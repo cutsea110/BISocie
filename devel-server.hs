@@ -6,10 +6,10 @@ main = do
     mapM_ putStrLn
         [ "Starting your server process. Code changes will be automatically"
         , "loaded as you save your files. Type \"quit\" to exit."
-        , "You can view your app at http://localhost:3000/"
+        , "You can view your app at http://localhost:3001/"
         , ""
         ]
-    _ <- forkIO $ run 3000 "Controller" "withBISocie" ["hamlet"]
+    _ <- forkIO $ run 3001 "Controller" "withBISocie" ["hamlet"]
     go
   where
     go = do

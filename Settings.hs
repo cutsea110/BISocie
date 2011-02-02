@@ -37,9 +37,9 @@ approot :: String
 -- you would probably want it to be:
 -- > approot = "http://www.yesod.com"
 -- Please note that there is no trailing slash.
-approot = "http://localhost:3000"
+approot = "http://localhost:3001"
 #else
-approot = "http://localhost:3000"
+approot = "http://localhost:3001"
 #endif
 
 -- | The location of static files on your system. This is a file system
@@ -67,7 +67,7 @@ staticroot = approot ++ "/static"
 -- specific.
 connStr :: String
 #ifdef PRODUCTION
-connStr = "user=bisocie password=bisocie host=localhost port=5432 dbname=bisocie_production"
+connStr = "user=bisocie password=bisocie host=localhost port=5432 dbname=bisocie"
 #else
 connStr = "user=bisocie password=bisocie host=localhost port=5432 dbname=bisocie_debug"
 #endif

@@ -1,4 +1,9 @@
 {-# LANGUAGE QuasiQuotes, TemplateHaskell, TypeFamilies #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE Rank2Types #-}
 module BISocie
     ( BISocie (..)
     , BISocieRoute (..)
@@ -14,6 +19,9 @@ module BISocie
     , AuthRoute (..)
       --
     , getBy404
+      --
+    , UserCrud
+    , userCrud
     ) where
 
 import Yesod
@@ -22,6 +30,7 @@ import Yesod.Helpers.Auth
 import BISocie.Helpers.Auth.HashDB
 import Yesod.Helpers.Auth.OpenId
 import Yesod.Helpers.Auth.Email
+import Yesod.Helpers.Crud
 import qualified Settings
 import System.Directory
 import qualified Data.ByteString.Lazy as L
@@ -31,6 +40,7 @@ import Settings (hamletFile, cassiusFile, juliusFile, widgetFile)
 import Model
 import Data.Maybe (isJust)
 import Control.Monad (join, unless)
+import Control.Applicative ((<$>),(<*>))
 import Network.Mail.Mime
 import qualified Data.Text.Lazy
 import qualified Data.Text.Lazy.Encoding
@@ -80,6 +90,9 @@ mkYesodData "BISocie" [$parseRoutes|
 /robots.txt RobotsR GET
 
 / RootR GET
+
+/admin AdminR UserCrud userCrud
+
 |]
 
 getBy404 ukey = do
@@ -137,6 +150,44 @@ instance YesodPersist BISocie where
     type YesodDB BISocie = SqlPersist
     runDB db = fmap connPool getYesod >>= Settings.runConnectionPool db
 
+instance Item User where
+  itemTitle = userIdent
+
+type UserCrud = Crud BISocie User
+
+instance ToForm User BISocie where
+  toForm mu = fieldsToTable $ User
+              <$> stringField "ident" (fmap userIdent mu)
+              <*> maybePasswordField "password" Nothing
+              <*> boolField "active" (fmap userActive mu)
+
+userCrud :: BISocie -> Crud BISocie User
+userCrud = const Crud
+           { crudSelect = do
+                _ <- requireAuth
+                runDB $ selectList [] [] 0 0
+           , crudReplace = \k a -> do
+                _ <- requireAuth
+                runDB $ do
+                  case userPassword a of
+                    Nothing -> do
+                      Just a' <- get k
+                      replace k $ a {userPassword=userPassword a', userActive=userActive a}
+                    Just rp -> do
+                      replace k $ a {userPassword=Just $ encrypt rp, userActive=userActive a}
+           , crudInsert = \a -> do
+                _ <- requireAuth
+                runDB $ do
+                  insert $ User (userIdent a) (fmap encrypt $ userPassword a) True
+           , crudGet = \k -> do
+                _ <- requireAuth
+                runDB $ get k
+           , crudDelete = \k -> do
+                _ <- requireAuth
+                runDB $ delete k
+           }
+
+
 instance YesodAuth BISocie where
     type AuthId BISocie = UserId
 
@@ -148,9 +199,17 @@ instance YesodAuth BISocie where
     getAuthId creds = runDB $ do
         x <- getBy $ UniqueUser $ credsIdent creds
         case x of
-            Just (uid, _) -> return $ Just uid
+            Just (uid, u) ->
+              if userActive u
+              then do
+                lift $ setMessage "You are now logged in."
+                return $ Just uid
+              else do
+                lift $ setMessage "Invalid login."
+                return Nothing
             Nothing -> do
-                fmap Just $ insert $ User (credsIdent creds) Nothing
+              lift $ setMessage "You are now logged in."
+              fmap Just $ insert $ User (credsIdent creds) Nothing True
 
     showAuthId _ = showIntegral
     readAuthId _ = readIntegral
@@ -235,7 +294,7 @@ instance YesodAuthEmail BISocie where
                 case emailUser e of
                     Just uid -> return $ Just uid
                     Nothing -> do
-                        uid <- insert $ User email Nothing
+                        uid <- insert $ User email Nothing True
                         update eid [EmailUser $ Just uid, EmailVerkey Nothing]
                         return $ Just uid
     getPassword = runDB . fmap (join . fmap userPassword) . get

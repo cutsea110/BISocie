@@ -12,11 +12,14 @@ module BISocie
     , module Model
     , StaticRoute (..)
     , AuthRoute (..)
+      --
+    , getBy404
     ) where
 
 import Yesod
 import Yesod.Helpers.Static
 import Yesod.Helpers.Auth
+import BISocie.Helpers.Auth.HashDB
 import Yesod.Helpers.Auth.OpenId
 import Yesod.Helpers.Auth.Email
 import qualified Settings
@@ -78,6 +81,12 @@ mkYesodData "BISocie" [$parseRoutes|
 
 / RootR GET
 |]
+
+getBy404 ukey = do
+  mres <- getBy ukey
+  case mres of
+    Nothing -> lift notFound
+    Just res -> return res
 
 -- Please see the documentation for the Yesod typeclass. There are a number
 -- of settings which can be configured by overriding methods here.
@@ -146,9 +155,33 @@ instance YesodAuth BISocie where
     showAuthId _ = showIntegral
     readAuthId _ = readIntegral
 
-    authPlugins = [ authOpenId
+    authPlugins = [ authHashDB
+                  , authOpenId
                   , authEmail
                   ]
+                  
+instance YesodAuthHashDB BISocie where
+    type AuthHashDBId BISocie = UserId
+
+    showAuthHashDBId _ = showIntegral
+    readAuthHashDBId _ = readIntegral
+
+    getPassword uid = runDB $ do
+      ma <- get uid
+      case ma of
+        Nothing -> return Nothing
+        Just u -> return $ userPassword u
+    setPassword uid encripted = runDB $ update uid [UserPassword $ Just encripted]
+    getHashDBCreds account = runDB $ do
+        ma <- getBy $ UniqueUser account
+        case ma of
+            Nothing -> return Nothing
+            Just (uid, _) -> return $ Just HashDBCreds
+                { hashdbCredsId = uid
+                , hashdbCredsAuthId = Just uid
+                }
+    getHashDB = runDB . fmap (fmap userIdent) . get
+
 
 instance YesodAuthEmail BISocie where
     type AuthEmailId BISocie = EmailId

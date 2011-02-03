@@ -1,0 +1,20 @@
+%h3 Set Your Profile
+%form!method=post!action=@ProfileR.uid@
+  %input!type=hidden!name=_method!value=modify
+  %table.nostyle
+    %tr
+      %th ユーザID:
+      %td $userIdent.u$
+    %tr
+      %th 姓:
+      %td
+        $maybe (userFamilyname u) n
+          %input.inplaceedit!type=text!name=familyname!uri=@ProfileR.uid@!value=$n$
+        $nothing
+          %input.inplaceedit!type=text!name=familyname!uri=@ProfileR.uid@
+      %th 名:
+      %td
+        $maybe (userGivenname u) n
+          %input.inplaceedit!type=text!name=givenname!uri=@ProfileR.uid@!value=$n$
+        $nothing
+          %input.inplaceedit!type=text!name=givenname!uri=@ProfileR.uid@

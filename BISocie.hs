@@ -31,7 +31,7 @@ import BISocie.Helpers.Auth.HashDB
 import Yesod.Helpers.Auth.OpenId
 import Yesod.Helpers.Auth.Email
 import Yesod.Helpers.Crud
-import qualified Settings
+import Yesod.Form.Jquery
 import System.Directory
 import qualified Data.ByteString.Lazy as L
 import Web.Routes.Site (Site (formatPathSegments))
@@ -45,6 +45,11 @@ import Network.Mail.Mime
 import qualified Data.Text.Lazy
 import qualified Data.Text.Lazy.Encoding
 import Text.Jasmine (minifym)
+
+import StaticFiles
+import Model
+import StaticFiles
+import qualified Settings
 
 -- | The site argument for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -86,6 +91,8 @@ mkYesodData "BISocie" [$parseRoutes|
 /static StaticR Static getStatic
 /auth   AuthR   Auth   getAuth
 
+/profile/#UserId ProfileR GET POST PUT
+
 /favicon.ico FaviconR GET
 /robots.txt RobotsR GET
 
@@ -107,11 +114,20 @@ instance Yesod BISocie where
     approot _ = Settings.approot
 
     defaultLayout widget = do
-        mmsg <- getMessage
-        pc <- widgetToPageContent $ do
-            widget
-            addCassius $(Settings.cassiusFile "default-layout")
-        hamletToRepHtml $(Settings.hamletFile "default-layout")
+      y <- getYesod
+      mmsg <- getMessage
+      pc <- widgetToPageContent $ do
+        widget
+        addScriptEither $ urlJqueryJs y
+        addScriptEither $ urlJqueryUiJs y
+        addStylesheetEither $ urlJqueryUiCss y
+        addScriptEither $ Left $ StaticR plugins_upload_jquery_upload_1_0_2_js
+        addScriptEither $ Left $ StaticR plugins_bubbleup_jquery_bubbleup_js
+        addScriptEither $ Left $ StaticR plugins_exinplaceeditor_jquery_exinplaceeditor_0_1_3_js
+        addStylesheetEither $ Left $ StaticR plugins_exinplaceeditor_exinplaceeditor_css
+        addScriptEither $ Left $ StaticR plugins_watermark_jquery_watermark_js
+        addCassius $(Settings.cassiusFile "default-layout")
+      hamletToRepHtml $(Settings.hamletFile "default-layout")
 
     -- This is done to provide an optimization for serving static files from
     -- a separate domain. Please see the staticroot setting in Settings.hs
@@ -150,6 +166,11 @@ instance YesodPersist BISocie where
     type YesodDB BISocie = SqlPersist
     runDB db = fmap connPool getYesod >>= Settings.runConnectionPool db
 
+instance YesodJquery BISocie where
+  urlJqueryJs _ = Left $ StaticR js_jquery_1_4_4_min_js
+  urlJqueryUiJs _ = Left $ StaticR js_jquery_ui_1_8_9_custom_min_js
+  urlJqueryUiCss _ = Left $ StaticR css_jquery_ui_1_8_9_custom_css
+
 instance Item User where
   itemTitle = userIdent
 
@@ -159,6 +180,8 @@ instance ToForm User BISocie where
   toForm mu = fieldsToTable $ User
               <$> stringField "ident" (fmap userIdent mu)
               <*> maybePasswordField "password" Nothing
+              <*> maybeStringField "familyname" (fmap userFamilyname mu)
+              <*> maybeStringField "givenname" (fmap userGivenname mu)
               <*> boolField "active" (fmap userActive mu)
 
 userCrud :: BISocie -> Crud BISocie User
@@ -178,7 +201,7 @@ userCrud = const Crud
            , crudInsert = \a -> do
                 _ <- requireAuth
                 runDB $ do
-                  insert $ User (userIdent a) (fmap encrypt $ userPassword a) True
+                  insert $ User (userIdent a) (fmap encrypt $ userPassword a) Nothing Nothing True
            , crudGet = \k -> do
                 _ <- requireAuth
                 runDB $ get k
@@ -209,7 +232,7 @@ instance YesodAuth BISocie where
                 return Nothing
             Nothing -> do
               lift $ setMessage "You are now logged in."
-              fmap Just $ insert $ User (credsIdent creds) Nothing True
+              fmap Just $ insert $ User (credsIdent creds) Nothing Nothing Nothing True
 
     showAuthId _ = showIntegral
     readAuthId _ = readIntegral
@@ -294,7 +317,7 @@ instance YesodAuthEmail BISocie where
                 case emailUser e of
                     Just uid -> return $ Just uid
                     Nothing -> do
-                        uid <- insert $ User email Nothing True
+                        uid <- insert $ User email Nothing Nothing Nothing True
                         update eid [EmailUser $ Just uid, EmailVerkey Nothing]
                         return $ Just uid
     getPassword = runDB . fmap (join . fmap userPassword) . get

@@ -12,6 +12,8 @@ share2 mkPersist (mkMigrate "migrateAll") [$persist|
 User
     ident String
     password String Maybe Update
+    familyname String Maybe Update
+    givenname String Maybe Update
     active Bool Eq default=true
     UniqueUser ident
 Email

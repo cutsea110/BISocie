@@ -2,6 +2,7 @@
 module Handler.Root where
 
 import BISocie
+import Control.Monad (when, forM)
 
 -- This is a handler function for the GET request method on the RootR
 -- resource pattern. All of your resource patterns are defined in
@@ -12,8 +13,13 @@ import BISocie
 -- inclined, or create a single monolithic file.
 getRootR :: Handler RepHtml
 getRootR = do
-    mu <- maybeAuth
-    defaultLayout $ do
-        h2id <- newIdent
-        setTitle "bisocie homepage"
-        addWidget $(widgetFile "homepage")
+    (uid, _) <- requireAuth
+    redirect RedirectTemporary $ HomeR uid
+
+getHomeR :: UserId -> Handler RepHtml
+getHomeR uid = do
+  (uid', u) <- requireAuth
+  when (uid'/=uid) $ permissionDenied ""
+  ps <- runDB $ selectList [ParticipantsUserEq uid] [] 0 0
+  defaultLayout $ do
+    addHamlet $(hamletFile "home")

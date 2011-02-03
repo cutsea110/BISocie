@@ -1,5 +1,6 @@
 $(document).ready(function(){
   $(".inplaceedit").exInPlaceEditor({
+    nulltext: "未登録",
     onsave: function(api) {
       var text = api.getEditor(),
           data = '_method=modify&'+text.attr('name')+'='+api.getValue();

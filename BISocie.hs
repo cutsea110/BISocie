@@ -39,8 +39,9 @@ import Database.Persist.GenericSql
 import Settings (hamletFile, cassiusFile, juliusFile, widgetFile)
 import Model
 import Data.Maybe (isJust)
-import Control.Monad (join, unless)
+import Control.Monad (join, unless, when)
 import Control.Applicative ((<$>),(<*>))
+import Control.Arrow ((&&&))
 import Network.Mail.Mime
 import qualified Data.Text.Lazy
 import qualified Data.Text.Lazy.Encoding
@@ -97,6 +98,8 @@ mkYesodData "BISocie" [$parseRoutes|
 /robots.txt RobotsR GET
 
 / RootR GET
+
+/home/#UserId HomeR GET
 
 /admin AdminR UserCrud userCrud
 
@@ -180,17 +183,25 @@ instance ToForm User BISocie where
   toForm mu = fieldsToTable $ User
               <$> stringField "ident" (fmap userIdent mu)
               <*> maybePasswordField "password" Nothing
+              <*> selectField roleopts "role" (fmap userRole mu)
+              <*> maybeEmailField "email" (fmap userEmail mu)
               <*> maybeStringField "familyname" (fmap userFamilyname mu)
               <*> maybeStringField "givenname" (fmap userGivenname mu)
               <*> boolField "active" (fmap userActive mu)
+    where
+      roleopts = map (id &&& show) [minBound..maxBound]
 
 userCrud :: BISocie -> Crud BISocie User
 userCrud = const Crud
            { crudSelect = do
-                _ <- requireAuth
+                (_, u) <- requireAuth
+                when (not $ isAdmin u) $
+                  permissionDenied "You couldn't access user crud."
                 runDB $ selectList [] [] 0 0
            , crudReplace = \k a -> do
-                _ <- requireAuth
+                (_, u) <- requireAuth
+                when (not $ isAdmin u) $
+                  permissionDenied "You couldn't access user crud."
                 runDB $ do
                   case userPassword a of
                     Nothing -> do
@@ -199,14 +210,20 @@ userCrud = const Crud
                     Just rp -> do
                       replace k $ a {userPassword=Just $ encrypt rp, userActive=userActive a}
            , crudInsert = \a -> do
-                _ <- requireAuth
+                (_, u) <- requireAuth
+                when (not $ isAdmin u) $
+                  permissionDenied "You couldn't access user crud."
                 runDB $ do
-                  insert $ User (userIdent a) (fmap encrypt $ userPassword a) Nothing Nothing True
+                  insert $ initUser{ userIdent=userIdent a, userPassword=(fmap encrypt $ userPassword a)}
            , crudGet = \k -> do
-                _ <- requireAuth
+                (_, u) <- requireAuth
+                when (not $ isAdmin u) $
+                  permissionDenied "You couldn't access user crud."
                 runDB $ get k
            , crudDelete = \k -> do
-                _ <- requireAuth
+                (_, u) <- requireAuth
+                when (not $ isAdmin u) $
+                  permissionDenied "You couldn't access user crud."
                 runDB $ delete k
            }
 
@@ -232,7 +249,7 @@ instance YesodAuth BISocie where
                 return Nothing
             Nothing -> do
               lift $ setMessage "You are now logged in."
-              fmap Just $ insert $ User (credsIdent creds) Nothing Nothing Nothing True
+              fmap Just $ insert $ initUser {userIdent=credsIdent creds}
 
     showAuthId _ = showIntegral
     readAuthId _ = readIntegral
@@ -317,7 +334,7 @@ instance YesodAuthEmail BISocie where
                 case emailUser e of
                     Just uid -> return $ Just uid
                     Nothing -> do
-                        uid <- insert $ User email Nothing Nothing Nothing True
+                        uid <- insert $ initUser {userIdent=email, userEmail=Just email}
                         update eid [EmailUser $ Just uid, EmailVerkey Nothing]
                         return $ Just uid
     getPassword = runDB . fmap (join . fmap userPassword) . get

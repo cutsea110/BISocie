@@ -3,18 +3,43 @@
   %input!type=hidden!name=_method!value=modify
   %table.nostyle
     %tr
-      %th ユーザID:
-      %td $userIdent.u$
+      %th ユーザID
+      %td!colspan=3 $userIdent.u$
     %tr
-      %th 姓:
+      %th 姓
       %td
-        $maybe (userFamilyname u) n
-          %input.inplaceedit!type=text!name=familyname!uri=@ProfileR.uid@!value=$n$
+        $maybe (userFamilyname u) fn
+          $if editable
+            %input.inplaceedit!type=text!name=familyname!uri=@ProfileR.uid@!value=$fn$
+          $else
+            $fn$
         $nothing
-          %input.inplaceedit!type=text!name=familyname!uri=@ProfileR.uid@
-      %th 名:
+          $if editable
+            %input.inplaceedit!type=text!name=familyname!uri=@ProfileR.uid@
+          $else
+            未登録
+      %th 名
       %td
-        $maybe (userGivenname u) n
-          %input.inplaceedit!type=text!name=givenname!uri=@ProfileR.uid@!value=$n$
+        $maybe (userGivenname u) gn
+          $if editable
+            %input.inplaceedit!type=text!name=givenname!uri=@ProfileR.uid@!value=$gn$
+          $else
+            $gn$
         $nothing
-          %input.inplaceedit!type=text!name=givenname!uri=@ProfileR.uid@
+          $if editable
+            %input.inplaceedit!type=text!name=givenname!uri=@ProfileR.uid@
+          $else
+            未登録
+    %tr
+      %th メールアドレス
+      %td!colspan=3
+        $maybe (userEmail u) e
+          $if editable
+            %input.inplaceedit!type=text!name=email!uri=@ProfileR.uid@!value=$e$
+          $else
+            $e$
+        $nothing
+          $if editable
+            %input.inplaceedit!type=text!name=email!uri=@ProfileR.uid@
+          $else
+            未登録

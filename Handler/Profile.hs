@@ -9,10 +9,12 @@ import Control.Applicative ((<$>),(<*>))
 
 getProfileR :: UserId -> Handler RepHtml
 getProfileR uid = do
-  (uid', _) <- requireAuth
-  when (uid' /= uid) $ do
-    permissionDenied "You couldn't access another user profile."
+  (uid', u') <- requireAuth
   u <- runDB $ get404 uid
+  let viewable = u' `canView` u
+      editable = u' `canEdit` u
+  when (not viewable) $ do
+    permissionDenied "You couldn't view another user profile."
   defaultLayout $ do
     setTitle $ string "Profile"
     addJulius $(juliusFile "profile")
@@ -27,14 +29,18 @@ postProfileR uid = do
 
 putProfileR :: UserId -> Handler ()
 putProfileR uid = do
-  (uid', u) <- requireAuth
-  when (uid' /= uid) $ do
-    permissionDenied "You couldn't access another user profile."
+  (uid', u') <- requireAuth
+  u <- runDB $ get404 uid
+  let editable = u' `canEdit` u
+  when (not editable ) $ do
+    permissionDenied "You couldn't modify another user profile."
   fn' <- lookupPostParam "familyname"
   ln' <- lookupPostParam "givenname"
-  let (fn, ln) = ( fn' `mplus` userFamilyname u
-                 , ln' `mplus` userGivenname u
-                 )
-  runDB $ update uid [UserFamilyname fn, UserGivenname ln]
+  em' <- lookupPostParam "email"
+  let (fn, ln, em) = ( fn' `mplus` userFamilyname u
+                     , ln' `mplus` userGivenname u
+                     , em' `mplus` userEmail u  
+                     )
+  runDB $ update uid [UserFamilyname fn, UserGivenname ln, UserEmail em]
   setMessage "Your profile updated."
   redirect RedirectTemporary $ ProfileR uid

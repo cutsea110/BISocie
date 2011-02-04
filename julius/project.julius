@@ -7,8 +7,9 @@ $(document).ready(function(){
    $("#button-search-users").click(function(){
      $("#search-users").dialog("open");
      $.getJSON('@UserListR@', function(json){
+       $("#search-result .user-logo").remove();
        $.each(json.userlist, function(i, u){
-         var a = $("<div/>").attr({uid: u.id, ident: u.ident}).text(u.name).addClass(u.role);
+         var a = $("<div/>").attr({uid: u.id, ident: u.ident}).text(u.name).addClass(u.role+' user-logo');
          $("#search-result").append(a);
        });
      });
@@ -17,7 +18,7 @@ $(document).ready(function(){
    // loading participants
    $.getJSON('@ParticipantsR.pid@', function(json) {
      $.each(json.participants, function(i, item){
-       var a = $("<div/>").attr({uid: item.id, ident: item.ident}).text(item.name).addClass(item.role);
+       var a = $("<div/>").attr({uid: item.id, ident: item.ident}).text(item.name).addClass(item.role+' user-log');
        $("#participants").append(a);
      });
    });

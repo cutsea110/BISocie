@@ -1,2 +1,129 @@
 body
     font-family: sans-serif
+    margin: 0
+    padding: 0
+
+h1, h2, h3, h4, h5, h6
+    margin: 0
+    padding: 0
+
+ul, ol
+   -webkit-padding-start: 15px
+
+ul
+   list-style-type: square
+
+img
+   border-style: none
+
+div#message
+    color: #817134
+    backgroud-color: #fdf1d0
+    border: 1px solid #fad163
+    line-height: 1.50
+    padding: 5px 8px
+    margin: 0 0 3px 0
+
+.errors
+    color: red
+    font-style: bold
+
+.warnings
+    color: red
+    font-style: bold
+    backgroud-color: #fdf1d0
+    border: 1px solid #fad163
+    line-height: 1.50
+    padding: 5px 8px
+    margin: 0 0 3px 0
+
+button.link
+    color: #4040f8
+    background-color: #e0e0e0
+    border: none
+    cursor: pointer
+    margin: 0 1px 1px 0
+
+table.nostyle
+   border: none
+   background-color: white
+table.nostyle tr
+   border: none
+   background-color: white
+table.nostyle th
+   border: none
+   background-color: white
+table.nostyle td
+   border: none
+   background-color: white
+
+.clearfix:after
+  content: "."
+  display: block
+  clear: both
+  height: 0
+  visibility: hidden
+
+.clearfix
+  min-height: 1px
+
+* html .clearfix
+  height: 1px
+  /*\*//*/
+  height: auto
+  overflow: hidden
+  /**/
+
+#main
+   width: 800
+   margin: 1px 3px 1px 3px
+
+#bisocie-title
+   color: #4682b4
+   float: left
+   width: 480
+   margin-top: 2px
+   padding: 0
+
+#userbox
+   float: right
+   width: 200
+   margin-top: 2px
+
+ul.tabs
+   margin: 0 0 1px
+   padding: 0
+
+ul.tabs li.selected
+   border-bottom: 3px solid white
+
+ul.tabs li
+   background: none repeat scroll 0 0 white
+   border-color: #cccccc
+   border-style: solid solid none
+   border-width: 1px 1px medium
+   display: inline
+   margin: 0 0 0 1.2em
+   padding: 0 0.6em
+
+ul.tabs li a
+   color: #3366CC
+   font-size: 93%
+   font-weight: bold
+   margin: 0px
+   text-decoration: none
+
+#footer
+   color: #888888
+   font-size: 93%
+   padding: 1em
+
+.left
+   text-align: left
+.center
+   text-align: center
+.right
+   text-align: right
+
+.inline
+   display: inline-block

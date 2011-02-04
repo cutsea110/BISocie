@@ -22,5 +22,5 @@ getHomeR uid = do
   when (uid'/=uid) $ permissionDenied "You couldn't access another users home."
   ps <- runDB $ selectList [ParticipantsUserEq uid] [] 0 0
   defaultLayout $ do
-    setTitle $ string $ "Home " ++ userDisplayName u
+    setTitle $ string $ userDisplayName u ++ " ホーム"
     addHamlet $(hamletFile "home")

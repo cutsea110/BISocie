@@ -117,8 +117,11 @@ instance Yesod BISocie where
     approot _ = Settings.approot
 
     defaultLayout widget = do
+      mu <- maybeAuth
       y <- getYesod
       mmsg <- getMessage
+      let header = $(Settings.hamletFile "header")
+          footer = $(Settings.hamletFile "footer")
       pc <- widgetToPageContent $ do
         widget
         addScriptEither $ urlJqueryJs y

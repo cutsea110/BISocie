@@ -7,12 +7,20 @@ import Yesod
 import Database.Persist.TH (share2, derivePersistField)
 import Database.Persist.Base
 import Database.Persist.GenericSql (mkMigrate)
+import System.Locale
 import Data.Time
 import Data.Int
+import Data.Monoid
+import Control.Monad
 
 data Role =  Student | Teacher | Admin
           deriving (Read, Show, Eq, Ord, Enum, Bounded)
 derivePersistField "Role"
+
+prettyRoleName :: Role -> String
+prettyRoleName Admin = "管理者"
+prettyRoleName Teacher = "教職員"
+prettyRoleName Student = "在校生/卒業生"
 
 -- You can define all of your database entities here. You can find more
 -- information on persistent and how to declare entities at:
@@ -35,7 +43,7 @@ Email
     UniqueEmail email
 
 Project
-    name String
+    name String Update
     description String Maybe Update
     statuses String Update
     cuser UserId
@@ -103,7 +111,14 @@ initPost u d = Post { postContent=""
                     }
 
 userDisplayName :: User -> String
-userDisplayName = userIdent
+userDisplayName u = name
+  where 
+    Just name = fullname `mplus` ident
+    fullname = userFamilyname u `mappend` userGivenname u
+    ident = Just $ userIdent u
+    
+userRoleName :: User -> String
+userRoleName = prettyRoleName . userRole
 
 isStudent :: User -> Bool
 isStudent u = userRole u == Student
@@ -119,3 +134,16 @@ x `canEdit` y = x == y || userRole x > userRole y
 
 canView :: User -> User -> Bool
 canView = canEdit
+
+canSearchUser :: User -> Bool
+canSearchUser u = userRole u >= Teacher
+
+canCreateProject :: User -> Bool
+canCreateProject u = userRole u >= Teacher
+
+showDate :: UTCTime -> String
+showDate = formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S"
+
+showmaybe :: Maybe String -> String
+showmaybe Nothing  = ""
+showmaybe (Just x) = x

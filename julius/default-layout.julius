@@ -1,13 +1,17 @@
 $(document).ready(function(){
+  $("#message").fadeOut(3000, function(){$(this).remove();});
+
+  $(".watermark").watermark();
+
   $(".inplaceedit").exInPlaceEditor({
-    nulltext: "未登録",
+    nulltext: "未設定",
     onsave: function(api) {
       var text = api.getEditor(),
           data = '_method=modify&'+text.attr('name')+'='+api.getValue();
       api.saving();
       $.ajax({
         type: 'post',
-        dataType: 'html',
+        dataType: 'xml',
         url: text.attr('uri'),
         data: data,
         success: function(res){

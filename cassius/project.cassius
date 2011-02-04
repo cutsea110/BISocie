@@ -1,0 +1,11 @@
+.Student
+  background-color: #fec0d0
+.Teacher
+  background-color: #c0fee0
+.Admin
+  background-color: ivory
+
+.scroll
+  overflow: scroll
+  height: 400px
+

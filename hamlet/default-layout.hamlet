@@ -1,9 +1,15 @@
 !!!
 %html
     %head
-        %title $pageTitle.pc$
-        ^pageHead.pc^
+      %title $pageTitle.pc$
+      ^pageHead.pc^
     %body
-        $maybe mmsg msg
-            #message $msg$
-        ^pageBody.pc^
+      #main
+        #ui-header.clearfix
+          ^header^
+        #ui-main
+          $maybe mmsg msg
+              #message $msg$
+          ^pageBody.pc^
+        #ui-footer
+          ^footer^

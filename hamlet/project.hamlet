@@ -1,0 +1,25 @@
+%h3 プロジェクト設定
+%form!method=post!action=@ProjectR.pid@
+  %input!type=hidden!name=_method!value=modify
+  %table.nostyle
+    %tr
+      %th プロジェクト名
+      %td
+        %input.inplaceedit!type=text!name=name!uri=@ProjectR.pid@!value=$projectName.prj$
+    %tr
+      %th プロジェクト概要
+      %td
+        %input.inplaceedit!type=text!name=description!uri=@ProjectR.pid@!value=$showmaybe.projectDescription.prj$
+    %tr
+      %th ステータス
+      %td
+        %textarea.inplaceedit!name=statuses!uri=@ProjectR.pid@ $projectStatuses.prj$
+    %tr
+      %th 参加者
+        %button#button-search-users.link 参加者追加
+      %td#participants
+
+#search-users
+  %input!type=text!name=username
+  #search-result.scroll
+

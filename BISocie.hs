@@ -100,9 +100,11 @@ mkYesodData "BISocie" [$parseRoutes|
 / RootR GET
 
 /home/#UserId HomeR GET
+/project/#ProjectId ProjectR GET POST PUT
+/participants/#ProjectId ParticipantsR GET
+/userlist.json UserListR GET
 
 /admin AdminR UserCrud userCrud
-
 |]
 
 getBy404 ukey = do
@@ -117,8 +119,11 @@ instance Yesod BISocie where
     approot _ = Settings.approot
 
     defaultLayout widget = do
+      mu <- maybeAuth
       y <- getYesod
       mmsg <- getMessage
+      let header = $(Settings.hamletFile "header")
+          footer = $(Settings.hamletFile "footer")
       pc <- widgetToPageContent $ do
         widget
         addScriptEither $ urlJqueryJs y
@@ -130,6 +135,7 @@ instance Yesod BISocie where
         addStylesheetEither $ Left $ StaticR plugins_exinplaceeditor_exinplaceeditor_css
         addScriptEither $ Left $ StaticR plugins_watermark_jquery_watermark_js
         addCassius $(Settings.cassiusFile "default-layout")
+        addJulius $(Settings.juliusFile "default-layout")
       hamletToRepHtml $(Settings.hamletFile "default-layout")
 
     -- This is done to provide an optimization for serving static files from
@@ -214,7 +220,7 @@ userCrud = const Crud
                 when (not $ isAdmin u) $
                   permissionDenied "You couldn't access user crud."
                 runDB $ do
-                  insert $ initUser{ userIdent=userIdent a, userPassword=(fmap encrypt $ userPassword a)}
+                  insert $ a { userPassword=(fmap encrypt $ userPassword a)}
            , crudGet = \k -> do
                 (_, u) <- requireAuth
                 when (not $ isAdmin u) $

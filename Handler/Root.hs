@@ -19,7 +19,8 @@ getRootR = do
 getHomeR :: UserId -> Handler RepHtml
 getHomeR uid = do
   (uid', u) <- requireAuth
-  when (uid'/=uid) $ permissionDenied ""
+  when (uid'/=uid) $ permissionDenied "You couldn't access another users home."
   ps <- runDB $ selectList [ParticipantsUserEq uid] [] 0 0
   defaultLayout $ do
+    setTitle $ string $ "Home " ++ userDisplayName u
     addHamlet $(hamletFile "home")

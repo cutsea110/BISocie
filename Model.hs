@@ -9,6 +9,8 @@ import Database.Persist.Base
 import Database.Persist.GenericSql (mkMigrate)
 import Data.Time
 import Data.Int
+import Data.Monoid
+import Control.Monad
 
 data Role =  Student | Teacher | Admin
           deriving (Read, Show, Eq, Ord, Enum, Bounded)
@@ -103,7 +105,11 @@ initPost u d = Post { postContent=""
                     }
 
 userDisplayName :: User -> String
-userDisplayName = userIdent
+userDisplayName u = name
+  where 
+    Just name = fullname `mplus` ident
+    fullname = userFamilyname u `mappend` userGivenname u
+    ident = Just $ userIdent u
 
 isStudent :: User -> Bool
 isStudent u = userRole u == Student

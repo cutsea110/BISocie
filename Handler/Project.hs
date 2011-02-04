@@ -15,6 +15,7 @@ getProjectR pid = do
       Just _ -> get404 pid
   defaultLayout $ do
     setTitle $ string $ projectName prj
+    addCassius $(cassiusFile "project")
     addJulius $(juliusFile "project")
     addHamlet $(hamletFile "project")
 

@@ -1,12 +1,23 @@
 $(document).ready(function(){
+   $("#search-users").hide().attr("title", "ユーザ検索").dialog({
+     autoOpen: false,
+     width: 500,
+     modal: true
+   });
+   $("#button-search-users").click(function(){
+     $("#search-users").dialog("open");
+     $.getJSON('@UserListR@', function(json){
+       $.each(json.userlist, function(i, u){
+         var a = $("<div/>").attr({uid: u.id, ident: u.ident}).text(u.name).addClass(u.role);
+         $("#search-result").append(a);
+       });
+     });
+     return false;
+   });
    // loading participants
    $.getJSON('@ParticipantsR.pid@', function(json) {
      $.each(json.participants, function(i, item){
-       var id = item.id,
-           ident = item.ident,
-           name = item.name,
-           role = item.role;
-       var a = $("<div/>").attr({uid: id, ident:ident}).text(name);
+       var a = $("<div/>").attr({uid: item.id, ident: item.ident}).text(item.name).addClass(item.role);
        $("#participants").append(a);
      });
    });

@@ -16,4 +16,10 @@
         %textarea.inplaceedit!name=statuses!uri=@ProjectR.pid@ $projectStatuses.prj$
     %tr
       %th 参加者
+        %button#button-search-users.link 参加者追加
       %td#participants
+
+#search-users
+  %input!type=text!name=username
+  #search-result.scroll
+

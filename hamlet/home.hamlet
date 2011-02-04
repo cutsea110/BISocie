@@ -1,1 +1,16 @@
 %h3 $userDisplayName.u$
+
+%table
+  %thead
+    %th プロジェクト名
+    %th 概要
+    %th 作成日
+    %th 更新日
+  %tbody
+    $forall prjs p
+      %tr
+        %td
+          %a!href=@ProjectR.fst.p@ $projectName.snd.p$
+        %td $showmaybe.projectDescription.snd.p$
+        %td $showDate.projectCdate.snd.p$
+        %td $showDate.projectUdate.snd.p$

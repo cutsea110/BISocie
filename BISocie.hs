@@ -100,9 +100,10 @@ mkYesodData "BISocie" [$parseRoutes|
 / RootR GET
 
 /home/#UserId HomeR GET
+/project/#ProjectId ProjectR GET POST PUT
+/participants/#ProjectId ParticipantsR GET
 
 /admin AdminR UserCrud userCrud
-
 |]
 
 getBy404 ukey = do
@@ -133,6 +134,7 @@ instance Yesod BISocie where
         addStylesheetEither $ Left $ StaticR plugins_exinplaceeditor_exinplaceeditor_css
         addScriptEither $ Left $ StaticR plugins_watermark_jquery_watermark_js
         addCassius $(Settings.cassiusFile "default-layout")
+        addJulius $(Settings.juliusFile "default-layout")
       hamletToRepHtml $(Settings.hamletFile "default-layout")
 
     -- This is done to provide an optimization for serving static files from

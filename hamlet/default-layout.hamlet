@@ -6,10 +6,10 @@
     %body
       #main
         #ui-header.clearfix
-          $maybe mmsg msg
-              #message $msg$
           ^header^
         #ui-main
+          $maybe mmsg msg
+              #message $msg$
           ^pageBody.pc^
         #ui-footer
           ^footer^

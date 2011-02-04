@@ -1,5 +1,6 @@
 #bisocie-title
-  %h1 BISocie
+  %a!href=@RootR@
+    %h1 BISocie
 #userbox
   $maybe mu u
     Now Logged in as $

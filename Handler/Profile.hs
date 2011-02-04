@@ -14,11 +14,10 @@ getProfileR uid = do
   let viewable = u' `canView` u
       editable = u' `canEdit` u
   when (not viewable) $ do
-    permissionDenied "You couldn't view another user profile."
+    permissionDenied "あなたはこのユーザプロファイルを見ることはできません."
   defaultLayout $ do
     setTitle $ string "Profile"
-    addJulius $(juliusFile "profile")
-    addHamlet $(hamletFile "viewProfile")
+    addHamlet $(hamletFile "profile")
 
 postProfileR :: UserId -> Handler ()
 postProfileR uid = do
@@ -42,5 +41,5 @@ putProfileR uid = do
                      , em' `mplus` userEmail u  
                      )
   runDB $ update uid [UserFamilyname fn, UserGivenname ln, UserEmail em]
-  setMessage "Your profile updated."
+  setMessage "プロフィールを更新しました."
   redirect RedirectTemporary $ ProfileR uid

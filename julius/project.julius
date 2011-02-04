@@ -1,0 +1,11 @@
+$(document).ready(function(){
+   $.getJSON('@ParticipantsR.pid@', function(json) {
+     $.each(json.participants, function(i, item){
+       var ident = item.ident,
+           name = item.name,
+           role = item.role;
+       var a = $("<div/>").text(name);
+       $("#participants").append(a);
+     });
+   });
+});

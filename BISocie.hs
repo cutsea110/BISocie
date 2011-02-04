@@ -102,6 +102,7 @@ mkYesodData "BISocie" [$parseRoutes|
 /home/#UserId HomeR GET
 /project/#ProjectId ProjectR GET POST PUT
 /participants/#ProjectId ParticipantsR GET
+/userlist.json UserListR GET
 
 /admin AdminR UserCrud userCrud
 |]

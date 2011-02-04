@@ -1,11 +1,14 @@
 $(document).ready(function(){
+   // loading participants
    $.getJSON('@ParticipantsR.pid@', function(json) {
      $.each(json.participants, function(i, item){
-       var ident = item.ident,
+       var id = item.id,
+           ident = item.ident,
            name = item.name,
            role = item.role;
-       var a = $("<div/>").text(name);
+       var a = $("<div/>").attr({uid: id, ident:ident}).text(name);
        $("#participants").append(a);
      });
    });
+
 });

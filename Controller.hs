@@ -15,6 +15,7 @@ import Handler.Root
 import Handler.Profile
 import Handler.Project
 import Handler.Participants
+import Handler.User
 
 -- This line actually creates our YesodSite instance. It is the second half
 -- of the call to mkYesodData which occurs in BISocie.hs. Please see

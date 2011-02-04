@@ -17,7 +17,9 @@ getParticipantsR pid = do
   cacheSeconds 10 -- FIXME
   jsonToRepJson $ jsonMap [("participants", jsonList $ map go us)]
   where
-    go (_, u) = jsonMap [ ("ident", jsonScalar (userIdent u))
-                        , ("name", jsonScalar (userDisplayName u))
-                        , ("role", jsonScalar (userRoleName u))
+    go (id, u) = jsonMap [ ("id", jsonScalar $ show $ toInteger id)
+                        , ("ident", jsonScalar $ userIdent u)
+                        , ("name", jsonScalar $ userDisplayName u)
+                        , ("role", jsonScalar $ show $ userRole u)
+                        , ("prettyrole", jsonScalar $ userRoleName u)
                         ]

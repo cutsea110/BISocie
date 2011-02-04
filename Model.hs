@@ -135,6 +135,9 @@ x `canEdit` y = x == y || userRole x > userRole y
 canView :: User -> User -> Bool
 canView = canEdit
 
+canSearchUser :: User -> Bool
+canSearchUser u = userRole u >= Teacher
+
 canCreateProject :: User -> Bool
 canCreateProject u = userRole u >= Teacher
 

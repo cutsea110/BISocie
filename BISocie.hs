@@ -214,7 +214,7 @@ userCrud = const Crud
                 when (not $ isAdmin u) $
                   permissionDenied "You couldn't access user crud."
                 runDB $ do
-                  insert $ initUser{ userIdent=userIdent a, userPassword=(fmap encrypt $ userPassword a)}
+                  insert $ a { userPassword=(fmap encrypt $ userPassword a)}
            , crudGet = \k -> do
                 (_, u) <- requireAuth
                 when (not $ isAdmin u) $

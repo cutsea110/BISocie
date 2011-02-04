@@ -11,7 +11,7 @@ $(document).ready(function(){
       api.saving();
       $.ajax({
         type: 'post',
-        dataType: 'html',
+        dataType: 'xml',
         url: text.attr('uri'),
         data: data,
         success: function(res){

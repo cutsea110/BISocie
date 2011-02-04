@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell, OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes, CPP #-}
 module Handler.Project where
 
 import BISocie
@@ -18,28 +19,43 @@ getProjectR pid = do
     addHamlet $(hamletFile "project")
 
 
-postProjectR :: ProjectId -> Handler ()
+postProjectR :: ProjectId -> Handler RepXml
 postProjectR pid = do
   _method <- lookupPostParam "_method"
   case _method of
     Just "modify" -> putProjectR pid
-    _             ->invalidArgs ["The possible values of '_method' is modify"]
+    _             -> invalidArgs ["The possible values of '_method' is modify"]
 
-putProjectR :: ProjectId -> Handler ()
+putProjectR :: ProjectId -> Handler RepXml
 putProjectR pid = do
   (uid, u) <- requireAuth
-  p <- runDB $ do
-     mp' <- getBy $ UniqueParticipants pid uid
-     case mp' of
-       Nothing -> lift $ permissionDenied "あなたはこのプロジェクトの参加者ではありません."
-       Just _ -> get404 pid
   nm' <- lookupPostParam "name"
   ds' <- lookupPostParam "description"
   st' <- lookupPostParam "statuses"
-  let (Just nm, ds, Just st) = ( nm' `mplus` (Just $ projectName p)
-                               , ds' `mplus` projectDescription p
-                               , st' `mplus` (Just $ projectStatuses p)
-                               )
-  runDB $ update pid [ProjectName nm, ProjectDescription ds, ProjectStatuses st]
-  setMessage "プロジェクトを更新しました."
-  redirect RedirectTemporary $ ProjectR pid
+  (nm, ds, st) <- runDB $ do
+     mp' <- getBy $ UniqueParticipants pid uid
+     case mp' of
+       Nothing -> lift $ permissionDenied "あなたはこのプロジェクトの参加者ではありません."
+       Just _ -> do 
+         p <- get404 pid
+         let (Just nm, ds, Just st) = 
+               ( nm' `mplus` (Just $ projectName p)
+               , ds' `mplus` projectDescription p
+               , st' `mplus` (Just $ projectStatuses p)
+               )
+         update pid [ProjectName nm, ProjectDescription ds, ProjectStatuses st]
+         return (nm, ds, st)
+  fmap RepXml $ hamletToContent
+#if GHC7
+                  [xhamlet|
+#else
+                  [$xhamlet|
+#endif
+%project
+  %name $nm$
+  $maybe ds ds
+    %description $ds$
+  $nothing
+    %description
+  %statuses $st$
+|]

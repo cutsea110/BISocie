@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell, OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes, CPP #-}
 module Handler.Profile where
 
 import BISocie
@@ -19,27 +20,46 @@ getProfileR uid = do
     setTitle $ string "Profile"
     addHamlet $(hamletFile "profile")
 
-postProfileR :: UserId -> Handler ()
+postProfileR :: UserId -> Handler RepXml
 postProfileR uid = do
   _method <- lookupPostParam "_method"
   case _method of
     Just "modify" -> putProfileR uid
     _             ->invalidArgs ["The possible values of '_method' is modify"]
 
-putProfileR :: UserId -> Handler ()
+putProfileR :: UserId -> Handler RepXml
 putProfileR uid = do
   (uid', u') <- requireAuth
-  u <- runDB $ get404 uid
-  let editable = u' `canEdit` u
-  when (not editable ) $ do
-    permissionDenied "You couldn't modify another user profile."
   fn' <- lookupPostParam "familyname"
-  ln' <- lookupPostParam "givenname"
+  gn' <- lookupPostParam "givenname"
   em' <- lookupPostParam "email"
-  let (fn, ln, em) = ( fn' `mplus` userFamilyname u
-                     , ln' `mplus` userGivenname u
-                     , em' `mplus` userEmail u  
-                     )
-  runDB $ update uid [UserFamilyname fn, UserGivenname ln, UserEmail em]
-  setMessage "プロフィールを更新しました."
-  redirect RedirectTemporary $ ProfileR uid
+  (fn, gn, em) <- runDB $ do
+    u <- get404 uid
+    let editable = u' `canEdit` u
+    when (not editable) $ lift $ permissionDenied "あなたはこのユーザプロファイルを編集することはできません."
+    let (fn, gn, em) = ( fn' `mplus` userFamilyname u
+                       , gn' `mplus` userGivenname u
+                       , em' `mplus` userEmail u  
+                       )
+    update uid [UserFamilyname fn, UserGivenname gn, UserEmail em]
+    return (fn, gn, em)
+  fmap RepXml $ hamletToContent
+#if GHC7
+                  [xhamlet|
+#else
+                  [$xhamlet|
+#endif
+%profile
+  $maybe fn fn
+    %familyname $fn$
+  $nothing
+    %familyname
+  $maybe gn gn
+    %givenname $gn$
+  $nothing
+    %givenname
+  $maybe em em
+    %email $em$
+  $nothing
+    %email
+|]

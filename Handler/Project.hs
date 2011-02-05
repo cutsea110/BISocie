@@ -36,7 +36,7 @@ putProjectR pid = do
   (nm, ds, st) <- runDB $ do
      mp' <- getBy $ UniqueParticipants pid uid
      case mp' of
-       Nothing -> lift $ permissionDenied "あなたはこのプロジェクトの参加者ではありません."
+       Nothing -> lift $ permissionDenied "あなたはこのプロジェクトの設定を編集できません."
        Just _ -> do 
          p <- get404 pid
          let (Just nm, ds, Just st) = 

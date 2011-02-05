@@ -12,7 +12,7 @@ getUserListR = do
   cacheSeconds 10 -- FIXME
   jsonToRepJson $ jsonMap [("userlist", jsonList $ map go us)]
   where
-    go (uid, u) = jsonMap [ ("id", jsonScalar $ show $ toInteger uid)
+    go (uid, u) = jsonMap [ ("id", jsonScalar $ show uid)
                           , ("ident", jsonScalar $ userIdent u)
                           , ("name", jsonScalar $ userDisplayName u)
                           , ("role", jsonScalar $ show $ userRole u)

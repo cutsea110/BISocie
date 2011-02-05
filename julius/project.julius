@@ -10,7 +10,7 @@ $(document).ready(function(){
      $.getJSON('@UserListR@', function(json){
        var us = json.userlist;
        $('#search-result .user-logo').remove();
-       $.getJSON('@ParticipantsR.pid@', function(json) {
+       $.getJSON('@ParticipantsListR.pid@', function(json) {
          var ps = json2hash(json.participants);
          $.each(us, function(i, u){
            $('#search-result').append(mkUser(u, ps));
@@ -20,7 +20,7 @@ $(document).ready(function(){
      return false;
    });
    // loading participants
-   $.getJSON('@ParticipantsR.pid@', function(json) {
+   $.getJSON('@ParticipantsListR.pid@', function(json) {
      var ps = json2hash(json.participants);
      $.each(json.participants, function(i, u){
        $('#participants').append(mkUser(u, ps));
@@ -42,5 +42,15 @@ function mkUser(u, ps){
       c = $('<input/>').attr({type:'checkbox'}),
       s =$('<span/>').text(u.name);
   if (ps[u.id])c.attr('checked', true);
+
+  c.click(function(){
+     var uid = $(this).closest('div').attr('uid'),
+         checked = $(this).attr('checked'),
+         method = checked ? "add" : "del";
+     $.post('@ParticipantsR.pid@', {_method: method, uid: uid}, function(json){
+       //
+     });
+  });
+
   return div.append(c).append(s);
 }

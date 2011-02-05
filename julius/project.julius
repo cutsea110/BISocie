@@ -11,7 +11,7 @@ $(document).ready(function(){
        var us = json.userlist;
        $('#search-result .user-logo').remove();
        $.getJSON('@ParticipantsR.pid@', function(json) {
-         var ps = json.participants;
+         var ps = json2hash(json.participants);
          $.each(us, function(i, u){
            $('#search-result').append(mkUser(u, ps));
          });
@@ -21,22 +21,26 @@ $(document).ready(function(){
    });
    // loading participants
    $.getJSON('@ParticipantsR.pid@', function(json) {
+     var ps = json2hash(json.participants);
      $.each(json.participants, function(i, u){
-       $('#participants').append(mkUser(u, json.participants));
+       $('#participants').append(mkUser(u, ps));
      });
    });
 
 });
 
+function json2hash(ps){
+  var ret = {};
+  for(var i=0;i<ps.length;i++){
+    ret[ps[i].id] = ps[i];
+  }
+  return ret;
+}
+
 function mkUser(u, ps){
   var div = $('<div/>').attr({uid: u.id, ident: u.ident}).addClass(u.role+' user-logo'),
       c = $('<input/>').attr({type:'checkbox'}),
       s =$('<span/>').text(u.name);
-  for(var i=0;i<ps.length;i++){
-    if (ps[i]['id']==u.id){
-      c.attr('checked', true);
-      break;
-    }
-  }
+  if (ps[u.id])c.attr('checked', true);
   return div.append(c).append(s);
 }

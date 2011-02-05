@@ -18,8 +18,9 @@ getParticipantsR pid = do
   jsonToRepJson $ jsonMap [("participants", jsonList $ map go us)]
   where
     go (id, u) = jsonMap [ ("id", jsonScalar $ show $ toInteger id)
-                        , ("ident", jsonScalar $ userIdent u)
-                        , ("name", jsonScalar $ userDisplayName u)
-                        , ("role", jsonScalar $ show $ userRole u)
-                        , ("prettyrole", jsonScalar $ userRoleName u)
-                        ]
+                         , ("ident", jsonScalar $ userIdent u)
+                         , ("name", jsonScalar $ userDisplayName u)
+                         , ("role", jsonScalar $ show $ userRole u)
+                         , ("prettyrole", jsonScalar $ userRoleName u)
+                         ]
+

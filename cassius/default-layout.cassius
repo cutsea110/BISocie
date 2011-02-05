@@ -38,6 +38,7 @@ div#message
     margin: 0 0 3px 0
 
 button.link
+    font-size: 90%
     color: #4040f8
     background-color: #e0e0e0
     border: none

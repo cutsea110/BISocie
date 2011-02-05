@@ -5,6 +5,8 @@ $(document).ready(function(){
      modal: true
    });
 
+   reloading_participants();
+
    $('#button-search-users').click(function(){
      $('#search-users').dialog('open');
      $.getJSON('@UserListR@', function(json){
@@ -19,15 +21,20 @@ $(document).ready(function(){
      });
      return false;
    });
-   // loading participants
-   $.getJSON('@ParticipantsListR.pid@', function(json) {
+
+});
+
+function reloading_participants() {
+   // clear
+   $('#participants .user-logo').remove();
+   // load
+   $.getJSON('@ParticipantsListR.pid@', {uncache: (new Date).getTime()}, function(json) {
      var ps = json2hash(json.participants);
      $.each(json.participants, function(i, u){
        $('#participants').append(mkUser(u, ps));
      });
    });
-
-});
+}
 
 function json2hash(ps){
   var ret = {};
@@ -40,17 +47,54 @@ function json2hash(ps){
 function mkUser(u, ps){
   var div = $('<div/>').attr({uid: u.id, ident: u.ident}).addClass(u.role+' user-logo'),
       c = $('<input/>').attr({type:'checkbox'}),
-      s =$('<span/>').text(u.name);
-  if (ps[u.id])c.attr('checked', true);
+      s =$('<span/>').text(u.name),
+      mail = $('<img/>');
 
+  if('%show.editable%'=='False')
+    return div.append(s);
+
+  if (ps[u.id])c.attr('checked', true);
   c.click(function(){
      var uid = $(this).closest('div').attr('uid'),
          checked = $(this).attr('checked'),
          method = checked ? "add" : "del";
-     $.post('@ParticipantsR.pid@', {_method: method, uid: uid}, function(json){
-       //
+
+     $.ajax({
+       type: 'POST',
+       url: '@ParticipantsR.pid@',
+       dataType: 'json',
+       data: {_method: method, uid: uid},
+       success: function (json) {
+         reloading_participants();
+         switch (json.participants.status) {
+           case 'added':
+             mail.attr({src: '@StaticR.img_mail_accept_png@'});
+             break;
+           case 'deleted':
+             mail.attr({src: '@StaticR.img_mail_checked_png@'});
+             break;
+         }
+       },
+       error: function(res, status) {
+         c.attr({checked: !checked});
+         var msg = $('<div/>').attr('id', 'message').text($(res.responseText).find('p').text());
+         msg.insertBefore($('#ui-main')).fadeOut(3000, function(){msg.remove();});
+       }
      });
   });
 
-  return div.append(c).append(s);
+  if (ps[u.id]){
+    switch (ps[u.id].receivemail){
+      case 'True':
+            mail.attr({src: '@StaticR.img_mail_accept_png@'});
+            break;
+      case 'False':
+            mail.attr({src: '@StaticR.img_mail_error_png@'});
+            break;
+    }
+  }else{
+    mail.attr({src: '@StaticR.img_mail_checked_png@'});
+  }
+
+  return div.append(c).append(mail).append(s);
 }

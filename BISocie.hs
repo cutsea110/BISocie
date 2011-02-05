@@ -49,7 +49,6 @@ import Text.Jasmine (minifym)
 
 import StaticFiles
 import Model
-import StaticFiles
 import qualified Settings
 
 -- | The site argument for your application. This can be a good place to

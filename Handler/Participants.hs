@@ -8,21 +8,23 @@ getParticipantsListR :: ProjectId -> Handler RepJson
 getParticipantsListR pid = do
   (uid, u) <- requireAuth
   us <- runDB $ do
+    viewable <- uid `canView` pid
+    when (not viewable) $ lift $ permissionDenied "あなたはこのプロジェクトに参加していません."
     ps' <- selectList [ParticipantsProjectEq pid] [] 0 0
     forM ps' $ \(id, p) -> do
       let uid' = participantsUser p
       Just u <- get uid'
-      return (uid', u)
-  when (lookup uid us == Nothing) $ permissionDenied "あなたはこのプロジェクトに参加していません."
+      return (uid', u, p)
   cacheSeconds 10 -- FIXME
   jsonToRepJson $ jsonMap [("participants", jsonList $ map go us)]
   where
-    go (id, u) = jsonMap [ ("id", jsonScalar $ show id)
-                         , ("ident", jsonScalar $ userIdent u)
-                         , ("name", jsonScalar $ userDisplayName u)
-                         , ("role", jsonScalar $ show $ userRole u)
-                         , ("prettyrole", jsonScalar $ userRoleName u)
-                         ]
+    go (id, u, p) = jsonMap [ ("id", jsonScalar $ show id)
+                            , ("ident", jsonScalar $ userIdent u)
+                            , ("name", jsonScalar $ userDisplayName u)
+                            , ("role", jsonScalar $ show $ userRole u)
+                            , ("prettyrole", jsonScalar $ userRoleName u)
+                            , ("receivemail", jsonScalar $ show $ participantsReceivemail p)
+                            ]
 
 postParticipantsR :: ProjectId -> Handler RepJson
 postParticipantsR pid = do
@@ -36,20 +38,31 @@ postParticipantsR pid = do
   where
     addParticipants :: UserId -> Handler RepJson
     addParticipants uid = do
-      runDB $ insert $ Participants pid uid
+      (uid', _) <- requireAuth
+      runDB $ do
+        editable <- uid' `canEdit` pid
+        when (not editable) $ lift $ permissionDenied "あなたはこのプロジェクトの参加者を編集できません."
+        insert $ Participants pid uid True
       cacheSeconds 10 -- FIXME
-      jsonToRepJson $ jsonMap [("participants", 
+      jsonToRepJson $ jsonMap [("participants",
                                 jsonMap [ ("project", jsonScalar $ show pid)
                                         , ("user", jsonScalar $ show uid)
+                                        , ("status", jsonScalar "added")
                                         ]
                                )]
 
     delParticipants :: UserId -> Handler RepJson
     delParticipants uid = do
-      runDB $ deleteBy $ UniqueParticipants pid uid
+      (uid', _) <- requireAuth
+      runDB $ do
+        editable <- uid' `canEdit` pid
+        when (not editable) $ lift $ permissionDenied "あなたはこのプロジェクトの参加者を編集できません."
+        when (uid'==uid) $ lift $ permissionDenied "自分自身を削除することはできません."
+        deleteBy $ UniqueParticipants pid uid
       cacheSeconds 10 -- FIXME
-      jsonToRepJson $ jsonMap [("participants", 
+      jsonToRepJson $ jsonMap [("participants",
                                 jsonMap [ ("project", jsonScalar $ show pid)
                                         , ("user", jsonScalar $ show uid)
+                                        , ("status", jsonScalar "deleted")
                                         ]
                                )]

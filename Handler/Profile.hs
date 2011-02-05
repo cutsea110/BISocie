@@ -11,9 +11,11 @@ import Control.Applicative ((<$>),(<*>))
 getProfileR :: UserId -> Handler RepHtml
 getProfileR uid = do
   (uid', u') <- requireAuth
-  u <- runDB $ get404 uid
-  let viewable = u' `canView` u
-      editable = u' `canEdit` u
+  (u, viewable, editable) <- runDB $ do
+    u <- get404 uid
+    v <- uid' `canView` uid
+    e <- uid' `canEdit` uid
+    return (u, v, e)
   when (not viewable) $ do
     permissionDenied "あなたはこのユーザプロファイルを見ることはできません."
   defaultLayout $ do
@@ -35,7 +37,7 @@ putProfileR uid = do
   em' <- lookupPostParam "email"
   (fn, gn, em) <- runDB $ do
     u <- get404 uid
-    let editable = u' `canEdit` u
+    editable <- uid' `canEdit` uid
     when (not editable) $ lift $ permissionDenied "あなたはこのユーザプロファイルを編集することはできません."
     let (fn, gn, em) = ( fn' `mplus` userFamilyname u
                        , gn' `mplus` userGivenname u

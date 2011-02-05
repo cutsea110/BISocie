@@ -1,5 +1,6 @@
 {-# LANGUAGE QuasiQuotes, TypeFamilies, GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Model where
 
@@ -12,6 +13,10 @@ import Data.Time
 import Data.Int
 import Data.Monoid
 import Control.Monad
+import Control.Failure
+import Control.Monad.Trans.Class
+import Data.List (intercalate)
+import Data.List.Split (splitOn)
 
 data Role =  Student | Teacher | Admin
           deriving (Read, Show, Eq, Ord, Enum, Bounded)
@@ -68,8 +73,8 @@ Post
 Participants
     project ProjectId Eq
     user UserId Eq
+    receivemail Bool Eq default=true
     UniqueParticipants project user
-
 |]
 
 initUser :: User
@@ -81,8 +86,6 @@ initUser = User { userIdent=""
                 , userGivenname=Nothing
                 , userActive=True
                 }
-initTeacher = initUser {userRole=Teacher}
-initStudent = initUser {userRole=Student}
 
 initProject :: UserId -> UTCTime -> Project
 initProject u d = Project { projectName=""
@@ -129,17 +132,31 @@ isTeacher u = userRole u == Teacher
 isAdmin :: User -> Bool
 isAdmin u = userRole u == Admin
 
-canEdit :: User -> User -> Bool
-x `canEdit` y = x == y || userRole x > userRole y
+class Permitable o where
+  canEdit :: (PersistBackend (t m), Failure ErrorResponse m, MonadTrans t) 
+             => Key User -> Key o -> t m Bool
+  canView :: (PersistBackend (t m), Failure ErrorResponse m, MonadTrans t) 
+             => Key User -> Key o -> t m Bool
+  canView = canEdit
+  
+instance Permitable User where
+  uid `canEdit` uid' = do
+    u <- get404 uid
+    u' <- get404 uid'
+    return $ u == u' || userRole u > userRole u'
 
-canView :: User -> User -> Bool
-canView = canEdit
+instance Permitable Project where
+  uid `canEdit` pid = do
+    u <- get404 uid
+    p <- getBy $ UniqueParticipants pid uid
+    return $ userRole u >= Teacher && p /= Nothing
+  uid `canView` pid = do
+    p <- getBy $ UniqueParticipants pid uid
+    return $ p /= Nothing
+
 
 canSearchUser :: User -> Bool
 canSearchUser u = userRole u >= Teacher
-
-canCreateProject :: User -> Bool
-canCreateProject u = userRole u >= Teacher
 
 showDate :: UTCTime -> String
 showDate = formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S"
@@ -147,3 +164,13 @@ showDate = formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S"
 showmaybe :: Maybe String -> String
 showmaybe Nothing  = ""
 showmaybe (Just x) = x
+
+showMultilineText :: String -> Html
+showMultilineText = preEscapedString . intercalate "<br/>" . splitOn "\n"
+
+showShortenText :: String -> Html
+showShortenText = preEscapedString . shorten 16 . safeHead . splitOn "\n"
+  where
+    safeHead [] = []
+    safeHead s = head s
+    shorten n s = if length s > n then take n s ++ ".." else s

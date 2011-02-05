@@ -5,18 +5,29 @@
     %tr
       %th プロジェクト名
       %td
-        %input.inplaceedit!type=text!name=name!uri=@ProjectR.pid@!value=$projectName.prj$
+        $if editable
+          %input.inplaceedit!type=text!name=name!uri=@ProjectR.pid@!value=$projectName.prj$
+        $else
+          $projectName.prj$
     %tr
-      %th プロジェクト概要
+      %th 概要
       %td
-        %input.inplaceedit!type=text!name=description!uri=@ProjectR.pid@!value=$showmaybe.projectDescription.prj$
+        $if editable
+          %textarea.inplaceedit!type=text!name=description!uri=@ProjectR.pid@ $showmaybe.projectDescription.prj$
+        $else
+          $showMultilineText.showmaybe.projectDescription.prj$
     %tr
       %th ステータス
       %td
-        %textarea.inplaceedit!name=statuses!uri=@ProjectR.pid@ $projectStatuses.prj$
+        $if editable
+          %textarea.inplaceedit!name=statuses!uri=@ProjectR.pid@ $projectStatuses.prj$
+        $else
+          $showMultilineText.(projectStatuses.prj)$
+
     %tr
       %th 参加者
-        %button#button-search-users.link 参加者追加
+        $if editable
+          %button#button-search-users.link 参加者追加
       %td#participants
 
 #search-users

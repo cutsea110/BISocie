@@ -11,6 +11,7 @@
       %tr
         %td
           %a!href=@ProjectR.fst.p@ $projectName.snd.p$
-        %td $showmaybe.projectDescription.snd.p$
+        %td
+          %a!href=@ProjectR.fst.p@ $showShortenText.showmaybe.projectDescription.snd.p$
         %td $showDate.projectCdate.snd.p$
         %td $showDate.projectUdate.snd.p$

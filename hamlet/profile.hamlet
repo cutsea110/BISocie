@@ -1,45 +1,57 @@
-%h3 プロフィール設定
-%form!method=post!action=@ProfileR.uid@
-  %input!type=hidden!name=_method!value=modify
-  %table.nostyle
-    %tr
-      %th ユーザID
-      %td!colspan=3 $userIdent.u$
-    %tr
-      %th 姓
-      %td
-        $maybe (userFamilyname u) fn
-          $if editable
-            %input.inplaceedit!type=text!name=familyname!uri=@ProfileR.uid@!value=$fn$
-          $else
-            $fn$
-        $nothing
-          $if editable
-            %input.inplaceedit!type=text!name=familyname!uri=@ProfileR.uid@
-          $else
-            未登録
-      %th 名
-      %td
-        $maybe (userGivenname u) gn
-          $if editable
-            %input.inplaceedit!type=text!name=givenname!uri=@ProfileR.uid@!value=$gn$
-          $else
-            $gn$
-        $nothing
-          $if editable
-            %input.inplaceedit!type=text!name=givenname!uri=@ProfileR.uid@
-          $else
-            未登録
-    %tr
-      %th メールアドレス
-      %td!colspan=3
-        $maybe (userEmail u) e
-          $if editable
-            %input.inplaceedit!type=text!name=email!uri=@ProfileR.uid@!value=$e$
-          $else
-            $e$
-        $nothing
-          $if editable
-            %input.inplaceedit!type=text!name=email!uri=@ProfileR.uid@
-          $else
-            未登録
+%ul.tabs
+  %li
+    %a!href=@HomeR.uid@ ホーム
+  %li.selected
+    %a!href=@ProfileR.uid@ プロフィール
+  $if (canCreateProject u)
+    %li
+      %a!href=@NewProjectR@ プロジェクト新規作成
+  %li
+    %a!href=@@ 案件検索
+
+#main-content
+  %h3 プロフィール設定
+  %form!method=post!action=@ProfileR.uid@
+    %input!type=hidden!name=_method!value=modify
+    %table.nostyle
+      %tr
+        %th ユーザID
+        %td!colspan=3 $userIdent.u$
+      %tr
+        %th 姓
+        %td
+          $maybe (userFamilyname u) fn
+            $if editable
+              %input.inplaceedit!type=text!name=familyname!uri=@ProfileR.uid@!value=$fn$
+            $else
+              $fn$
+          $nothing
+            $if editable
+              %input.inplaceedit!type=text!name=familyname!uri=@ProfileR.uid@
+            $else
+              未登録
+        %th 名
+        %td
+          $maybe (userGivenname u) gn
+            $if editable
+              %input.inplaceedit!type=text!name=givenname!uri=@ProfileR.uid@!value=$gn$
+            $else
+              $gn$
+          $nothing
+            $if editable
+              %input.inplaceedit!type=text!name=givenname!uri=@ProfileR.uid@
+            $else
+              未登録
+      %tr
+        %th メールアドレス
+        %td!colspan=3
+          $maybe (userEmail u) e
+            $if editable
+              %input.inplaceedit!type=text!name=email!uri=@ProfileR.uid@!value=$e$
+            $else
+              $e$
+          $nothing
+            $if editable
+              %input.inplaceedit!type=text!name=email!uri=@ProfileR.uid@
+            $else
+              未登録

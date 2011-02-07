@@ -1,0 +1,26 @@
+%ul.tabs
+  %li
+    %a!href=@HomeR.uid@ ホーム
+  %li
+    %a!href=@IssueListR.pid@ 案件一覧
+  %li
+    %a!href=@NewIssueR.pid@ 案件追加
+  %li
+    %a!href=@@ 案件検索
+  %li
+    %a!href=@ProjectR.pid@ プロジェクト設定
+
+#main-content
+  %h3 $show.ino$ : $issueSubject.snd.issue$
+
+  %form!method=post!action=@(CommentR.pid).ino@
+    %textarea.watermark!name=content!placeholder=内容...
+    %button!type=submit!name=_method!value=add 投稿
+
+  %ul#issue-thread
+    $forall comments c
+      .post-head
+        $show.commentCdate.snd.c$
+        $userDisplayName.fst.c$
+      .post-body
+        $commentContent.snd.c$

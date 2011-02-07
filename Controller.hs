@@ -14,6 +14,7 @@ import Database.Persist.GenericSql
 import Handler.Root
 import Handler.Profile
 import Handler.Project
+import Handler.Issue
 import Handler.Participants
 import Handler.User
 

@@ -1,0 +1,35 @@
+%ul.tabs
+  %li
+    %a!href=@HomeR.uid@ ホーム
+  %li.selected
+    %a!href=@IssueListR.pid@ 案件一覧
+  %li
+    %a!href=@NewIssueR.pid@ 案件追加
+  %li
+    %a!href=@@ 案件検索
+  %li
+    %a!href=@ProjectR.pid@ プロジェクト設定
+
+#main-content
+  %h3 $projectName.prj$ 案件一覧
+
+  %table
+    %thead
+      %th 件名
+      %th ステータス
+      %th アサイン
+      %th 期限
+      %th 作成者
+      %th 更新者
+      %th 更新日
+    %tbody
+      $forall issues issue
+        %tr
+          %td
+            %a!href=@(IssueR.pid).issueNumber.snd.fst3.issue@ $issueSubject.snd.fst3.issue$
+          %td $show.issueAssign.snd.fst3.issue$
+          %td $issueStatus.snd.fst3.issue$
+          %td $show.issueLimitdate.snd.fst3.issue$
+          %td $userDisplayName.snd3.issue$
+          %td $userDisplayName.thd3.issue$
+          %td $show.issueUdate.snd.fst3.issue$

@@ -1,34 +1,44 @@
-%h3 プロジェクト設定
-%form!method=post!action=@ProjectR.pid@
-  %input!type=hidden!name=_method!value=modify
-  %table.nostyle
-    %tr
-      %th プロジェクト名
-      %td
-        $if editable
-          %input.inplaceedit!type=text!name=name!uri=@ProjectR.pid@!value=$projectName.prj$
-        $else
-          $projectName.prj$
-    %tr
-      %th 概要
-      %td
-        $if editable
-          %textarea.inplaceedit!type=text!name=description!uri=@ProjectR.pid@ $showmaybe.projectDescription.prj$
-        $else
-          $showMultilineText.showmaybe.projectDescription.prj$
-    %tr
-      %th ステータス
-      %td
-        $if editable
-          %textarea.inplaceedit!name=statuses!uri=@ProjectR.pid@ $projectStatuses.prj$
-        $else
-          $showMultilineText.(projectStatuses.prj)$
+%ul.tabs
+  %li
+    %a!href=@HomeR.uid@ ホーム
+  %li
+    %a!href=@IssueListR.pid@ 案件一覧
+  %li
+    %a!href=@@ 案件検索
+  %li.selected
+    %a!href=@ProjectR.pid@ プロジェクト設定
 
-    %tr
-      %th 参加者
-        $if editable
-          %button#button-search-users.link 参加者追加
-      %td#participants
+#main-content
+  %h3 プロジェクト設定
+  %form!method=post!action=@ProjectR.pid@
+    %input!type=hidden!name=_method!value=modify
+    %table.nostyle
+      %tr
+        %th プロジェクト名
+        %td
+          $if editable
+            %input.inplaceedit!type=text!name=name!placeholder=(プロジェクト名)!uri=@ProjectR.pid@!value=$projectName.prj$
+          $else
+            $projectName.prj$
+      %tr
+        %th 概要
+        %td
+          $if editable
+            %textarea.inplaceedit!type=text!name=description!placeholder=(プロジェクト概要)!uri=@ProjectR.pid@ $showmaybe.projectDescription.prj$
+          $else
+            $showMultilineText.showmaybe.projectDescription.prj$
+      %tr
+        %th ステータス
+        %td
+          $if editable
+            %textarea.inplaceedit!name=statuses!placeholder=(ステータス設定)!uri=@ProjectR.pid@ $projectStatuses.prj$
+          $else
+            $showMultilineText.(projectStatuses.prj)$
+      %tr
+        %th 参加者
+          $if editable
+            %button#button-search-users.link 参加者追加
+        %td#participants
 
 #search-users
   %input!type=text!name=username

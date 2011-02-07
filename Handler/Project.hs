@@ -26,28 +26,26 @@ postNewProjectR = do
   when (not cancreateproject) $ 
     permissionDenied "あなたはプロジェクトを作成することはできません."
   now <- liftIO getCurrentTime
-  pid <- runDB $ do
+  runDB $ do
     pid <- insert $ initProject selfid now
     _ <- insert $ Participants pid selfid True
-    return pid
-  redirect RedirectTemporary $ ProjectR pid
+    lift $ redirect RedirectTemporary $ ProjectR pid
 
 getProjectR :: ProjectId -> Handler RepHtml
 getProjectR pid = do
   (selfid, self) <- requireAuth
-  (prj, editable) <- runDB $ do 
+  runDB $ do 
     p <- getBy $ UniqueParticipants pid selfid
     let viewable = p /= Nothing
         editable = viewable && userRole self >= Teacher
     when (not viewable) $ 
       lift $ permissionDenied "あなたはこのプロジェクトの参加者ではありません."
     prj <- get404 pid
-    return (prj, editable)
-  defaultLayout $ do
-    setTitle $ string $ projectName prj
-    addCassius $(cassiusFile "project")
-    addJulius $(juliusFile "project")
-    addHamlet $(hamletFile "project")
+    lift $ defaultLayout $ do
+      setTitle $ string $ projectName prj
+      addCassius $(cassiusFile "project")
+      addJulius $(juliusFile "project")
+      addHamlet $(hamletFile "project")
 
 
 postProjectR :: ProjectId -> Handler RepJson
@@ -60,7 +58,7 @@ postProjectR pid = do
 putProjectR :: ProjectId -> Handler RepJson
 putProjectR pid = do
   (selfid, self) <- requireAuth
-  prj <- runDB $ do
+  runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
     let viewable = p /= Nothing
         editable = viewable && userRole self >= Teacher
@@ -78,12 +76,13 @@ putProjectR pid = do
                , ProjectDescription ds
                , ProjectStatuses st
                , ProjectUdate now]
-    get404 pid
-  cacheSeconds 10 -- FIXME
-  jsonToRepJson $ jsonMap [ ("name", jsonScalar $ projectName prj)
-                          , ("description", showMaybeJScalar $ projectDescription prj)
-                          , ("statuses", jsonScalar $ projectStatuses prj)
-                          ]
+    prj <- get404 pid
+    lift $ do
+      cacheSeconds 10 -- FIXME
+      jsonToRepJson $ jsonMap [ ("name", jsonScalar $ projectName prj)
+                              , ("description", showMaybeJScalar $ projectDescription prj)
+                              , ("statuses", jsonScalar $ projectStatuses prj)
+                              ]
     where
       showJScalar :: (Show a) => a -> Json
       showJScalar = jsonScalar . show

@@ -13,7 +13,7 @@ import StaticFiles
 getIssueListR :: ProjectId -> Handler RepHtml
 getIssueListR pid = do
   (selfid, self) <- requireAuth
-  (prj, issues) <- runDB $ do
+  runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
     let viewable = p /= Nothing
     when (not viewable) $ 
@@ -25,9 +25,9 @@ getIssueListR pid = do
       Just uu <- get $ issueUuser i
       return (issue, cu, uu)
     return (prj, issues)
-  defaultLayout $ do
-    setTitle $ string $ projectName prj ++ "案件一覧"
-    addHamlet $(hamletFile "issuelist")
+    lift $ defaultLayout $ do
+      setTitle $ string $ projectName prj ++ "案件一覧"
+      addHamlet $(hamletFile "issuelist")
 
 getNewIssueR :: ProjectId -> Handler RepHtml
 getNewIssueR pid = do
@@ -37,8 +37,8 @@ getNewIssueR pid = do
     let addable = p /= Nothing
     when (not addable) $ 
       lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
-  defaultLayout $ do
-    addHamlet $(hamletFile "newissue")
+    lift $ defaultLayout $ do
+      addHamlet $(hamletFile "newissue")
 
 postNewIssueR :: ProjectId -> Handler RepHtml
 postNewIssueR pid = do
@@ -55,7 +55,7 @@ postNewIssueR pid = do
                       <$> stringInput "subject"
                       <*> stringInput "content"
       now <- liftIO getCurrentTime
-      ino <- runDB $ do
+      runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
         let addable = p /= Nothing
         when (not addable) $ 
@@ -65,25 +65,24 @@ postNewIssueR pid = do
         let ino = projectIssuecounter prj
         iid <- insert $ initIssue selfid pid ino sbj now
         _ <- insert $ initComment selfid pid iid cntnt now
-        return ino
-      redirect RedirectTemporary $ IssueR pid ino
+        lift $ redirect RedirectTemporary $ IssueR pid ino
 
 getIssueR :: ProjectId -> IssueNo -> Handler RepHtml
 getIssueR pid ino = do
   (selfid, self) <- requireAuth
-  (issue, comments) <- runDB $ do
+  runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
     let viewable = p /= Nothing
     when (not viewable) $ 
       lift $ permissionDenied "あなたはこの案件を閲覧することはできません."
-    issue@(iid, _) <- getBy404 $ UniqueIssue pid ino
+    issue@(iid, i) <- getBy404 $ UniqueIssue pid ino
     cs <- selectList [CommentIssueEq iid] [CommentCdateDesc] 0 0
     comments <- forM cs $ \(_, c) -> do
       Just u <- get $ commentCuser c
       return (u, c)
-    return (issue, comments)
-  defaultLayout $ do
-    addHamlet $(hamletFile "issue")
+    lift $ defaultLayout $ do
+      setTitle $ string $ issueSubject i
+      addHamlet $(hamletFile "issue")
 
 postCommentR :: ProjectId -> IssueNo -> Handler RepHtml
 postCommentR pid ino = do
@@ -106,4 +105,4 @@ postCommentR pid ino = do
         (iid, _) <- getBy404 $ UniqueIssue pid ino
         update iid [IssueUuser selfid, IssueUdate now]
         insert $ initComment selfid pid iid cntnt now
-      redirect RedirectTemporary $ IssueR pid ino
+        lift $ redirect RedirectTemporary $ IssueR pid ino

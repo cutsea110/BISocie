@@ -7,18 +7,19 @@ import Control.Monad (when, forM, mplus)
 getParticipantsListR :: ProjectId -> Handler RepJson
 getParticipantsListR pid = do
   (selfid, self) <- requireAuth
-  us <- runDB $ do
+  runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
     let viewable = p /= Nothing
     when (not viewable) $ 
       lift $ permissionDenied "あなたはこのプロジェクトに参加していません."
     ps' <- selectList [ParticipantsProjectEq pid] [] 0 0
-    forM ps' $ \(id, p) -> do
+    us <- forM ps' $ \(id, p) -> do
       let uid' = participantsUser p
       Just u <- get uid'
       return (uid', u, p)
-  cacheSeconds 10 -- FIXME
-  jsonToRepJson $ jsonMap [("participants", jsonList $ map go us)]
+    lift $ do
+      cacheSeconds 10 -- FIXME
+      jsonToRepJson $ jsonMap [("participants", jsonList $ map go us)]
   where
     go (id, u, p) = jsonMap [ ("id", jsonScalar $ show id)
                             , ("ident", jsonScalar $ userIdent u)

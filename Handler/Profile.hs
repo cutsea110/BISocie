@@ -11,16 +11,15 @@ import Control.Applicative ((<$>),(<*>))
 getProfileR :: UserId -> Handler RepHtml
 getProfileR uid = do
   (selfid, self) <- requireAuth
-  (user, viewable, editable, cancreateproject) <- runDB $ do
+  runDB $ do
     user <- get404 uid
     let viewable = self == user || userRole self > userRole user
         editable = self == user || userRole self > userRole user
         cancreateproject = userRole self >= Teacher
     when (not viewable) $ lift $ permissionDenied "あなたはこのユーザプロファイルを見ることはできません."
-    return (user, viewable, editable, cancreateproject)
-  defaultLayout $ do
-    setTitle $ string "Profile"
-    addHamlet $(hamletFile "profile")
+    lift $ defaultLayout $ do
+      setTitle $ string "Profile"
+      addHamlet $(hamletFile "profile")
 
 postProfileR :: UserId -> Handler RepJson
 postProfileR uid = do
@@ -32,7 +31,7 @@ postProfileR uid = do
 putProfileR :: UserId -> Handler RepJson
 putProfileR uid = do
   (selfid, self) <- requireAuth
-  user <- runDB $ do
+  runDB $ do
     -- validate
     user <- get404 uid
     let editable = selfid == uid || userRole self > userRole user
@@ -45,15 +44,16 @@ putProfileR uid = do
     em <- (lift $ lookupPostParam "email") >>=
           \em' -> return $ em' `mplus` userEmail user
     update uid [UserFamilyname fn, UserGivenname gn, UserEmail em]
-    get404 uid
-  cacheSeconds 10 -- FIXME
-  jsonToRepJson $ jsonMap [ ("id", showJScalar uid)
-                          , ("ident", jsonScalar $ userIdent user)
-                          , ("familyname", showMaybeJScalar $ userFamilyname user)
-                          , ("givenname", showMaybeJScalar $ userGivenname user)
-                          , ("role", showJScalar $ userRole user)
-                          , ("email", showMaybeJScalar $ userEmail user)
-                          ]
+    user <- get404 uid
+    lift $ do
+      cacheSeconds 10 -- FIXME
+      jsonToRepJson $ jsonMap [ ("id", showJScalar uid)
+                              , ("ident", jsonScalar $ userIdent user)
+                              , ("familyname", showMaybeJScalar $ userFamilyname user)
+                              , ("givenname", showMaybeJScalar $ userGivenname user)
+                              , ("role", showJScalar $ userRole user)
+                              , ("email", showMaybeJScalar $ userEmail user)
+                              ]
     where
       showJScalar :: (Show a) => a -> Json
       showJScalar = jsonScalar . show

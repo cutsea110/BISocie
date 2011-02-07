@@ -146,45 +146,6 @@ isTeacher u = userRole u == Teacher
 
 isAdmin :: User -> Bool
 isAdmin u = userRole u == Admin
-{--
-class Permitable o where
-  canEdit :: (PersistBackend (t m), Failure ErrorResponse m, MonadTrans t) 
-             => Key User -> Key o -> t m Bool
-  canView :: (PersistBackend (t m), Failure ErrorResponse m, MonadTrans t) 
-             => Key User -> Key o -> t m Bool
-  canView = canEdit
-
-class (Permitable o) => PermitableContainer o where
-  canViewChild :: (PersistBackend (t m), Failure ErrorResponse m, MonadTrans t) 
-             => Key User -> Key o -> t m Bool
-  canViewChild = canView
-  canAddChild :: (PersistBackend (t m), Failure ErrorResponse m, MonadTrans t) 
-             => Key User -> Key o -> t m Bool
-  canAddChild = canView
-                 
-instance Permitable User where
-  uid `canEdit` uid' = do
-    u <- get404 uid
-    u' <- get404 uid'
-    return $ u == u' || userRole u > userRole u'
-
-instance Permitable Project where
-  uid `canEdit` pid = do
-    u <- get404 uid
-    p <- getBy $ UniqueParticipants pid uid
-    return $ userRole u >= Teacher && p /= Nothing
-  uid `canView` pid = do
-    p <- getBy $ UniqueParticipants pid uid
-    return $ p /= Nothing
-    
-instance PermitableContainer Project where
-
-canSearchUser :: User -> Bool
-canSearchUser u = userRole u >= Teacher
-
-canCreateProject :: User -> Bool
-canCreateProject u = userRole u >= Teacher
---}
 
 showDate :: UTCTime -> String
 showDate = formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S"

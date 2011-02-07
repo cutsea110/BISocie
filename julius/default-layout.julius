@@ -3,25 +3,27 @@ $(document).ready(function(){
 
   $(".watermark").watermark();
 
-  $(".inplaceedit").exInPlaceEditor({
-    nulltext: "未設定",
-    onsave: function(api) {
-      var text = api.getEditor(),
-          data = '_method=modify&'+text.attr('name')+'='+api.getValue();
-      api.saving();
-      $.ajax({
-        type: 'post',
-        dataType: 'xml',
-        url: text.attr('uri'),
-        data: data,
-        success: function(res){
-          api.saveComplete();
-        },
-        error: function(res,status){
-          api.saveError(res.statusText+'['+res.status+']: '+$(res.responseText).find('p').text());
-        }
-      });
-      return false;
-    }
+  $(".inplaceedit").each(function(){
+    $(this).exInPlaceEditor({
+      nulltext: $(this).attr('placeholder') || '未設定',
+      onsave: function(api) {
+        var text = api.getEditor(),
+            data = '_method=modify&'+text.attr('name')+'='+api.getValue();
+        api.saving();
+        $.ajax({
+          type: 'post',
+          dataType: 'xml',
+          url: text.attr('uri'),
+          data: data,
+          success: function(res){
+            api.saveComplete();
+          },
+          error: function(res,status){
+            api.saveError(res.statusText+'['+res.status+']: '+$(res.responseText).find('p').text());
+          }
+        });
+        return false;
+      }
+    });
   });
 });

@@ -1,0 +1,24 @@
+%ul.tabs
+  %li
+    %a!href=@HomeR.uid@ ホーム
+  %li
+    %a!href=@IssueListR.pid@ 案件一覧
+  %li.selected
+    %a!href=@NewIssueR.pid@ 案件追加
+  %li
+    %a!href=@@ 案件検索
+  %li
+    %a!href=@ProjectR.pid@ プロジェクト設定
+
+#main-content
+  %form!method=post!action=@NewIssueR.pid@
+    %table.nostyle
+      %tr
+        %th 件名:
+        %td
+          %input.watermark!type=text!name=subject!placeholder=案件名...
+      %tr
+        %th 内容:
+        %td
+          %textarea.watermark!name=content!placeholder=内容を書く...
+    %button!type=submit!name=_method!value=add 案件作成

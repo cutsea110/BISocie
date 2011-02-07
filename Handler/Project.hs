@@ -4,8 +4,29 @@ module Handler.Project where
 
 import BISocie
 import Control.Monad (when, forM, mplus)
+import Data.Time
 
 import StaticFiles
+
+getNewProjectR :: Handler RepHtml
+getNewProjectR = do
+  (uid, u) <- requireAuth
+  when (not $ canCreateProject u) $ permissionDenied "あなたはプロジェクトを作成することはできません."
+  defaultLayout $ do
+    setTitle $ string "プロジェクト新規作成"
+    addCassius $(cassiusFile "project")
+    addHamlet $(hamletFile "newproject")
+    
+postNewProjectR :: Handler RepHtml
+postNewProjectR = do
+  (uid, u) <- requireAuth
+  when (not $ canCreateProject u) $ permissionDenied "あなたはプロジェクトを作成することはできません."
+  now <- liftIO getCurrentTime
+  pid <- runDB $ do
+    pid <- insert $ initProject uid now
+    _ <- insert $ Participants pid uid True
+    return pid
+  redirect RedirectTemporary $ ProjectR pid
 
 getProjectR :: ProjectId -> Handler RepHtml
 getProjectR pid = do
@@ -45,7 +66,8 @@ putProjectR pid = do
            , ds' `mplus` projectDescription p
            , st' `mplus` (Just $ projectStatuses p)
            )
-     update pid [ProjectName nm, ProjectDescription ds, ProjectStatuses st]
+     now <- liftIO getCurrentTime
+     update pid [ProjectName nm, ProjectDescription ds, ProjectStatuses st, ProjectUdate now]
      return (nm, ds, st)
   fmap RepXml $ hamletToContent
 #if GHC7

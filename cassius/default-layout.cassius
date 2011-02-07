@@ -114,6 +114,14 @@ ul.tabs li a
    margin: 0px
    text-decoration: none
 
+#main-content
+   background-color: #ffffff
+   border: 1px solid #CCCCCC
+   font-size: 108%
+   padding: 1em
+   margin-bottom: 2px
+
+
 #footer
    color: #888888
    font-size: 93%

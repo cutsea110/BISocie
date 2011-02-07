@@ -27,6 +27,8 @@ prettyRoleName Admin = "管理者"
 prettyRoleName Teacher = "教職員"
 prettyRoleName Student = "在校生/卒業生"
 
+type IssueNo = Int
+
 -- You can define all of your database entities here. You can find more
 -- information on persistent and how to declare entities at:
 -- http://docs.yesodweb.com/book/persistent/
@@ -51,24 +53,31 @@ Project
     name String Update
     description String Maybe Update
     statuses String Update
+    issuecounter IssueNo Update Add default=0
     cuser UserId
     cdate UTCTime
     udate UTCTime Update
 
 Issue
+    project ProjectId Eq
+    number IssueNo Eq
     subject String
-    asign UserId Maybe
-    status String
-    limitdate UTCTime Maybe
+    assign UserId Maybe Update
+    status String Update
+    limitdate UTCTime Maybe Update
     cuser UserId
     cdate UTCTime
-    udate UTCTime
+    uuser UserId Update
+    udate UTCTime Update
+    UniqueIssue project number
 
 Post
+    project ProjectId Eq In
+    issue IssueId Eq
     content String
-    status String
+    status String Eq In
     cuser UserId
-    cdate UTCTime
+    cdate UTCTime Desc
 
 Participants
     project ProjectId Eq
@@ -89,6 +98,7 @@ initUser = User { userIdent=""
 
 initProject :: UserId -> UTCTime -> Project
 initProject u d = Project { projectName=""
+                          , projectIssuecounter=0
                           , projectDescription=Nothing
                           , projectStatuses=""
                           , projectCuser=u
@@ -96,22 +106,27 @@ initProject u d = Project { projectName=""
                           , projectUdate=d
                           }
                   
-initIssue :: UserId -> UTCTime -> Issue
-initIssue u d = Issue { issueSubject=""
-                      , issueAsign=Nothing
-                      , issueStatus=""
-                      , issueLimitdate=Nothing
-                      , issueCuser=u
-                      , issueCdate=d
-                      , issueUdate=d
-                      }
+initIssue :: UserId -> ProjectId -> IssueNo -> String -> UTCTime -> Issue
+initIssue uid pid ino sbj d = Issue { issueProject=pid
+                                    , issueNumber=ino
+                                    , issueSubject=sbj
+                                    , issueAssign=Nothing
+                                    , issueStatus=""
+                                    , issueLimitdate=Nothing
+                                    , issueCuser=uid
+                                    , issueCdate=d
+                                    , issueUuser=uid
+                                    , issueUdate=d
+                                    }
 
-initPost :: UserId -> UTCTime -> Post
-initPost u d = Post { postContent=""
-                    , postStatus=""
-                    , postCuser=u
-                    , postCdate=d
-                    }
+initPost :: UserId -> ProjectId -> IssueId -> String -> UTCTime -> Post
+initPost uid pid iid cntnt d = Post { postProject=pid
+                                    , postIssue=iid
+                                    , postContent=cntnt
+                                    , postStatus=""
+                                    , postCuser=uid
+                                    , postCdate=d
+                                    }
 
 userDisplayName :: User -> String
 userDisplayName u = name
@@ -138,7 +153,15 @@ class Permitable o where
   canView :: (PersistBackend (t m), Failure ErrorResponse m, MonadTrans t) 
              => Key User -> Key o -> t m Bool
   canView = canEdit
-  
+
+class (Permitable o) => PermitableContainer o where
+  canViewChild :: (PersistBackend (t m), Failure ErrorResponse m, MonadTrans t) 
+             => Key User -> Key o -> t m Bool
+  canViewChild = canView
+  canAddChild :: (PersistBackend (t m), Failure ErrorResponse m, MonadTrans t) 
+             => Key User -> Key o -> t m Bool
+  canAddChild = canView
+                 
 instance Permitable User where
   uid `canEdit` uid' = do
     u <- get404 uid
@@ -153,10 +176,14 @@ instance Permitable Project where
   uid `canView` pid = do
     p <- getBy $ UniqueParticipants pid uid
     return $ p /= Nothing
-
+    
+instance PermitableContainer Project where
 
 canSearchUser :: User -> Bool
 canSearchUser u = userRole u >= Teacher
+
+canCreateProject :: User -> Bool
+canCreateProject u = userRole u >= Teacher
 
 showDate :: UTCTime -> String
 showDate = formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S"

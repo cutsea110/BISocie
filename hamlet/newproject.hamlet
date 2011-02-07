@@ -1,0 +1,17 @@
+%ul.tabs
+  %li
+    %a!href=@HomeR.uid@ ホーム
+  %li
+    %a!href=@ProfileR.uid@ プロフィール
+  $if (canCreateProject u)
+    %li.selected
+      %a!href=@NewProjectR@ プロジェクト新規作成
+  %li
+    %a!href=@@ 案件検索
+
+#main-content
+  .warnings
+     プロジェクトを新規に作成します.
+
+  %form!method=post!action=@NewProjectR@
+    %button!type=submit!name=_method!value=create プロジェクト作成

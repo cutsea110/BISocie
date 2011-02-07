@@ -67,9 +67,9 @@ staticroot = approot ++ "/static"
 -- specific.
 connStr :: String
 #ifdef PRODUCTION
-connStr = "user=cut-sea password=yesoddevel host=localhost port=5432 dbname=bisocie"
+connStr = "user=bisocie password=bisocie host=localhost port=5432 dbname=bisocie"
 #else
-connStr = "user=cut-sea password=yesoddevel host=localhost port=5432 dbname=bisocie_debug"
+connStr = "user=bisocie password=bisocie host=localhost port=5432 dbname=bisocie_debug"
 #endif
 
 -- | Your application will keep a connection pool and take connections from

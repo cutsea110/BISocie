@@ -6,8 +6,10 @@ import Control.Monad (when, forM, mplus)
 
 getUserListR :: Handler RepJson
 getUserListR = do
-  (uid, u) <- requireAuth
-  when (not $ canSearchUser u) $ permissionDenied "あなたは他のユーザを検索することはできません."
+  (selfid, self) <- requireAuth
+  let cansearchuser = userRole self >= Teacher
+  when (not cansearchuser) $ 
+    permissionDenied "あなたは他のユーザを検索することはできません."
   us <- runDB $ selectList [UserActiveEq True] [] 0 0
   cacheSeconds 10 -- FIXME
   jsonToRepJson $ jsonMap [("userlist", jsonList $ map go us)]

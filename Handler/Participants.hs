@@ -6,10 +6,12 @@ import Control.Monad (when, forM, mplus)
 
 getParticipantsListR :: ProjectId -> Handler RepJson
 getParticipantsListR pid = do
-  (uid, u) <- requireAuth
+  (selfid, self) <- requireAuth
   us <- runDB $ do
-    viewable <- uid `canView` pid
-    when (not viewable) $ lift $ permissionDenied "あなたはこのプロジェクトに参加していません."
+    p <- getBy $ UniqueParticipants pid selfid
+    let viewable = p /= Nothing
+    when (not viewable) $ 
+      lift $ permissionDenied "あなたはこのプロジェクトに参加していません."
     ps' <- selectList [ParticipantsProjectEq pid] [] 0 0
     forM ps' $ \(id, p) -> do
       let uid' = participantsUser p
@@ -38,10 +40,13 @@ postParticipantsR pid = do
   where
     addParticipants :: UserId -> Handler RepJson
     addParticipants uid = do
-      (uid', _) <- requireAuth
+      (selfid, self) <- requireAuth
       runDB $ do
-        editable <- uid' `canEdit` pid
-        when (not editable) $ lift $ permissionDenied "あなたはこのプロジェクトの参加者を編集できません."
+        p <- getBy $ UniqueParticipants pid selfid
+        let viewable = p /= Nothing
+            editable = viewable && userRole self >= Teacher
+        when (not editable) $ 
+          lift $ permissionDenied "あなたはこのプロジェクトの参加者を編集できません."
         insert $ Participants pid uid True
       cacheSeconds 10 -- FIXME
       jsonToRepJson $ jsonMap [("participants",
@@ -53,11 +58,16 @@ postParticipantsR pid = do
 
     delParticipants :: UserId -> Handler RepJson
     delParticipants uid = do
-      (uid', _) <- requireAuth
+      (selfid, self) <- requireAuth
       runDB $ do
-        editable <- uid' `canEdit` pid
-        when (not editable) $ lift $ permissionDenied "あなたはこのプロジェクトの参加者を編集できません."
-        when (uid'==uid) $ lift $ permissionDenied "自分自身を削除することはできません."
+        p <- getBy $ UniqueParticipants pid selfid
+        let viewable = p /= Nothing
+            editable = viewable && userRole self >= Teacher
+        
+        when (not editable) $ 
+          lift $ permissionDenied "あなたはこのプロジェクトの参加者を編集できません."
+        when (selfid==uid) $ 
+          lift $ permissionDenied "自分自身を削除することはできません."
         deleteBy $ UniqueParticipants pid uid
       cacheSeconds 10 -- FIXME
       jsonToRepJson $ jsonMap [("participants",

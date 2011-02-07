@@ -1,9 +1,9 @@
 %ul.tabs
   %li
-    %a!href=@HomeR.uid@ ホーム
+    %a!href=@HomeR.selfid@ ホーム
   %li
-    %a!href=@ProfileR.uid@ プロフィール
-  $if (canCreateProject u)
+    %a!href=@ProfileR.selfid@ プロフィール
+  $if cancreateproject
     %li.selected
       %a!href=@NewProjectR@ プロジェクト新規作成
   %li

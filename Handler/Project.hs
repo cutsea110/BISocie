@@ -10,8 +10,10 @@ import StaticFiles
 
 getNewProjectR :: Handler RepHtml
 getNewProjectR = do
-  (uid, u) <- requireAuth
-  when (not $ canCreateProject u) $ permissionDenied "あなたはプロジェクトを作成することはできません."
+  (selfid, self) <- requireAuth
+  let cancreateproject = userRole self >= Teacher
+  when (not cancreateproject) $ 
+    permissionDenied "あなたはプロジェクトを作成することはできません."
   defaultLayout $ do
     setTitle $ string "プロジェクト新規作成"
     addCassius $(cassiusFile "project")
@@ -19,22 +21,26 @@ getNewProjectR = do
     
 postNewProjectR :: Handler RepHtml
 postNewProjectR = do
-  (uid, u) <- requireAuth
-  when (not $ canCreateProject u) $ permissionDenied "あなたはプロジェクトを作成することはできません."
+  (selfid, self) <- requireAuth
+  let cancreateproject = userRole self >= Teacher
+  when (not cancreateproject) $ 
+    permissionDenied "あなたはプロジェクトを作成することはできません."
   now <- liftIO getCurrentTime
   pid <- runDB $ do
-    pid <- insert $ initProject uid now
-    _ <- insert $ Participants pid uid True
+    pid <- insert $ initProject selfid now
+    _ <- insert $ Participants pid selfid True
     return pid
   redirect RedirectTemporary $ ProjectR pid
 
 getProjectR :: ProjectId -> Handler RepHtml
 getProjectR pid = do
-  (uid, u) <- requireAuth
+  (selfid, self) <- requireAuth
   (prj, editable) <- runDB $ do 
-    viewable <- uid `canView` pid
-    editable <- uid `canEdit` pid
-    when (not viewable) $ lift $ permissionDenied "あなたはこのプロジェクトの参加者ではありません."
+    p <- getBy $ UniqueParticipants pid selfid
+    let viewable = p /= Nothing
+        editable = viewable && userRole self >= Teacher
+    when (not viewable) $ 
+      lift $ permissionDenied "あなたはこのプロジェクトの参加者ではありません."
     prj <- get404 pid
     return (prj, editable)
   defaultLayout $ do
@@ -53,20 +59,26 @@ postProjectR pid = do
 
 putProjectR :: ProjectId -> Handler RepJson
 putProjectR pid = do
-  (uid, u) <- requireAuth
+  (selfid, self) <- requireAuth
   prj <- runDB $ do
-     editable <- uid `canEdit` pid
-     when (not editable) $ lift $ permissionDenied "あなたはこのプロジェクトの設定を編集できません."
-     p <- get404 pid
-     Just nm <- (lift $ lookupPostParam "name") >>=
-           \nm' -> return $ nm' `mplus` (Just $ projectName p)
-     ds <- (lift $ lookupPostParam "description") >>=
-           \ds' -> return $ ds' `mplus` projectDescription p
-     Just st <- (lift $ lookupPostParam "statuses") >>=
-           \st' -> return $ st' `mplus` (Just $ projectStatuses p)
-     now <- liftIO getCurrentTime
-     update pid [ProjectName nm, ProjectDescription ds, ProjectStatuses st, ProjectUdate now]
-     get404 pid
+    p <- getBy $ UniqueParticipants pid selfid
+    let viewable = p /= Nothing
+        editable = viewable && userRole self >= Teacher
+    when (not editable) $ 
+      lift $ permissionDenied "あなたはこのプロジェクトの設定を編集できません."
+    prj <- get404 pid
+    Just nm <- (lift $ lookupPostParam "name") >>=
+               \nm' -> return $ nm' `mplus` (Just $ projectName prj)
+    ds <- (lift $ lookupPostParam "description") >>=
+          \ds' -> return $ ds' `mplus` projectDescription prj
+    Just st <- (lift $ lookupPostParam "statuses") >>=
+               \st' -> return $ st' `mplus` (Just $ projectStatuses prj)
+    now <- liftIO getCurrentTime
+    update pid [ ProjectName nm
+               , ProjectDescription ds
+               , ProjectStatuses st
+               , ProjectUdate now]
+    get404 pid
   cacheSeconds 10 -- FIXME
   jsonToRepJson $ jsonMap [ ("name", jsonScalar $ projectName prj)
                           , ("description", showMaybeJScalar $ projectDescription prj)

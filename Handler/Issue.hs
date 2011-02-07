@@ -12,10 +12,12 @@ import StaticFiles
 
 getIssueListR :: ProjectId -> Handler RepHtml
 getIssueListR pid = do
-  (uid, u) <- requireAuth
+  (selfid, self) <- requireAuth
   (prj, issues) <- runDB $ do
-    viewable <- uid `canView` pid
-    when (not viewable) $ lift $ permissionDenied "あなたはこのプロジェクトの参加者ではありません."
+    p <- getBy $ UniqueParticipants pid selfid
+    let viewable = p /= Nothing
+    when (not viewable) $ 
+      lift $ permissionDenied "あなたはこのプロジェクトの参加者ではありません."
     prj <- get404 pid
     issues' <- selectList [IssueProjectEq pid] [] 0 0
     issues <- forM issues' $ \issue@(id, i) -> do
@@ -29,10 +31,12 @@ getIssueListR pid = do
 
 getNewIssueR :: ProjectId -> Handler RepHtml
 getNewIssueR pid = do
-  (uid, u) <- requireAuth
+  (selfid, self) <- requireAuth
   runDB $ do
-    addable <- uid `canAddChild` pid
-    when (not addable) $ lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
+    p <- getBy $ UniqueParticipants pid selfid
+    let addable = p /= Nothing
+    when (not addable) $ 
+      lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
   defaultLayout $ do
     addHamlet $(hamletFile "newissue")
 
@@ -46,28 +50,32 @@ postNewIssueR pid = do
   where
     addIssueR :: ProjectId -> Handler RepHtml
     addIssueR pid = do
-      (uid, u) <- requireAuth
+      (selfid, self) <- requireAuth
       (sbj, cntnt) <- runFormPost' $ (,)
                       <$> stringInput "subject"
                       <*> stringInput "content"
       now <- liftIO getCurrentTime
       ino <- runDB $ do
-        addable <- uid `canAddChild` pid
-        when (not addable) $ lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
+        p <- getBy $ UniqueParticipants pid selfid
+        let addable = p /= Nothing
+        when (not addable) $ 
+          lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
         update pid [ProjectIssuecounterAdd 1, ProjectUdate now]
         prj <- get404 pid
         let ino = projectIssuecounter prj
-        iid <- insert $ initIssue uid pid ino sbj now
-        _ <- insert $ initComment uid pid iid cntnt now
+        iid <- insert $ initIssue selfid pid ino sbj now
+        _ <- insert $ initComment selfid pid iid cntnt now
         return ino
       redirect RedirectTemporary $ IssueR pid ino
 
 getIssueR :: ProjectId -> IssueNo -> Handler RepHtml
 getIssueR pid ino = do
-  (uid, u) <- requireAuth
+  (selfid, self) <- requireAuth
   (issue, comments) <- runDB $ do
-    viewable <- uid `canViewChild` pid
-    when (not viewable) $ lift $ permissionDenied "あなたはこの案件を閲覧することはできません."
+    p <- getBy $ UniqueParticipants pid selfid
+    let viewable = p /= Nothing
+    when (not viewable) $ 
+      lift $ permissionDenied "あなたはこの案件を閲覧することはできません."
     issue@(iid, _) <- getBy404 $ UniqueIssue pid ino
     cs <- selectList [CommentIssueEq iid] [CommentCdateDesc] 0 0
     comments <- forM cs $ \(_, c) -> do
@@ -87,13 +95,15 @@ postCommentR pid ino = do
   where
     addCommentR :: ProjectId -> IssueNo -> Handler RepHtml
     addCommentR pid ino = do
-      (uid, u) <- requireAuth
+      (selfid, self) <- requireAuth
       cntnt <- runFormPost' $ stringInput "content"
       now <- liftIO getCurrentTime
       runDB $ do
-        addable <- uid `canAddChild` pid
-        when (not addable) $ lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
+        p <- getBy $ UniqueParticipants pid selfid
+        let addable = p /= Nothing
+        when (not addable) $ 
+          lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
         (iid, _) <- getBy404 $ UniqueIssue pid ino
-        update iid [IssueUuser uid, IssueUdate now]
-        insert $ initComment uid pid iid cntnt now
+        update iid [IssueUuser selfid, IssueUdate now]
+        insert $ initComment selfid pid iid cntnt now
       redirect RedirectTemporary $ IssueR pid ino

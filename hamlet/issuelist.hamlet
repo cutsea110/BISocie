@@ -1,6 +1,6 @@
 %ul.tabs
   %li
-    %a!href=@HomeR.uid@ ホーム
+    %a!href=@HomeR.selfid@ ホーム
   %li.selected
     %a!href=@IssueListR.pid@ 案件一覧
   %li

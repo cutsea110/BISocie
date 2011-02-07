@@ -18,14 +18,15 @@ getRootR = do
 
 getHomeR :: UserId -> Handler RepHtml
 getHomeR uid = do
-  (uid', u) <- requireAuth
-  when (uid'/=uid) $ permissionDenied "他人のホームを見ることはできません."
+  (selfid, self) <- requireAuth
+  when (selfid/=uid) $ permissionDenied "他人のホームを見ることはできません."
+  let cancreateproject = userRole self >= Teacher
   prjs <- runDB $ do
-    ps <- selectList [ParticipantsUserEq uid] [] 0 0
+    ps <- selectList [ParticipantsUserEq selfid] [] 0 0
     forM ps $ \(id, p) -> do
       let pid = participantsProject p
       Just prj <- get pid
       return (pid, prj)
   defaultLayout $ do
-    setTitle $ string $ userDisplayName u ++ " ホーム"
+    setTitle $ string $ userDisplayName self ++ " ホーム"
     addHamlet $(hamletFile "home")

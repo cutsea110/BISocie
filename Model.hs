@@ -146,7 +146,7 @@ isTeacher u = userRole u == Teacher
 
 isAdmin :: User -> Bool
 isAdmin u = userRole u == Admin
-{----}
+{--
 class Permitable o where
   canEdit :: (PersistBackend (t m), Failure ErrorResponse m, MonadTrans t) 
              => Key User -> Key o -> t m Bool
@@ -178,12 +178,13 @@ instance Permitable Project where
     return $ p /= Nothing
     
 instance PermitableContainer Project where
-{----}
+
 canSearchUser :: User -> Bool
 canSearchUser u = userRole u >= Teacher
 
 canCreateProject :: User -> Bool
 canCreateProject u = userRole u >= Teacher
+--}
 
 showDate :: UTCTime -> String
 showDate = formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S"

@@ -50,8 +50,21 @@ function mkUser(u, ps){
       s =$('<span/>').text(u.name),
       mail = $('<img/>');
 
+  if (ps[u.id]){
+    switch (ps[u.id].receivemail){
+      case 'True':
+            mail.attr({src: '@StaticR.img_mail_accept_png@'});
+            break;
+      case 'False':
+            mail.attr({src: '@StaticR.img_mail_error_png@'});
+            break;
+    }
+  }else{
+    mail.attr({src: '@StaticR.img_mail_checked_png@'});
+  }
+
   if('%show.editable%'=='False')
-    return div.append(s);
+    return div.append(mail).append(s);
 
   if (ps[u.id])c.attr('checked', true);
   c.click(function(){
@@ -82,19 +95,6 @@ function mkUser(u, ps){
        }
      });
   });
-
-  if (ps[u.id]){
-    switch (ps[u.id].receivemail){
-      case 'True':
-            mail.attr({src: '@StaticR.img_mail_accept_png@'});
-            break;
-      case 'False':
-            mail.attr({src: '@StaticR.img_mail_error_png@'});
-            break;
-    }
-  }else{
-    mail.attr({src: '@StaticR.img_mail_checked_png@'});
-  }
 
   return div.append(c).append(mail).append(s);
 }

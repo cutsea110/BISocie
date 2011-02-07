@@ -71,7 +71,7 @@ Issue
     udate UTCTime Update
     UniqueIssue project number
 
-Post
+Comment
     project ProjectId Eq In
     issue IssueId Eq
     content String
@@ -119,14 +119,14 @@ initIssue uid pid ino sbj d = Issue { issueProject=pid
                                     , issueUdate=d
                                     }
 
-initPost :: UserId -> ProjectId -> IssueId -> String -> UTCTime -> Post
-initPost uid pid iid cntnt d = Post { postProject=pid
-                                    , postIssue=iid
-                                    , postContent=cntnt
-                                    , postStatus=""
-                                    , postCuser=uid
-                                    , postCdate=d
-                                    }
+initComment :: UserId -> ProjectId -> IssueId -> String -> UTCTime -> Comment
+initComment uid pid iid cntnt d = Comment { commentProject=pid
+                                          , commentIssue=iid
+                                          , commentContent=cntnt
+                                          , commentStatus=""
+                                          , commentCuser=uid
+                                          , commentCdate=d
+                                          }
 
 userDisplayName :: User -> String
 userDisplayName u = name

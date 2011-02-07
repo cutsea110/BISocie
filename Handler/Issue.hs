@@ -58,22 +58,22 @@ postNewIssueR pid = do
         prj <- get404 pid
         let ino = projectIssuecounter prj
         iid <- insert $ initIssue uid pid ino sbj now
-        _ <- insert $ initPost uid pid iid cntnt now
+        _ <- insert $ initComment uid pid iid cntnt now
         return ino
       redirect RedirectTemporary $ IssueR pid ino
 
 getIssueR :: ProjectId -> IssueNo -> Handler RepHtml
 getIssueR pid ino = do
   (uid, u) <- requireAuth
-  (issue, posts) <- runDB $ do
+  (issue, comments) <- runDB $ do
     viewable <- uid `canViewChild` pid
     when (not viewable) $ lift $ permissionDenied "あなたはこの案件を閲覧することはできません."
     issue@(iid, _) <- getBy404 $ UniqueIssue pid ino
-    posts' <- selectList [PostIssueEq iid] [PostCdateDesc] 0 0
-    posts <- forM posts' $ \(_, p) -> do
-      Just u <- get $ postCuser p
-      return (u, p)
-    return (issue, posts)
+    cs <- selectList [CommentIssueEq iid] [CommentCdateDesc] 0 0
+    comments <- forM cs $ \(_, c) -> do
+      Just u <- get $ commentCuser c
+      return (u, c)
+    return (issue, comments)
   defaultLayout $ do
     addHamlet $(hamletFile "issue")
 
@@ -95,5 +95,5 @@ postCommentR pid ino = do
         when (not addable) $ lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
         (iid, _) <- getBy404 $ UniqueIssue pid ino
         update iid [IssueUuser uid, IssueUdate now]
-        insert $ initPost uid pid iid cntnt now
+        insert $ initComment uid pid iid cntnt now
       redirect RedirectTemporary $ IssueR pid ino

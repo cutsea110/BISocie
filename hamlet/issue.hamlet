@@ -18,9 +18,9 @@
     %button!type=submit!name=_method!value=add 投稿
 
   %ul#issue-thread
-    $forall posts post
+    $forall comments c
       .post-head
-        $show.postCdate.snd.post$
-        $userDisplayName.fst.post$
+        $show.commentCdate.snd.c$
+        $userDisplayName.fst.c$
       .post-body
-        $postContent.snd.post$
+        $commentContent.snd.c$

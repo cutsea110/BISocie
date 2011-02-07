@@ -44,42 +44,36 @@ getProjectR pid = do
     addHamlet $(hamletFile "project")
 
 
-postProjectR :: ProjectId -> Handler RepXml
+postProjectR :: ProjectId -> Handler RepJson
 postProjectR pid = do
   _method <- lookupPostParam "_method"
   case _method of
     Just "modify" -> putProjectR pid
     _             -> invalidArgs ["The possible values of '_method' is modify"]
 
-putProjectR :: ProjectId -> Handler RepXml
+putProjectR :: ProjectId -> Handler RepJson
 putProjectR pid = do
   (uid, u) <- requireAuth
-  nm' <- lookupPostParam "name"
-  ds' <- lookupPostParam "description"
-  st' <- lookupPostParam "statuses"
-  (nm, ds, st) <- runDB $ do
+  prj <- runDB $ do
      editable <- uid `canEdit` pid
      when (not editable) $ lift $ permissionDenied "あなたはこのプロジェクトの設定を編集できません."
      p <- get404 pid
-     let (Just nm, ds, Just st) = 
-           ( nm' `mplus` (Just $ projectName p)
-           , ds' `mplus` projectDescription p
-           , st' `mplus` (Just $ projectStatuses p)
-           )
+     Just nm <- (lift $ lookupPostParam "name") >>=
+           \nm' -> return $ nm' `mplus` (Just $ projectName p)
+     ds <- (lift $ lookupPostParam "description") >>=
+           \ds' -> return $ ds' `mplus` projectDescription p
+     Just st <- (lift $ lookupPostParam "statuses") >>=
+           \st' -> return $ st' `mplus` (Just $ projectStatuses p)
      now <- liftIO getCurrentTime
      update pid [ProjectName nm, ProjectDescription ds, ProjectStatuses st, ProjectUdate now]
-     return (nm, ds, st)
-  fmap RepXml $ hamletToContent
-#if GHC7
-                  [xhamlet|
-#else
-                  [$xhamlet|
-#endif
-%project
-  %name $nm$
-  $maybe ds ds
-    %description $ds$
-  $nothing
-    %description
-  %statuses $st$
-|]
+     get404 pid
+  cacheSeconds 10 -- FIXME
+  jsonToRepJson $ jsonMap [ ("name", jsonScalar $ projectName prj)
+                          , ("description", showMaybeJScalar $ projectDescription prj)
+                          , ("statuses", jsonScalar $ projectStatuses prj)
+                          ]
+    where
+      showJScalar :: (Show a) => a -> Json
+      showJScalar = jsonScalar . show
+      showMaybeJScalar :: Maybe String -> Json
+      showMaybeJScalar = jsonScalar . showmaybe

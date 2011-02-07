@@ -1,9 +1,9 @@
 %ul.tabs
   %li
-    %a!href=@HomeR.uid@ ホーム
+    %a!href=@HomeR.selfid@ ホーム
   %li.selected
-    %a!href=@ProfileR.uid@ プロフィール
-  $if (canCreateProject u)
+    %a!href=@ProfileR.selfid@ プロフィール
+  $if cancreateproject
     %li
       %a!href=@NewProjectR@ プロジェクト新規作成
   %li
@@ -16,11 +16,11 @@
     %table.nostyle
       %tr
         %th ユーザID
-        %td!colspan=3 $userIdent.u$
+        %td!colspan=3 $userIdent.user$
       %tr
         %th 姓
         %td
-          $maybe (userFamilyname u) fn
+          $maybe (userFamilyname user) fn
             $if editable
               %input.inplaceedit!type=text!name=familyname!uri=@ProfileR.uid@!value=$fn$
             $else
@@ -32,7 +32,7 @@
               未登録
         %th 名
         %td
-          $maybe (userGivenname u) gn
+          $maybe (userGivenname user) gn
             $if editable
               %input.inplaceedit!type=text!name=givenname!uri=@ProfileR.uid@!value=$gn$
             $else
@@ -45,7 +45,7 @@
       %tr
         %th メールアドレス
         %td!colspan=3
-          $maybe (userEmail u) e
+          $maybe (userEmail user) e
             $if editable
               %input.inplaceedit!type=text!name=email!uri=@ProfileR.uid@!value=$e$
             $else

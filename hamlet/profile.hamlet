@@ -14,42 +14,11 @@
   %form!method=post!action=@ProfileR.uid@
     %table.profile
       %tr
-        %th ユーザID
+        %td 学籍番号
         %td!colspan=3 $userIdent.user$
-      %tr
-        %th 姓
-        %td
-            $if editable
-              %input!type=text!name=familyname!value=$userFamilyName.user$
-            $else
-              $userFamilyName.user$
-      %tr
-        %th 名
-        %td
-            $if editable
-              %input!type=text!name=givenname!value=$userGivenName.user$
-            $else
-              $userGivenName.user$
-      %tr
-        %th メールアドレス
-        %td!colspan=3
-            $if editable
-              %input!type=text!name=email!value=$userEmail.user$
-            $else
-              $userEmail.user$
-      $maybe mprof prof
-        %tr
-          %th 誕生日
-          %td
-            $if editable
-              %input.date!type=date!name=birth!value=$show.profileBirth.snd.prof$
-            $else
-              $show.profileBirth.snd.prof$
-        %tr
-          %th 入学年度
-          %td
-            $if editable
-              %input.number!type=number!name=birth!value=$show.profileEntryYear.snd.prof$
-            $else
-              $show.profileEntryYear.snd.prof$
+      $maybe muform uform
+        ^uform^
+      $maybe mpform pform
+        ^pform^
+
     %button!type=submit!name=_method!value=modify 更新する

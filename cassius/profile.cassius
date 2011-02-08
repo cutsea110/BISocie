@@ -1,0 +1,11 @@
+table.profile
+  width: 800
+
+table.profile th
+  text-align: right
+
+table.profile td
+  text-align: left
+
+th.number, td.number
+  text-align: right

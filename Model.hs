@@ -11,10 +11,6 @@ import Database.Persist.GenericSql (mkMigrate)
 import System.Locale
 import Data.Time
 import Data.Int
-import Data.Monoid
-import Control.Monad
-import Control.Failure
-import Control.Monad.Trans.Class
 import Data.List (intercalate)
 import Data.List.Split (splitOn)
 

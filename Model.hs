@@ -11,10 +11,6 @@ import Database.Persist.GenericSql (mkMigrate)
 import System.Locale
 import Data.Time
 import Data.Int
-import Data.Monoid
-import Control.Monad
-import Control.Failure
-import Control.Monad.Trans.Class
 import Data.List (intercalate)
 import Data.List.Split (splitOn)
 
@@ -37,11 +33,37 @@ User
     ident String
     password String Maybe Update
     role Role Update
-    email String Maybe Update
-    familyname String Maybe Update
-    givenname String Maybe Update
+    familyName String Update
+    givenName String Update
+    email String Update
     active Bool Eq default=true
     UniqueUser ident
+    
+Profile
+    user UserId
+    birth Day Update
+    
+    entryYear Int Update
+    graduateYear Int Maybe Update
+    branch String Update
+    
+    address String Update
+    longitude Double Maybe Ne
+    latitude Double Maybe Ne
+    tel String Update
+    station String Update
+    
+    homeAddress String Update
+    homeLongitude Double Maybe Ne
+    homeLatitude Double Maybe Ne
+    homeTel String Update
+    
+    desiredCourse String Maybe Update
+    desiredWorkLocation String Maybe Update
+    employment String Maybe Update
+    
+    UniqueProfile user
+    
 
 Email
     email String
@@ -64,7 +86,7 @@ Issue
     subject String
     assign UserId Maybe Update
     status String Update
-    limitdate UTCTime Maybe Update
+    limitdate Day Maybe Update
     cuser UserId
     cdate UTCTime
     uuser UserId Update
@@ -75,7 +97,9 @@ Comment
     project ProjectId Eq In
     issue IssueId Eq
     content String
+    assign UserId Maybe
     status String Eq In
+    limitdate Day Maybe
     cuser UserId
     cdate UTCTime Desc
 
@@ -86,54 +110,37 @@ Participants
     UniqueParticipants project user
 |]
 
-initUser :: User
-initUser = User { userIdent=""
-                , userPassword=Nothing
-                , userRole=Student
-                , userEmail=Nothing
-                , userFamilyname=Nothing
-                , userGivenname=Nothing
-                , userActive=True
-                }
-
-initProject :: UserId -> UTCTime -> Project
-initProject u d = Project { projectName=""
-                          , projectIssuecounter=0
-                          , projectDescription=Nothing
-                          , projectStatuses=""
-                          , projectCuser=u
-                          , projectCdate=d
-                          , projectUdate=d
+initUser :: String -> User
+initUser id = User { userIdent=id
+                   , userPassword=Nothing
+                   , userRole=Student
+                   , userActive=True
+                   , userFamilyName=""
+                   , userGivenName=""
+                   , userEmail=""
+                   }
+initProfile :: UserId -> Profile
+initProfile uid = Profile { profileUser=uid
+                          , profileBirth=undefined -- FIXME
+                          , profileEntryYear=undefined -- FIXME
+                          , profileGraduateYear=Nothing
+                          , profileBranch=""
+                          , profileAddress=""
+                          , profileLongitude=Nothing
+                          , profileLatitude=Nothing
+                          , profileTel=""
+                          , profileStation=""
+                          , profileHomeAddress=""
+                          , profileHomeLongitude=Nothing
+                          , profileHomeLatitude=Nothing
+                          , profileHomeTel=""
+                          , profileDesiredCourse=Nothing
+                          , profileDesiredWorkLocation=Nothing
+                          , profileEmployment=Nothing
                           }
-                  
-initIssue :: UserId -> ProjectId -> IssueNo -> String -> UTCTime -> Issue
-initIssue uid pid ino sbj d = Issue { issueProject=pid
-                                    , issueNumber=ino
-                                    , issueSubject=sbj
-                                    , issueAssign=Nothing
-                                    , issueStatus=""
-                                    , issueLimitdate=Nothing
-                                    , issueCuser=uid
-                                    , issueCdate=d
-                                    , issueUuser=uid
-                                    , issueUdate=d
-                                    }
-
-initComment :: UserId -> ProjectId -> IssueId -> String -> UTCTime -> Comment
-initComment uid pid iid cntnt d = Comment { commentProject=pid
-                                          , commentIssue=iid
-                                          , commentContent=cntnt
-                                          , commentStatus=""
-                                          , commentCuser=uid
-                                          , commentCdate=d
-                                          }
-
-userDisplayName :: User -> String
-userDisplayName u = name
-  where 
-    Just name = fullname `mplus` ident
-    fullname = userFamilyname u `mappend` userGivenname u
-    ident = Just $ userIdent u
+              
+userFullName :: User -> String
+userFullName u = userFamilyName u ++ " " ++ userGivenName u
     
 userRoleName :: User -> String
 userRoleName = prettyRoleName . userRole

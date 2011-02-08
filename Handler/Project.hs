@@ -3,7 +3,7 @@
 module Handler.Project where
 
 import BISocie
-import Control.Monad (when, forM, mplus)
+import Control.Monad (unless, forM, mplus)
 import Data.Time
 
 import StaticFiles
@@ -12,7 +12,7 @@ getNewProjectR :: Handler RepHtml
 getNewProjectR = do
   (selfid, self) <- requireAuth
   let cancreateproject = userRole self >= Teacher
-  when (not cancreateproject) $ 
+  unless cancreateproject $ 
     permissionDenied "あなたはプロジェクトを作成することはできません."
   defaultLayout $ do
     setTitle $ string "プロジェクト新規作成"
@@ -23,12 +23,22 @@ postNewProjectR :: Handler RepHtml
 postNewProjectR = do
   (selfid, self) <- requireAuth
   let cancreateproject = userRole self >= Teacher
-  when (not cancreateproject) $ 
+  unless cancreateproject $ 
     permissionDenied "あなたはプロジェクトを作成することはできません."
   now <- liftIO getCurrentTime
   runDB $ do
-    pid <- insert $ initProject selfid now
-    _ <- insert $ Participants pid selfid True
+    pid <- insert $ Project { projectName=""
+                            , projectIssuecounter=0
+                            , projectDescription=Nothing
+                            , projectStatuses=""
+                            , projectCuser=selfid
+                            , projectCdate=now
+                            , projectUdate=now
+                            }
+    _ <- insert $ Participants { participantsProject=pid 
+                               , participantsUser=selfid 
+                               , participantsReceivemail=True
+                               }
     lift $ redirect RedirectTemporary $ ProjectR pid
 
 getProjectR :: ProjectId -> Handler RepHtml
@@ -38,7 +48,7 @@ getProjectR pid = do
     p <- getBy $ UniqueParticipants pid selfid
     let viewable = p /= Nothing
         editable = viewable && userRole self >= Teacher
-    when (not viewable) $ 
+    unless viewable $ 
       lift $ permissionDenied "あなたはこのプロジェクトの参加者ではありません."
     prj <- get404 pid
     lift $ defaultLayout $ do
@@ -62,7 +72,7 @@ putProjectR pid = do
     p <- getBy $ UniqueParticipants pid selfid
     let viewable = p /= Nothing
         editable = viewable && userRole self >= Teacher
-    when (not editable) $ 
+    unless editable $ 
       lift $ permissionDenied "あなたはこのプロジェクトの設定を編集できません."
     prj <- get404 pid
     Just nm <- (lift $ lookupPostParam "name") >>=

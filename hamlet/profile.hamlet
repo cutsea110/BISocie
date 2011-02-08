@@ -12,46 +12,44 @@
 #main-content
   %h3 プロフィール設定
   %form!method=post!action=@ProfileR.uid@
-    %input!type=hidden!name=_method!value=modify
-    %table.nostyle
+    %table.profile
       %tr
         %th ユーザID
         %td!colspan=3 $userIdent.user$
       %tr
         %th 姓
         %td
-          $maybe (userFamilyname user) fn
             $if editable
-              %input.inplaceedit!type=text!name=familyname!uri=@ProfileR.uid@!value=$fn$
+              %input!type=text!name=familyname!value=$userFamilyName.user$
             $else
-              $fn$
-          $nothing
-            $if editable
-              %input.inplaceedit!type=text!name=familyname!uri=@ProfileR.uid@
-            $else
-              未登録
+              $userFamilyName.user$
+      %tr
         %th 名
         %td
-          $maybe (userGivenname user) gn
             $if editable
-              %input.inplaceedit!type=text!name=givenname!uri=@ProfileR.uid@!value=$gn$
+              %input!type=text!name=givenname!value=$userGivenName.user$
             $else
-              $gn$
-          $nothing
-            $if editable
-              %input.inplaceedit!type=text!name=givenname!uri=@ProfileR.uid@
-            $else
-              未登録
+              $userGivenName.user$
       %tr
         %th メールアドレス
         %td!colspan=3
-          $maybe (userEmail user) e
             $if editable
-              %input.inplaceedit!type=text!name=email!uri=@ProfileR.uid@!value=$e$
+              %input!type=text!name=email!value=$userEmail.user$
             $else
-              $e$
-          $nothing
+              $userEmail.user$
+      $maybe mprof prof
+        %tr
+          %th 誕生日
+          %td
             $if editable
-              %input.inplaceedit!type=text!name=email!uri=@ProfileR.uid@
+              %input.date!type=date!name=birth!value=$show.profileBirth.snd.prof$
             $else
-              未登録
+              $show.profileBirth.snd.prof$
+        %tr
+          %th 入学年度
+          %td
+            $if editable
+              %input.number!type=number!name=birth!value=$show.profileEntryYear.snd.prof$
+            $else
+              $show.profileEntryYear.snd.prof$
+    %button!type=submit!name=_method!value=modify 更新する

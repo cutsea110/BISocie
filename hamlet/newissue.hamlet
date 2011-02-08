@@ -24,6 +24,6 @@
       %tr
         %th 期限:
         %td
-          %input.watermark.date!type=date!name=limitdate!placeholder="yyyy/mm/dd"
+          %input.watermark.date!type=date!name=limitdate!placeholder=yyyy-mm-dd
 
     %button!type=submit!name=_method!value=add 案件作成

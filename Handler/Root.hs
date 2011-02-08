@@ -2,7 +2,7 @@
 module Handler.Root where
 
 import BISocie
-import Control.Monad (when, forM)
+import Control.Monad (unless, forM)
 
 -- This is a handler function for the GET request method on the RootR
 -- resource pattern. All of your resource patterns are defined in
@@ -19,7 +19,7 @@ getRootR = do
 getHomeR :: UserId -> Handler RepHtml
 getHomeR uid = do
   (selfid, self) <- requireAuth
-  when (selfid/=uid) $ permissionDenied "他人のホームを見ることはできません."
+  unless (selfid==uid) $ permissionDenied "他人のホームを見ることはできません."
   let cancreateproject = userRole self >= Teacher
   runDB $ do
     ps <- selectList [ParticipantsUserEq selfid] [] 0 0
@@ -28,5 +28,5 @@ getHomeR uid = do
       Just prj <- get pid
       return (pid, prj)
     lift $ defaultLayout $ do
-      setTitle $ string $ userDisplayName self ++ " ホーム"
+      setTitle $ string $ userFullName self ++ " ホーム"
       addHamlet $(hamletFile "home")

@@ -30,6 +30,6 @@
           %td $show.issueAssign.snd.fst3.issue$
           %td $issueStatus.snd.fst3.issue$
           %td $show.issueLimitdate.snd.fst3.issue$
-          %td $userDisplayName.snd3.issue$
-          %td $userDisplayName.thd3.issue$
+          %td $userFullName.snd3.issue$
+          %td $userFullName.thd3.issue$
           %td $show.issueUdate.snd.fst3.issue$

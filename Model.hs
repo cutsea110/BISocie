@@ -64,7 +64,7 @@ Issue
     subject String
     assign UserId Maybe Update
     status String Update
-    limitdate UTCTime Maybe Update
+    limitdate Day Maybe Update
     cuser UserId
     cdate UTCTime
     uuser UserId Update
@@ -75,7 +75,9 @@ Comment
     project ProjectId Eq In
     issue IssueId Eq
     content String
+    assign UserId Maybe
     status String Eq In
+    limitdate Day Maybe
     cuser UserId
     cdate UTCTime Desc
 
@@ -106,28 +108,6 @@ initProject u d = Project { projectName=""
                           , projectUdate=d
                           }
                   
-initIssue :: UserId -> ProjectId -> IssueNo -> String -> UTCTime -> Issue
-initIssue uid pid ino sbj d = Issue { issueProject=pid
-                                    , issueNumber=ino
-                                    , issueSubject=sbj
-                                    , issueAssign=Nothing
-                                    , issueStatus=""
-                                    , issueLimitdate=Nothing
-                                    , issueCuser=uid
-                                    , issueCdate=d
-                                    , issueUuser=uid
-                                    , issueUdate=d
-                                    }
-
-initComment :: UserId -> ProjectId -> IssueId -> String -> UTCTime -> Comment
-initComment uid pid iid cntnt d = Comment { commentProject=pid
-                                          , commentIssue=iid
-                                          , commentContent=cntnt
-                                          , commentStatus=""
-                                          , commentCuser=uid
-                                          , commentCdate=d
-                                          }
-
 userDisplayName :: User -> String
 userDisplayName u = name
   where 

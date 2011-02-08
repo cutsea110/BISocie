@@ -14,7 +14,15 @@
   %h3 $show.ino$ : $issueSubject.snd.issue$
 
   %form!method=post!action=@(CommentR.pid).ino@
-    %textarea.watermark!name=content!placeholder=内容...
+    %table.nostyle
+      %tr
+        %th 内容:
+        %td
+          %textarea.watermark!name=content!placeholder=内容...
+      %tr
+        %th 期限:
+        %td
+          %input.watermark.date!type=date!name=limitdate!placeholder=yyyy-mm-dd
     %button!type=submit!name=_method!value=add 投稿
 
   %ul#issue-thread

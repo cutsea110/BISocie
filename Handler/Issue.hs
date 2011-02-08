@@ -38,6 +38,7 @@ getNewIssueR pid = do
     when (not addable) $ 
       lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
   defaultLayout $ do
+    setTitle $ string "新規案件作成"
     addHamlet $(hamletFile "newissue")
 
 postNewIssueR :: ProjectId -> Handler RepHtml
@@ -51,20 +52,39 @@ postNewIssueR pid = do
     addIssueR :: ProjectId -> Handler RepHtml
     addIssueR pid = do
       (selfid, self) <- requireAuth
-      (sbj, cntnt) <- runFormPost' $ (,)
-                      <$> stringInput "subject"
-                      <*> stringInput "content"
-      now <- liftIO getCurrentTime
+      (sbj, cntnt, ldate) <- runFormPost' $ (,,)
+                             <$> stringInput "subject"
+                             <*> stringInput "content"
+                             <*> maybeDayInput "limitdate"
       ino <- runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
         let addable = p /= Nothing
         when (not addable) $ 
           lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
+        now <- liftIO getCurrentTime
         update pid [ProjectIssuecounterAdd 1, ProjectUdate now]
         prj <- get404 pid
         let ino = projectIssuecounter prj
-        iid <- insert $ initIssue selfid pid ino sbj now
-        _ <- insert $ initComment selfid pid iid cntnt now
+        iid <- insert $ Issue { issueProject=pid
+                              , issueNumber=ino
+                              , issueSubject=sbj
+                              , issueAssign=Nothing
+                              , issueStatus=""
+                              , issueLimitdate=ldate
+                              , issueCuser=selfid
+                              , issueCdate=now
+                              , issueUuser=selfid
+                              , issueUdate=now
+                              }
+        _ <- insert $ Comment { commentProject=pid
+                              , commentIssue=iid
+                              , commentContent=cntnt
+                              , commentAssign=Nothing
+                              , commentStatus=""
+                              , commentLimitdate=ldate
+                              , commentCuser=selfid
+                              , commentCdate=now
+                              }
         return ino
       redirect RedirectTemporary $ IssueR pid ino
 
@@ -96,14 +116,25 @@ postCommentR pid ino = do
     addCommentR :: ProjectId -> IssueNo -> Handler RepHtml
     addCommentR pid ino = do
       (selfid, self) <- requireAuth
-      cntnt <- runFormPost' $ stringInput "content"
+      (cntnt, limit) <- runFormPost' $ (,)
+                        <$> stringInput "content"
+                        <*> maybeDayInput "limitdate"
       now <- liftIO getCurrentTime
       runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
         let addable = p /= Nothing
         when (not addable) $ 
           lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
-        (iid, _) <- getBy404 $ UniqueIssue pid ino
-        update iid [IssueUuser selfid, IssueUdate now]
-        insert $ initComment selfid pid iid cntnt now
+        (iid, i) <- getBy404 $ UniqueIssue pid ino
+        let ldate = limit `mplus` issueLimitdate i
+        update iid [IssueUuser selfid, IssueUdate now, IssueLimitdate ldate]
+        insert $ Comment { commentProject=pid
+                         , commentIssue=iid
+                         , commentContent=cntnt
+                         , commentAssign=Nothing
+                         , commentStatus=""
+                         , commentLimitdate=ldate
+                         , commentCuser=selfid
+                         , commentCdate=now
+                         }
       redirect RedirectTemporary $ IssueR pid ino

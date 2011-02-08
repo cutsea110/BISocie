@@ -27,8 +27,18 @@ postNewProjectR = do
     permissionDenied "あなたはプロジェクトを作成することはできません."
   now <- liftIO getCurrentTime
   pid <- runDB $ do
-    pid <- insert $ initProject selfid now
-    _ <- insert $ Participants pid selfid True
+    pid <- insert $ Project { projectName=""
+                            , projectIssuecounter=0
+                            , projectDescription=Nothing
+                            , projectStatuses=""
+                            , projectCuser=selfid
+                            , projectCdate=now
+                            , projectUdate=now
+                            }
+    _ <- insert $ Participants { participantsProject=pid 
+                               , participantsUser=selfid 
+                               , participantsReceivemail=True
+                               }
     return pid
   redirect RedirectTemporary $ ProjectR pid
 

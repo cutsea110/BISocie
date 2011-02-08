@@ -4,7 +4,7 @@
 #userbox
   $maybe mu u
     ログイン中 $
-    %a!title="プロフィール"!href=@ProfileR.fst.u@ $userDisplayName.snd.u$
+    %a!title="プロフィール"!href=@ProfileR.fst.u@ $userFullName.snd.u$
     \.
     %form.inline!method=get!action=@AuthR.LogoutR@
       %button.link!type=submit ログアウト

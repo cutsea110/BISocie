@@ -37,11 +37,37 @@ User
     ident String
     password String Maybe Update
     role Role Update
-    email String Maybe Update
-    familyname String Maybe Update
-    givenname String Maybe Update
+    familyName String Update
+    givenName String Update
+    email String Update
     active Bool Eq default=true
     UniqueUser ident
+    
+Profile
+    user UserId
+    birth Day Update
+    
+    entryYear Int Update
+    graduateYear Int Maybe Update
+    branch String Update
+    
+    address String Update
+    longitude Double Maybe Ne
+    latitude Double Maybe Ne
+    tel String Update
+    station String Update
+    
+    homeAddress String Update
+    homeLongitude Double Maybe Ne
+    homeLatitude Double Maybe Ne
+    homeTel String Update
+    
+    desiredCourse String Maybe Update
+    desiredWorkLocation String Maybe Update
+    employment String Maybe Update
+    
+    UniqueProfile user
+    
 
 Email
     email String
@@ -88,32 +114,37 @@ Participants
     UniqueParticipants project user
 |]
 
-initUser :: User
-initUser = User { userIdent=""
-                , userPassword=Nothing
-                , userRole=Student
-                , userEmail=Nothing
-                , userFamilyname=Nothing
-                , userGivenname=Nothing
-                , userActive=True
-                }
-
-initProject :: UserId -> UTCTime -> Project
-initProject u d = Project { projectName=""
-                          , projectIssuecounter=0
-                          , projectDescription=Nothing
-                          , projectStatuses=""
-                          , projectCuser=u
-                          , projectCdate=d
-                          , projectUdate=d
+initUser :: String -> User
+initUser id = User { userIdent=id
+                   , userPassword=Nothing
+                   , userRole=Student
+                   , userActive=True
+                   , userFamilyName=""
+                   , userGivenName=""
+                   , userEmail=""
+                   }
+initProfile :: UserId -> Profile
+initProfile uid = Profile { profileUser=uid
+                          , profileBirth=undefined -- FIXME
+                          , profileEntryYear=undefined -- FIXME
+                          , profileGraduateYear=Nothing
+                          , profileBranch=""
+                          , profileAddress=""
+                          , profileLongitude=Nothing
+                          , profileLatitude=Nothing
+                          , profileTel=""
+                          , profileStation=""
+                          , profileHomeAddress=""
+                          , profileHomeLongitude=Nothing
+                          , profileHomeLatitude=Nothing
+                          , profileHomeTel=""
+                          , profileDesiredCourse=Nothing
+                          , profileDesiredWorkLocation=Nothing
+                          , profileEmployment=Nothing
                           }
-                  
-userDisplayName :: User -> String
-userDisplayName u = name
-  where 
-    Just name = fullname `mplus` ident
-    fullname = userFamilyname u `mappend` userGivenname u
-    ident = Just $ userIdent u
+              
+userFullName :: User -> String
+userFullName u = userFamilyName u ++ " " ++ userGivenName u
     
 userRoleName :: User -> String
 userRoleName = prettyRoleName . userRole

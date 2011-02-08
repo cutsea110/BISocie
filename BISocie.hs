@@ -29,7 +29,6 @@ import Yesod.Helpers.Static
 import Yesod.Helpers.Auth
 import BISocie.Helpers.Auth.HashDB
 import Yesod.Helpers.Auth.OpenId
-import Yesod.Helpers.Auth.Email
 import Yesod.Helpers.Crud
 import Yesod.Form.Jquery
 import System.Directory
@@ -197,9 +196,9 @@ instance ToForm User BISocie where
               <$> stringField "ident" (fmap userIdent mu)
               <*> maybePasswordField "password" Nothing
               <*> selectField roleopts "role" (fmap userRole mu)
-              <*> maybeEmailField "email" (fmap userEmail mu)
-              <*> maybeStringField "familyname" (fmap userFamilyname mu)
-              <*> maybeStringField "givenname" (fmap userGivenname mu)
+              <*> stringField "familyName" (fmap userFamilyName mu)
+              <*> stringField "givenName" (fmap userGivenName mu)
+              <*> emailField "email" (fmap userEmail mu)
               <*> boolField "active" (fmap userActive mu)
     where
       roleopts = map (id &&& show) [minBound..maxBound]
@@ -262,15 +261,12 @@ instance YesodAuth BISocie where
                 return Nothing
             Nothing -> do
               lift $ setMessage "You are now logged in."
-              fmap Just $ insert $ initUser {userIdent=credsIdent creds}
+              fmap Just $ insert $ initUser $ credsIdent creds
 
     showAuthId _ = showIntegral
     readAuthId _ = readIntegral
 
-    authPlugins = [ authHashDB
-                  , authOpenId
-                  , authEmail
-                  ]
+    authPlugins = [ authHashDB, authOpenId ]
                   
 instance YesodAuthHashDB BISocie where
     type AuthHashDBId BISocie = UserId
@@ -293,73 +289,3 @@ instance YesodAuthHashDB BISocie where
                 , hashdbCredsAuthId = Just uid
                 }
     getHashDB = runDB . fmap (fmap userIdent) . get
-
-
-instance YesodAuthEmail BISocie where
-    type AuthEmailId BISocie = EmailId
-
-    showAuthEmailId _ = showIntegral
-    readAuthEmailId _ = readIntegral
-
-    addUnverified email verkey =
-        runDB $ insert $ Email email Nothing $ Just verkey
-    sendVerifyEmail email _ verurl = liftIO $ renderSendMail Mail
-        { mailHeaders =
-            [ ("From", "noreply")
-            , ("To", email)
-            , ("Subject", "Verify your email address")
-            ]
-        , mailParts = [[textPart, htmlPart]]
-        }
-      where
-        textPart = Part
-            { partType = "text/plain; charset=utf-8"
-            , partEncoding = None
-            , partFilename = Nothing
-            , partContent = Data.Text.Lazy.Encoding.encodeUtf8
-                          $ Data.Text.Lazy.pack $ unlines
-                [ "Please confirm your email address by clicking on the link below."
-                , ""
-                , verurl
-                , ""
-                , "Thank you"
-                ]
-            }
-        htmlPart = Part
-            { partType = "text/html; charset=utf-8"
-            , partEncoding = None
-            , partFilename = Nothing
-            , partContent = renderHtml [$hamlet|
-%p Please confirm your email address by clicking on the link below.
-%p
-    %a!href=$verurl$ $verurl$
-%p Thank you
-|]
-            }
-    getVerifyKey = runDB . fmap (join . fmap emailVerkey) . get
-    setVerifyKey eid key = runDB $ update eid [EmailVerkey $ Just key]
-    verifyAccount eid = runDB $ do
-        me <- get eid
-        case me of
-            Nothing -> return Nothing
-            Just e -> do
-                let email = emailEmail e
-                case emailUser e of
-                    Just uid -> return $ Just uid
-                    Nothing -> do
-                        uid <- insert $ initUser {userIdent=email, userEmail=Just email}
-                        update eid [EmailUser $ Just uid, EmailVerkey Nothing]
-                        return $ Just uid
-    getPassword = runDB . fmap (join . fmap userPassword) . get
-    setPassword uid pass = runDB $ update uid [UserPassword $ Just pass]
-    getEmailCreds email = runDB $ do
-        me <- getBy $ UniqueEmail email
-        case me of
-            Nothing -> return Nothing
-            Just (eid, e) -> return $ Just EmailCreds
-                { emailCredsId = eid
-                , emailCredsAuthId = emailUser e
-                , emailCredsStatus = isJust $ emailUser e
-                , emailCredsVerkey = emailVerkey e
-                }
-    getEmail = runDB . fmap (fmap emailEmail) . get

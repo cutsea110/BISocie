@@ -20,38 +20,20 @@
       %tr
         %th 姓
         %td
-          $maybe (userFamilyname user) fn
             $if editable
-              %input.inplaceedit!type=text!name=familyname!uri=@ProfileR.uid@!value=$fn$
+              %input.inplaceedit!type=text!name=familyname!uri=@ProfileR.uid@!value=$userFamilyName.user$
             $else
-              $fn$
-          $nothing
-            $if editable
-              %input.inplaceedit!type=text!name=familyname!uri=@ProfileR.uid@
-            $else
-              未登録
+              $userFamilyName.user$
         %th 名
         %td
-          $maybe (userGivenname user) gn
             $if editable
-              %input.inplaceedit!type=text!name=givenname!uri=@ProfileR.uid@!value=$gn$
+              %input.inplaceedit!type=text!name=givenname!uri=@ProfileR.uid@!value=$userGivenName.user$
             $else
-              $gn$
-          $nothing
-            $if editable
-              %input.inplaceedit!type=text!name=givenname!uri=@ProfileR.uid@
-            $else
-              未登録
+              $userGivenName.user$
       %tr
         %th メールアドレス
         %td!colspan=3
-          $maybe (userEmail user) e
             $if editable
-              %input.inplaceedit!type=text!name=email!uri=@ProfileR.uid@!value=$e$
+              %input.inplaceedit!type=text!name=email!uri=@ProfileR.uid@!value=$userEmail.user$
             $else
-              $e$
-          $nothing
-            $if editable
-              %input.inplaceedit!type=text!name=email!uri=@ProfileR.uid@
-            $else
-              未登録
+              $userEmail.user$

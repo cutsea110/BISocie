@@ -28,5 +28,5 @@ getHomeR uid = do
       Just prj <- get pid
       return (pid, prj)
   defaultLayout $ do
-    setTitle $ string $ userDisplayName self ++ " ホーム"
+    setTitle $ string $ userFullName self ++ " ホーム"
     addHamlet $(hamletFile "home")

@@ -29,6 +29,6 @@
     $forall comments c
       .post-head
         $show.commentCdate.snd.c$
-        $userDisplayName.fst.c$
+        $userFullName.fst.c$
       .post-body
         $commentContent.snd.c$

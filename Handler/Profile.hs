@@ -38,24 +38,22 @@ putProfileR uid = do
     let editable = selfid == uid || userRole self > userRole user
     unless editable $ lift $ permissionDenied "あなたはこのユーザプロファイルを編集することはできません."
     -- logic
-    fn <- (lift $ lookupPostParam "familyname") >>= 
-           \fn' -> return $ fn' `mplus` userFamilyname user
-    gn <- (lift $ lookupPostParam "givenname") >>=
-          \gn' -> return $ gn' `mplus` userGivenname user
-    em <- (lift $ lookupPostParam "email") >>=
-          \em' -> return $ em' `mplus` userEmail user
-    update uid [UserFamilyname fn, UserGivenname gn, UserEmail em]
+    Just fn <- (lift $ lookupPostParam "familyname") >>= 
+           \fn' -> return $ fn' `mplus` Just (userFamilyName user)
+    Just gn <- (lift $ lookupPostParam "givenname") >>=
+          \gn' -> return $ gn' `mplus` Just (userGivenName user)
+    Just em <- (lift $ lookupPostParam "email") >>=
+          \em' -> return $ em' `mplus` Just (userEmail user)
+    update uid [UserFamilyName fn, UserGivenName gn, UserEmail em]
     get404 uid
   cacheSeconds 10 -- FIXME
   jsonToRepJson $ jsonMap [ ("id", showJScalar uid)
                           , ("ident", jsonScalar $ userIdent user)
-                          , ("familyname", showMaybeJScalar $ userFamilyname user)
-                          , ("givenname", showMaybeJScalar $ userGivenname user)
+                          , ("familyname", showJScalar $ userFamilyName user)
+                          , ("givenname", showJScalar $ userGivenName user)
                           , ("role", showJScalar $ userRole user)
-                          , ("email", showMaybeJScalar $ userEmail user)
+                          , ("email", showJScalar $ userEmail user)
                           ]
     where
       showJScalar :: (Show a) => a -> Json
       showJScalar = jsonScalar . show
-      showMaybeJScalar :: Maybe String -> Json
-      showMaybeJScalar = jsonScalar . showmaybe

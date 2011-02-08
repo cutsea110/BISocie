@@ -16,7 +16,7 @@ getUserListR = do
   where
     go (uid, u) = jsonMap [ ("id", jsonScalar $ show uid)
                           , ("ident", jsonScalar $ userIdent u)
-                          , ("name", jsonScalar $ userDisplayName u)
+                          , ("name", jsonScalar $ userFullName u)
                           , ("role", jsonScalar $ show $ userRole u)
                           , ("prettyrole", jsonScalar $ userRoleName u)
                           ]

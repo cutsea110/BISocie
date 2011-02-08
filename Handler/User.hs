@@ -2,13 +2,13 @@
 module Handler.User where
 
 import BISocie
-import Control.Monad (when, forM, mplus)
+import Control.Monad (unless, forM, mplus)
 
 getUserListR :: Handler RepJson
 getUserListR = do
   (selfid, self) <- requireAuth
   let cansearchuser = userRole self >= Teacher
-  when (not cansearchuser) $ 
+  unless cansearchuser $ 
     permissionDenied "あなたは他のユーザを検索することはできません."
   us <- runDB $ selectList [UserActiveEq True] [] 0 0
   cacheSeconds 10 -- FIXME

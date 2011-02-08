@@ -2,7 +2,7 @@
 module Handler.Participants where
 
 import BISocie
-import Control.Monad (when, forM, mplus)
+import Control.Monad (unless, when, forM, mplus)
 
 getParticipantsListR :: ProjectId -> Handler RepJson
 getParticipantsListR pid = do
@@ -10,7 +10,7 @@ getParticipantsListR pid = do
   us <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
     let viewable = p /= Nothing
-    when (not viewable) $ 
+    unless viewable $ 
       lift $ permissionDenied "あなたはこのプロジェクトに参加していません."
     ps' <- selectList [ParticipantsProjectEq pid] [] 0 0
     forM ps' $ \(id, p) -> do
@@ -45,7 +45,7 @@ postParticipantsR pid = do
         p <- getBy $ UniqueParticipants pid selfid
         let viewable = p /= Nothing
             editable = viewable && userRole self >= Teacher
-        when (not editable) $ 
+        unless editable $ 
           lift $ permissionDenied "あなたはこのプロジェクトの参加者を編集できません."
         insert $ Participants pid uid True
       cacheSeconds 10 -- FIXME
@@ -64,7 +64,7 @@ postParticipantsR pid = do
         let viewable = p /= Nothing
             editable = viewable && userRole self >= Teacher
         
-        when (not editable) $ 
+        unless editable $ 
           lift $ permissionDenied "あなたはこのプロジェクトの参加者を編集できません."
         when (selfid==uid) $ 
           lift $ permissionDenied "自分自身を削除することはできません."

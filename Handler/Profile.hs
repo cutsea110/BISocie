@@ -16,7 +16,7 @@ getProfileR uid = do
     let viewable = self == user || userRole self > userRole user
         editable = self == user || userRole self > userRole user
         cancreateproject = userRole self >= Teacher
-    when (not viewable) $ lift $ permissionDenied "あなたはこのユーザプロファイルを見ることはできません."
+    unless viewable $ lift $ permissionDenied "あなたはこのユーザプロファイルを見ることはできません."
     return (user, viewable, editable, cancreateproject)
   defaultLayout $ do
     setTitle $ string "Profile"
@@ -36,7 +36,7 @@ putProfileR uid = do
     -- validate
     user <- get404 uid
     let editable = selfid == uid || userRole self > userRole user
-    when (not editable) $ lift $ permissionDenied "あなたはこのユーザプロファイルを編集することはできません."
+    unless editable $ lift $ permissionDenied "あなたはこのユーザプロファイルを編集することはできません."
     -- logic
     fn <- (lift $ lookupPostParam "familyname") >>= 
            \fn' -> return $ fn' `mplus` userFamilyname user

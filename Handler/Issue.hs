@@ -4,7 +4,7 @@ module Handler.Issue where
 
 import BISocie
 import Control.Applicative ((<$>),(<*>))
-import Control.Monad (when, forM, mplus)
+import Control.Monad (unless, forM, mplus)
 import Data.Time
 import Data.Tuple.HT
 
@@ -16,7 +16,7 @@ getIssueListR pid = do
   (prj, issues) <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
     let viewable = p /= Nothing
-    when (not viewable) $ 
+    unless viewable $ 
       lift $ permissionDenied "あなたはこのプロジェクトの参加者ではありません."
     prj <- get404 pid
     issues' <- selectList [IssueProjectEq pid] [] 0 0
@@ -35,7 +35,7 @@ getNewIssueR pid = do
   runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
     let addable = p /= Nothing
-    when (not addable) $ 
+    unless addable $ 
       lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
   defaultLayout $ do
     setTitle $ string "新規案件作成"
@@ -59,7 +59,7 @@ postNewIssueR pid = do
       ino <- runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
         let addable = p /= Nothing
-        when (not addable) $ 
+        unless addable $ 
           lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
         now <- liftIO getCurrentTime
         update pid [ProjectIssuecounterAdd 1, ProjectUdate now]
@@ -94,7 +94,7 @@ getIssueR pid ino = do
   (issue, comments) <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
     let viewable = p /= Nothing
-    when (not viewable) $ 
+    unless viewable $ 
       lift $ permissionDenied "あなたはこの案件を閲覧することはできません."
     issue@(iid, _) <- getBy404 $ UniqueIssue pid ino
     cs <- selectList [CommentIssueEq iid] [CommentCdateDesc] 0 0
@@ -123,7 +123,7 @@ postCommentR pid ino = do
       runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
         let addable = p /= Nothing
-        when (not addable) $ 
+        unless addable $ 
           lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
         (iid, i) <- getBy404 $ UniqueIssue pid ino
         let ldate = limit `mplus` issueLimitdate i

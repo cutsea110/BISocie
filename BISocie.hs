@@ -39,7 +39,7 @@ import Database.Persist.GenericSql
 import Settings (hamletFile, cassiusFile, juliusFile, widgetFile)
 import Model
 import Data.Maybe (isJust)
-import Control.Monad (join, unless, when)
+import Control.Monad (join, unless)
 import Control.Applicative ((<$>),(<*>))
 import Control.Arrow ((&&&))
 import Network.Mail.Mime
@@ -208,12 +208,12 @@ userCrud :: BISocie -> Crud BISocie User
 userCrud = const Crud
            { crudSelect = do
                 (_, u) <- requireAuth
-                when (not $ isAdmin u) $
+                unless (isAdmin u) $
                   permissionDenied "You couldn't access user crud."
                 runDB $ selectList [] [] 0 0
            , crudReplace = \k a -> do
                 (_, u) <- requireAuth
-                when (not $ isAdmin u) $
+                unless (isAdmin u) $
                   permissionDenied "You couldn't access user crud."
                 runDB $ do
                   case userPassword a of
@@ -224,18 +224,18 @@ userCrud = const Crud
                       replace k $ a {userPassword=Just $ encrypt rp, userActive=userActive a}
            , crudInsert = \a -> do
                 (_, u) <- requireAuth
-                when (not $ isAdmin u) $
+                unless (isAdmin u) $
                   permissionDenied "You couldn't access user crud."
                 runDB $ do
                   insert $ a { userPassword=(fmap encrypt $ userPassword a)}
            , crudGet = \k -> do
                 (_, u) <- requireAuth
-                when (not $ isAdmin u) $
+                unless (isAdmin u) $
                   permissionDenied "You couldn't access user crud."
                 runDB $ get k
            , crudDelete = \k -> do
                 (_, u) <- requireAuth
-                when (not $ isAdmin u) $
+                unless (isAdmin u) $
                   permissionDenied "You couldn't access user crud."
                 runDB $ delete k
            }

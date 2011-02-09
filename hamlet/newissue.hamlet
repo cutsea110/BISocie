@@ -25,5 +25,18 @@
         %th 期限:
         %td
           %input.watermark.date!type=date!name=limitdate!placeholder=yyyy-mm-dd
+      %tr
+        %th アサイン:
+        %td
+          %select!name=assign
+            %option!selected
+            $forall ptcpts p
+              %option!value=$show.fst.p$ $userFullName.snd.p$
+      %tr
+        %th ステータス
+        %td
+          %select!name=status
+            $forall stss s
+              %option $s$
 
     %button!type=submit!name=_method!value=add 案件作成

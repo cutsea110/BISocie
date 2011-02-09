@@ -11,18 +11,31 @@
     %a!href=@ProjectR.pid@ プロジェクト設定
 
 #main-content
-  %h3 $show.ino$ : $issueSubject.snd.issue$
+  %h3 $show.ino$ : $issueSubject.issue$
 
   %form!method=post!action=@(CommentR.pid).ino@
     %table.nostyle
       %tr
         %th 内容:
         %td
-          %textarea.watermark!name=content!placeholder=内容...
+          %textarea.watermark!placeholder="内容..."!name=content
       %tr
         %th 期限:
         %td
-          %input.watermark.date!type=date!name=limitdate!placeholder=yyyy-mm-dd
+          %input.watermark.date!placeholder=yyyy-mm-dd!type=date!name=limitdate!value=$showLimitdate.issue$
+      %tr
+        %th アサイン:
+        %td
+          %select!name=assign
+            %option!selected
+            $forall ptcpts p
+              %option!:isAssign.fst.p:selected!value=$show.fst.p$ $userFullName.snd.p$
+      %tr
+        %th ステータス
+        %td
+          %select!name=status
+            $forall stss s
+              %option!:isStatus.s:selected $s$
     %button!type=submit!name=_method!value=add 投稿
 
   %ul#issue-thread

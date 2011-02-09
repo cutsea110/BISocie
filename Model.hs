@@ -12,6 +12,7 @@ import System.Locale
 import Data.Time
 import Data.List (intercalate)
 import Data.List.Split (splitOn)
+import Data.Maybe (fromMaybe)
 
 data Role =  Student | Teacher | Admin
           deriving (Read, Show, Eq, Ord, Enum, Bounded)
@@ -133,6 +134,9 @@ isTeacher u = userRole u == Teacher
 
 isAdmin :: User -> Bool
 isAdmin u = userRole u == Admin
+
+showLimitdate :: Issue -> String
+showLimitdate i = fromMaybe "" (fmap show (issueLimitdate i))
 
 showDate :: UTCTime -> String
 showDate = formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S"

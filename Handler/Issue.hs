@@ -7,6 +7,7 @@ import Control.Applicative ((<$>),(<*>))
 import Control.Monad (unless, forM, mplus)
 import Data.Time
 import Data.Tuple.HT
+import Data.Maybe (fromMaybe)
 
 import StaticFiles
 
@@ -21,10 +22,9 @@ getIssueListR pid = do
     prj <- get404 pid
     issues' <- selectList [IssueProjectEq pid] [] 0 0
     issues <- forM issues' $ \issue@(id, i) -> do
-      Just cu <- get $ issueCuser i
-      Just uu <- get $ issueUuser i
+      cu <- get404 $ issueCuser i
+      uu <- get404 $ issueUuser i
       return (issue, cu, uu)
-    return (prj, issues)
     lift $ defaultLayout $ do
       setTitle $ string $ projectName prj ++ "案件一覧"
       addHamlet $(hamletFile "issuelist")
@@ -37,6 +37,14 @@ getNewIssueR pid = do
     let addable = p /= Nothing
     unless addable $ 
       lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
+    prj <- get404 pid
+    ptcpts <- do
+      ptcpt <- selectList [ParticipantsProjectEq pid] [] 0 0
+      forM ptcpt $ \(_, p) -> do
+        let uid' = participantsUser p
+        u <- get404 uid'
+        return (uid', u)
+    let stss = lines $ projectStatuses prj
     lift $ defaultLayout $ do
       setTitle $ string "新規案件作成"
       addHamlet $(hamletFile "newissue")
@@ -53,10 +61,13 @@ postNewIssueR pid = do
     addIssueR :: ProjectId -> Handler RepHtml
     addIssueR pid = do
       (selfid, self) <- requireAuth
-      (sbj, cntnt, ldate) <- runFormPost' $ (,,)
-                             <$> stringInput "subject"
-                             <*> stringInput "content"
-                             <*> maybeDayInput "limitdate"
+      (sbj, cntnt, ldate, asgn, sts) <- 
+        runFormPost' $ (,,,,)
+        <$> stringInput "subject"
+        <*> stringInput "content"
+        <*> maybeDayInput "limitdate"
+        <*> maybeStringInput "assign"
+        <*> stringInput "status"
       runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
         let addable = p /= Nothing
@@ -66,11 +77,12 @@ postNewIssueR pid = do
         update pid [ProjectIssuecounterAdd 1, ProjectUdate now]
         prj <- get404 pid
         let ino = projectIssuecounter prj
+            asgn' = fromMaybe Nothing (fmap (Just . read) asgn)
         iid <- insert $ Issue { issueProject=pid
                               , issueNumber=ino
                               , issueSubject=sbj
-                              , issueAssign=Nothing
-                              , issueStatus=""
+                              , issueAssign=asgn'
+                              , issueStatus=sts
                               , issueLimitdate=ldate
                               , issueCuser=selfid
                               , issueCdate=now
@@ -80,8 +92,8 @@ postNewIssueR pid = do
         _ <- insert $ Comment { commentProject=pid
                               , commentIssue=iid
                               , commentContent=cntnt
-                              , commentAssign=Nothing
-                              , commentStatus=""
+                              , commentAssign=asgn'
+                              , commentStatus=sts
                               , commentLimitdate=ldate
                               , commentCuser=selfid
                               , commentCdate=now
@@ -96,13 +108,25 @@ getIssueR pid ino = do
     let viewable = p /= Nothing
     unless viewable $ 
       lift $ permissionDenied "あなたはこの案件を閲覧することはできません."
-    issue@(iid, i) <- getBy404 $ UniqueIssue pid ino
+    (iid, issue) <- getBy404 $ UniqueIssue pid ino
     cs <- selectList [CommentIssueEq iid] [CommentCdateDesc] 0 0
     comments <- forM cs $ \(_, c) -> do
       Just u <- get $ commentCuser c
       return (u, c)
+    prj <- get404 pid
+    ptcpts <- do
+      ptcpt <- selectList [ParticipantsProjectEq pid] [] 0 0
+      forM ptcpt $ \(_, p) -> do
+        let uid' = participantsUser p
+        u <- get404 uid'
+        return (uid', u)
+    let stss = lines $ projectStatuses prj
+        isAssign = case issueAssign issue of
+          Nothing -> const False
+          Just uid -> (==uid)
+        isStatus = (==issueStatus issue)
     lift $ defaultLayout $ do
-      setTitle $ string $ issueSubject i
+      setTitle $ string $ issueSubject issue
       addHamlet $(hamletFile "issue")
 
 postCommentR :: ProjectId -> IssueNo -> Handler RepHtml
@@ -116,26 +140,35 @@ postCommentR pid ino = do
     addCommentR :: ProjectId -> IssueNo -> Handler RepHtml
     addCommentR pid ino = do
       (selfid, self) <- requireAuth
-      (cntnt, limit) <- runFormPost' $ (,)
-                        <$> stringInput "content"
-                        <*> maybeDayInput "limitdate"
+      (cntnt, limit, asgn, sts) <- 
+        runFormPost' $ (,,,)
+        <$> stringInput "content"
+        <*> maybeDayInput "limitdate"
+        <*> maybeStringInput "assign"
+        <*> stringInput "status"
+      
       now <- liftIO getCurrentTime
       runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
         let addable = p /= Nothing
         unless addable $ 
           lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
-        (iid, i) <- getBy404 $ UniqueIssue pid ino
-        let ldate = limit `mplus` issueLimitdate i
-        update iid [IssueUuser selfid, IssueUdate now, IssueLimitdate ldate]
+        (iid, issue) <- getBy404 $ UniqueIssue pid ino
+        let ldate = limit `mplus` issueLimitdate issue
+            asgn' = fromMaybe Nothing (fmap (Just . read) asgn)
+        update iid [ IssueUuser selfid
+                   , IssueUdate now
+                   , IssueLimitdate ldate
+                   , IssueAssign asgn'
+                   , IssueStatus sts
+                   ]
         insert $ Comment { commentProject=pid
                          , commentIssue=iid
                          , commentContent=cntnt
-                         , commentAssign=Nothing
-                         , commentStatus=""
+                         , commentAssign=asgn'
+                         , commentStatus=sts
                          , commentLimitdate=ldate
                          , commentCuser=selfid
                          , commentCdate=now
                          }
         lift $ redirect RedirectTemporary $ IssueR pid ino
-

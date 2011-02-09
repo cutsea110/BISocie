@@ -10,7 +10,6 @@ import Database.Persist.Base
 import Database.Persist.GenericSql (mkMigrate)
 import System.Locale
 import Data.Time
-import Data.Int
 import Data.List (intercalate)
 import Data.List.Split (splitOn)
 
@@ -48,14 +47,14 @@ Profile
     branch String Update
     
     address String Update
-    longitude Double Maybe Ne
-    latitude Double Maybe Ne
+    longitude Double Maybe Ne Update
+    latitude Double Maybe Ne Update
     tel String Update
     station String Update
     
     homeAddress String Update
-    homeLongitude Double Maybe Ne
-    homeLatitude Double Maybe Ne
+    homeLongitude Double Maybe Ne Update
+    homeLatitude Double Maybe Ne Update
     homeTel String Update
     
     desiredCourse String Maybe Update
@@ -119,25 +118,6 @@ initUser id = User { userIdent=id
                    , userGivenName=""
                    , userEmail=""
                    }
-initProfile :: UserId -> Profile
-initProfile uid = Profile { profileUser=uid
-                          , profileBirth=undefined -- FIXME
-                          , profileEntryYear=undefined -- FIXME
-                          , profileGraduateYear=Nothing
-                          , profileBranch=""
-                          , profileAddress=""
-                          , profileLongitude=Nothing
-                          , profileLatitude=Nothing
-                          , profileTel=""
-                          , profileStation=""
-                          , profileHomeAddress=""
-                          , profileHomeLongitude=Nothing
-                          , profileHomeLatitude=Nothing
-                          , profileHomeTel=""
-                          , profileDesiredCourse=Nothing
-                          , profileDesiredWorkLocation=Nothing
-                          , profileEmployment=Nothing
-                          }
               
 userFullName :: User -> String
 userFullName u = userFamilyName u ++ " " ++ userGivenName u
@@ -156,6 +136,17 @@ isAdmin u = userRole u == Admin
 
 showDate :: UTCTime -> String
 showDate = formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S"
+
+showBirthDay :: Profile -> String
+showBirthDay = show . profileBirth
+
+showEntryYear :: Profile -> String
+showEntryYear = show . profileEntryYear
+
+showGraduateYear :: Profile -> String
+showGraduateYear u =  case profileGraduateYear u of
+  Nothing -> ""
+  Just y -> show y
 
 showmaybe :: Maybe String -> String
 showmaybe Nothing  = ""

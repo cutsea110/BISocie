@@ -89,7 +89,6 @@ type Widget = GWidget BISocie BISocie
 mkYesodData "BISocie" [$parseRoutes|
 /static StaticR Static getStatic
 /auth   AuthR   Auth   getAuth
-
 /profile/#UserId ProfileR GET POST PUT
 
 /favicon.ico FaviconR GET

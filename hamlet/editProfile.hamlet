@@ -1,0 +1,85 @@
+%ul.tabs
+  %li
+    %a!href=@HomeR.selfid@ ホーム
+  %li
+    %a!href=@?viewprof@ プロフィール
+  %li.selected
+    %a!href=@?editprof@ プロフィール編集
+
+#main-content
+  %h3 $userIdent.user$のプロフィール編集
+  %form!method=post!action=@ProfileR.uid@
+    %table.profile
+      %tr
+        %th
+          $if (isStudent user)
+            学籍番号
+          $else
+            教職員番号
+        %td!colspan=3 $userIdent.user$
+      %tr
+        %th メールアドレス
+        %td!colspan=3
+          %input.watermark!placeholder="email address"!type=text!name=email!value=$userEmail.user$
+      %tr
+        %th 姓
+        %td
+          %input.watermark!placeholder=聖徳!type=text!name=familyName!value=$userFamilyName.user$
+        %th 名
+        %td
+          %input.watermark!placeholder=花子!type=text!name=givenName!value=$userGivenName.user$
+      $maybe mprof prof
+        %tr
+          %th 生年月日
+          %td!colspan=3
+            %input.date.watermark!placeholder=yyyy/mm/dd!type=date!name=birth!value=$show.profileBirth.snd.prof$
+        %tr
+          %th 入学年度
+          %td!colspan=3
+            %select!name=entryYear
+              $forall eyears ey
+                %option!:fst.ey:selected $show.snd.ey$
+        %tr
+          %th 卒業年度
+          %td!colspan=3
+            %select!name=graduateYear
+              %option!selected
+              $forall gyears gy
+                %option!:fst.gy:selected $show.snd.gy$
+        %tr
+          %th 所属ブランチ
+          %td!colspan=3
+            %input.watermark!placeholder=ブランチ!type=text!name=branch!value=$profileBranch.snd.prof$
+        %tr
+          %th 現住所
+          %td!colspan=3
+            %input.watermark!placeholder="千葉県..."!type=text!name=address!value=$profileAddress.snd.prof$
+        %tr
+          %th 電話番号
+          %td!colspan=3
+            %input.watermark!placeholder=090-1234-5678!type=tel!name=tel!value=$profileTel.snd.prof$
+        %tr
+          %th 最寄駅
+          %td!colspan=3
+            %input.watermark!placeholder=松戸!type=text!name=station!value=$profileStation.snd.prof$
+        %tr
+          %th 実家住所
+          %td!colspan=3
+            %input.watermark!placeholder="埼玉県..."!type=text!name=homeAddress!value=$profileHomeAddress.snd.prof$
+        %tr
+          %th 実家電話番号
+          %td!colspan=3
+            %input.watermark!placeholder=098-7654-3210!type=tel!name=homeTel!value=$profileHomeTel.snd.prof$
+        %tr
+          %th 希望進路
+          %td!colspan=3
+            %input.watermark!placeholder=一般職!type=text!name=desiredCourse!value=$showmaybe.profileDesiredCourse.snd.prof$
+        %tr
+          %th 希望勤務地
+          %td!colspan=3
+            %input.watermark!placeholder=関東!type=text!name=desiredWorkLocation!value=$showmaybe.profileDesiredWorkLocation.snd.prof$
+        %tr
+          %th 勤務(予定)先
+          %td!colspan=3
+            %input.watermark!placeholder=未定!type=text!name=employment!value=$showmaybe.profileEmployment.snd.prof$
+    %button!type=submit!name=_method!value=update 更新する

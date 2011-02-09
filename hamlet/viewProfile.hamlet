@@ -2,18 +2,19 @@
   %li
     %a!href=@HomeR.selfid@ ホーム
   %li.selected
-    %a!href=@ProfileR.selfid@ プロフィール
-  $if cancreateproject
-    %li
-      %a!href=@NewProjectR@ プロジェクト新規作成
+    %a!href=@?viewprof@ プロフィール
   %li
-    %a!href=@@ 案件検索
+    %a!href=@?editprof@ プロフィール編集
 
 #main-content
-  %h3 プロフィール
+  %h3 $userIdent.user$のプロフィール
   %table.profile
     %tr
-      %th 学籍番号
+      %th
+        $if (isStudent user)
+          学籍番号
+        $else
+          教職員番号
       %td!colspan=3 $userIdent.user$
     %tr
       %th メールアドレス
@@ -29,10 +30,10 @@
         %td!colspan=3 $show.profileBirth.snd.prof$
       %tr
         %th 入学年度
-        %td!colspan=3 $show.profileEntryYear.snd.prof$
+        %td!colspan=3 $showEntryYear.snd.prof$
       %tr
         %th 卒業年度
-        %td!colspan=3 $show.profileGraduateYear.snd.prof$
+        %td!colspan=3 $showGraduateYear.snd.prof$
       %tr
         %th 所属ブランチ
         %td!colspan=3 $profileBranch.snd.prof$

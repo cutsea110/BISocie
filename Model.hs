@@ -138,14 +138,10 @@ isAdmin u = userRole u == Admin
 showLimitdate :: Issue -> String
 showLimitdate i = fromMaybe "" (fmap show (issueLimitdate i))
 
-showLongitude :: Profile -> String
-showLongitude p = case profileLongitude p of
+showMaybeDouble :: Maybe Double -> String
+showMaybeDouble md = case md of
   Nothing -> ""
-  Just l -> show l
-showLatitude :: Profile -> String
-showLatitude p = case profileLatitude p of
-  Nothing -> ""
-  Just l -> show l
+  Just d -> show d
 
 showDate :: UTCTime -> String
 showDate = formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S"

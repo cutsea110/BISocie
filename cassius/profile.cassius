@@ -9,3 +9,8 @@ table.profile td
 
 th.number, td.number
   text-align: right
+
+#map_canvas
+  height: 200px
+  width: 400px
+  margin-top: 5px

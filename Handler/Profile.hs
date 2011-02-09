@@ -126,37 +126,43 @@ putProfileR uid = do
     case mprof of
       Nothing -> return ()
       Just (pid, _) -> do
-        (bir, ey, gy, br, adr, tel, st, hadr, htel, dc, dwl, emp, lon, lat) <- 
-          lift $ runFormPost' $ (,,,,,,,,,,,,,)
+        (bir, ey, gy, br, adr, lon, lat, tel, st, hadr, hlon, hlat, htel, dc, dwl, emp) <- 
+          lift $ runFormPost' $ (,,,,,,,,,,,,,,,)
           <$> dayInput "birth"
           <*> intInput "entryYear"
           <*> maybeIntInput "graduateYear"
           <*> stringInput "branch"
           <*> stringInput "address"
+          <*> maybeStringInput "longitude"
+          <*> maybeStringInput "latitude"
           <*> stringInput "tel"
           <*> stringInput "station"
           <*> stringInput "homeAddress"
+          <*> maybeStringInput "homeLongitude"
+          <*> maybeStringInput "homeLatitude"
           <*> stringInput "homeTel"
           <*> maybeStringInput "desiredCourse"
           <*> maybeStringInput "desiredWorkLocation"
           <*> maybeStringInput "employment"
-          <*> maybeStringInput "longitude"
-          <*> maybeStringInput "latitude"
         let lon' = fromMaybe Nothing (fmap (Just . read) lon)
             lat' = fromMaybe Nothing (fmap (Just . read) lat)
+            hlon' = fromMaybe Nothing (fmap (Just . read) hlon)
+            hlat' = fromMaybe Nothing (fmap (Just . read) hlat)
         update pid [ ProfileBirth bir
                    , ProfileEntryYear ey
                    , ProfileGraduateYear gy
                    , ProfileBranch br
                    , ProfileAddress adr
+                   , ProfileLongitude lon'
+                   , ProfileLatitude lat'
                    , ProfileTel tel
                    , ProfileStation st
                    , ProfileHomeAddress hadr
+                   , ProfileHomeLongitude hlon'
+                   , ProfileHomeLatitude hlat'
                    , ProfileHomeTel htel
                    , ProfileDesiredCourse dc
                    , ProfileDesiredWorkLocation dwl
                    , ProfileEmployment emp
-                   , ProfileLongitude lon'
-                   , ProfileLatitude lat'
                    ]
     lift $ redirectParams RedirectTemporary (ProfileR uid) [("mode", "e")]

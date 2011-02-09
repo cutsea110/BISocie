@@ -1,34 +1,49 @@
 $(document).ready(function(){
-  $("#location").after("<div id='map_canvas'></div>");
+  $("#cloc").after("<div id='map_canvas'></div>");
   geocoder = new google.maps.Geocoder();
-  var lat = $("#latitude").val() || 0;
-  var lng = $("#longitude").val() || 0;
-  var latlng = new google.maps.LatLng(lat, lng);
+
+  var clat = $("#clat").val() || 0;
+  var clng = $("#clon").val() || 0;
+  var clatlng = new google.maps.LatLng(clat, clng);
+  var hlat = $("#hlat").val() || 0;
+  var hlng = $("#hlon").val() || 0;
+  var hlatlng = new google.maps.LatLng(hlat, hlng);
+
   var myOptions = {
     zoom: 8,
-    center: latlng,
+    center: clatlng,
     mapTypeId: google.maps.MapTypeId.ROADMAP
   }
   map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
-  if (lat != 0 || lng != 0) new google.maps.Marker({
+
+  if (clat != 0 || clng != 0) new google.maps.Marker({
       map: map,
-      position: latlng
+      position: clatlng
   });
-  $("#location").blur(function(){
-      var address = document.getElementById("location").value;
-      geocoder.geocode( { 'address': address}, function(results, status) {
-        if (status == google.maps.GeocoderStatus.OK) {
-          map.setCenter(results[0].geometry.location);
-          var marker = new google.maps.Marker({
-              map: map, 
-              position: results[0].geometry.location
-          });
-          $("#longitude").val(results[0].geometry.location.lng());
-          $("#latitude").val(results[0].geometry.location.lat());
-        } else {
-          alert("Geocode was not successful for the following reason: " + status);
-        }
-      });
-      return false;
+  if (hlat != 0 || hlng != 0) new google.maps.Marker({
+      map: map,
+      position: hlatlng
+  });
+
+  $("#cloc, #hloc").each(function(){
+    $(this).blur(function(){
+        var address = $(this).attr('value');
+        var lonid = '#'+$(this).attr('locprefix')+'lon';
+        var latid = '#'+$(this).attr('locprefix')+'lat';
+        geocoder.geocode( { 'address': address}, function(results, status) {
+          if (status == google.maps.GeocoderStatus.OK) {
+            map.setCenter(results[0].geometry.location);
+            var marker = new google.maps.Marker({
+                map: map, 
+                position: results[0].geometry.location
+            });
+            $(lonid).val(results[0].geometry.location.lng());
+            $(latid).val(results[0].geometry.location.lat());
+          } else {
+            alert("Geocode was not successful for the following reason: " + status);
+          }
+        });
+        return false;
+    });
   });
 });

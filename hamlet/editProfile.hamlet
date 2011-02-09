@@ -53,7 +53,9 @@
         %tr
           %th 現住所
           %td!colspan=3
-            %input.watermark!placeholder="千葉県..."!type=text!name=address!value=$profileAddress.snd.prof$
+            %input#longitude!type=text!name=longitude!value=$showLongitude.snd.prof$
+            %input#latitude!type=text!name=latitude!value=$showLatitude.snd.prof$
+            %input#location.watermark!placeholder="千葉県..."!type=text!name=address!value=$profileAddress.snd.prof$
         %tr
           %th 電話番号
           %td!colspan=3

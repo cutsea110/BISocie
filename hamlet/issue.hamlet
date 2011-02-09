@@ -41,7 +41,7 @@
   %ul#issue-thread
     $forall comments c
       .post-head
-        $show.commentCdate.snd.c$
-        $userFullName.fst.c$
+        $showDate.commentCdate.snd.c$
+        %a.profile!href=@ProfileR.commentCuser.snd.c@ $userFullName.fst.c$
       .post-body
         $commentContent.snd.c$

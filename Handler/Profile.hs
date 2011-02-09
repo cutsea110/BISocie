@@ -69,6 +69,7 @@ getProfileR uid = do
         lift $ defaultLayout $ do
           setTitle $ string "Profile"
           addCassius $(cassiusFile "profile")
+          addScriptRemote "http://maps.google.com/maps/api/js?sensor=false"
           addJulius $(juliusFile "profile")
           addHamlet $(hamletFile "viewProfile")
     
@@ -93,6 +94,7 @@ getProfileR uid = do
         lift $ defaultLayout $ do
           setTitle $ string "Profile"
           addCassius $(cassiusFile "profile")
+          addScriptRemote "http://maps.google.com/maps/api/js?sensor=false"
           addJulius $(juliusFile "profile")
           addHamlet $(hamletFile "editProfile")
 
@@ -124,8 +126,8 @@ putProfileR uid = do
     case mprof of
       Nothing -> return ()
       Just (pid, _) -> do
-        (bir, ey, gy, br, adr, tel, st, hadr, htel, dc, dwl, emp) <- 
-          lift $ runFormPost' $ (,,,,,,,,,,,)
+        (bir, ey, gy, br, adr, tel, st, hadr, htel, dc, dwl, emp, lon, lat) <- 
+          lift $ runFormPost' $ (,,,,,,,,,,,,,)
           <$> dayInput "birth"
           <*> intInput "entryYear"
           <*> maybeIntInput "graduateYear"
@@ -138,6 +140,10 @@ putProfileR uid = do
           <*> maybeStringInput "desiredCourse"
           <*> maybeStringInput "desiredWorkLocation"
           <*> maybeStringInput "employment"
+          <*> maybeStringInput "longitude"
+          <*> maybeStringInput "latitude"
+        let lon' = fromMaybe Nothing (fmap (Just . read) lon)
+            lat' = fromMaybe Nothing (fmap (Just . read) lat)
         update pid [ ProfileBirth bir
                    , ProfileEntryYear ey
                    , ProfileGraduateYear gy
@@ -150,5 +156,7 @@ putProfileR uid = do
                    , ProfileDesiredCourse dc
                    , ProfileDesiredWorkLocation dwl
                    , ProfileEmployment emp
+                   , ProfileLongitude lon'
+                   , ProfileLatitude lat'
                    ]
     lift $ redirectParams RedirectTemporary (ProfileR uid) [("mode", "e")]

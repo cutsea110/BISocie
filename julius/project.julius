@@ -1,26 +1,38 @@
 $(document).ready(function(){
-   $('#search-users').hide().attr('title', 'ユーザ検索').dialog({
-     autoOpen: false,
-     width: 500,
-     modal: true
-   });
+  $('#search-users').hide().attr('title', 'ユーザ検索').dialog({
+    autoOpen: false,
+    width: 500,
+    modal: true
+  });
 
-   reloading_participants();
+  reloading_participants();
 
-   $('#button-search-users').click(function(){
-     $('#search-users').dialog('open');
-     $.getJSON('@UserListR@', function(json){
-       var us = json.userlist;
-       $('#search-result .user-logo').remove();
-       $.getJSON('@ParticipantsListR.pid@', function(json) {
-         var ps = json2hash(json.participants);
+  $('#button-search-users').click(function(){
+    $('#search-users').dialog('open');
+    $.getJSON('@UserListR@', function(json){
+      var us = json.userlist;
+      $('#search-result .user-logo').remove();
+      $.getJSON('@ParticipantsListR.pid@', function(json) {
+       var ps = json2hash(json.participants);
          $.each(us, function(i, u){
-           $('#search-result').append(mkUser(u, ps));
-         });
-       });
-     });
-     return false;
-   });
+          $('#search-result').append(mkUser(u, ps));
+        });
+      });
+    });
+    return false;
+  });
+
+  $("#select-teacher,#select-student,#select-admin").click(function(){
+    var tc = $("#select-teacher").attr('checked'),
+        ts = $("#select-student").attr('checked'),
+        ta = $("#select-admin").attr('checked');
+    tc ? $('#search-result .Teacher').show() : $('#search-result .Teacher').hide();
+    ts ? $('#search-result .Student').show() : $('#search-result .Student').hide();
+    ta ? $('#search-result .Admin').show() : $('#search-result .Admin').hide();
+    if(!(tc||ts||ta)) {
+      $('#search-result .Teacher,#search-result .Student,#search-result .Admin').show();
+    }
+  });
 
 });
 

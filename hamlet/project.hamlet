@@ -41,5 +41,13 @@
         %td#participants
 
 #search-users
-  %input!type=text!name=username
+  %input#search-by-name!type=text!name=username
+
+  %label!for=select-teacher 教職員
+  %input#select-teacher!type=checkbox!value=Teacher
+  %label!for=select-student 在校生/卒業生
+  %input#select-student!type=checkbox!value=Student
+  %label!for=select-admin 管理者
+  %input#select-admin!type=checkbox!value=Admin
+
   #search-result.scroll

@@ -1,0 +1,62 @@
+%ul.tabs
+  %li
+    %a!href=@HomeR.selfid@ ホーム
+  %li.selected
+    %a!href=@ProfileR.selfid@ プロフィール
+  $if cancreateproject
+    %li
+      %a!href=@NewProjectR@ プロジェクト新規作成
+  %li
+    %a!href=@@ 案件検索
+
+#main-content
+  %h3 プロフィール
+  %table.profile
+    %tr
+      %th 学籍番号
+      %td!colspan=3 $userIdent.user$
+    %tr
+      %th メールアドレス
+      %td!colspan=3 $userEmail.user$
+    %tr
+      %th 姓
+      %td $userFamilyName.user$
+      %th 名
+      %td $userGivenName.user$
+    $maybe mprof prof
+      %tr
+        %th 生年月日
+        %td!colspan=3 $show.profileBirth.snd.prof$
+      %tr
+        %th 入学年度
+        %td!colspan=3 $show.profileEntryYear.snd.prof$
+      %tr
+        %th 卒業年度
+        %td!colspan=3 $show.profileGraduateYear.snd.prof$
+      %tr
+        %th 所属ブランチ
+        %td!colspan=3 $profileBranch.snd.prof$
+      %tr
+        %th 現住所
+        %td!colspan=3 $profileAddress.snd.prof$
+      %tr
+        %th 電話番号
+        %td!colspan=3 $profileTel.snd.prof$
+      %tr
+        %th 最寄駅
+        %td!colspan=3 $profileStation.snd.prof$
+      %tr
+        %th 実家住所
+        %td!colspan=3 $profileHomeAddress.snd.prof$
+      %tr
+        %th 実家電話番号
+        %td!colspan=3 $profileHomeTel.snd.prof$
+      %tr
+        %th 希望進路
+        %td!colspan=3 $showmaybe.profileDesiredCourse.snd.prof$
+      %tr
+        %th 希望勤務地
+        %td!colspan=3 $showmaybe.profileDesiredWorkLocation.snd.prof$
+      %tr
+        %th 勤務(予定)先
+        %td!colspan=3 $showmaybe.profileEmployment.snd.prof$

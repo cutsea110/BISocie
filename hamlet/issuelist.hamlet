@@ -26,10 +26,10 @@
       $forall issues issue
         %tr
           %td
-            %a!href=@(IssueR.pid).issueNumber.snd.fst3.issue@ $issueSubject.snd.fst3.issue$
-          %td $show.issueAssign.snd.fst3.issue$
-          %td $issueStatus.snd.fst3.issue$
-          %td $show.issueLimitdate.snd.fst3.issue$
-          %td $userFullName.snd3.issue$
-          %td $userFullName.thd3.issue$
-          %td $show.issueUdate.snd.fst3.issue$
+            %a!href=@(IssueR.pid).issueNumber.snd.fst.issue@ $issueSubject.snd.fst.issue$
+          %td $issueStatus.snd.fst.issue$
+          %td $showmaybe.(fmap.userFullName).thd3.snd.issue$
+          %td $showLimitdate.snd.fst.issue$
+          %td $userFullName.fst3.snd.issue$
+          %td $userFullName.snd3.snd.issue$
+          %td $showDate.issueUdate.snd.fst.issue$

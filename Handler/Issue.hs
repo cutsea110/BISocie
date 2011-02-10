@@ -24,7 +24,10 @@ getIssueListR pid = do
     issues <- forM issues' $ \issue@(id, i) -> do
       cu <- get404 $ issueCuser i
       uu <- get404 $ issueUuser i
-      return (issue, cu, uu)
+      mau <- case issueAssign i of
+        Nothing -> return Nothing
+        Just auid -> get auid
+      return (issue, (cu, uu, mau))
     lift $ defaultLayout $ do
       setTitle $ string $ projectName prj ++ "案件一覧"
       addHamlet $(hamletFile "issuelist")

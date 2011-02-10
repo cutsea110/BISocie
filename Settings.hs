@@ -17,6 +17,9 @@ module Settings
     , approot
     , staticroot
     , staticdir
+    , rootRelativePath
+    , s3dir
+    , s3root
       --
     , entryStartYear
     , graduateStartYear
@@ -45,6 +48,14 @@ approot = "http://localhost:3001"
 approot = "http://localhost:3001"
 #endif
 
+-- | The base URL for your site's root relative top path with consider apache.
+rootRelativePath :: String
+#ifdef PRODUCTION
+rootRelativePath = "http://localhost:3000"
+#else
+rootRelativePath = "http://localhost:3000"
+#endif
+
 -- | The location of static files on your system. This is a file system
 -- path. The default value works properly with your scaffolded site.
 staticdir :: FilePath
@@ -65,6 +76,11 @@ staticdir = "static"
 -- To see how this value is used, see urlRenderOverride in BISocie.hs
 staticroot :: String
 staticroot = approot ++ "/static"
+
+s3dir :: FilePath
+s3dir = "s3"
+s3root :: String
+s3root = approot ++ "/s3"
 
 -- | The database connection string. The meaning of this string is backend-
 -- specific.

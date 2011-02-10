@@ -9,6 +9,7 @@ import Database.Persist.TH (share2, derivePersistField)
 import Database.Persist.Base
 import Database.Persist.GenericSql (mkMigrate)
 import System.Locale
+import Data.Int
 import Data.Time
 import Data.List (intercalate)
 import Data.List.Split (splitOn)
@@ -108,6 +109,16 @@ Participants
     user UserId Eq
     receivemail Bool Eq default=true
     UniqueParticipants project user
+
+FileHeader
+    fullname String Eq
+    efname String
+    name String Eq
+    extension String Eq
+    contentType String
+    fileSize Int64
+    creator UserId Eq
+    created UTCTime Desc
 |]
 
 initUser :: String -> User

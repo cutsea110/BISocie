@@ -110,6 +110,10 @@ mkYesodData "BISocie" [$parseRoutes|
 /comment/#ProjectId/#IssueNo CommentR POST
 
 /admin AdminR UserCrud userCrud
+
+/s3/upload UploadR GET POST PUT
+/s3/user/#UserId/file/#FileHeaderId FileR GET POST DELETE
+/s3/user/#UserId/list.json FileListR GET
 |]
 
 getBy404 ukey = do

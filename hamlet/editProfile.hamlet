@@ -16,6 +16,7 @@
       %input#go_upload!type=button!name=upload!value="Upload File"
 
   %form!method=post!action=@ProfileR.uid@
+    %input#avatar-file-header-id!type=hidden!name=avatar
     %table.profile
       %tr
         %th

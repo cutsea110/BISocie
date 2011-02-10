@@ -53,13 +53,15 @@ $(document).ready(function(){
     $("#fields").upload($("#upload_form").attr('action'),
                    function(res) {
                      var file = $(res).find('file'),
+                         fhid = file.find('fhid').text(),
                          uri = file.find('uri').text(),
                          name = file.find('name').text(),
                          ext = file.find('ext').text(),
                          size = file.find('size').text();
-                     var avatar = $("<img id='myavatar'/>").attr({src: uri});
+                     var avatar = $("<img id='myavatar'/>").attr({src: uri, fhid: fhid});
                      $('#myavatar').remove();
                      $('#avatar').append(avatar);
+                     $('#avatar-file-header-id').val(fhid);
                    }, 'xml');
     return false;
   });

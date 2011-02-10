@@ -72,6 +72,7 @@ postUploadR = do
                       [$xhamlet|
 #endif
 %file
+  %fhid $show.fid$
   %name $name$
   %ext $ext$
   %size $show.fsize$

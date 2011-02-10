@@ -41,13 +41,23 @@
         %td#participants
 
 #search-users
+  %label!for=search-bay-name 名前:
   %input#search-by-name!type=text!name=username
 
-  %label!for=select-teacher 教職員
+  %label!for=select-teacher 教職員:
   %input#select-teacher!type=checkbox!value=Teacher
-  %label!for=select-student 在校生/卒業生
+  %label!for=select-student 在校生/卒業生:
   %input#select-student!type=checkbox!value=Student
-  %label!for=select-admin 管理者
+  %label!for=select-admin 管理者:
   %input#select-admin!type=checkbox!value=Admin
+  %label!for=select-entry-year 入学年度:
+  %select#select-entry-year
+    %option
+    $forall eyears ey
+      %option!value=$show.ey$ $show.ey$
+
+
+  %input#all-filtered-set!type=button!value=全選択
+  %input#all-filtered-reset!type=button!value=全解除
 
   #search-result.scroll

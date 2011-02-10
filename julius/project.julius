@@ -17,6 +17,7 @@ $(document).ready(function(){
          $.each(us, function(i, u){
           $('#search-result').append(mkUser(u, ps));
         });
+        filter_users();
       });
     });
     return false;
@@ -28,6 +29,25 @@ $(document).ready(function(){
 
   $('#search-by-name').keyup(function(){
     filter_users();
+  });
+
+  $('#select-entry-year').change(function(){
+    filter_users();
+  });
+
+  $('#all-filtered-set').click(function(){
+    $("#search-result .user-logo:visible input[type='checkbox']:not(:checked)").each(function(){
+      $(this).attr('checked',true);
+      $(this).trigger('change');
+    });
+    reloading_participants();
+  });
+  $('#all-filtered-reset').click(function(){
+    $("#search-result .user-logo:visible input[type='checkbox']:checked").each(function(){
+      $(this).attr('checked',false);
+      $(this).trigger('change');
+    });
+    reloading_participants();
   });
 
 });
@@ -43,23 +63,30 @@ function filter_users() {
       contains_name = ":contains('" + name + "')";
     }
 
+    var eyear = $('#select-entry-year').attr('value');
+    var select_eyear="";
+    if (eyear!=null && eyear!=""){
+      select_eyear = "[eyear='"+eyear+"']";
+    }
+
     var ct = $("#select-teacher").attr('checked'),
         cs = $("#select-student").attr('checked'),
         ca = $("#select-admin").attr('checked');
     if (ct||cs||ca) {
       if (ct) {
-        selector = selector + (',' + user + ".Teacher" + contains_name);
+        selector = selector + (',' + user + ".Teacher" + select_eyear + contains_name);
       }
       if (cs) {
-        selector = selector + (',' + user + ".Student" + contains_name);
+        selector = selector + (',' + user + ".Student" + select_eyear + contains_name);
       }
       if (ca) {
-        selector = selector + (',' + user + ".Admin" + contains_name);
+        selector = selector + (',' + user + ".Admin" + select_eyear + contains_name);
       }
     }else{
-      selector = user + contains_name;
+      selector = user + select_eyear + contains_name;
     }
-
+    // for debug
+    // alert(selector);
     $(selector).show();
 }
 
@@ -84,7 +111,7 @@ function json2hash(ps){
 }
 
 function mkUser(u, ps){
-  var div = $('<div/>').attr({uid: u.id, ident: u.ident, fullname: u.name}).addClass(u.role+' user-logo'),
+  var div = $('<div/>').attr({uid: u.id, ident: u.ident, fullname: u.name, eyear: u.entryYear}).addClass(u.role+' user-logo'),
       c = $('<input/>').attr({type:'checkbox'}),
       s =$('<span/>').text(u.name),
       mail = $('<img/>');
@@ -107,17 +134,20 @@ function mkUser(u, ps){
 
   if (ps[u.id])c.attr('checked', true);
   c.click(function(){
+    reloading_participants();
+  });
+  c.change(function(){
      var uid = $(this).closest('div').attr('uid'),
          checked = $(this).attr('checked'),
          method = checked ? "add" : "del";
 
      $.ajax({
+       async: false,
        type: 'POST',
        url: '@ParticipantsR.pid@',
        dataType: 'json',
        data: {_method: method, uid: uid},
        success: function (json) {
-         reloading_participants();
          switch (json.participants.status) {
            case 'added':
              mail.attr({src: '@StaticR.img_mail_accept_png@'});

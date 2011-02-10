@@ -1,3 +1,11 @@
+#search-users
+  font-size: 86%
+  width: 600px
+  height: 480px
+
+#search-by-name
+  width: 8em
+
 .Student
   background-color: #fec0d0
 .Teacher

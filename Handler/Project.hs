@@ -51,6 +51,9 @@ getProjectR pid = do
     unless viewable $ 
       lift $ permissionDenied "あなたはこのプロジェクトの参加者ではありません."
     prj <- get404 pid
+    now <- liftIO getCurrentTime
+    let (y,_,_) = toGregorian $ utctDay now
+        eyears = [2000..y+5]
     lift $ defaultLayout $ do
       setTitle $ string $ projectName prj
       addCassius $(cassiusFile "project")

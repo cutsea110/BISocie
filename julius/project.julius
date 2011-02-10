@@ -23,18 +23,45 @@ $(document).ready(function(){
   });
 
   $("#select-teacher,#select-student,#select-admin").click(function(){
-    var tc = $("#select-teacher").attr('checked'),
-        ts = $("#select-student").attr('checked'),
-        ta = $("#select-admin").attr('checked');
-    tc ? $('#search-result .Teacher').show() : $('#search-result .Teacher').hide();
-    ts ? $('#search-result .Student').show() : $('#search-result .Student').hide();
-    ta ? $('#search-result .Admin').show() : $('#search-result .Admin').hide();
-    if(!(tc||ts||ta)) {
-      $('#search-result .Teacher,#search-result .Student,#search-result .Admin').show();
-    }
+    filter_users();
+  });
+
+  $('#search-by-name').keyup(function(){
+    filter_users();
   });
 
 });
+
+function filter_users() {
+    var selector = "";
+    var user = "#search-result .user-logo";
+    $(user).hide();
+
+    var name = $('#search-by-name').attr('value');
+    var contains_name = "";
+    if (name!=null && name!=""){
+      contains_name = ":contains('" + name + "')";
+    }
+
+    var ct = $("#select-teacher").attr('checked'),
+        cs = $("#select-student").attr('checked'),
+        ca = $("#select-admin").attr('checked');
+    if (ct||cs||ca) {
+      if (ct) {
+        selector = selector + (',' + user + ".Teacher" + contains_name);
+      }
+      if (cs) {
+        selector = selector + (',' + user + ".Student" + contains_name);
+      }
+      if (ca) {
+        selector = selector + (',' + user + ".Admin" + contains_name);
+      }
+    }else{
+      selector = user + contains_name;
+    }
+
+    $(selector).show();
+}
 
 function reloading_participants() {
    // clear
@@ -57,7 +84,7 @@ function json2hash(ps){
 }
 
 function mkUser(u, ps){
-  var div = $('<div/>').attr({uid: u.id, ident: u.ident}).addClass(u.role+' user-logo'),
+  var div = $('<div/>').attr({uid: u.id, ident: u.ident, fullname: u.name}).addClass(u.role+' user-logo'),
       c = $('<input/>').attr({type:'checkbox'}),
       s =$('<span/>').text(u.name),
       mail = $('<img/>');

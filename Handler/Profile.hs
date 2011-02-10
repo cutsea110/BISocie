@@ -3,7 +3,7 @@
 module Handler.Profile where
 
 import BISocie
-import Settings (hamletFile, cassiusFile, juliusFile, widgetFile)
+import Settings (hamletFile, cassiusFile, juliusFile, widgetFile, entryStartYear, graduateStartYear)
 
 import Yesod.Form.Jquery
 import Control.Monad
@@ -87,9 +87,9 @@ getProfileR uid = do
         unless editable $ 
           lift $ permissionDenied "あなたはこのユーザプロファイルを編集することはできません."
         mprof <- getProf user y
-        let eyears = zipWith (\y1 y2 -> (y1==y2, y1)) [2000..y+5] $ 
+        let eyears = zipWith (\y1 y2 -> (y1==y2, y1)) [Settings.entryStartYear..y+5] $ 
                      repeat (fromMaybe y (fmap (toInteger.profileEntryYear.snd) mprof))
-            gyears = zipWith (\y1 y2 -> (Just y1==y2, y1)) [2000..y+5] $
+            gyears = zipWith (\y1 y2 -> (Just y1==y2, y1)) [Settings.graduateStartYear..y+5] $
                      repeat (fromMaybe Nothing (fmap (fmap toInteger.profileGraduateYear.snd) mprof))
         lift $ defaultLayout $ do
           setTitle $ string "Profile"

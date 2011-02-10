@@ -17,6 +17,9 @@ module Settings
     , approot
     , staticroot
     , staticdir
+      --
+    , entryStartYear
+    , graduateStartYear
     ) where
 
 import qualified Text.Hamlet as H
@@ -144,3 +147,8 @@ withConnectionPool = withPostgresqlPool connStr connectionCount
 
 runConnectionPool :: MonadInvertIO m => SqlPersist m a -> ConnectionPool -> m a
 runConnectionPool = runSqlPool
+
+entryStartYear :: Integer
+entryStartYear = 2000
+graduateStartYear :: Integer
+graduateStartYear = 2000

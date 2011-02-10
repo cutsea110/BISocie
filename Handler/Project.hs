@@ -6,6 +6,7 @@ import BISocie
 import Control.Monad (unless, forM, mplus)
 import Data.Time
 
+import qualified Settings
 import StaticFiles
 
 getNewProjectR :: Handler RepHtml
@@ -53,7 +54,7 @@ getProjectR pid = do
     prj <- get404 pid
     now <- liftIO getCurrentTime
     let (y,_,_) = toGregorian $ utctDay now
-        eyears = [2000..y+5]
+        eyears = [Settings.entryStartYear..y+5]
     lift $ defaultLayout $ do
       setTitle $ string $ projectName prj
       addCassius $(cassiusFile "project")

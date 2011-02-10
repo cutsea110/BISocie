@@ -1,4 +1,10 @@
 $(document).ready(function(){
+  $.getJSON('@AvatarR.uid@', function(json){
+    var avatar = $("<img id='myavatar'/>").attr({src: json.uri});
+    $('#myavatar').remove();
+    $('#avatar').append(avatar);
+  });
+
   if ($('#cloc').length>0) {
      $("#cloc").after("<div id='map_canvas'></div>");
      geocoder = new google.maps.Geocoder();
@@ -50,19 +56,19 @@ $(document).ready(function(){
   }
 
   $("#go_upload").click(function(){
-    $("#fields").upload($("#upload_form").attr('action'),
-                   function(res) {
-                     var file = $(res).find('file'),
-                         fhid = file.find('fhid').text(),
-                         uri = file.find('uri').text(),
-                         name = file.find('name').text(),
-                         ext = file.find('ext').text(),
-                         size = file.find('size').text();
-                     var avatar = $("<img id='myavatar'/>").attr({src: uri, fhid: fhid});
-                     $('#myavatar').remove();
-                     $('#avatar').append(avatar);
-                     $('#avatar-file-header-id').val(fhid);
-                   }, 'xml');
+    $("#fields")
+    .upload($("#upload_form").attr('action'),
+         function(res) {
+           var file = $(res).find('file'),
+               fhid = file.find('fhid').text(),
+               uri = file.find('uri').text();
+           // bind avatar
+           $.post('@AvatarR.uid@', {uri: uri, avatar: fhid}, function(json){
+             var avatar = $("<img id='myavatar'/>").attr({src: json.uri});
+             $('#myavatar').remove();
+             $('#avatar').append(avatar);
+           }, 'json');
+         }, 'xml');
     return false;
   });
 

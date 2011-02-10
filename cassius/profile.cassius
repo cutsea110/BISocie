@@ -16,4 +16,4 @@ th.number, td.number
   margin-top: 5px
 
 #myavatar
-  width: 180px
+  width: 100px

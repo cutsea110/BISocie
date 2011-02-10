@@ -97,8 +97,8 @@ putProjectR pid = do
                               , ("description", showMaybeJScalar $ projectDescription prj)
                               , ("statuses", jsonScalar $ projectStatuses prj)
                               ]
-    where
-      showJScalar :: (Show a) => a -> Json
-      showJScalar = jsonScalar . show
-      showMaybeJScalar :: Maybe String -> Json
-      showMaybeJScalar = jsonScalar . showmaybe
+  where
+    showJScalar :: (Show a) => a -> Json
+    showJScalar = jsonScalar . show
+    showMaybeJScalar :: Maybe String -> Json
+    showMaybeJScalar = jsonScalar . showmaybe

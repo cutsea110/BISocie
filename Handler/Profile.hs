@@ -167,3 +167,47 @@ putProfileR uid = do
                    , ProfileEmployment emp
                    ]
     lift $ redirectParams RedirectTemporary (ProfileR uid) [("mode", "e")]
+    
+getAvatarR :: UserId -> Handler RepJson
+getAvatarR uid = do
+  (selfid, _) <- requireAuth
+  r <- getUrlRender
+  runDB $ do
+    user <- get404 uid
+    (fid, file) <- case userAvatar user of
+      Nothing -> lift notFound
+      Just fid -> do
+        file <- get404 fid
+        return (fid, file)
+    let rf = r $ FileR (fileHeaderCreator file) fid -- not uid but creator
+    lift $ do
+      cacheSeconds 10 -- FIXME
+      jsonToRepJson $ jsonMap [ ("uri", jsonScalar rf)
+                              , ("avatar", showJScalar fid)
+                              ]
+  where
+    showJScalar :: (Show a) => a -> Json
+    showJScalar = jsonScalar . show
+    showMaybeJScalar :: Maybe String -> Json
+    showMaybeJScalar = jsonScalar . showmaybe
+
+
+postAvatarR :: UserId -> Handler RepJson
+postAvatarR uid = do
+  (selfid, self) <- requireAuth
+  (avatar', uri) <- uncurry (liftM2 (,)) (lookupPostParam "avatar", lookupPostParam "uri")
+  let avatar = fmap read avatar'
+  runDB $ do
+    user <- get404 uid
+    let editable = self == user || userRole self > userRole user
+    unless editable $
+      lift $ permissionDenied "あなたはこのユーザのアバターを変更することはできません."
+    update uid [UserAvatar avatar]
+    lift $ do
+      cacheSeconds 10 -- FIXME
+      jsonToRepJson $ jsonMap [ ("uri", showMaybeJScalar $ uri)
+                              , ("avatar", showMaybeJScalar $ avatar')
+                              ]
+  where
+    showMaybeJScalar :: Maybe String -> Json
+    showMaybeJScalar = jsonScalar . showmaybe

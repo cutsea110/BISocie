@@ -37,9 +37,9 @@ import Web.Routes.Site (Site (formatPathSegments))
 import Database.Persist.GenericSql
 import Settings (hamletFile, cassiusFile, juliusFile, widgetFile)
 import Model
-import Data.Maybe (isJust)
+import Data.Maybe (isJust, fromMaybe)
 import Control.Monad (join, unless)
-import Control.Applicative ((<$>),(<*>))
+import Control.Applicative ((<$>),(<*>),pure)
 import Control.Arrow ((&&&))
 import Network.Mail.Mime
 import qualified Data.Text.Lazy
@@ -89,7 +89,9 @@ type Widget = GWidget BISocie BISocie
 mkYesodData "BISocie" [$parseRoutes|
 /static StaticR Static getStatic
 /auth   AuthR   Auth   getAuth
+
 /profile/#UserId ProfileR GET POST PUT
+/avatar/#UserId AvatarR GET POST
 
 /favicon.ico FaviconR GET
 /robots.txt RobotsR GET
@@ -204,6 +206,7 @@ instance ToForm User BISocie where
               <*> stringField "familyName" (fmap userFamilyName mu)
               <*> stringField "givenName" (fmap userGivenName mu)
               <*> emailField "email" (fmap userEmail mu)
+              <*> pure (fromMaybe Nothing (fmap userAvatar mu))
               <*> boolField "active" (fmap userActive mu)
     where
       roleopts = map (id &&& show) [minBound..maxBound]

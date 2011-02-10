@@ -37,6 +37,7 @@ User
     familyName String Update
     givenName String Update
     email String Update
+    avatar FileHeaderId Maybe Update
     active Bool Eq default=true
     UniqueUser ident
     
@@ -125,10 +126,11 @@ initUser :: String -> User
 initUser id = User { userIdent=id
                    , userPassword=Nothing
                    , userRole=Student
-                   , userActive=True
                    , userFamilyName=""
                    , userGivenName=""
                    , userEmail=""
+                   , userAvatar=Nothing
+                   , userActive=True
                    }
               
 userFullName :: User -> String

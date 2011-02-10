@@ -14,3 +14,6 @@ th.number, td.number
   height: 200px
   width: 400px
   margin-top: 5px
+
+#myavatar
+  width: 180px

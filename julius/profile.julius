@@ -1,49 +1,67 @@
 $(document).ready(function(){
-  $("#cloc").after("<div id='map_canvas'></div>");
-  geocoder = new google.maps.Geocoder();
+  if ($('#cloc').length>0) {
+     $("#cloc").after("<div id='map_canvas'></div>");
+     geocoder = new google.maps.Geocoder();
 
-  var clat = $("#clat").val() || 0;
-  var clng = $("#clon").val() || 0;
-  var clatlng = new google.maps.LatLng(clat, clng);
-  var hlat = $("#hlat").val() || 0;
-  var hlng = $("#hlon").val() || 0;
-  var hlatlng = new google.maps.LatLng(hlat, hlng);
+     var clat = $("#clat").val() || 0;
+     var clng = $("#clon").val() || 0;
+     var clatlng = new google.maps.LatLng(clat, clng);
+     var hlat = $("#hlat").val() || 0;
+     var hlng = $("#hlon").val() || 0;
+     var hlatlng = new google.maps.LatLng(hlat, hlng);
 
-  var myOptions = {
-    zoom: 8,
-    center: clatlng,
-    mapTypeId: google.maps.MapTypeId.ROADMAP
+     var myOptions = {
+       zoom: 8,
+       center: clatlng,
+       mapTypeId: google.maps.MapTypeId.ROADMAP
+     }
+     map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
+
+     if (clat != 0 || clng != 0) new google.maps.Marker({
+         map: map,
+         position: clatlng
+     });
+     if (hlat != 0 || hlng != 0) new google.maps.Marker({
+         map: map,
+         position: hlatlng
+     });
+
+     $("#cloc, #hloc").each(function(){
+       $(this).blur(function(){
+           var address = $(this).attr('value');
+           var lonid = '#'+$(this).attr('locprefix')+'lon';
+           var latid = '#'+$(this).attr('locprefix')+'lat';
+           geocoder.geocode( { 'address': address}, function(results, status) {
+             if (status == google.maps.GeocoderStatus.OK) {
+               map.setCenter(results[0].geometry.location);
+               var marker = new google.maps.Marker({
+                   map: map, 
+                   position: results[0].geometry.location
+               });
+               $(lonid).val(results[0].geometry.location.lng());
+               $(latid).val(results[0].geometry.location.lat());
+             } else {
+               alert("Geocode was not successful for the following reason: " + status);
+             }
+           });
+           return false;
+       });
+     });
   }
-  map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
 
-  if (clat != 0 || clng != 0) new google.maps.Marker({
-      map: map,
-      position: clatlng
-  });
-  if (hlat != 0 || hlng != 0) new google.maps.Marker({
-      map: map,
-      position: hlatlng
+  $("#go_upload").click(function(){
+    $("#fields").upload($("#upload_form").attr('action'),
+                   function(res) {
+                     var file = $(res).find('file'),
+                         uri = file.find('uri').text(),
+                         name = file.find('name').text(),
+                         ext = file.find('ext').text(),
+                         size = file.find('size').text();
+                     var avatar = $("<img id='myavatar'/>").attr({src: uri});
+                     $('#myavatar').remove();
+                     $('#avatar').append(avatar);
+                   }, 'xml');
+    return false;
   });
 
-  $("#cloc, #hloc").each(function(){
-    $(this).blur(function(){
-        var address = $(this).attr('value');
-        var lonid = '#'+$(this).attr('locprefix')+'lon';
-        var latid = '#'+$(this).attr('locprefix')+'lat';
-        geocoder.geocode( { 'address': address}, function(results, status) {
-          if (status == google.maps.GeocoderStatus.OK) {
-            map.setCenter(results[0].geometry.location);
-            var marker = new google.maps.Marker({
-                map: map, 
-                position: results[0].geometry.location
-            });
-            $(lonid).val(results[0].geometry.location.lng());
-            $(latid).val(results[0].geometry.location.lat());
-          } else {
-            alert("Geocode was not successful for the following reason: " + status);
-          }
-        });
-        return false;
-    });
-  });
 });

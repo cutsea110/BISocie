@@ -4,6 +4,7 @@ module Handler.Profile where
 
 import BISocie
 import Settings (hamletFile, cassiusFile, juliusFile, widgetFile, entryStartYear, graduateStartYear)
+import StaticFiles
 
 import Yesod.Form.Jquery
 import Control.Monad

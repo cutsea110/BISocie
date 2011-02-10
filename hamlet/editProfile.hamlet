@@ -8,8 +8,10 @@
 
 #main-content
   %h3 $userIdent.user$のプロフィール編集
+
   #avatar
     %img#myavatar!src=@StaticR.img_no_image_png@
+
   %form#upload_form!method=post!enctype=multipart/form-data!action=@UploadR@
     #fields.inline
       %input#upload_file!type=file!name=upfile

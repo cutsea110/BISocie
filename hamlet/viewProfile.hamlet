@@ -8,6 +8,10 @@
 
 #main-content
   %h3 $userIdent.user$のプロフィール
+
+  #avatar
+    %img#myavatar!src=@StaticR.img_no_image_png@
+
   %table.profile
     %tr
       %th

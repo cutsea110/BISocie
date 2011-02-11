@@ -17,7 +17,7 @@ $(document).ready(function(){
     dayNamesShort: ['日','月','火','水','木','金','土'],
     dayNamesMin: ['日','月','火','水','木','金','土'],
     dayStatus: 'DD', dateStatus: 'D, M d',
-    dateFormat: 'yy-mm-dd', firstDay: 0,
+    dateFormat: 'yy-mm-dd', firstDay: 1,
     initStatus: '',
     isRTL: false
   }
@@ -25,7 +25,9 @@ $(document).ready(function(){
   $.datepicker.setDefaults({
     buttonText: 'Calendar',
     showAnim: 'slideDown',
-    speed: 'fast'
+    speed: 'fast',
+    changeYear: true,
+    changeMonth: true
   });
   $(".date").datepicker();
 

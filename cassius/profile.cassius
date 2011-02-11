@@ -1,14 +1,21 @@
 table.profile
-  width: 800
+  border: solid 1px #000000
+  border-collapse: collapse
 
 table.profile th
-  text-align: right
+  border: solid 1px #000000
+  background-color: #e0e0f0
+  text-align: left
 
 table.profile td
+  border: solid 1px #000000
   text-align: left
 
 th.number, td.number
   text-align: right
+
+input[type=address]
+  width: 400px
 
 #map_canvas
   height: 200px
@@ -17,3 +24,4 @@ th.number, td.number
 
 #myavatar
   width: 100px
+

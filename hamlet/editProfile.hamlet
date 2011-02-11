@@ -9,16 +9,13 @@
 #main-content
   %h3 $userIdent.user$のプロフィール編集
 
-  #avatar
-    %img#myavatar!src=@StaticR.img_no_image_png@
-
-  %form#upload_form!method=post!enctype=multipart/form-data!action=@UploadR@
-    #fields.inline
-      %input#upload_file!type=file!name=upfile
-      %input#go_upload!type=button!name=upload!value="Upload File"
-
   %form!method=post!action=@ProfileR.uid@
     %table.profile
+      %tr
+        %th アバター
+        %td!colspan=3
+          #avatar
+            %img#myavatar!src=@StaticR.img_no_image_png@
       %tr
         %th
           $if (isStudent user)
@@ -29,7 +26,7 @@
       %tr
         %th メールアドレス
         %td!colspan=3
-          %input.watermark!placeholder="email address"!type=text!name=email!value=$userEmail.user$
+          %input.watermark!placeholder="your@@mail.address.ac.jp"!type=text!name=email!value=$userEmail.user$
       %tr
         %th 姓
         %td
@@ -44,13 +41,12 @@
             %input.date.watermark!placeholder=yyyy/mm/dd!type=date!name=birth!value=$show.profileBirth.snd.prof$
         %tr
           %th 入学年度
-          %td!colspan=3
+          %td
             %select!name=entryYear
               $forall eyears ey
                 %option!:fst.ey:selected $show.snd.ey$
-        %tr
           %th 卒業年度
-          %td!colspan=3
+          %td
             %select!name=graduateYear
               %option!selected
               $forall gyears gy
@@ -64,7 +60,7 @@
           %td!colspan=3
             %input#clon!type=hidden!name=longitude!value=$showMaybeDouble.profileLongitude.snd.prof$
             %input#clat!type=hidden!name=latitude!value=$showMaybeDouble.profileLatitude.snd.prof$
-            %input#cloc.watermark!placeholder="千葉県..."!locprefix=c!type=text!name=address!value=$profileAddress.snd.prof$
+            %input#cloc.watermark!placeholder="千葉県..."!locprefix=c!type=address!name=address!value=$profileAddress.snd.prof$
         %tr
           %th 電話番号
           %td!colspan=3
@@ -78,7 +74,7 @@
           %td!colspan=3
             %input#hlon!type=hidden!name=homeLongitude!value=$showMaybeDouble.profileHomeLongitude.snd.prof$
             %input#hlat!type=hidden!name=homeLatitude!value=$showMaybeDouble.profileHomeLatitude.snd.prof$
-            %input#hloc.watermark!placeholder="埼玉県..."!locprefix=h!type=text!name=homeAddress!value=$profileHomeAddress.snd.prof$
+            %input#hloc.watermark!placeholder="埼玉県..."!locprefix=h!type=address!name=homeAddress!value=$profileHomeAddress.snd.prof$
         %tr
           %th 実家電話番号
           %td!colspan=3
@@ -96,3 +92,8 @@
           %td!colspan=3
             %input.watermark!placeholder=未定!type=text!name=employment!value=$showmaybe.profileEmployment.snd.prof$
     %button!type=submit!name=_method!value=update 更新する
+
+  %form#upload_form!method=post!enctype=multipart/form-data!action=@UploadR@
+    #fields.inline
+      %input#upload_file!type=file!name=upfile
+      %input#go_upload!type=button!name=upload!value=アバターのアップロード

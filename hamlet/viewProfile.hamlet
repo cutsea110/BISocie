@@ -9,10 +9,13 @@
 #main-content
   %h3 $userIdent.user$のプロフィール
 
-  #avatar
-    %img#myavatar!src=@StaticR.img_no_image_png@
 
   %table.profile
+    %tr
+      %th アバター
+      %td
+        #avatar
+          %img#myavatar!src=@StaticR.img_no_image_png@
     %tr
       %th
         $if (isStudent user)
@@ -24,20 +27,15 @@
       %th メールアドレス
       %td!colspan=3 $userEmail.user$
     %tr
-      %th 姓
-      %td $userFamilyName.user$
-      %th 名
-      %td $userGivenName.user$
+      %th 氏名
+      %td!colspan=3 $userFullName.user$
     $maybe mprof prof
       %tr
         %th 生年月日
         %td!colspan=3 $show.profileBirth.snd.prof$
       %tr
-        %th 入学年度
-        %td!colspan=3 $showEntryYear.snd.prof$
-      %tr
-        %th 卒業年度
-        %td!colspan=3 $showGraduateYear.snd.prof$
+        %th 在籍年度
+        %td!colspan=3 $showEntryYear.snd.prof$ 〜 $showGraduateYear.snd.prof$
       %tr
         %th 所属ブランチ
         %td!colspan=3 $profileBranch.snd.prof$

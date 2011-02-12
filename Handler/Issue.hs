@@ -4,11 +4,16 @@ module Handler.Issue where
 
 import BISocie
 import Control.Applicative ((<$>),(<*>))
-import Control.Monad (unless, forM, mplus)
+import Control.Monad (unless, forM, mplus, liftM2)
+import Data.List (intercalate)
 import Data.Time
 import Data.Tuple.HT
 import Data.Maybe (fromMaybe)
+import Network.Mail.Mime
+import qualified Data.Text.Lazy
+import qualified Data.Text.Lazy.Encoding
 
+import qualified Settings (mailXHeader)
 import StaticFiles
 
 getIssueListR :: ProjectId -> Handler RepHtml
@@ -41,18 +46,12 @@ getNewIssueR pid = do
     unless addable $ 
       lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
     prj <- get404 pid
-    ptcpts <- do
-      ptcpt <- selectList [ParticipantsProjectEq pid] [] 0 0
-      forM ptcpt $ \(_, p) -> do
-        let uid' = participantsUser p
-        u <- get404 uid'
-        return (uid', u)
+    ptcpts <- selectParticipants pid
     let stss = lines $ projectStatuses prj
     lift $ defaultLayout $ do
       setTitle $ string "新規案件作成"
       addHamlet $(hamletFile "newissue")
-
-
+      
 postNewIssueR :: ProjectId -> Handler RepHtml
 postNewIssueR pid = do
   _method <- lookupPostParam "_method"
@@ -76,6 +75,7 @@ postNewIssueR pid = do
         let addable = p /= Nothing
         unless addable $ 
           lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
+        r <- lift getUrlRender
         now <- liftIO getCurrentTime
         update pid [ProjectIssuecounterAdd 1, ProjectUdate now]
         prj <- get404 pid
@@ -101,6 +101,31 @@ postNewIssueR pid = do
                               , commentCuser=selfid
                               , commentCdate=now
                               }
+        ptcpts <- selectParticipants pid
+        liftIO $ renderSendMail Mail
+          { mailHeaders =
+               [ ("From", "noreply")
+               , ("To", intercalate "," $ map (userEmail.snd) ptcpts)
+               , ("Subject", sbj)
+               , (Settings.mailXHeader, show pid ++ ":" ++ show ino)
+               ]
+          , mailParts = 
+                 [[ Part
+                     { partType = "text/plain; charset=utf-8"
+                     , partEncoding = None
+                     , partFilename = Nothing
+                     , partContent = Data.Text.Lazy.Encoding.encodeUtf8
+                                     $ Data.Text.Lazy.pack $ unlines
+                                     $ [ "プロジェクト: " ++ projectName prj
+                                       , "案件: " ++ sbj
+                                       , "ステータス: " ++ sts
+                                       , ""
+                                       ]
+                                     ++ lines cntnt 
+                                     ++ [r (IssueR pid ino)]
+                     }
+                  ]]
+          }
         lift $ redirect RedirectTemporary $ IssueR pid ino
 
 getIssueR :: ProjectId -> IssueNo -> Handler RepHtml
@@ -117,12 +142,7 @@ getIssueR pid ino = do
       Just u <- get $ commentCuser c
       return (u, c)
     prj <- get404 pid
-    ptcpts <- do
-      ptcpt <- selectList [ParticipantsProjectEq pid] [] 0 0
-      forM ptcpt $ \(_, p) -> do
-        let uid' = participantsUser p
-        u <- get404 uid'
-        return (uid', u)
+    ptcpts <- selectParticipants pid
     let stss = lines $ projectStatuses prj
         isAssign = case issueAssign issue of
           Nothing -> const False
@@ -149,7 +169,7 @@ postCommentR pid ino = do
         <*> maybeDayInput "limitdate"
         <*> maybeStringInput "assign"
         <*> stringInput "status"
-      
+      r <- getUrlRender
       now <- liftIO getCurrentTime
       runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
@@ -174,4 +194,44 @@ postCommentR pid ino = do
                          , commentCuser=selfid
                          , commentCdate=now
                          }
+        prj <- get404 pid
+        ptcpts <- selectParticipants pid
+        liftIO $ renderSendMail Mail
+          { mailHeaders =
+               [ ("From", "noreply")
+               , ("To", intercalate "," $ map (userEmail.snd) ptcpts)
+               , ("Subject", issueSubject issue)
+               , (Settings.mailXHeader, show pid ++ ":" ++ show ino)
+               ]
+          , mailParts = 
+                 [[ Part
+                     { partType = "text/plain; charset=utf-8"
+                     , partEncoding = None
+                     , partFilename = Nothing
+                     , partContent = Data.Text.Lazy.Encoding.encodeUtf8
+                                     $ Data.Text.Lazy.pack $ unlines
+                                     $ [ "プロジェクト: " ++ projectName prj
+                                       , "案件: " ++ issueSubject issue
+                                       , "ステータス: " ++ sts
+                                       , ""
+                                       ]
+                                     ++ lines cntnt 
+                                     ++ [r (IssueR pid ino)]
+                     }
+                  ]]
+          }
         lift $ redirect RedirectTemporary $ IssueR pid ino
+
+
+-- | selectParticipants
+--  :: (PersistBackend (t m),
+--      Control.Failure.Failure ErrorResponse m,
+--      Control.Monad.Trans.Class.MonadTrans t) =>
+--     ProjectId -> t m [(UserId, User)]
+selectParticipants pid = do
+  mapM (p2u.snd) =<< selectList [ParticipantsProjectEq pid] [] 0 0
+  where
+    p2u p = do
+      let uid = participantsUser p
+      u <- get404 uid
+      return (uid, u)

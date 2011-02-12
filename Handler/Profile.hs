@@ -20,7 +20,7 @@ getProfileR uid = do
     Just "e" {- edit prof -} -> editProf
     Nothing  {-  default  -} -> viewProf
   where
---    getProf :: (Control.Monad.IO.Class.MonadIO m, PersistBackend m) =>
+-- |  getProf :: (Control.Monad.IO.Class.MonadIO m, PersistBackend m) =>
 --                User -> m (Maybe (Key Profile, Profile))
     getProf user y =
       if (userRole user /= Student) 

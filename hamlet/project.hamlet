@@ -44,12 +44,12 @@
   %label!for=search-bay-name 名前:
   %input#search-by-name!type=text!name=username
 
-  %label!for=select-teacher 教職員:
   %input#select-teacher!type=checkbox!value=Teacher
-  %label!for=select-student 在校生/卒業生:
+  %label!for=select-teacher 教職員:
   %input#select-student!type=checkbox!value=Student
-  %label!for=select-admin 管理者:
+  %label!for=select-student 在校生/卒業生:
   %input#select-admin!type=checkbox!value=Admin
+  %label!for=select-admin 管理者:
   %label!for=select-entry-year 入学年度:
   %select#select-entry-year
     %option

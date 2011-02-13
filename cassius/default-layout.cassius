@@ -58,6 +58,9 @@ table.nostyle td
    border: none
    background-color: white
 
+td.number
+   text-align: right
+
 .clearfix:after
   content: "."
   display: block

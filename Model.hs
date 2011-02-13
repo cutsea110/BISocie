@@ -84,7 +84,7 @@ Project
 
 Issue
     project ProjectId Eq
-    number IssueNo Eq
+    number IssueNo Eq Desc Asc
     subject String
     assign UserId Maybe Update
     status String Update

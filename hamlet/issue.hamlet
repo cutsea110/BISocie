@@ -37,7 +37,8 @@
   %ul#issue-thread
     $forall comments c
       .post-head
-        $showDate.commentCdate.snd.c$
-        %a.profile!href=@ProfileR.commentCuser.snd.c@ $userFullName.fst.c$
-      .post-body
-        $commentContent.snd.c$
+        %img.avatar!src=@thd3.c@
+        %a.profile!href=@ProfileR.commentCuser.snd3.c@ $userFullName.fst3.c$
+        \  $showDate.commentCdate.snd3.c$ $commentStatus.snd3.c$
+      %pre.post-body
+        $commentContent.snd3.c$

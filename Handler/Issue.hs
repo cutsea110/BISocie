@@ -17,6 +17,13 @@ import qualified Data.Text.Lazy.Encoding
 import qualified Settings (mailXHeader)
 import StaticFiles
 
+data IssueBis = IssueBis { issueBisId :: IssueId
+                         , issueBisIssue :: Issue
+                         , issueBisCreator :: User
+                         , issueBisUpdator :: User
+                         , issueBisAssign :: Maybe User
+                         }
+                
 getIssueListR :: ProjectId -> Handler RepHtml
 getIssueListR pid = do
   (selfid, self) <- requireAuth
@@ -26,14 +33,15 @@ getIssueListR pid = do
     unless viewable $ 
       lift $ permissionDenied "あなたはこのプロジェクトの参加者ではありません."
     prj <- get404 pid
-    issues' <- selectList [IssueProjectEq pid] [] 0 0
-    issues <- forM issues' $ \issue@(id, i) -> do
+    issues' <- selectList [IssueProjectEq pid] [IssueNumberDesc] 0 0
+    issues'' <- forM issues' $ \issue@(id, i) -> do
       cu <- get404 $ issueCuser i
       uu <- get404 $ issueUuser i
       mau <- case issueAssign i of
         Nothing -> return Nothing
         Just auid -> get auid
-      return (issue, (cu, uu, mau))
+      return $ IssueBis id i cu uu mau
+    let issues = zip (concat $ repeat ["odd"::String,"even"]) issues''
     lift $ defaultLayout $ do
       setTitle $ string $ projectName prj ++ "案件一覧"
       addCassius $(cassiusFile "issue")
@@ -142,8 +150,13 @@ getIssueR pid ino = do
     (iid, issue) <- getBy404 $ UniqueIssue pid ino
     cs <- selectList [CommentIssueEq iid] [CommentCdateDesc] 0 0
     comments <- forM cs $ \(_, c) -> do
-      Just u <- get $ commentCuser c
-      return (u, c)
+      u <- get404 $ commentCuser c
+      ra <- case userAvatar u of
+        Nothing  -> return $ StaticR img_no_image_png
+        Just fid -> do
+          f <- get404 fid
+          return $ FileR (fileHeaderCreator f) fid
+      return (u, c, ra)
     prj <- get404 pid
     ptcpts <- selectParticipants pid
     let stss = lines $ projectStatuses prj
@@ -237,4 +250,5 @@ selectParticipants pid = do
   where
     p2u p = do
       let uid = participantsUser p
-      return . (uid,) =<< get404 uid
+      u <- get404 uid
+      return (uid, u)

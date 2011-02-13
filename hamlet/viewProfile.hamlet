@@ -15,7 +15,7 @@
       %th アバター
       %td
         #avatar
-          %img#myavatar!src=@StaticR.img_no_image_png@
+          %img#myavatar.avatar!src=@StaticR.img_no_image_png@
     %tr
       %th
         $if (isStudent user)

@@ -167,6 +167,7 @@ getIssueR pid ino = do
     lift $ defaultLayout $ do
       setTitle $ string $ issueSubject issue
       addCassius $(cassiusFile "issue")
+      addJulius $(juliusFile "issue")
       addHamlet $(hamletFile "issue")
 
 postCommentR :: ProjectId -> IssueNo -> Handler RepHtml

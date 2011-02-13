@@ -1,5 +1,6 @@
 {-# LANGUAGE TemplateHaskell, OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes, CPP #-}
+{-# LANGUAGE TupleSections #-}
 module Handler.Issue where
 
 import BISocie
@@ -233,5 +234,4 @@ selectParticipants pid = do
   where
     p2u p = do
       let uid = participantsUser p
-      u <- get404 uid
-      return (uid, u)
+      return . (uid,) =<< get404 uid

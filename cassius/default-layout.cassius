@@ -114,6 +114,13 @@ ul.tabs li a
    margin: 0px
    text-decoration: none
 
+#breadcrumbs li
+    display: inline
+#breadcrumbs li:after
+    content: " » "
+#breadcrumbs li:last-child:after
+    content: ''
+
 #main-content
    background-color: #ffffff
    border: 1px solid #CCCCCC

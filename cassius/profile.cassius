@@ -14,9 +14,6 @@ table.profile td
 th.number, td.number
   text-align: right
 
-input[type=address]
-  width: 400px
-
 #map_canvas
   height: 200px
   width: 400px
@@ -25,3 +22,17 @@ input[type=address]
 #myavatar
   width: 100px
 
+.required
+  color: red
+
+input[type=address]
+  width: 400px
+
+input[type=email]
+  width: 200px
+
+input[type=tel]
+  width: 160px
+
+input[name=familyName], input[name=givenName]
+  width: 100px

@@ -1,10 +1,8 @@
 %ul.tabs
   %li
-    %a!href=@HomeR.selfid@ ホーム
-  %li
     %a!href=@IssueListR.pid@ 案件一覧
   %li
-    %a!href=@@ 案件検索
+    %a!href=@NewIssueR.pid@ 案件追加
   %li.selected
     %a!href=@ProjectR.pid@ プロジェクト設定
 

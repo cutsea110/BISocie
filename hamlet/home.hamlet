@@ -1,13 +1,7 @@
 %ul.tabs
-  %li.selected
-    %a!href=@HomeR.selfid@ ホーム
-  %li
-    %a!href=@ProfileR.selfid@ プロフィール
   $if cancreateproject
     %li
       %a!href=@NewProjectR@ プロジェクト新規作成
-  %li
-    %a!href=@@ 案件検索
 
 #main-content
   %table

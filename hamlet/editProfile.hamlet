@@ -3,11 +3,12 @@
     %a!href=@HomeR.selfid@ ホーム
   %li
     %a!href=@?viewprof@ プロフィール
-  %li.selected
-    %a!href=@?editprof@ プロフィール編集
 
 #main-content
-  %h3 $userIdent.user$のプロフィール編集
+  %h3 $userIdent.user$のプロフィール
+    %form.inline!method=get!action=@ProfileR.uid@
+      %input!type=hidden!name=mode!value=v
+      %button.link!type=submit キャンセル
 
   %form!method=post!action=@ProfileR.uid@
     %table.profile
@@ -25,22 +26,27 @@
         %td!colspan=3 $userIdent.user$
       %tr
         %th メールアドレス
+          .required (必須)
         %td!colspan=3
-          %input.watermark!placeholder="your@@mail.address.ac.jp"!type=text!name=email!value=$userEmail.user$
+          %input.watermark!placeholder="your@@mail.address.ac.jp"!type=email!name=email!value=$userEmail.user$
       %tr
         %th 姓
+          .required (必須)
         %td
           %input.watermark!placeholder=聖徳!type=text!name=familyName!value=$userFamilyName.user$
         %th 名
+          .required (必須)
         %td
           %input.watermark!placeholder=花子!type=text!name=givenName!value=$userGivenName.user$
       $maybe mprof prof
         %tr
           %th 生年月日
+            .required (必須)
           %td!colspan=3
             %input.date.watermark!placeholder=yyyy/mm/dd!type=date!name=birth!value=$show.profileBirth.snd.prof$
         %tr
           %th 入学年度
+            .required (必須)
           %td
             %select!name=entryYear
               $forall eyears ey
@@ -53,30 +59,36 @@
                 %option!:fst.gy:selected $show.snd.gy$
         %tr
           %th 所属ブランチ
+            .required (必須)
           %td!colspan=3
             %input.watermark!placeholder=ブランチ!type=text!name=branch!value=$profileBranch.snd.prof$
         %tr
           %th 現住所
+            .required (必須)
           %td!colspan=3
             %input#clon!type=hidden!name=longitude!value=$showMaybeDouble.profileLongitude.snd.prof$
             %input#clat!type=hidden!name=latitude!value=$showMaybeDouble.profileLatitude.snd.prof$
             %input#cloc.watermark!placeholder="千葉県..."!locprefix=c!type=address!name=address!value=$profileAddress.snd.prof$
         %tr
           %th 電話番号
+            .required (必須)
           %td!colspan=3
             %input.watermark!placeholder=090-1234-5678!type=tel!name=tel!value=$profileTel.snd.prof$
         %tr
           %th 最寄駅
+            .required (必須)
           %td!colspan=3
             %input.watermark!placeholder=松戸!type=text!name=station!value=$profileStation.snd.prof$
         %tr
           %th 実家住所
+            .required (必須)
           %td!colspan=3
             %input#hlon!type=hidden!name=homeLongitude!value=$showMaybeDouble.profileHomeLongitude.snd.prof$
             %input#hlat!type=hidden!name=homeLatitude!value=$showMaybeDouble.profileHomeLatitude.snd.prof$
             %input#hloc.watermark!placeholder="埼玉県..."!locprefix=h!type=address!name=homeAddress!value=$profileHomeAddress.snd.prof$
         %tr
           %th 実家電話番号
+            .required (必須)
           %td!colspan=3
             %input.watermark!placeholder=098-7654-3210!type=tel!name=homeTel!value=$profileHomeTel.snd.prof$
         %tr

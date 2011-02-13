@@ -87,20 +87,11 @@ type Widget = GWidget BISocie BISocie
 -- usually require access to the BISocieRoute datatype. Therefore, we
 -- split these actions into two functions and place them in separate files.
 mkYesodData "BISocie" [$parseRoutes|
-/static StaticR Static getStatic
-/auth   AuthR   Auth   getAuth
-
-/profile/#UserId ProfileR GET POST PUT
-/avatar/#UserId AvatarR GET POST
-
-/favicon.ico FaviconR GET
-/robots.txt RobotsR GET
-
 / RootR GET
-
 /home/#UserId HomeR GET
 /project NewProjectR GET POST
 /project/#ProjectId ProjectR GET POST PUT
+
 /participantslist/#ProjectId ParticipantsListR GET
 /participants/#ProjectId ParticipantsR POST
 /userlist.json UserListR GET
@@ -108,8 +99,16 @@ mkYesodData "BISocie" [$parseRoutes|
 /issuelist/#ProjectId IssueListR GET
 /issue/#ProjectId NewIssueR GET POST
 /issue/#ProjectId/#IssueNo IssueR GET
-
 /comment/#ProjectId/#IssueNo CommentR POST
+
+/profile/#UserId ProfileR GET POST PUT
+/avatar/#UserId AvatarR GET POST
+
+/static StaticR Static getStatic
+/auth   AuthR   Auth   getAuth
+
+/favicon.ico FaviconR GET
+/robots.txt RobotsR GET
 
 /admin AdminR UserCrud userCrud
 
@@ -131,8 +130,11 @@ instance Yesod BISocie where
 
     defaultLayout widget = do
       mu <- maybeAuth
-      y <- getYesod
       mmsg <- getMessage
+      y <- getYesod
+      (title, parents) <- breadcrumbs
+      current <- getCurrentRoute
+      tm <- getRouteToMaster
       let header = $(Settings.hamletFile "header")
           footer = $(Settings.hamletFile "footer")
       pc <- widgetToPageContent $ do
@@ -168,20 +170,62 @@ instance Yesod BISocie where
     -- users receiving stale content.
     addStaticContent ext' _ content = do
         let fn = base64md5 content ++ '.' : ext'
-        let content' = content
-            {--
+        let content' =
                 if ext' == "js"
                     then case minifym content of
                             Left _ -> content
                             Right y -> y
                     else content
---}
         let statictmp = Settings.staticdir ++ "/tmp/"
         liftIO $ createDirectoryIfMissing True statictmp
         let fn' = statictmp ++ fn
         exists <- liftIO $ doesFileExist fn'
         unless exists $ liftIO $ L.writeFile fn' content'
         return $ Just $ Right (StaticR $ StaticRoute ["tmp", fn] [], [])
+
+instance YesodBreadcrumbs BISocie where
+  breadcrumb RootR = return ("", Nothing)
+  breadcrumb HomeR{} = return ("ホーム", Nothing)
+  breadcrumb NewProjectR = do
+    (uid, _) <- requireAuth
+    return ("新規プロジェクト作成", Just $ HomeR uid)
+  breadcrumb (ProjectR pid) = return ("設定", Just $ IssueListR pid)
+    
+  breadcrumb ParticipantsListR{} = return ("", Nothing)
+  breadcrumb ParticipantsR{} = return ("", Nothing)
+  breadcrumb UserListR = return ("ユーザ一覧", Nothing)
+  
+  breadcrumb (IssueListR pid) = do 
+    (uid, _) <- requireAuth
+    p <- runDB $ get404 pid
+    return (projectName p, Just $ HomeR uid)
+  breadcrumb (NewIssueR pid) = return ("案件追加", Just $ IssueListR pid)
+  breadcrumb (IssueR pid ino) = do
+    (_, issue) <- runDB $ getBy404 $ UniqueIssue pid ino
+    return (show (issueNumber issue) ++ ": " ++ issueSubject issue, Just $ IssueListR pid)
+  breadcrumb CommentR{} = return ("", Nothing)
+  
+  breadcrumb (ProfileR uid) = do 
+    u <- runDB $ get404 uid
+    mode <- lookupGetParam "mode"
+    case mode of
+      Just "e" -> return (userFullName u ++ " プロフィール編集", Nothing)
+      _        -> return (userFullName u, Nothing)
+  breadcrumb AvatarR{} = return ("", Nothing)
+  
+  -- these pages never call breadcrumb
+  breadcrumb StaticR{} = return ("", Nothing)
+  breadcrumb AuthR{} = return ("", Nothing)
+  
+  breadcrumb FaviconR = return ("", Nothing)
+  breadcrumb RobotsR = return ("", Nothing)
+  
+  breadcrumb AdminR{} = return ("", Nothing)  
+  
+  breadcrumb UploadR = return ("", Nothing)
+  breadcrumb FileR{} = return ("", Nothing)
+  breadcrumb FileListR{} = return ("", Nothing)
+  
 
 -- How to run database actions.
 instance YesodPersist BISocie where

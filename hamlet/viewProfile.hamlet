@@ -3,12 +3,12 @@
     %a!href=@HomeR.selfid@ ホーム
   %li.selected
     %a!href=@?viewprof@ プロフィール
-  %li
-    %a!href=@?editprof@ プロフィール編集
 
 #main-content
   %h3 $userIdent.user$のプロフィール
-
+    %form.inline!method=get!action=@ProfileR.uid@
+      %input!type=hidden!name=mode!value=e
+      %button.link!type=submit 編集する
 
   %table.profile
     %tr

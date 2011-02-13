@@ -36,6 +36,7 @@ getIssueListR pid = do
       return (issue, (cu, uu, mau))
     lift $ defaultLayout $ do
       setTitle $ string $ projectName prj ++ "案件一覧"
+      addCassius $(cassiusFile "issue")
       addHamlet $(hamletFile "issuelist")
 
 getNewIssueR :: ProjectId -> Handler RepHtml
@@ -51,6 +52,7 @@ getNewIssueR pid = do
     let stss = lines $ projectStatuses prj
     lift $ defaultLayout $ do
       setTitle $ string "新規案件作成"
+      addCassius $(cassiusFile "issue")
       addHamlet $(hamletFile "newissue")
       
 postNewIssueR :: ProjectId -> Handler RepHtml
@@ -151,6 +153,7 @@ getIssueR pid ino = do
         isStatus = (==issueStatus issue)
     lift $ defaultLayout $ do
       setTitle $ string $ issueSubject issue
+      addCassius $(cassiusFile "issue")
       addHamlet $(hamletFile "issue")
 
 postCommentR :: ProjectId -> IssueNo -> Handler RepHtml

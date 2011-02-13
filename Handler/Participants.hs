@@ -4,9 +4,12 @@ module Handler.Participants where
 import BISocie
 import Control.Monad (unless, when, forM, mplus)
 
+import StaticFiles
+
 getParticipantsListR :: ProjectId -> Handler RepJson
 getParticipantsListR pid = do
   (selfid, self) <- requireAuth
+  r <- getUrlRender
   runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
     let viewable = p /= Nothing
@@ -16,18 +19,24 @@ getParticipantsListR pid = do
     us <- forM ps' $ \(id, p) -> do
       let uid' = participantsUser p
       Just u <- get uid'
-      return (uid', u, p)
+      ra <- case userAvatar u of
+        Nothing -> return $ StaticR img_no_image_png
+        Just fid -> do
+          f <- get404 fid
+          return $ FileR (fileHeaderCreator f) fid
+      return (uid', u, p, ra)
     lift $ do
       cacheSeconds 10 -- FIXME
-      jsonToRepJson $ jsonMap [("participants", jsonList $ map go us)]
+      jsonToRepJson $ jsonMap [("participants", jsonList $ map (go r) us)]
   where
-    go (id, u, p) = jsonMap [ ("id", jsonScalar $ show id)
-                            , ("ident", jsonScalar $ userIdent u)
-                            , ("name", jsonScalar $ userFullName u)
-                            , ("role", jsonScalar $ show $ userRole u)
-                            , ("prettyrole", jsonScalar $ userRoleName u)
-                            , ("receivemail", jsonScalar $ show $ participantsReceivemail p)
-                            ]
+    go r (id, u, p, ra) = jsonMap [ ("id", jsonScalar $ show id)
+                                  , ("ident", jsonScalar $ userIdent u)
+                                  , ("name", jsonScalar $ userFullName u)
+                                  , ("role", jsonScalar $ show $ userRole u)
+                                  , ("prettyrole", jsonScalar $ userRoleName u)
+                                  , ("receivemail", jsonScalar $ show $ participantsReceivemail p)
+                                  , ("avatar", jsonScalar $ r ra)
+                                  ]
 
 postParticipantsR :: ProjectId -> Handler RepJson
 postParticipantsR pid = do

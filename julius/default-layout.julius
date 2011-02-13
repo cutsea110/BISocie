@@ -4,6 +4,7 @@ $(document).ready(function(){
   $(".watermark").watermark();
 
   $.datepicker.regional['ja'] = {
+    autoSize: true,
     clearText: '', clearStatus: '',
     closeText: '閉じる', closeStatus: '',
     prevText: '<前月', prevStatus: '',

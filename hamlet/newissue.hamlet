@@ -12,11 +12,11 @@
       %tr
         %th 件名:
         %td
-          %input.watermark!type=text!name=subject!placeholder=案件名...
+          %input#subject.watermark!type=text!name=subject!placeholder=案件名...
       %tr
         %th 内容:
         %td
-          %textarea.watermark!name=content!placeholder=内容を書く...
+          %textarea#content.watermark!name=content!placeholder=内容を書く...
       %tr
         %th 期限:
         %td

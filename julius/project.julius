@@ -111,8 +111,11 @@ function json2hash(ps){
 }
 
 function mkUser(u, ps){
-  var div = $('<div/>').attr({uid: u.id, ident: u.ident, fullname: u.name, eyear: u.entryYear}).addClass(u.role+' user-logo'),
+  var div = $("<div class='inline user'/>")
+            .attr({uid: u.id, ident: u.ident, fullname: u.name, eyear: u.entryYear})
+            .addClass(u.role+' user-logo'),
       c = $('<input/>').attr({type:'checkbox'}),
+      avatar = $("<img class='avatar'/>").attr({src: u.avatar}),
       s =$('<span/>').text(u.name),
       mail = $('<img/>');
 
@@ -130,7 +133,7 @@ function mkUser(u, ps){
   }
 
   if('%show.editable%'=='False')
-    return div.append(mail).append(s);
+    return div.append(mail).append(avatar).append(s);
 
   if (ps[u.id])c.attr('checked', true);
   c.click(function(){
@@ -165,5 +168,5 @@ function mkUser(u, ps){
      });
   });
 
-  return div.append(c).append(mail).append(s);
+  return div.append(c).append(mail).append(avatar).append(s);
 }

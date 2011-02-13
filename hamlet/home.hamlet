@@ -4,7 +4,7 @@
       %a!href=@NewProjectR@ プロジェクト新規作成
 
 #main-content
-  %table
+  %table.list
     %thead
       %th プロジェクト名
       %th 概要
@@ -12,10 +12,10 @@
       %th 更新日
     %tbody
       $forall prjs p
-        %tr
+        %tr!class=$fst.p$
           %td
-            %a!href=@IssueListR.fst.p@ $projectName.snd.p$
+            %a!href=@IssueListR.fst.snd.p@ $projectName.snd.snd.p$
           %td
-            %a!href=@ProjectR.fst.p@ $showShortenText.showmaybe.projectDescription.snd.p$
-          %td $showDate.projectCdate.snd.p$
-          %td $showDate.projectUdate.snd.p$
+            %a!href=@ProjectR.fst.snd.p@ $showShortenText.showmaybe.projectDescription.snd.snd.p$
+          %td $showDate.projectCdate.snd.snd.p$
+          %td $showDate.projectUdate.snd.snd.p$

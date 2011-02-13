@@ -23,10 +23,12 @@ getHomeR uid = do
   let cancreateproject = userRole self >= Teacher
   runDB $ do
     ps <- selectList [ParticipantsUserEq selfid] [] 0 0
-    prjs <- forM ps $ \(id, p) -> do
-      let pid = participantsProject p
-      Just prj <- get pid
-      return (pid, prj)
+    prjs <- do
+      prjs' <- forM ps $ \(id, p) -> do
+        let pid = participantsProject p
+        Just prj <- get pid
+        return (pid, prj)
+      return $ zip (concat $ repeat ["odd"::String, "even"]) prjs'
     lift $ defaultLayout $ do
       setTitle $ string $ userFullName self ++ " ホーム"
       addHamlet $(hamletFile "home")

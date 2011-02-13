@@ -19,19 +19,6 @@ img.avatar
   max-height: 40px
   margin-right: 10px
 
-table.list
-  border-collapse: collapse
-  background-color: #ffffff
-table.list tr.odd
-  background-color: #eeeeee
-table.list tr.even
-  background-color: #ffffff
-table.list td
-  border: solid 1px #000000
-table.list th
-  border: solid 1px #000000
-  background-color: #d0d0d0
-
 div.prof-tooltip
   position: absolute
   left: -9999px

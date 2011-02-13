@@ -11,7 +11,7 @@
 .Teacher
   color: #90a0fc
 .Admin
-  color: #ffffff
+  color: #000000
 
 .scroll
   overflow: scroll
@@ -40,5 +40,15 @@ dd
   margin-left: 0em
   margin-top: 0.5em
 
-img.avatar
-  width: 60px
+div.user-logo
+  width: 110px
+  height: 110px
+  margin: 0.5em
+  vertical-align: top
+
+div.user-logo span
+  font-size: 90%
+
+div.user-logo img.avatar
+  max-width: 80px
+  max-height: 80px

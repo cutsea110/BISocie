@@ -38,14 +38,14 @@ $(document).ready(function(){
   $('#all-filtered-set').click(function(){
     $("#search-result .user-logo:visible input[type='checkbox']:not(:checked)").each(function(){
       $(this).attr('checked',true);
-      $(this).trigger('change');
+      modifyParticipant($(this));
     });
     reloading_participants();
   });
   $('#all-filtered-reset').click(function(){
     $("#search-result .user-logo:visible input[type='checkbox']:checked").each(function(){
       $(this).attr('checked',false);
-      $(this).trigger('change');
+      modifyParticipant($(this));
     });
     reloading_participants();
   });
@@ -117,7 +117,7 @@ function mkUser(u, ps){
       c = $('<input/>').attr({type:'checkbox'}),
       avatar = $("<img class='avatar'/>").attr({src: u.avatar}),
       s =$('<span/>').text(u.name),
-      mail = $('<img/>');
+      mail = $('<img/>').addClass('mail');
 
   if (ps[u.id]){
     switch (ps[u.id].receivemail){
@@ -133,40 +133,42 @@ function mkUser(u, ps){
   }
 
   if('%show.editable%'=='False')
-    return div.append(mail).append(avatar).append(s);
+    return div.append(s).append(mail).append(avatar);
 
   if (ps[u.id])c.attr('checked', true);
   c.click(function(){
+    modifyParticipant(c);
     reloading_participants();
   });
-  c.change(function(){
-     var uid = $(this).closest('div').attr('uid'),
-         checked = $(this).attr('checked'),
-         method = checked ? "add" : "del";
 
-     $.ajax({
-       async: false,
-       type: 'POST',
-       url: '@ParticipantsR.pid@',
-       dataType: 'json',
-       data: {_method: method, uid: uid},
-       success: function (json) {
-         switch (json.participants.status) {
-           case 'added':
-             mail.attr({src: '@StaticR.img_mail_accept_png@'});
-             break;
-           case 'deleted':
-             mail.attr({src: '@StaticR.img_mail_checked_png@'});
-             break;
-         }
-       },
-       error: function(res, status) {
-         c.attr({checked: !checked});
-         var msg = $('<div/>').attr('id', 'message').text($(res.responseText).find('p').text());
-         msg.insertBefore($('#ui-main')).fadeOut(3000, function(){msg.remove();});
-       }
-     });
+  return div.append(c).append(s).append(mail).append(avatar);
+}
+
+function modifyParticipant(c){
+  var uid = c.closest('div').attr('uid'),
+      checked = c.attr('checked'),
+      method = checked ? "add" : "del",
+      mail = c.closest('div').find("img[class='mail']");
+
+  $.ajax({
+    type: 'POST',
+    url: '@ParticipantsR.pid@',
+    dataType: 'json',
+    data: {_method: method, uid: uid},
+    success: function (json) {
+      switch (json.participants.status) {
+        case 'added':
+          mail.attr({src: '@StaticR.img_mail_accept_png@'});
+          break;
+        case 'deleted':
+          mail.attr({src: '@StaticR.img_mail_checked_png@'});
+          break;
+      }
+    },
+    error: function(res, status) {
+      c.attr({checked: !checked});
+      var msg = $('<div/>').attr('id', 'message').text($(res.responseText).find('p').text());
+      msg.insertBefore($('#ui-main')).fadeOut(3000, function(){msg.remove();});
+    }
   });
-
-  return div.append(c).append(mail).append(avatar).append(s);
 }

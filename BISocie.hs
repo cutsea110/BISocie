@@ -127,7 +127,7 @@ getBy404 ukey = do
 -- of settings which can be configured by overriding methods here.
 instance Yesod BISocie where
     approot _ = Settings.approot
-
+    
     defaultLayout widget = do
       mu <- maybeAuth
       mmsg <- getMessage
@@ -170,12 +170,14 @@ instance Yesod BISocie where
     -- users receiving stale content.
     addStaticContent ext' _ content = do
         let fn = base64md5 content ++ '.' : ext'
-        let content' =
+        let content' = content
+            {--
                 if ext' == "js"
                     then case minifym content of
                             Left _ -> content
                             Right y -> y
                     else content
+            --}
         let statictmp = Settings.staticdir ++ "/tmp/"
         liftIO $ createDirectoryIfMissing True statictmp
         let fn' = statictmp ++ fn

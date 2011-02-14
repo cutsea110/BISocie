@@ -44,17 +44,21 @@ approot :: String
 -- you would probably want it to be:
 -- > approot = "http://www.yesod.com"
 -- Please note that there is no trailing slash.
-approot = "http://localhost:3001"
+-- approot = "http://localhost:3001"
+approot = "http://research.timedia.co.jp/bisocie"
 #else
-approot = "http://localhost:3001"
+-- approot = "http://localhost:3001"
+approot = "http://research.timedia.co.jp/bisocie"
 #endif
 
 -- | The base URL for your site's root relative top path with consider apache.
 rootRelativePath :: String
 #ifdef PRODUCTION
-rootRelativePath = "http://localhost:3000"
+-- rootRelativePath = "http://localhost:3000"
+rootRelativePath = "http://research.timedia.co.jp"
 #else
-rootRelativePath = "http://localhost:3000"
+-- rootRelativePath = "http://localhost:3000"
+rootRelativePath = "http://research.timedia.co.jp"
 #endif
 
 -- | The location of static files on your system. This is a file system
@@ -87,9 +91,9 @@ s3root = approot ++ "/s3"
 -- specific.
 connStr :: String
 #ifdef PRODUCTION
-connStr = "user=cut-sea password=yesoddevel host=localhost port=5432 dbname=bisocie"
+connStr = "user=bisocie password=bisocie host=localhost port=5432 dbname=bisocie"
 #else
-connStr = "user=cut-sea password=yesoddevel host=localhost port=5432 dbname=bisocie_debug"
+connStr = "user=bisocie password=bisocie host=localhost port=5432 dbname=bisocie_debug"
 #endif
 
 -- | Your application will keep a connection pool and take connections from

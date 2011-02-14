@@ -64,7 +64,7 @@ table.list
 table.list tr.odd
   background-color: #ffffff
 table.list tr.even
-  background-color: #eeeeee
+  background-color: #dddddd
 table.list td
   border: solid 1px #000000
 table.list th

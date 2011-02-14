@@ -151,6 +151,7 @@ function modifyParticipant(c){
       mail = c.closest('div').find("img[class='mail']");
 
   $.ajax({
+    async: false,
     type: 'POST',
     url: '@ParticipantsR.pid@',
     dataType: 'json',

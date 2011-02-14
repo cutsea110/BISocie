@@ -102,6 +102,7 @@ Comment
     assign UserId Maybe
     status String Eq In
     limitdate Day Maybe
+    attached FileHeaderId Maybe
     cuser UserId
     cdate UTCTime Desc
 

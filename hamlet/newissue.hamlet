@@ -7,7 +7,7 @@
     %a!href=@ProjectR.pid@ プロジェクト設定
 
 #main-content
-  %form!method=post!action=@NewIssueR.pid@
+  %form!method=post!enctype=multipart/form-data!action=@NewIssueR.pid@
     %table.nostyle
       %tr
         %th 件名:
@@ -34,5 +34,9 @@
           %select!name=status
             $forall stss s
               %option $s$
+      %tr
+        %th 添付ファイル
+        %td
+          %input!type=file!name=attached
 
     %button!type=submit!name=_method!value=add 案件作成

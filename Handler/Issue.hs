@@ -16,6 +16,7 @@ import qualified Data.Text.Lazy.Encoding
 
 import qualified Settings (mailXHeader)
 import StaticFiles
+import Handler.S3
 
 data IssueBis = IssueBis { issueBisId :: IssueId
                          , issueBisIssue :: Issue
@@ -92,6 +93,7 @@ postNewIssueR pid = do
         prj <- get404 pid
         let ino = projectIssuecounter prj
             asgn' = fromMaybe Nothing (fmap (Just . read) asgn)
+        mfhid <- storeAttachedFile selfid
         iid <- insert $ Issue { issueProject=pid
                               , issueNumber=ino
                               , issueSubject=sbj
@@ -109,6 +111,7 @@ postNewIssueR pid = do
                               , commentAssign=asgn'
                               , commentStatus=sts
                               , commentLimitdate=ldate
+                              , commentAttached=mfhid
                               , commentCuser=selfid
                               , commentCdate=now
                               }
@@ -197,6 +200,7 @@ postCommentR pid ino = do
         (iid, issue) <- getBy404 $ UniqueIssue pid ino
         let ldate = limit `mplus` issueLimitdate issue
             asgn' = fromMaybe Nothing (fmap (Just . read) asgn)
+        mfhid <- storeAttachedFile selfid
         update iid [ IssueUuser selfid
                    , IssueUdate now
                    , IssueLimitdate ldate
@@ -209,6 +213,7 @@ postCommentR pid ino = do
                          , commentAssign=asgn'
                          , commentStatus=sts
                          , commentLimitdate=ldate
+                         , commentAttached=mfhid
                          , commentCuser=selfid
                          , commentCdate=now
                          }
@@ -253,3 +258,14 @@ selectParticipants pid = do
       let uid = participantsUser p
       u <- get404 uid
       return (uid, u)
+
+-- | storeAttachedFile
+--   :: (Control.Monad.IO.Class.MonadIO m, RequestReader m, PersistBackend m) =>
+--      Key User -> m (Maybe (Key FileHeader))
+storeAttachedFile uid =
+  lift (lookupFile "attached") >>= \mfi -> do
+    case mfi of
+      Nothing -> return Nothing
+      Just fi -> do
+        (fid, _, _, _, _) <- upload uid fi
+        return $ Just fid

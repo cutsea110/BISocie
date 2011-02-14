@@ -9,7 +9,7 @@
 #main-content
   %h3 $show.ino$ : $issueSubject.issue$
 
-  %form!method=post!action=@(CommentR.pid).ino@
+  %form!method=post!enctype=multipart/form-data!action=@(CommentR.pid).ino@
     %table.nostyle
       %tr
         %th 内容:
@@ -32,6 +32,11 @@
           %select!name=status
             $forall stss s
               %option!:isStatus.s:selected $s$
+      %tr
+        %th 添付ファイル
+        %td
+          %input!type=file!name=attached
+
     %button!type=submit!name=_method!value=add 投稿
 
   %ul#issue-thread

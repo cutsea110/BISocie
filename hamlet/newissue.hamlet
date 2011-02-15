@@ -1,6 +1,4 @@
 %ul.tabs
-  %li
-    %a!href=@IssueListR.pid@ 案件一覧
   %li.selected
     %a!href=@NewIssueR.pid@ 案件追加
   %li

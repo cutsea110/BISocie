@@ -47,6 +47,6 @@
       %pre.post-body
         $commentBisContent.snd.c$
         $maybe (commentBisAttached (snd c)) f
-          %hr
-          添付ファイル: $
-          %a!href=@(AttachedFileR.fst.c).(fst.f)@ $fileHeaderFullname.snd.f$
+          .attached
+            添付ファイル: $
+            %a!href=@(AttachedFileR.fst.c).(fst.f)@ $fileHeaderFullname.snd.f$

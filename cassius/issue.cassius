@@ -26,3 +26,9 @@ div.prof-tooltip
   padding: 5px 10px
   border: 1px solid #aaa
   color: #000
+
+.attached
+  margin-top: 2em
+  padding-top: 5px
+  border-top: solid 1px #CCC
+

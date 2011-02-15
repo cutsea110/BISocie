@@ -102,7 +102,7 @@ mkYesodData "BISocie" [$parseRoutes|
 /comment/#ProjectId/#IssueNo CommentR POST
 
 /profile/#UserId ProfileR GET POST PUT
-/avatar/#UserId AvatarR GET POST
+/avatar/#UserId AvatarR POST
 /avatar-image/#UserId AvatarImageR GET
 
 /static StaticR Static getStatic
@@ -213,7 +213,6 @@ instance YesodBreadcrumbs BISocie where
     case mode of
       Just "e" -> return (userFullName u ++ " プロフィール編集", Nothing)
       _        -> return (userFullName u, Nothing)
-  breadcrumb AvatarR{} = return ("", Nothing)
   
   -- these pages never call breadcrumb
   breadcrumb StaticR{} = return ("", Nothing)

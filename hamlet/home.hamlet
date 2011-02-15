@@ -5,6 +5,7 @@
 
 #main-content
   %table.list
+    %caption 参加プロジェクト一覧
     %thead
       %th プロジェクト名
       %th 概要

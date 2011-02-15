@@ -14,7 +14,7 @@ import Network.Mail.Mime
 import qualified Data.Text.Lazy
 import qualified Data.Text.Lazy.Encoding
 
-import qualified Settings (mailXHeader)
+import qualified Settings (mailXHeader, mailMessageIdDomain)
 import StaticFiles
 import Handler.S3
 
@@ -123,11 +123,13 @@ postNewIssueR pid = do
                                 , commentCdate=now
                                 }
         ptcpts <- selectParticipants pid
+        let msgid = toMessageId iid cid now Settings.mailMessageIdDomain
         liftIO $ renderSendMail Mail
           { mailHeaders =
                [ ("From", "noreply")
                , ("To", intercalate "," $ map (userEmail.snd) ptcpts)
                , ("Subject", sbj)
+               , ("Message-ID", msgid)
                , (Settings.mailXHeader, show pid)
                ]
           , mailParts = 
@@ -216,6 +218,7 @@ postCommentR pid ino = do
         unless addable $ 
           lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
         (iid, issue) <- getBy404 $ UniqueIssue pid ino
+        [(lastCid, _)] <- selectList [CommentIssueEq iid] [CommentCdateDesc] 1 0
         let ldate = limit `mplus` issueLimitdate issue
             asgn' = fromMaybe Nothing (fmap (Just . read) asgn)
         mfhid <- storeAttachedFile selfid
@@ -237,11 +240,16 @@ postCommentR pid ino = do
                                 }
         prj <- get404 pid
         ptcpts <- selectParticipants pid
+        let msgid = toMessageId iid cid now Settings.mailMessageIdDomain
+            refid = toMessageId iid lastCid now Settings.mailMessageIdDomain
         liftIO $ renderSendMail Mail
           { mailHeaders =
                [ ("From", "noreply")
                , ("To", intercalate "," $ map (userEmail.snd) ptcpts)
                , ("Subject", issueSubject issue)
+               , ("Message-ID", msgid)
+               , ("Referrence", refid)
+               , ("In-Reply-To", refid)
                , (Settings.mailXHeader, show pid)
                ]
           , mailParts = 

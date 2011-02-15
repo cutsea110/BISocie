@@ -124,16 +124,16 @@ FileHeader
 |]
 
 initUser :: String -> User
-initUser id = User { userIdent=id
-                   , userPassword=Nothing
-                   , userRole=Student
-                   , userFamilyName=""
-                   , userGivenName=""
-                   , userEmail=""
-                   , userAvatar=Nothing
-                   , userActive=True
-                   }
-              
+initUser uid = User { userIdent=uid
+                    , userPassword=Nothing
+                    , userRole=Student
+                    , userFamilyName=""
+                    , userGivenName=""
+                    , userEmail=""
+                    , userAvatar=Nothing
+                    , userActive=True
+                    }
+
 userFullName :: User -> String
 userFullName u = userFamilyName u ++ " " ++ userGivenName u
     
@@ -159,6 +159,14 @@ showMaybeDouble md = case md of
 
 showDate :: UTCTime -> String
 showDate = formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S"
+
+toMessageId :: IssueId -> CommentId -> UTCTime -> String -> String
+toMessageId (IssueId iid) (CommentId cid) time domain = "<" 
+                    ++ formatTime defaultTimeLocale "%Y%m%d%H%M%S%q" time
+                    ++ "i" ++ show iid 
+                    ++ "c" ++ show cid 
+                    ++ "@" ++ domain
+                    ++ ">"
 
 showBirthDay :: Profile -> String
 showBirthDay = show . profileBirth

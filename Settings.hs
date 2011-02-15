@@ -24,6 +24,7 @@ module Settings
     , entryStartYear
     , graduateStartYear
     , mailXHeader
+    , mailMessageIdDomain
     ) where
 
 import qualified Text.Hamlet as H
@@ -87,9 +88,9 @@ s3root = approot ++ "/s3"
 -- specific.
 connStr :: String
 #ifdef PRODUCTION
-connStr = "user=bisocie password=bisocie host=localhost port=5432 dbname=bisocie"
+connStr = "user=cut-sea password=yesoddevel host=localhost port=5432 dbname=bisocie"
 #else
-connStr = "user=bisocie password=bisocie host=localhost port=5432 dbname=bisocie_debug"
+connStr = "user=cut-sea password=yesoddevel host=localhost port=5432 dbname=bisocie_debug"
 #endif
 
 -- | Your application will keep a connection pool and take connections from
@@ -165,9 +166,12 @@ withConnectionPool = withPostgresqlPool connStr connectionCount
 runConnectionPool :: MonadInvertIO m => SqlPersist m a -> ConnectionPool -> m a
 runConnectionPool = runSqlPool
 
+-- BISocie server settings
 entryStartYear :: Integer
 entryStartYear = 2000
 graduateStartYear :: Integer
 graduateStartYear = 2000
 mailXHeader :: String
 mailXHeader = "X-BISocie"
+mailMessageIdDomain :: String
+mailMessageIdDomain = "bisocie.localhost"

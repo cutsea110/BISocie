@@ -31,7 +31,7 @@ executable         simple-server
                  , persistent   >= 0.3.1.1
                  , persistent-postgresql
                  , template-haskell
-                 , hamlet
+                 , hamlet       == 0.6.1.2
                  , web-routes
                  , hjsmin       >= 0.0.4   && < 0.1
     ghc-options:   -Wall

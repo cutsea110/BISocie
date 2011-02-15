@@ -128,7 +128,7 @@ postNewIssueR pid = do
                [ ("From", "noreply")
                , ("To", intercalate "," $ map (userEmail.snd) ptcpts)
                , ("Subject", sbj)
-               , (Settings.mailXHeader, show pid ++ ":" ++ show ino)
+               , (Settings.mailXHeader, show pid)
                ]
           , mailParts = 
                  [[ Part
@@ -242,7 +242,7 @@ postCommentR pid ino = do
                [ ("From", "noreply")
                , ("To", intercalate "," $ map (userEmail.snd) ptcpts)
                , ("Subject", issueSubject issue)
-               , (Settings.mailXHeader, show pid ++ ":" ++ show ino)
+               , (Settings.mailXHeader, show pid)
                ]
           , mailParts = 
                  [[ Part

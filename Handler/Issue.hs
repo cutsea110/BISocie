@@ -248,7 +248,7 @@ postCommentR pid ino = do
                , ("To", intercalate "," $ map (userEmail.snd) ptcpts)
                , ("Subject", issueSubject issue)
                , ("Message-ID", msgid)
-               , ("Referrence", refid)
+               , ("References", refid)
                , ("In-Reply-To", refid)
                , (Settings.mailXHeader, show pid)
                ]

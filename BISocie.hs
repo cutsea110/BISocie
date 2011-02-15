@@ -103,6 +103,7 @@ mkYesodData "BISocie" [$parseRoutes|
 
 /profile/#UserId ProfileR GET POST PUT
 /avatar/#UserId AvatarR GET POST
+/avatar-image/#UserId AvatarImageR GET
 
 /static StaticR Static getStatic
 /auth   AuthR   Auth   getAuth
@@ -112,10 +113,11 @@ mkYesodData "BISocie" [$parseRoutes|
 
 /admin AdminR UserCrud userCrud
 
-/s3/upload UploadR GET POST PUT
-/s3/user/#UserId/file/#FileHeaderId FileR GET POST DELETE
-/s3/user/#UserId/list.json FileListR GET
+/s3/upload UploadR POST PUT
+/s3/user/#UserId/file/#FileHeaderId FileR POST DELETE
 |]
+-- S3はアクセス制限する
+-- S3は基本公開ベースなので制限をするURIを提供してそこからgetFileRを呼ぶ
 
 getBy404 ukey = do
   mres <- getBy ukey
@@ -223,8 +225,6 @@ instance YesodBreadcrumbs BISocie where
   breadcrumb AdminR{} = return ("", Nothing)  
   
   breadcrumb UploadR = return ("", Nothing)
-  breadcrumb FileR{} = return ("", Nothing)
-  breadcrumb FileListR{} = return ("", Nothing)
   
 
 -- How to run database actions.

@@ -153,12 +153,9 @@ getIssueR pid ino = do
     (iid, issue) <- getBy404 $ UniqueIssue pid ino
     cs <- selectList [CommentIssueEq iid] [CommentCdateDesc] 0 0
     comments <- forM cs $ \(_, c) -> do
-      u <- get404 $ commentCuser c
-      ra <- case userAvatar u of
-        Nothing  -> return $ StaticR img_no_image_png
-        Just fid -> do
-          f <- get404 fid
-          return $ FileR (fileHeaderCreator f) fid
+      let uid = commentCuser c
+          ra = AvatarImageR uid
+      u <- get404 uid
       return (u, c, ra)
     prj <- get404 pid
     ptcpts <- selectParticipants pid

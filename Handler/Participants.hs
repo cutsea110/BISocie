@@ -18,12 +18,8 @@ getParticipantsListR pid = do
     ps' <- selectList [ParticipantsProjectEq pid] [] 0 0
     us <- forM ps' $ \(id, p) -> do
       let uid' = participantsUser p
+          ra = AvatarImageR uid'
       Just u <- get uid'
-      ra <- case userAvatar u of
-        Nothing -> return $ StaticR img_no_image_png
-        Just fid -> do
-          f <- get404 fid
-          return $ FileR (fileHeaderCreator f) fid
       return (uid', u, p, ra)
     lift $ do
       cacheSeconds 10 -- FIXME

@@ -17,11 +17,7 @@ getUserListR = do
     us' <- selectList [UserActiveEq True] [] 0 0
     forM us' $ \u@(uid,u') -> do
       mp' <- getBy $ UniqueProfile uid
-      ra <- case userAvatar u' of
-        Nothing  -> return $ StaticR img_no_image_png
-        Just fid -> do
-          f <- get404 fid
-          return $ FileR (fileHeaderCreator f) fid
+      let ra = AvatarImageR uid
       return (u, mp', ra)
   cacheSeconds 10 -- FIXME
   jsonToRepJson $ jsonMap [("userlist", jsonList $ map (go r) us)]

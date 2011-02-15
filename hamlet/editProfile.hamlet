@@ -1,7 +1,7 @@
 %ul.tabs
   %li
     %a!href=@HomeR.selfid@ ホーム
-  %li
+  %li.selected
     %a!href=@?viewprof@ プロフィール
 
 #main-content
@@ -16,7 +16,7 @@
         %th アバター
         %td!colspan=3
           #avatar
-            %img#myavatar!src=@StaticR.img_no_image_png@
+            %img#myavatar!src=@AvatarImageR.uid@
       %tr
         %th
           $if (isStudent user)

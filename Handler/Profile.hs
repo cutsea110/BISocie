@@ -5,6 +5,7 @@ module Handler.Profile where
 import BISocie
 import Settings (hamletFile, cassiusFile, juliusFile, widgetFile, entryStartYear, graduateStartYear)
 import StaticFiles
+import Handler.S3
 
 import Yesod.Form.Jquery
 import Control.Monad
@@ -168,9 +169,20 @@ putProfileR uid = do
                    ]
     lift $ redirectParams RedirectTemporary (ProfileR uid) [("mode", "e")]
     
+getAvatarImageR :: UserId -> Handler RepHtml
+getAvatarImageR uid = do
+  _ <- requireAuth
+  runDB $ do
+    u <- get404 uid
+    case userAvatar u of
+      Nothing -> lift $ redirect RedirectTemporary $ StaticR img_no_image_png
+      Just fid -> do
+        f <- get404 fid
+        lift $ getFileR (fileHeaderCreator f) fid
+
 getAvatarR :: UserId -> Handler RepJson
 getAvatarR uid = do
-  (selfid, _) <- requireAuth
+  _ <- requireAuth
   r <- getUrlRender
   runDB $ do
     user <- get404 uid
@@ -179,7 +191,7 @@ getAvatarR uid = do
       Just fid -> do
         file <- get404 fid
         return (fid, file)
-    let rf = r $ FileR (fileHeaderCreator file) fid -- not uid but creator
+    let rf = r $ AvatarImageR uid
     lift $ do
       cacheSeconds 10 -- FIXME
       jsonToRepJson $ jsonMap [ ("uri", jsonScalar rf)
@@ -195,8 +207,9 @@ getAvatarR uid = do
 postAvatarR :: UserId -> Handler RepJson
 postAvatarR uid = do
   (selfid, self) <- requireAuth
-  (avatar', uri) <- uncurry (liftM2 (,)) (lookupPostParam "avatar", lookupPostParam "uri")
-  let avatar = fmap read avatar'
+  r <- getUrlRender
+  mfhid <- lookupPostParam "avatar"
+  let avatar = fmap read mfhid
   runDB $ do
     user <- get404 uid
     let editable = self == user || userRole self > userRole user
@@ -205,9 +218,6 @@ postAvatarR uid = do
     update uid [UserAvatar avatar]
     lift $ do
       cacheSeconds 10 -- FIXME
-      jsonToRepJson $ jsonMap [ ("uri", showMaybeJScalar $ uri)
-                              , ("avatar", showMaybeJScalar $ avatar')
+      jsonToRepJson $ jsonMap [ ("uri", jsonScalar $ r $ AvatarImageR uid)
+                              , ("avatar", jsonScalar $ showmaybe $ mfhid)
                               ]
-  where
-    showMaybeJScalar :: Maybe String -> Json
-    showMaybeJScalar = jsonScalar . showmaybe

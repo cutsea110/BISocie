@@ -1,9 +1,4 @@
 $(document).ready(function(){
-  $.getJSON('@AvatarR.uid@', function(json){
-    var avatar = $("<img id='myavatar'/>").attr({src: json.uri});
-    $('#myavatar').remove();
-    $('#avatar').append(avatar);
-  });
 
   if ($('#cloc').length>0) {
      $("#cloc").after("<div id='map_canvas'></div>");
@@ -62,11 +57,10 @@ $(document).ready(function(){
     .upload($("#upload_form").attr('action'),
          function(res) {
            var file = $(res).find('file'),
-               fhid = file.find('fhid').text(),
-               uri = file.find('uri').text();
+               fhid = file.find('fhid').text();
            // bind avatar
-           $.post('@AvatarR.uid@', {uri: uri, avatar: fhid}, function(json){
-             var avatar = $("<img id='myavatar'/>").attr({src: json.uri});
+           $.post('@AvatarR.uid@', {avatar: fhid}, function(json){
+             var avatar = $("<img id='myavatar'/>").attr({src: json.uri + '?uncache='+(new Date).getTime()});
              $('#myavatar').remove();
              $('#avatar').append(avatar);
              $('#upload_file').val('');

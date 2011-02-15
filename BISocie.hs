@@ -100,6 +100,7 @@ mkYesodData "BISocie" [$parseRoutes|
 /issue/#ProjectId NewIssueR GET POST
 /issue/#ProjectId/#IssueNo IssueR GET
 /comment/#ProjectId/#IssueNo CommentR POST
+/attached/#CommentId/#FileHeaderId AttachedFileR GET
 
 /profile/#UserId ProfileR GET POST PUT
 /avatar/#UserId AvatarR POST

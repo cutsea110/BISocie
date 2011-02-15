@@ -24,6 +24,13 @@ data IssueBis = IssueBis { issueBisId :: IssueId
                          , issueBisUpdator :: User
                          , issueBisAssign :: Maybe User
                          }
+data CommentBis = CommentBis { commentBisId :: CommentId
+                             , commentBisContent :: String
+                             , commentBisStatus :: String
+                             , commentBisAttached :: Maybe (FileHeaderId, FileHeader)
+                             , commentBisCuser :: (UserId, User)
+                             , commentBisCdate :: UTCTime
+                             }
                 
 getIssueListR :: ProjectId -> Handler RepHtml
 getIssueListR pid = do
@@ -105,16 +112,16 @@ postNewIssueR pid = do
                               , issueUuser=selfid
                               , issueUdate=now
                               }
-        _ <- insert $ Comment { commentProject=pid
-                              , commentIssue=iid
-                              , commentContent=cntnt
-                              , commentAssign=asgn'
-                              , commentStatus=sts
-                              , commentLimitdate=ldate
-                              , commentAttached=mfhid
-                              , commentCuser=selfid
-                              , commentCdate=now
-                              }
+        cid <- insert $ Comment { commentProject=pid
+                                , commentIssue=iid
+                                , commentContent=cntnt
+                                , commentAssign=asgn'
+                                , commentStatus=sts
+                                , commentLimitdate=ldate
+                                , commentAttached=mfhid
+                                , commentCuser=selfid
+                                , commentCdate=now
+                                }
         ptcpts <- selectParticipants pid
         liftIO $ renderSendMail Mail
           { mailHeaders =
@@ -136,7 +143,11 @@ postNewIssueR pid = do
                                        , ""
                                        ]
                                      ++ lines cntnt 
-                                     ++ [r (IssueR pid ino)]
+                                     ++ [ ""
+                                        , "イシュー: " ++ r (IssueR pid ino)]
+                                     ++ case mfhid of
+                                       Nothing -> []
+                                       Just fid -> ["添付ファイル: " ++ (r $ AttachedFileR cid fid)]
                      }
                   ]]
           }
@@ -152,11 +163,21 @@ getIssueR pid ino = do
       lift $ permissionDenied "あなたはこの案件を閲覧することはできません."
     (iid, issue) <- getBy404 $ UniqueIssue pid ino
     cs <- selectList [CommentIssueEq iid] [CommentCdateDesc] 0 0
-    comments <- forM cs $ \(_, c) -> do
+    comments <- forM cs $ \(cid, c) -> do
       let uid = commentCuser c
-          ra = AvatarImageR uid
       u <- get404 uid
-      return (u, c, ra)
+      mf <- case commentAttached c of
+        Nothing -> return Nothing
+        Just fid -> do
+          f <- get404 fid
+          return $ Just (fid, f)
+      return $ (cid, CommentBis { commentBisId=cid
+                                , commentBisContent=commentContent c
+                                , commentBisStatus=commentStatus c
+                                , commentBisAttached=mf
+                                , commentBisCuser=(uid, u)
+                                , commentBisCdate=commentCdate c
+                                })
     prj <- get404 pid
     ptcpts <- selectParticipants pid
     let stss = lines $ projectStatuses prj
@@ -204,16 +225,16 @@ postCommentR pid ino = do
                    , IssueAssign asgn'
                    , IssueStatus sts
                    ]
-        insert $ Comment { commentProject=pid
-                         , commentIssue=iid
-                         , commentContent=cntnt
-                         , commentAssign=asgn'
-                         , commentStatus=sts
-                         , commentLimitdate=ldate
-                         , commentAttached=mfhid
-                         , commentCuser=selfid
-                         , commentCdate=now
-                         }
+        cid <- insert $ Comment { commentProject=pid
+                                , commentIssue=iid
+                                , commentContent=cntnt
+                                , commentAssign=asgn'
+                                , commentStatus=sts
+                                , commentLimitdate=ldate
+                                , commentAttached=mfhid
+                                , commentCuser=selfid
+                                , commentCdate=now
+                                }
         prj <- get404 pid
         ptcpts <- selectParticipants pid
         liftIO $ renderSendMail Mail
@@ -236,11 +257,27 @@ postCommentR pid ino = do
                                        , ""
                                        ]
                                      ++ lines cntnt 
-                                     ++ [r (IssueR pid ino)]
+                                     ++ [ ""
+                                        , "イシュー: " ++ r (IssueR pid ino)]
+                                     ++ case mfhid of
+                                       Nothing -> []
+                                       Just fid -> ["添付ファイル: " ++ (r $ AttachedFileR cid fid)]
                      }
                   ]]
           }
         lift $ redirect RedirectTemporary $ IssueR pid ino
+        
+getAttachedFileR :: CommentId -> FileHeaderId -> Handler RepHtml
+getAttachedFileR cid fid = do
+  (selfid, _) <- requireAuth
+  runDB $ do
+    c <- get404 cid
+    p <- getBy $ UniqueParticipants (commentProject c) selfid
+    let viewable = p /= Nothing
+    unless viewable $
+      lift $ permissionDenied "あなたはこのファイルをダウンロードできません."
+    f <- get404 fid
+    lift $ getFileR (fileHeaderCreator f) fid
 
 
 -- | selectParticipants
@@ -259,10 +296,9 @@ selectParticipants pid = do
 -- | storeAttachedFile
 --   :: (Control.Monad.IO.Class.MonadIO m, RequestReader m, PersistBackend m) =>
 --      Key User -> m (Maybe (Key FileHeader))
-storeAttachedFile uid =
-  lift (lookupFile "attached") >>= \mfi -> do
-    case mfi of
-      Nothing -> return Nothing
-      Just fi -> do
-        (fid, _, _, _, _) <- upload uid fi
-        return $ Just fid
+storeAttachedFile uid = do
+  Just fi <- lift $ lookupFile "attached"
+  mf <- upload uid fi
+  case mf of
+    Nothing -> return Nothing
+    Just (fid, _, _, _, _) -> return $ Just fid

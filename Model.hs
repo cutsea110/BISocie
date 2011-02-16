@@ -173,15 +173,15 @@ color = do
              if c == ""
                then return Nothing
                else return $ Just c
-    known = (char '赤' >> (return $ Just "#ff0000"))
+    known = (char '赤' >> (return $ Just "#ffcccc"))
             <|>
-            (char '緑' >> (return $ Just "#00ff00"))
+            (char '緑' >> (return $ Just "#ccffcc"))
             <|>
-            (char '青' >> (return $ Just "#0000ff"))
+            (char '青' >> (return $ Just "#ccccff"))
             <|>
             (char '灰' >> (return $ Just "#888888"))
             <|>
-            (char '黄' >> (return $ Just "#ffff00"))
+            (char '黄' >> (return $ Just "#ffffcc"))
             <|>
             (char '桃' >> (return $ Just "#ffc0cb"))
             <|>

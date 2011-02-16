@@ -173,15 +173,15 @@ color = do
              if c == ""
                then return Nothing
                else return $ Just c
-    known = (char '赤' >> (return $ Just "#f00"))
+    known = (char '赤' >> (return $ Just "#ff0000"))
             <|>
-            (char '緑' >> (return $ Just "#0f0"))
+            (char '緑' >> (return $ Just "#00ff00"))
             <|>
-            (char '青' >> (return $ Just "#00f"))
+            (char '青' >> (return $ Just "#0000ff"))
             <|>
-            (char '灰' >> (return $ Just "#888"))
+            (char '灰' >> (return $ Just "#888888"))
             <|>
-            (char '黄' >> (return $ Just "#ff0"))
+            (char '黄' >> (return $ Just "#ffff00"))
             <|>
             (char '桃' >> (return $ Just "#ffc0cb"))
             <|>
@@ -201,7 +201,7 @@ color = do
       g <- hexDigit
       b <- hexDigit
       eof
-      return $ Just ['#',r,g,b]
+      return $ Just ['#',r,r,g,g,b,b]
 
 
 data IssueBis = IssueBis { issueBisId :: IssueId

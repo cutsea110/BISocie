@@ -182,10 +182,6 @@ color = do
             (char '灰' >> (return $ Just "#888888"))
             <|>
             (char '黄' >> (return $ Just "#ffffcc"))
-            <|>
-            (char '桃' >> (return $ Just "#ffc0cb"))
-            <|>
-            (char '紫' >> (return $ Just "#800080"))
       
     rgb6 = do
       r1 <- hexDigit

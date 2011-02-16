@@ -5,6 +5,10 @@
     %a!href=@ProjectR.pid@ プロジェクト設定
 
 #main-content
+  %h3 $projectName.prj$ への新規案件追加
+    %form.inline!method=get!action=@IssueListR.pid@
+      %button.link!type=submit キャンセル
+
   %form!method=post!enctype=multipart/form-data!action=@NewIssueR.pid@
     %table.nostyle
       %tr

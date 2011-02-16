@@ -6,6 +6,12 @@
 #search-by-name
   width: 8em
 
+#status-syntax-help
+  font-size: 67%
+
+#status-syntax-help .underline
+  text-decoration: underline
+
 .Student
   color: #fb90a0
 .Teacher

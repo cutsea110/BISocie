@@ -17,6 +17,16 @@ import qualified Data.Text.Lazy.Encoding
 import qualified Settings (mailXHeader, mailMessageIdDomain)
 import StaticFiles
 import Handler.S3
+
+getCrossSearchR :: Handler RepHtml
+getCrossSearchR = do
+  (selfid, self) <- requireAuth
+  let cancreateproject = userRole self >= Teacher
+  defaultLayout $ do
+    setTitle $ string "クロスサーチ"
+    addCassius $(cassiusFile "crosssearch")
+    addJulius $(juliusFile "crosssearch")
+    addHamlet $(hamletFile "crosssearch")
                 
 getIssueListR :: ProjectId -> Handler RepHtml
 getIssueListR pid = do

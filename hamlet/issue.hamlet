@@ -1,4 +1,6 @@
 %ul.tabs
+  %li.selected
+    %a!href=@(IssueR.pid).ino@ $show.ino$ : $issueSubject.issue$
   %li
     %a!href=@NewIssueR.pid@ 案件追加
   %li

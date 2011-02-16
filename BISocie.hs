@@ -96,6 +96,7 @@ mkYesodData "BISocie" [$parseRoutes|
 /participants/#ProjectId ParticipantsR POST
 /userlist.json UserListR GET
 
+/cross-search CrossSearchR GET
 /issuelist/#ProjectId IssueListR GET
 /issue/#ProjectId NewIssueR GET POST
 /issue/#ProjectId/#IssueNo IssueR GET
@@ -198,6 +199,9 @@ instance YesodBreadcrumbs BISocie where
   breadcrumb ParticipantsR{} = return ("", Nothing)
   breadcrumb UserListR = return ("ユーザ一覧", Nothing)
   
+  breadcrumb CrossSearchR = do
+    (uid, _) <- requireAuth
+    return ("クロスサーチ", Just $ HomeR uid)
   breadcrumb (IssueListR pid) = do 
     (uid, _) <- requireAuth
     p <- runDB $ get404 pid

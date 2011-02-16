@@ -1,7 +1,10 @@
 %ul.tabs
-  $if cancreateproject
-    %li.selected
-      %a!href=@NewProjectR@ プロジェクト新規作成
+  %li
+    %a!href=@HomeR.selfid@ ホーム
+  %li.selected
+    %a!href=@NewProjectR@ プロジェクト新規作成
+  %li
+    %a!href=@CrossSearchR@ クロスサーチ
 
 #main-content
   .warnings

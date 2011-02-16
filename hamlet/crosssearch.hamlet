@@ -1,0 +1,11 @@
+%ul.tabs
+  %li
+    %a!href=@HomeR.selfid@ ホーム
+  $if cancreateproject
+    %li
+      %a!href=@NewProjectR@ プロジェクト新規作成
+  %li.selected
+    %a!href=@CrossSearchR@ クロスサーチ
+
+#main-content
+  %h3 クロスサーチ

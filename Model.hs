@@ -14,6 +14,8 @@ import Data.Time
 import Data.List (intercalate)
 import Data.List.Split (splitOn)
 import Data.Maybe (fromMaybe)
+import Text.ParserCombinators.Parsec
+import qualified Text.ParserCombinators.Parsec as P (string)
 
 data Role =  Student | Teacher | Admin
           deriving (Read, Show, Eq, Ord, Enum, Bounded)
@@ -122,6 +124,97 @@ FileHeader
     creator UserId Eq
     created UTCTime Desc
 |]
+
+data Effect = Impact | Strike deriving (Show, Eq)
+type Color = String
+data ProjectBis = ProjectBis { projectBisId :: ProjectId
+                             , projectBisName :: String
+                             , projectBisDescription :: String
+                             , projectBisStatuses :: [(String, Maybe Color, Maybe Effect)]
+                             , projectBisIssuecounter :: IssueNo
+                             , projectBisCuser :: (UserId, User)
+                             , projectBisCdate :: UTCTime
+                             , projectBisUdate :: UTCTime
+                             }
+
+-- | Parse Statuses
+statuses :: String -> Either ParseError [(String, Maybe Color, Maybe Effect)]
+statuses = mapM (parse status "status parser") . lines
+status = do
+  e <- effect
+  s <- many1 (noneOf "#")
+  c <- color
+  return (s, c, e)
+
+effect = do
+  try (oneOf "!=") >>= \e ->
+      case e of
+        '!' -> return $ Just Impact
+        '=' -> return $ Just Strike
+  <|> return Nothing
+
+color = do
+  try (char '#')
+  c <- color'
+  return c
+  <|>
+  return Nothing
+  where
+    color' = try known
+             <|>
+             try rgb3
+             <|>
+             try rgb6
+             <|> 
+             do
+             c <- many letter
+             if c == ""
+               then return Nothing
+               else return $ Just c
+    known = (char '赤' >> (return $ Just "#f00"))
+            <|>
+            (char '緑' >> (return $ Just "#0f0"))
+            <|>
+            (char '青' >> (return $ Just "#00f"))
+            <|>
+            (char '灰' >> (return $ Just "#888"))
+            <|>
+            (char '黄' >> (return $ Just "#ff0"))
+            <|>
+            (char '桃' >> (return $ Just "#ffc0cb"))
+            <|>
+            (char '紫' >> (return $ Just "#800080"))
+      
+    rgb6 = do
+      r1 <- hexDigit
+      r2 <- hexDigit
+      g1 <- hexDigit
+      g2 <- hexDigit
+      b1 <- hexDigit
+      b2 <- hexDigit
+      eof
+      return $ Just ['#',r1,r2,g1,g2,b1,b2]
+    rgb3 = do
+      r <- hexDigit
+      g <- hexDigit
+      b <- hexDigit
+      eof
+      return $ Just ['#',r,g,b]
+
+
+data IssueBis = IssueBis { issueBisId :: IssueId
+                         , issueBisIssue :: Issue
+                         , issueBisCreator :: User
+                         , issueBisUpdator :: User
+                         , issueBisAssign :: Maybe User
+                         }
+data CommentBis = CommentBis { commentBisId :: CommentId
+                             , commentBisContent :: String
+                             , commentBisStatus :: String
+                             , commentBisAttached :: Maybe (FileHeaderId, FileHeader)
+                             , commentBisCuser :: (UserId, User)
+                             , commentBisCdate :: UTCTime
+                             }
 
 initUser :: String -> User
 initUser uid = User { userIdent=uid

@@ -17,20 +17,6 @@ import qualified Data.Text.Lazy.Encoding
 import qualified Settings (mailXHeader, mailMessageIdDomain)
 import StaticFiles
 import Handler.S3
-
-data IssueBis = IssueBis { issueBisId :: IssueId
-                         , issueBisIssue :: Issue
-                         , issueBisCreator :: User
-                         , issueBisUpdator :: User
-                         , issueBisAssign :: Maybe User
-                         }
-data CommentBis = CommentBis { commentBisId :: CommentId
-                             , commentBisContent :: String
-                             , commentBisStatus :: String
-                             , commentBisAttached :: Maybe (FileHeaderId, FileHeader)
-                             , commentBisCuser :: (UserId, User)
-                             , commentBisCdate :: UTCTime
-                             }
                 
 getIssueListR :: ProjectId -> Handler RepHtml
 getIssueListR pid = do
@@ -218,7 +204,7 @@ postCommentR pid ino = do
         unless addable $ 
           lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
         (iid, issue) <- getBy404 $ UniqueIssue pid ino
-        [(lastCid, _)] <- selectList [CommentIssueEq iid] [CommentCdateDesc] 1 0
+        [(lastCid, lastC)] <- selectList [CommentIssueEq iid] [CommentCdateDesc] 1 0
         let ldate = limit `mplus` issueLimitdate issue
             asgn' = fromMaybe Nothing (fmap (Just . read) asgn)
         mfhid <- storeAttachedFile selfid
@@ -241,7 +227,7 @@ postCommentR pid ino = do
         prj <- get404 pid
         ptcpts <- selectParticipants pid
         let msgid = toMessageId iid cid now Settings.mailMessageIdDomain
-            refid = toMessageId iid lastCid now Settings.mailMessageIdDomain
+            refid = toMessageId iid lastCid (commentCdate lastC) Settings.mailMessageIdDomain
         liftIO $ renderSendMail Mail
           { mailHeaders =
                [ ("From", "noreply")

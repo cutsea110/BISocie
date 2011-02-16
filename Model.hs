@@ -129,13 +129,15 @@ data Effect = Impact | Strike deriving (Show, Eq)
 type Color = String
 data ProjectBis = ProjectBis { projectBisId :: ProjectId
                              , projectBisName :: String
-                             , projectBisDescription :: String
+                             , projectBisDescription :: Maybe String
                              , projectBisStatuses :: [(String, Maybe Color, Maybe Effect)]
-                             , projectBisIssuecounter :: IssueNo
-                             , projectBisCuser :: (UserId, User)
-                             , projectBisCdate :: UTCTime
-                             , projectBisUdate :: UTCTime
                              }
+
+lookupStatus :: (Eq a) => a -> [(a, b, c)] -> Maybe (a, b, c)
+lookupStatus _ [] = Nothing
+lookupStatus x (z@(y,_,_):zs) = if x == y
+                                then Just z
+                                else lookupStatus x zs
 
 -- | Parse Statuses
 statuses :: String -> Either ParseError [(String, Maybe Color, Maybe Effect)]

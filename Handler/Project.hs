@@ -31,7 +31,7 @@ postNewProjectR = do
     pid <- insert $ Project { projectName=""
                             , projectIssuecounter=0
                             , projectDescription=Nothing
-                            , projectStatuses="未開始\n着手\n完了\n却下\n保留\n議論\n報告"
+                            , projectStatuses="!未開始#赤\n着手#緑\n完了#灰\n=却下#灰\n保留\n議論\n報告"
                             , projectCuser=selfid
                             , projectCdate=now
                             , projectUdate=now

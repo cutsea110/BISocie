@@ -29,7 +29,7 @@
         %td
           %select!name=status
             $forall stss s
-              %option!:isStatus.s:selected $s$
+              %option!:isStatus.fst3.s:selected $fst3.s$
       %tr
         %th 添付ファイル
         %td

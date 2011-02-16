@@ -31,7 +31,7 @@
         %td
           %select!name=status
             $forall stss s
-              %option $s$
+              %option $fst3.s$
       %tr
         %th 添付ファイル
         %td

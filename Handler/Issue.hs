@@ -26,7 +26,13 @@ getIssueListR pid = do
     let viewable = p /= Nothing
     unless viewable $ 
       lift $ permissionDenied "あなたはこのプロジェクトの参加者ではありません."
-    prj <- get404 pid
+    prj' <- get404 pid
+    let (Right es) = statuses $ projectStatuses prj'
+        prj = ProjectBis { projectBisId=pid
+                         , projectBisName=projectName prj'
+                         , projectBisDescription=projectDescription prj'
+                         , projectBisStatuses=es
+                         }
     issues' <- selectList [IssueProjectEq pid] [IssueNumberDesc] 0 0
     issues'' <- forM issues' $ \issue@(id, i) -> do
       cu <- get404 $ issueCuser i
@@ -36,8 +42,12 @@ getIssueListR pid = do
         Just auid -> get auid
       return $ IssueBis id i cu uu mau
     let issues = zip (concat $ repeat ["odd"::String,"even"]) issues''
+        colorOf = \s -> 
+          case lookupStatus s es of
+            Nothing -> ""
+            Just (_, c, _) -> fromMaybe "" c
     lift $ defaultLayout $ do
-      setTitle $ string $ projectName prj ++ "案件一覧"
+      setTitle $ string $ projectBisName prj ++ "案件一覧"
       addCassius $(cassiusFile "issue")
       addHamlet $(hamletFile "issuelist")
 
@@ -51,7 +61,7 @@ getNewIssueR pid = do
       lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
     prj <- get404 pid
     ptcpts <- selectParticipants pid
-    let stss = lines $ projectStatuses prj
+    let (Right stss) = statuses $ projectStatuses prj
     lift $ defaultLayout $ do
       setTitle $ string "新規案件作成"
       addCassius $(cassiusFile "issue")
@@ -168,7 +178,7 @@ getIssueR pid ino = do
                                 })
     prj <- get404 pid
     ptcpts <- selectParticipants pid
-    let stss = lines $ projectStatuses prj
+    let (Right stss) = statuses $ projectStatuses prj
         isAssign = case issueAssign issue of
           Nothing -> const False
           Just uid -> (==uid)

@@ -6,7 +6,7 @@
 
 #main-content
   %table.list
-    %caption $projectName.prj$ 案件一覧
+    %caption $projectBisName.prj$ 案件一覧
     %thead
       %th No
       %th 件名
@@ -18,7 +18,7 @@
       %th 更新日
     %tbody
       $forall issues issue
-        %tr!class=$fst.issue$
+        %tr!bgcolor=$colorOf.issueStatus.issueBisIssue.snd.issue$
           %td.number $show.issueNumber.issueBisIssue.snd.issue$
           %td
             %a!href=@(IssueR.pid).issueNumber.issueBisIssue.snd.issue@

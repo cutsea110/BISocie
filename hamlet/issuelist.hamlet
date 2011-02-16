@@ -18,7 +18,7 @@
       %th 更新日
     %tbody
       $forall issues issue
-        %tr!bgcolor=$colorOf.issueStatus.issueBisIssue.snd.issue$
+        %tr!bgcolor=$colorOf.issueStatus.issueBisIssue.snd.issue$!class=$effectOf.issueStatus.issueBisIssue.snd.issue$
           %td.number $show.issueNumber.issueBisIssue.snd.issue$
           %td
             %a!href=@(IssueR.pid).issueNumber.issueBisIssue.snd.issue@

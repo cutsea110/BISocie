@@ -46,6 +46,10 @@ getIssueListR pid = do
           case lookupStatus s es of
             Nothing -> ""
             Just (_, c, _) -> fromMaybe "" c
+        effectOf = \s ->
+          case lookupStatus s es of
+            Nothing -> ""
+            Just (_, _, e) -> fromMaybe "" (fmap show e)
     lift $ defaultLayout $ do
       setTitle $ string $ projectBisName prj ++ "案件一覧"
       addCassius $(cassiusFile "issue")

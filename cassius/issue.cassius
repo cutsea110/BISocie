@@ -32,3 +32,8 @@ div.prof-tooltip
   padding-top: 5px
   border-top: solid 1px #CCC
 
+.Impact td
+  font-weight: bold
+
+.Strike td
+  text-decoration: line-through

@@ -3,8 +3,6 @@
     %a!href=@(IssueR.pid).ino@ $show.ino$ : $issueSubject.issue$
   %li
     %a!href=@NewIssueR.pid@ 案件追加
-  %li
-    %a!href=@ProjectR.pid@ プロジェクト設定
 
 #main-content
   %h3 $show.ino$ : $issueSubject.issue$

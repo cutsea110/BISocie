@@ -8,4 +8,31 @@
     %a!href=@CrossSearchR@ クロスサーチ
 
 #main-content
-  %h3 クロスサーチ
+  %table
+    %caption クロスサーチ
+    %thead
+      %th プロジェクト名
+      %th No
+      %th 件名
+      %th ステータス
+      %th アサイン
+      %th 期限
+      %th 作成者
+      %th 更新者
+      %th 更新日
+    %tbody
+      $forall issues issue
+        %tr!bgcolor=$(colorOf.issueProject.issueBisIssue.snd.issue).issueStatus.issueBisIssue.snd.issue$!class=$(effectOf.issueProject.issueBisIssue.snd.issue).issueStatus.issueBisIssue.snd.issue$
+          %td $projectNameOf.issueProject.issueBisIssue.snd.issue$
+          %td.number $show.issueNumber.issueBisIssue.snd.issue$
+          %td
+            %a!href=@(IssueR.issueProject.issueBisIssue.snd.issue).issueNumber.issueBisIssue.snd.issue@
+              $issueSubject.issueBisIssue.snd.issue$
+          %td $issueStatus.issueBisIssue.snd.issue$
+          %td $showmaybe.(fmap.userFullName).issueBisAssign.snd.issue$
+          %td $showLimitdate.issueBisIssue.snd.issue$
+          %td $userFullName.issueBisCreator.snd.issue$
+          %td $userFullName.issueBisUpdator.snd.issue$
+          %td $showDate.issueUdate.issueBisIssue.snd.issue$
+
+    

@@ -22,11 +22,47 @@ getCrossSearchR :: Handler RepHtml
 getCrossSearchR = do
   (selfid, self) <- requireAuth
   let cancreateproject = userRole self >= Teacher
-  defaultLayout $ do
-    setTitle $ string "クロスサーチ"
-    addCassius $(cassiusFile "crosssearch")
-    addJulius $(juliusFile "crosssearch")
-    addHamlet $(hamletFile "crosssearch")
+  runDB $ do
+    ptcpts <- selectList [ParticipantsUserEq selfid] [] 0 0
+    prjids <- forM ptcpts $ \(_, ptcpt) -> do
+      return $ participantsProject ptcpt
+    prjs' <- forM prjids $ \ pid -> do
+      p <- get404 pid
+      return (pid, p)
+    prjs <- forM prjs' $ \(pid, p) -> do
+      let (Right es) = statuses $ projectStatuses p
+      return $ ProjectBis { projectBisId=pid
+                          , projectBisName=projectName p
+                          , projectBisDescription=projectDescription p
+                          , projectBisStatuses=es
+                          }
+    issues' <- selectList [IssueProjectIn prjids] [] 0 0
+    issues'' <- forM issues' $ \issue@(id, i) -> do
+      cu <- get404 $ issueCuser i
+      uu <- get404 $ issueUuser i
+      mau <- case issueAssign i of
+        Nothing -> return Nothing
+        Just auid -> get auid
+      return $ IssueBis id i cu uu mau
+    let issues = zip (concat $ repeat ["odd"::String,"even"]) issues''
+        projectNameOf = \pid -> do
+          let (Just p) = (lookupProjectBis pid prjs)
+          projectBisName p
+        colorOf = \pid s -> do
+          let (Just p) = (lookupProjectBis pid prjs)
+          case lookupStatus s (projectBisStatuses p) of
+            Nothing -> ""
+            Just (_, c, _) -> fromMaybe "" c
+        effectOf = \pid s -> do
+          let (Just p) = (lookupProjectBis pid prjs)
+          case lookupStatus s (projectBisStatuses p) of
+            Nothing -> ""
+            Just (_, _, e) -> fromMaybe "" (fmap show e)
+    lift $ defaultLayout $ do
+      setTitle $ string "クロスサーチ"
+      addCassius $(cassiusFile "crosssearch")
+      addJulius $(juliusFile "crosssearch")
+      addHamlet $(hamletFile "crosssearch")
                 
 getIssueListR :: ProjectId -> Handler RepHtml
 getIssueListR pid = do

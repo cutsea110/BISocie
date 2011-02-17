@@ -85,7 +85,7 @@ Project
     udate UTCTime Update
 
 Issue
-    project ProjectId Eq
+    project ProjectId Eq In
     number IssueNo Eq Desc Asc
     subject String
     assign UserId Maybe Update
@@ -138,6 +138,12 @@ lookupStatus _ [] = Nothing
 lookupStatus x (z@(y,_,_):zs) = if x == y
                                 then Just z
                                 else lookupStatus x zs
+
+lookupProjectBis :: ProjectId -> [ProjectBis] -> Maybe ProjectBis
+lookupProjectBis pid [] = Nothing
+lookupProjectBis pid (p:ps) = if pid == (projectBisId p)
+                              then Just p
+                              else lookupProjectBis pid ps
 
 -- | Parse Statuses
 statuses :: String -> Either ParseError [(String, Maybe Color, Maybe Effect)]

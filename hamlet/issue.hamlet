@@ -50,3 +50,5 @@
           .attached
             添付ファイル: $
             %a!href=@(AttachedFileR.fst.c).(fst.f)@ $fileHeaderFullname.snd.f$
+
+#popup-profile

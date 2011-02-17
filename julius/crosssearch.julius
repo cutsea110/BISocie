@@ -40,20 +40,22 @@ function reload_search_result() {
       var ilist = json.issues;
       $.each(ilist, function(i, item){
         var tr = $('<tr/>'),
-            project = $('<td/>').text(item.project),
-            no = $('<td/>').text(item.no),
-            subject = $('<td/>').text(item.subject),
+            project = $('<td/>'),
+            no = $('<td/>').addClass('number').text(item.no),
+            subject = $('<td/>'),
             status = $('<td/>').text(item.status),
             assign = $('<td/>').text(item.assign),
             limitdate = $('<td/>').text(item.limitdate),
             creator = $('<td/>').text(item.creator),
             updator = $('<td/>').text(item.updator),
-            updated = $('<td/>').text(item.updated);
+            updated = $('<td/>').text(item.updated),
+            link2project = $('<a/>').attr({href: item.projecturi}).text(item.project),
+            link2issue = $('<a/>').attr({href: item.issueuri}).text(item.subject);
         if(item.effect!="") tr.addClass(item.effect);
         if(item.color!="") tr.attr({bgcolor: item.color});
-        tr.append(project)
+        tr.append(project.append(link2project))
           .append(no)
-          .append(subject)
+          .append(subject.append(link2issue))
           .append(status)
           .append(assign)
           .append(limitdate)

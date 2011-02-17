@@ -88,6 +88,7 @@ getCrossSearchR = do
 postCrossSearchR :: Handler RepJson
 postCrossSearchR = do
   (selfid, self) <- requireAuth
+  r <- getUrlRender
   ps' <- lookupPostParams "projectid"
   ss' <- lookupPostParams "status"
   as' <- lookupPostParams "assign"
@@ -116,20 +117,24 @@ postCrossSearchR = do
       return $ (prj, IssueBis id i cu uu mau)
     lift $ do
       cacheSeconds 10 -- FIXME
-      jsonToRepJson $ jsonMap [("issues", jsonList $ map go issues)]
+      jsonToRepJson $ jsonMap [("issues", jsonList $ map (go r) issues)]
   where
     colorAndEffect s es = case lookupStatus s es of
       Nothing -> ("", "")
       Just (_, c, e) -> (fromMaybe "" c, fromMaybe "" (fmap show e))
-    go (p, i) = 
+    go r (p, i) = 
       let (c, e) = colorAndEffect (issueStatus $ issueBisIssue i) (projectBisStatuses p)
+          projectRoute = IssueListR $ projectBisId p
+          issueRoute = IssueR (projectBisId p) (issueNumber $ issueBisIssue i)
       in
       jsonMap [ ("id", jsonScalar $ show $ issueBisId i)
               , ("effect", jsonScalar e)
               , ("color", jsonScalar c)
               , ("project", jsonScalar $ projectBisName p)
+              , ("projecturi", jsonScalar $ r $ projectRoute)
               , ("no", jsonScalar $ show $ issueNumber $ issueBisIssue i)
               , ("subject", jsonScalar $ issueSubject $ issueBisIssue i)
+              , ("issueuri", jsonScalar $ r $ issueRoute)
               , ("status", jsonScalar $ issueStatus $ issueBisIssue i)
               , ("assign", showMaybeJScalar $ fmap userFullName $ issueBisAssign i)
               , ("limitdate", jsonScalar $ showLimitdate $ issueBisIssue i)

@@ -88,13 +88,13 @@ Issue
     project ProjectId Eq In
     number IssueNo Eq Desc Asc
     subject String
-    assign UserId Maybe Update
-    status String Update
-    limitdate Day Maybe Update
+    assign UserId Maybe Update In
+    status String Update In
+    limitdate Day Maybe Update GE LT
     cuser UserId
     cdate UTCTime
     uuser UserId Update
-    udate UTCTime Update Desc
+    udate UTCTime Update Desc GE LT
     UniqueIssue project number
 
 Comment
@@ -109,7 +109,7 @@ Comment
     cdate UTCTime Desc
 
 Participants
-    project ProjectId Eq
+    project ProjectId Eq In
     user UserId Eq
     receivemail Bool Eq default=true
     UniqueParticipants project user

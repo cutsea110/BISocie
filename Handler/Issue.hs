@@ -6,7 +6,7 @@ module Handler.Issue where
 import BISocie
 import Control.Applicative ((<$>),(<*>))
 import Control.Monad (unless, forM, mplus, liftM2)
-import Data.List (intercalate)
+import Data.List (intercalate, nub)
 import Data.Time
 import Data.Tuple.HT
 import Data.Maybe (fromMaybe)
@@ -17,6 +17,49 @@ import qualified Data.Text.Lazy.Encoding
 import qualified Settings (mailXHeader, mailMessageIdDomain)
 import StaticFiles
 import Handler.S3
+
+getAssignListR :: Handler RepJson
+getAssignListR = do
+  (selfid, _) <- requireAuth
+  pids' <- lookupGetParams "projectid"
+  let pids = map read pids'
+  runDB $ do
+    ptcpts <- selectList [ParticipantsUserEq selfid, ParticipantsProjectIn pids] [] 0 0
+    prjids <- forM ptcpts $ \(_, p) -> return $ participantsProject p
+    users' <- selectList [ParticipantsProjectIn prjids] [] 0 0
+    users'' <- forM users' $ \(_, p) -> do
+      let uid = participantsUser p
+      u <- get404 uid
+      return (uid, u)
+    let users = nub users''
+    lift $ do
+      cacheSeconds 10 -- FIXME
+      jsonToRepJson $ jsonMap [("assigns", jsonList $ map go users)]
+  where
+    go (uid, u) = jsonMap [ ("uid", jsonScalar $ show uid)
+                          , ("name", jsonScalar $ userFullName u)
+                          ]
+
+getStatusListR :: Handler RepJson
+getStatusListR = do
+  (selfid, _) <- requireAuth
+  prjids' <- lookupGetParams "projectid"
+  let prjids = map read prjids'
+  runDB $ do
+    ptcpts <- selectList [ParticipantsUserEq selfid, ParticipantsProjectIn prjids] [] 0 0
+    prjs <- forM ptcpts $ \(_, p) -> do
+      let pid = participantsProject p
+      prj <- get404 pid
+      let (Right es) = statuses $ projectStatuses prj
+      return $ ProjectBis { projectBisId=pid
+                          , projectBisName=projectName prj
+                          , projectBisDescription=projectDescription prj
+                          , projectBisStatuses=es
+                          }
+    let statuses = nub $ concatMap (map fst3 . projectBisStatuses) prjs
+    lift $ do
+      cacheSeconds 10 -- FIXME
+      jsonToRepJson $ jsonMap [("statuses", jsonList $ map jsonScalar statuses)]
 
 getCrossSearchR :: Handler RepHtml
 getCrossSearchR = do
@@ -36,33 +79,66 @@ getCrossSearchR = do
                           , projectBisDescription=projectDescription p
                           , projectBisStatuses=es
                           }
-    issues' <- selectList [IssueProjectIn prjids] [IssueUdateDesc] 0 0
-    issues'' <- forM issues' $ \issue@(id, i) -> do
-      cu <- get404 $ issueCuser i
-      uu <- get404 $ issueUuser i
-      mau <- case issueAssign i of
-        Nothing -> return Nothing
-        Just auid -> get auid
-      return $ IssueBis id i cu uu mau
-    let issues = zip (concat $ repeat ["odd"::String,"even"]) issues''
-        projectNameOf = \pid -> do
-          let (Just p) = (lookupProjectBis pid prjs)
-          projectBisName p
-        colorOf = \pid s -> do
-          let (Just p) = (lookupProjectBis pid prjs)
-          case lookupStatus s (projectBisStatuses p) of
-            Nothing -> ""
-            Just (_, c, _) -> fromMaybe "" c
-        effectOf = \pid s -> do
-          let (Just p) = (lookupProjectBis pid prjs)
-          case lookupStatus s (projectBisStatuses p) of
-            Nothing -> ""
-            Just (_, _, e) -> fromMaybe "" (fmap show e)
     lift $ defaultLayout $ do
       setTitle $ string "クロスサーチ"
       addCassius $(cassiusFile "issue")
       addJulius $(juliusFile "crosssearch")
       addHamlet $(hamletFile "crosssearch")
+
+postCrossSearchR :: Handler RepJson
+postCrossSearchR = do
+  (selfid, self) <- requireAuth
+  ps' <- lookupPostParams "projectid"
+  ss' <- lookupPostParams "status"
+  as' <- lookupPostParams "assign"
+  let (pS, sS, aS) = (map read ps', ss', map (Just . read) as')
+  runDB $ do
+    ptcpts' <- selectList [ParticipantsUserEq selfid] [] 0 0
+    prjs <- forM ptcpts' $ \(_, p) -> do
+      let pid = participantsProject p
+      prj <- get404 pid
+      let (Right es) = statuses $ projectStatuses prj
+      return (pid, ProjectBis { projectBisId=pid
+                              , projectBisName=projectName prj
+                              , projectBisDescription=projectDescription prj
+                              , projectBisStatuses=es
+                              })
+    issues' <- selectList [IssueProjectIn pS, IssueStatusIn sS, IssueAssignIn aS] [IssueUdateDesc] 0 0
+    issues <- forM issues' $ \(id, i) -> do
+      cu <- get404 $ issueCuser i
+      uu <- get404 $ issueUuser i
+      mau <- case issueAssign i of
+        Nothing -> return Nothing
+        Just auid -> get auid
+      let (Just prj) = lookup (issueProject i) prjs
+      return $ (prj, IssueBis id i cu uu mau)
+    lift $ do
+      cacheSeconds 10 -- FIXME
+      jsonToRepJson $ jsonMap [("issues", jsonList $ map go issues)]
+  where
+    colorAndEffect s es = case lookupStatus s es of
+      Nothing -> ("", "")
+      Just (_, c, e) -> (fromMaybe "" c, fromMaybe "" (fmap show e))
+    go (p, i) = 
+      let (c, e) = colorAndEffect (issueStatus $ issueBisIssue i) (projectBisStatuses p)
+      in
+      jsonMap [ ("id", jsonScalar $ show $ issueBisId i)
+              , ("effect", jsonScalar e)
+              , ("color", jsonScalar c)
+              , ("project", jsonScalar $ projectBisName p)
+              , ("no", jsonScalar $ show $ issueNumber $ issueBisIssue i)
+              , ("subject", jsonScalar $ issueSubject $ issueBisIssue i)
+              , ("status", jsonScalar $ issueStatus $ issueBisIssue i)
+              , ("assign", showMaybeJScalar $ fmap userFullName $ issueBisAssign i)
+              , ("limitdate", jsonScalar $ showLimitdate $ issueBisIssue i)
+              , ("creator", jsonScalar $ userFullName $ issueBisCreator i)
+              , ("updator", jsonScalar $ userFullName $ issueBisUpdator i)
+              , ("updated", jsonScalar $ showDate $ issueUdate $ issueBisIssue i)
+              ]
+    showJScalar :: (Show a) => a -> Json
+    showJScalar = jsonScalar . show
+    showMaybeJScalar :: Maybe String -> Json
+    showMaybeJScalar = jsonScalar . showmaybe
                 
 getIssueListR :: ProjectId -> Handler RepHtml
 getIssueListR pid = do

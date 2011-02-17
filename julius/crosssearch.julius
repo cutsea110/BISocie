@@ -1,3 +1,139 @@
 $(document).ready(function(){
+  $('#projectids').change(function(){
+    reload_statuses();
+    reload_assigns();
+    reload_search_result();
+  });
 
+  $('#statuses, #assigns').change(function(){
+    reload_search_result();
+  });
+
+  reload_statuses();
+  reload_assigns();
+  reload_search_result();
 });
+
+function reload_search_result() {
+  // clear
+  $('#cross-search-result tr').remove();
+
+  // search
+  var keys = '';
+  $('#projectids option:selected').each(function(){
+    keys = keys + 'projectid=' + encodeURI( $(this).val() ) + '&';
+  });
+  $('#statuses option:selected').each(function(){
+    keys = keys + 'status=' + encodeURI( $(this).val() ) + '&';
+  });
+  $('#assigns option:selected').each(function(){
+    keys = keys + 'assign=' + encodeURI( $(this).val() ) + '&';
+  });
+
+  $.ajax({
+    async: true,
+    type: 'POST',
+    url: '@CrossSearchR@',
+    dataType: 'json',
+    data: keys,
+    success: function(json){
+      var ilist = json.issues;
+      $.each(ilist, function(i, item){
+        var tr = $('<tr/>'),
+            project = $('<td/>').text(item.project),
+            no = $('<td/>').text(item.no),
+            subject = $('<td/>').text(item.subject),
+            status = $('<td/>').text(item.status),
+            assign = $('<td/>').text(item.assign),
+            limitdate = $('<td/>').text(item.limitdate),
+            creator = $('<td/>').text(item.creator),
+            updator = $('<td/>').text(item.updator),
+            updated = $('<td/>').text(item.updated);
+        if(item.effect!="") tr.addClass(item.effect);
+        if(item.color!="") tr.attr({bgcolor: item.color});
+        tr.append(project)
+          .append(no)
+          .append(subject)
+          .append(status)
+          .append(assign)
+          .append(limitdate)
+          .append(creator)
+          .append(updator)
+          .append(updated);
+        $('#cross-search-result').append(tr);
+
+      });
+    },
+    error: function (res, status) {
+
+    }
+  });
+}
+
+function reload_statuses() {
+  // save selected
+  var selected = {};
+  $('#statuses option:selected').each(function(){
+    selected[$(this).val()] = $(this).val();
+  });
+  // clear
+  $('#statuses option').remove();
+
+  // get statuses
+  var keys = '';
+  $('#projectids option:selected').each(function(){
+    keys = keys + 'projectid=' + encodeURI( $(this).val() ) + '&';
+  });
+
+  $.ajax({
+    async: false,
+    type: 'GET',
+    url: '@StatusListR@',
+    dataType: 'json',
+    data: keys,
+    success: function(json){
+      var slist = json.statuses;
+      $.each(slist, function(i, s){
+        var opt = $('<option/>').text(s);
+        if (selected[s]) opt.attr('selected', 'selected');
+        $('#statuses').append(opt);
+      });
+    },
+    error: function (res, status) {
+    }
+  });
+}
+
+function reload_assigns() {
+  // save selected
+  var selected = {};
+  $('#assigns option:selected').each(function(){
+    selected[$(this).val()] = $(this).val();
+  });
+  // clear
+  $('#assigns option').remove();
+
+  // get participants
+  var keys = '';
+  $('#projectids option:selected').each(function(){
+    keys = keys + 'projectid=' + encodeURI( $(this).val() ) + '&';
+  });
+
+  $.ajax({
+    async: false,
+    type: 'GET',
+    url: '@AssignListR@',
+    dataType: 'json',
+    data: keys,
+    success: function(json) {
+    var alist = json.assigns;
+      $.each(alist, function(i, a){
+        var opt = $('<option/>').val(a.uid).text(a.name);
+        if (selected[a.uid]) opt.attr('selected', 'selected');
+        $('#assigns').append(opt);
+      });
+    },
+    error: function (res, status) {
+    }
+  });
+}

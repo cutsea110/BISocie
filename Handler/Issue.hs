@@ -91,7 +91,9 @@ postCrossSearchR = do
   ps' <- lookupPostParams "projectid"
   ss' <- lookupPostParams "status"
   as' <- lookupPostParams "assign"
-  let (pS, sS, aS) = (map read ps', ss', map (Just . read) as')
+  let (pS, sS, aS) = (toInFilter IssueProjectIn $ map read ps', 
+                      toInFilter IssueStatusIn ss', 
+                      toInFilter IssueAssignIn $ map (Just . read) as')
   runDB $ do
     ptcpts' <- selectList [ParticipantsUserEq selfid] [] 0 0
     prjs <- forM ptcpts' $ \(_, p) -> do
@@ -103,7 +105,7 @@ postCrossSearchR = do
                               , projectBisDescription=projectDescription prj
                               , projectBisStatuses=es
                               })
-    issues' <- selectList [IssueProjectIn pS, IssueStatusIn sS, IssueAssignIn aS] [IssueUdateDesc] 0 0
+    issues' <- selectList (pS ++ sS ++ aS) [IssueUdateDesc] 0 0
     issues <- forM issues' $ \(id, i) -> do
       cu <- get404 $ issueCuser i
       uu <- get404 $ issueUuser i

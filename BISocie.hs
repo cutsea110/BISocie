@@ -322,7 +322,7 @@ instance YesodAuth BISocie where
     showAuthId _ = showIntegral
     readAuthId _ = readIntegral
 
-    authPlugins = [ authHashDB, authOpenId ]
+    authPlugins = [ authHashDB ]
                   
 instance YesodAuthHashDB BISocie where
     type AuthHashDBId BISocie = UserId

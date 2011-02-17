@@ -45,17 +45,19 @@ approot :: String
 -- you would probably want it to be:
 -- > approot = "http://www.yesod.com"
 -- Please note that there is no trailing slash.
-approot = "http://localhost:3001"
+-- approot = "http://192.168.4.147:3001"
+approot = "http://bisocie.timedia.co.jp"
 #else
-approot = "http://localhost:3001"
+-- approot = "http://192.168.4.147:3001"
+approot = "http://bisocie.timedia.co.jp"
 #endif
 
 -- | The base URL for your site's root relative top path with consider apache.
 rootRelativePath :: String
 #ifdef PRODUCTION
-rootRelativePath = "http://localhost:3001"
+rootRelativePath = "http://bisocie.timedia.co.jp"
 #else
-rootRelativePath = "http://localhost:3001"
+rootRelativePath = "http://bisocie.timedia.co.jp"
 #endif
 
 -- | The location of static files on your system. This is a file system
@@ -88,9 +90,9 @@ s3root = approot ++ "/s3"
 -- specific.
 connStr :: String
 #ifdef PRODUCTION
-connStr = "user=cut-sea password=yesoddevel host=localhost port=5432 dbname=bisocie"
+connStr = "user=devel password=yesoddevel host=localhost port=5432 dbname=bisocie"
 #else
-connStr = "user=cut-sea password=yesoddevel host=localhost port=5432 dbname=bisocie_debug"
+connStr = "user=devel password=yesoddevel host=localhost port=5432 dbname=bisocie_debug"
 #endif
 
 -- | Your application will keep a connection pool and take connections from
@@ -172,6 +174,6 @@ entryStartYear = 2000
 graduateStartYear :: Integer
 graduateStartYear = 2000
 mailXHeader :: String
-mailXHeader = "X-BISocie"
+mailXHeader = "X-BISocie-Devel"
 mailMessageIdDomain :: String
-mailMessageIdDomain = "bisocie.localhost"
+mailMessageIdDomain = "bisocie.timedia.co.jp"

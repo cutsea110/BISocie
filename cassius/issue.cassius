@@ -37,3 +37,9 @@ div.prof-tooltip
 
 .Strike td
   text-decoration: line-through
+
+.searchbox
+  padding: 10px
+  margin-bottom: 5px
+  border: solid 1px #CCC
+  background-color: ivory

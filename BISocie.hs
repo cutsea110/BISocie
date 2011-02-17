@@ -96,7 +96,10 @@ mkYesodData "BISocie" [$parseRoutes|
 /participants/#ProjectId ParticipantsR POST
 /userlist.json UserListR GET
 
-/cross-search CrossSearchR GET
+/cross-search CrossSearchR GET POST
+/status-list StatusListR GET
+/assign-list AssignListR GET
+
 /issuelist/#ProjectId IssueListR GET
 /issue/#ProjectId NewIssueR GET POST
 /issue/#ProjectId/#IssueNo IssueR GET

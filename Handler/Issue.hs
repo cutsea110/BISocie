@@ -36,7 +36,7 @@ getCrossSearchR = do
                           , projectBisDescription=projectDescription p
                           , projectBisStatuses=es
                           }
-    issues' <- selectList [IssueProjectIn prjids] [] 0 0
+    issues' <- selectList [IssueProjectIn prjids] [IssueUdateDesc] 0 0
     issues'' <- forM issues' $ \issue@(id, i) -> do
       cu <- get404 $ issueCuser i
       uu <- get404 $ issueUuser i
@@ -60,7 +60,7 @@ getCrossSearchR = do
             Just (_, _, e) -> fromMaybe "" (fmap show e)
     lift $ defaultLayout $ do
       setTitle $ string "クロスサーチ"
-      addCassius $(cassiusFile "crosssearch")
+      addCassius $(cassiusFile "issue")
       addJulius $(juliusFile "crosssearch")
       addHamlet $(hamletFile "crosssearch")
                 

@@ -8,7 +8,7 @@
     %a!href=@CrossSearchR@ クロスサーチ
 
 #main-content
-  %table
+  %table.list
     %caption クロスサーチ
     %thead
       %th プロジェクト名

@@ -94,7 +94,7 @@ Issue
     cuser UserId
     cdate UTCTime
     uuser UserId Update
-    udate UTCTime Update
+    udate UTCTime Update Desc
     UniqueIssue project number
 
 Comment

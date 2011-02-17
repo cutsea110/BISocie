@@ -10,6 +10,7 @@
 #main-content
   .searchbox
     %table
+      %caption 検索条件
       %tr
         %th プロジェクト
         %th ステータス

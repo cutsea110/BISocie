@@ -89,6 +89,8 @@ type Widget = GWidget BISocie BISocie
 mkYesodData "BISocie" [$parseRoutes|
 / RootR GET
 /home/#UserId HomeR GET
+/human-network HumanNetworkR GET
+/user-address.json UserLocationsR GET
 /project NewProjectR GET POST
 /project/#ProjectId ProjectR GET POST PUT
 
@@ -197,6 +199,9 @@ instance Yesod BISocie where
 instance YesodBreadcrumbs BISocie where
   breadcrumb RootR = return ("", Nothing)
   breadcrumb HomeR{} = return ("ホーム", Nothing)
+  breadcrumb HumanNetworkR = do
+    (uid, _) <- requireAuth
+    return ("ヒューマンネットワーク", Just $ HomeR uid)
   breadcrumb NewProjectR = do
     (uid, _) <- requireAuth
     return ("新規プロジェクト作成", Just $ HomeR uid)
@@ -232,6 +237,8 @@ instance YesodBreadcrumbs BISocie where
   
   breadcrumb FaviconR = return ("", Nothing)
   breadcrumb RobotsR = return ("", Nothing)
+  
+  breadcrumb UserLocationsR = return ("", Nothing)
   
   breadcrumb AdminR{} = return ("", Nothing)  
   

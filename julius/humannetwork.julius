@@ -1,0 +1,26 @@
+$(function(){
+    var latlng = new google.maps.LatLng(35.7846244, 139.90640959999996);
+
+    $.getJSON('@UserLocationsR@', function(data){
+        var map = new google.maps.Map(document.getElementById("global_map_canvas"), {
+            zoom: 9,
+            scrollwheel: true,
+            center: latlng,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        });
+        for (var i = 0; i < data.locations.length; ++i) {
+            var marker = new google.maps.Marker({
+                map: map,
+                position: new google.maps.LatLng(data.locations[i].lat, data.locations[i].lng),
+                title: data.locations[i].name
+            });
+            addMarkerLink(marker, data.locations[i].uri);
+        }
+    });
+});
+
+function addMarkerLink(marker, uri) {
+    google.maps.event.addListener(marker, "click", function(){
+        document.location = uri;
+    });
+}

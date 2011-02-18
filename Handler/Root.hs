@@ -21,6 +21,7 @@ getHomeR uid = do
   (selfid, self) <- requireAuth
   unless (selfid==uid) $ permissionDenied "他人のホームを見ることはできません."
   let cancreateproject = userRole self >= Teacher
+      viewablehumannet = userRole self >= Teacher
   runDB $ do
     ps <- selectList [ParticipantsUserEq selfid] [] 0 0
     prjs <- do
@@ -32,3 +33,39 @@ getHomeR uid = do
     lift $ defaultLayout $ do
       setTitle $ string $ userFullName self ++ " ホーム"
       addHamlet $(hamletFile "home")
+
+getHumanNetworkR :: Handler RepHtml
+getHumanNetworkR = do
+  (selfid, self) <- requireAuth
+  let cancreateproject = userRole self >= Teacher
+      viewablehumannet = userRole self >= Teacher
+  unless viewablehumannet $ 
+    permissionDenied "あなたはヒューマンエットワークを閲覧することはできません."
+  defaultLayout $ do
+    setTitle $ string "ヒューマンネットワーク"
+    addCassius $(cassiusFile "humannetwork")
+    addJulius $(juliusFile "humannetwork")
+    addScriptRemote "http://maps.google.com/maps/api/js?sensor=false"
+    addHamlet $(hamletFile "humannetwork")
+
+getUserLocationsR :: Handler RepJson
+getUserLocationsR = do
+  (selfid, self) <- requireAuth
+  r <- getUrlRender
+  let viewable = userRole self >= Teacher
+  unless viewable $ permissionDenied "あなたはこの情報を取得することはできません."
+  runDB $ do
+    us <- selectList [UserRoleEq Student] [] 0 0
+    profs' <- selectList [ProfileUserIn $ map fst us] [] 0 0
+    profs <- forM profs' $ \(_, p) -> do
+      let (Just u) = lookup (profileUser p) us
+      return (u, p)
+    lift $ do
+      jsonToRepJson $ jsonMap [("locations", jsonList $ map (go r) profs)]
+  where
+    go r (u, p) = 
+      jsonMap [ ("uri", jsonScalar $ r $ ProfileR $ profileUser p)
+              , ("name", jsonScalar $ userFullName u)
+              , ("lat", jsonScalar $ showMaybeDouble $ profileLatitude p)
+              , ("lng", jsonScalar $ showMaybeDouble $ profileLongitude p)
+              ]

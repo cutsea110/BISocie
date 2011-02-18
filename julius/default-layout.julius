@@ -56,7 +56,8 @@ $(document).ready(function(){
             api.saveComplete();
           },
           error: function(res,status){
-            api.saveError(res.statusText+'['+res.status+']: '+$(res.responseText).find('p').text());
+            var msg = $(res.responseText).find('div#ui-main li:last').text();
+            api.saveError(res.statusText+'['+res.status+']: '+$(res.responseText).find('p').text()+msg);
           }
         });
         return false;

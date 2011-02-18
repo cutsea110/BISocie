@@ -37,8 +37,11 @@ div#message
     padding: 5px 8px
     margin: 0 0 3px 0
 
-.required
-  color: red
+span.invalid
+   color: red
+   font-style: bold
+input.invalid, textarea.invalid
+   border: 1px solid red
 
 button.link
     font-size: 90%

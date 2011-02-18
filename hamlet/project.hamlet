@@ -14,7 +14,7 @@
     %dl
       %dt プロジェクト名 $
         $if editable
-          %span.required (必須)
+          %span.errors (必須)
       %dd
         $if editable
           %input#name.inplaceedit!type=text!name=name!placeholder=(プロジェクト名)!uri=@ProjectR.pid@!value=$projectName.prj$
@@ -22,7 +22,7 @@
           $projectName.prj$
       %dt 概要 $
         $if editable
-          %span.required (必須)
+          %span.errors (必須)
       %dd
         $if editable
           %textarea#description.inplaceedit!type=text!name=description!placeholder=(プロジェクト概要)!uri=@ProjectR.pid@ $projectDescription.prj$
@@ -30,7 +30,7 @@
           $showMultilineText.projectDescription.prj$
       %dt ステータス $
         $if editable
-          %span.required (必須) $
+          %span.errors (必須) $
         %button.link#button-status-syntax-help!type=submit ヘルプ
       %dd
         $if editable

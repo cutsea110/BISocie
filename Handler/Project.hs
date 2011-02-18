@@ -23,6 +23,7 @@ getNewProjectR = do
     setTitle $ string "プロジェクト新規作成"
     addCassius $(cassiusFile "project")
     addJulius $(juliusFile "help")
+    addJulius $(juliusFile "newproject")
     addHamlet $(hamletFile "newproject")
     
 postNewProjectR :: Handler RepHtml

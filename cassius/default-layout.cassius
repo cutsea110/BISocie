@@ -170,6 +170,8 @@ ul.tabs li a
    color: #40ff40
    background-image: none
    background-color: #fefe00
+.ui-datepicker-today .ui-state-default
+   border: 1px solid #4040ff
 
 .ui-datepicker select.ui-datepicker-year, .ui-datepicker select.ui-datepicker-month
    width: auto

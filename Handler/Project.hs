@@ -13,6 +13,7 @@ getNewProjectR :: Handler RepHtml
 getNewProjectR = do
   (selfid, self) <- requireAuth
   let cancreateproject = userRole self >= Teacher
+      viewablehumannet = userRole self >= Teacher
   unless cancreateproject $ 
     permissionDenied "あなたはプロジェクトを作成することはできません."
   defaultLayout $ do

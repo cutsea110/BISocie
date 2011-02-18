@@ -1,5 +1,13 @@
 $(document).ready(function(){
   if ($('#cloc').length>0) {
+     $('#czip').blur(function(){
+       AjaxZip2.zip2addr(this, 'address', 'address');
+     });
+     $('#hzip').blur(function(){
+       AjaxZip2.zip2addr(this, 'homeAddress', 'homeAddress');
+     });
+
+
      $("#cloc").after("<div id='map_canvas'></div>");
      geocoder = new google.maps.Geocoder();
 

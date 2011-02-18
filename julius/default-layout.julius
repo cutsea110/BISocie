@@ -3,6 +3,8 @@ $(document).ready(function(){
 
   $(".watermark").watermark();
 
+  AjaxZip2.JSONDATA = '%aprt%' + '/static/plugins/ajaxzip2/data';
+
   $.datepicker.regional['ja'] = {
     autoSize: true,
     clearText: '', clearStatus: '',

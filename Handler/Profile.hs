@@ -38,11 +38,13 @@ getProfileR uid = do
                              , profileEntryYear=fromInteger y
                              , profileGraduateYear=Nothing
                              , profileBranch=""
+                             , profileZip=""
                              , profileAddress=""
                              , profileLongitude=Nothing
                              , profileLatitude=Nothing
                              , profileTel=""
                              , profileStation=""
+                             , profileHomeZip=""
                              , profileHomeAddress=""
                              , profileHomeLongitude=Nothing
                              , profileHomeLatitude=Nothing
@@ -128,17 +130,19 @@ putProfileR uid = do
     case mprof of
       Nothing -> return ()
       Just (pid, _) -> do
-        (bir, ey, gy, br, adr, lon, lat, tel, st, hadr, hlon, hlat, htel, dc, dwl, emp) <- 
-          lift $ runFormPost' $ (,,,,,,,,,,,,,,,)
+        (bir, ey, gy, br, zip, adr, lon, lat, tel, st, hzip, hadr, hlon, hlat, htel, dc, dwl, emp) <- 
+          lift $ runFormPost' $ (,,,,,,,,,,,,,,,,,)
           <$> dayInput "birth"
           <*> intInput "entryYear"
           <*> maybeIntInput "graduateYear"
           <*> stringInput "branch"
+          <*> stringInput "zip"
           <*> stringInput "address"
           <*> maybeStringInput "longitude"
           <*> maybeStringInput "latitude"
           <*> stringInput "tel"
           <*> stringInput "station"
+          <*> stringInput "homeZip"
           <*> stringInput "homeAddress"
           <*> maybeStringInput "homeLongitude"
           <*> maybeStringInput "homeLatitude"
@@ -154,11 +158,13 @@ putProfileR uid = do
                    , ProfileEntryYear ey
                    , ProfileGraduateYear gy
                    , ProfileBranch br
+                   , ProfileZip zip
                    , ProfileAddress adr
                    , ProfileLongitude lon'
                    , ProfileLatitude lat'
                    , ProfileTel tel
                    , ProfileStation st
+                   , ProfileHomeZip hzip
                    , ProfileHomeAddress hadr
                    , ProfileHomeLongitude hlon'
                    , ProfileHomeLatitude hlat'

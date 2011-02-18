@@ -337,6 +337,11 @@ instance YesodAuth BISocie where
     readAuthId _ = readIntegral
 
     authPlugins = [ authHashDB ]
+    
+    loginHandler = do
+      defaultLayout $ do
+        addCassius $(Settings.cassiusFile "login")
+        addHamlet $(Settings.hamletFile "login")
                   
 instance YesodAuthHashDB BISocie where
     type AuthHashDBId BISocie = UserId

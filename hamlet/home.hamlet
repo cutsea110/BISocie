@@ -27,3 +27,4 @@
             %a!href=@ProjectR.fst.snd.p@ $showShortenText.showmaybe.projectDescription.snd.snd.p$
           %td $showDate.projectCdate.snd.snd.p$
           %td $showDate.projectUdate.snd.snd.p$
+

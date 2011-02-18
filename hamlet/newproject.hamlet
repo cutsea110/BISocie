@@ -5,6 +5,9 @@
     %a!href=@NewProjectR@ プロジェクト新規作成
   %li
     %a!href=@CrossSearchR@ クロスサーチ
+  $if viewablehumannet
+    %li
+      %a!href=@HumanNetworkR@ ヒューマンネットワーク
 
 #main-content
   .warnings

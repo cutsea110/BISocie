@@ -37,6 +37,9 @@ div#message
     padding: 5px 8px
     margin: 0 0 3px 0
 
+.required
+  color: red
+
 button.link
     font-size: 90%
     color: #4040f8

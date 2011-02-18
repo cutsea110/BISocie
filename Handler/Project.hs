@@ -97,12 +97,24 @@ putProjectR pid = do
     unless editable $ 
       lift $ permissionDenied "あなたはこのプロジェクトの設定を編集できません."
     prj <- get404 pid
-    Just nm <- (lift $ lookupPostParam "name") >>=
-               \nm' -> return $ nm' `mplus` (Just $ projectName prj)
-    Just ds <- (lift $ lookupPostParam "description") >>=
-          \ds' -> return $ ds' `mplus` (Just $ projectDescription prj)
-    Just st <- (lift $ lookupPostParam "statuses") >>=
-               \st' -> return $ st' `mplus` (Just $ projectStatuses prj)
+    Just nm <- do
+      nm' <- lift $ lookupPostParam "name"
+      case nm' of
+        Nothing -> return $ Just $ projectName prj
+        Just "" -> lift $ invalidArgs ["プロジェクト名は入力必須項目です."]
+        Just nm'' -> return $ Just nm''
+    Just ds <- do
+      ds' <- lift $ lookupPostParam "description"
+      case ds' of
+        Nothing -> return $ Just $ projectDescription prj
+        Just "" -> lift $ invalidArgs ["概要は入力必須項目です."]
+        Just ds'' -> return $ Just ds''
+    Just st <- do
+      st' <- lift $ lookupPostParam "statuses"
+      case st' of
+        Nothing -> return $ Just $ projectStatuses prj
+        Just "" -> lift $ invalidArgs ["ステータスは入力必須項目です."]
+        Just st'' -> return $ Just st''
     now <- liftIO getCurrentTime
     update pid [ ProjectName nm
                , ProjectDescription ds

@@ -22,9 +22,6 @@ th.number, td.number
 #myavatar
   width: 100px
 
-.required
-  color: red
-
 input[type=address]
   width: 400px
 

@@ -90,11 +90,11 @@ Issue
     subject String
     assign UserId Maybe Update In
     status String Update In
-    limitdate Day Maybe Update GE LT
+    limitdate Day Maybe Update Ge Lt
     cuser UserId
     cdate UTCTime
     uuser UserId Update
-    udate UTCTime Update Desc GE LT
+    udate UTCTime Update Desc Ge Lt
     UniqueIssue project number
 
 Comment
@@ -234,6 +234,10 @@ initUser uid = User { userIdent=uid
 toInFilter :: ([a] -> Filter b) -> [a] -> [Filter b]
 toInFilter _ [] = []
 toInFilter f xs = [f xs]
+
+maybeToFilter :: (a -> Filter b) -> Maybe a -> [Filter b]
+maybeToFilter _ Nothing  = []
+maybeToFilter f (Just x) = [f x]
 
 userFullName :: User -> String
 userFullName u = userFamilyName u ++ " " ++ userGivenName u

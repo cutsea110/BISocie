@@ -92,9 +92,17 @@ postCrossSearchR = do
   ps' <- lookupPostParams "projectid"
   ss' <- lookupPostParams "status"
   as' <- lookupPostParams "assign"
+  (lf', lt') <- uncurry (liftM2 (,)) (lookupPostParam "limitdatefrom",
+                                      lookupPostParam "limitdateto")
+  (uf', ut') <- uncurry (liftM2 (,)) (lookupPostParam "updatedfrom",
+                                      lookupPostParam "updatedto")
   let (pS, sS, aS) = (toInFilter IssueProjectIn $ map read ps', 
                       toInFilter IssueStatusIn ss', 
                       toInFilter IssueAssignIn $ map (Just . read) as')
+      (lF, lT, uF, uT) = (maybeToFilter IssueLimitdateGe $ fmap read lf',
+                          maybeToFilter IssueLimitdateLt $ fmap (addDays 1 . read) lt',
+                          maybeToFilter IssueUdateGe $ fmap (flip UTCTime 0 . read) uf',
+                          maybeToFilter IssueUdateLt $ fmap (flip UTCTime 0 . addDays 1 . read) ut')
   runDB $ do
     ptcpts' <- selectList [ParticipantsUserEq selfid] [] 0 0
     prjs <- forM ptcpts' $ \(_, p) -> do
@@ -106,7 +114,7 @@ postCrossSearchR = do
                               , projectBisDescription=projectDescription prj
                               , projectBisStatuses=es
                               })
-    issues' <- selectList (pS ++ sS ++ aS) [IssueUdateDesc] 0 0
+    issues' <- selectList (pS ++ sS ++ aS ++ lF ++ lT ++ uF ++ uT) [IssueUdateDesc] 0 0
     issues <- forM issues' $ \(id, i) -> do
       cu <- get404 $ issueCuser i
       uu <- get404 $ issueUuser i

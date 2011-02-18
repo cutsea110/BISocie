@@ -33,3 +33,6 @@ input[type=tel]
 
 input[name=familyName], input[name=givenName]
   width: 100px
+
+input[type=zip]
+  width: 80px

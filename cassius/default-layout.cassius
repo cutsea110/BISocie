@@ -24,7 +24,7 @@ div#message
     padding: 5px 8px
     margin: 0 0 3px 0
 
-.errors
+.errors, .alert
     color: red
     font-style: bold
 

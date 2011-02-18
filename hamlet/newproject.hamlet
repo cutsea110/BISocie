@@ -12,18 +12,18 @@
 #main-content
   %h3 プロジェクト設定
 
-  %form#newproject!method=post!action=@NewProjectR@
+  %form.validate!method=post!action=@NewProjectR@
     %dl
       %dt プロジェクト名 $
-        %span.errors (必須)
+        %span.alert (必須)
       %dd
         %input#name.watermark.required!type=text!name=name!placeholder=(プロジェクト名)
       %dt 概要 $
-        %span.errors (必須)
+        %span.alert (必須)
       %dd
         %textarea#description.watermark.required!type=text!name=description!placeholder=(プロジェクト概要)
       %dt ステータス $
-        %span.errors (必須) $
+        %span.alert (必須) $
         %button.link#button-status-syntax-help!type=submit ヘルプ
       %dd
         %textarea#statuses.watermark.required!name=statuses!placeholder=(ステータス設定) $inintstatuses$

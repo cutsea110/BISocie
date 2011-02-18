@@ -1,7 +1,7 @@
 $(document).ready(function(){
   $('#popup-profile').hide().attr('title','プロフィール').dialog({
     autoOpen: false,
-    width: 300,
+    width: 460,
     modal: false
   });
   $('a.profile').click(function(){

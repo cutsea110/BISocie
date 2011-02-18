@@ -44,7 +44,7 @@
           %td!colspan=3 $profileBranch.snd.prof$
         %tr
           %th 現住所
-          %td!colspan=3 $profileAddress.snd.prof$
+          %td!colspan=3 〒 $profileZip.snd.prof$ $profileAddress.snd.prof$
               %input#clon!type=hidden!name=longitude!value=$showMaybeDouble.profileLongitude.snd.prof$
               %input#clat!type=hidden!name=latitude!value=$showMaybeDouble.profileLatitude.snd.prof$
               %input#cloc!type=hidden!name=address!value=$profileAddress.snd.prof$
@@ -56,7 +56,7 @@
           %td!colspan=3 $profileStation.snd.prof$
         %tr
           %th 実家住所
-          %td!colspan=3 $profileHomeAddress.snd.prof$
+          %td!colspan=3 〒 $profileHomeZip.snd.prof$ $profileHomeAddress.snd.prof$
               %input#hlon!type=hidden!name=homeLongitude!value=$showMaybeDouble.profileHomeLongitude.snd.prof$
               %input#hlat!type=hidden!name=homeLatitude!value=$showMaybeDouble.profileHomeLatitude.snd.prof$
               %input#hloc!type=hidden!name=homeAddress!value=$profileHomeAddress.snd.prof$

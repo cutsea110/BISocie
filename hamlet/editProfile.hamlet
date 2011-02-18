@@ -68,7 +68,10 @@
           %td!colspan=3
             %input#clon!type=hidden!name=longitude!value=$showMaybeDouble.profileLongitude.snd.prof$
             %input#clat!type=hidden!name=latitude!value=$showMaybeDouble.profileLatitude.snd.prof$
-            %input#cloc.watermark!placeholder="千葉県..."!locprefix=c!type=address!name=address!value=$profileAddress.snd.prof$
+            〒
+              %input#czip.watermark!placeholder="271-8555"!maxlength=8!type=zip!name=zip!value=$profileZip.snd.prof$
+            %br
+            %input#cloc.watermark!placeholder="千葉県松戸市岩瀬550"!locprefix=c!type=address!name=address!value=$profileAddress.snd.prof$
         %tr
           %th 電話番号
             .required (必須)
@@ -85,7 +88,10 @@
           %td!colspan=3
             %input#hlon!type=hidden!name=homeLongitude!value=$showMaybeDouble.profileHomeLongitude.snd.prof$
             %input#hlat!type=hidden!name=homeLatitude!value=$showMaybeDouble.profileHomeLatitude.snd.prof$
-            %input#hloc.watermark!placeholder="埼玉県..."!locprefix=h!type=address!name=homeAddress!value=$profileHomeAddress.snd.prof$
+            〒
+              %input#hzip.watermark!placeholder="271-8555"!type=zip!maxlength=8!name=homeZip!value=$profileHomeZip.snd.prof$
+            %br
+            %input#hloc.watermark!placeholder="千葉県松戸市岩瀬550"!locprefix=h!type=address!name=homeAddress!value=$profileHomeAddress.snd.prof$
         %tr
           %th 実家電話番号
             .required (必須)

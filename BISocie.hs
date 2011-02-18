@@ -144,6 +144,7 @@ instance Yesod BISocie where
       tm <- getRouteToMaster
       let header = $(Settings.hamletFile "header")
           footer = $(Settings.hamletFile "footer")
+          aprt = Settings.approot
       pc <- widgetToPageContent $ do
         widget
         addScriptEither $ urlJqueryJs y
@@ -154,6 +155,7 @@ instance Yesod BISocie where
         addScriptEither $ Left $ StaticR plugins_exinplaceeditor_jquery_exinplaceeditor_0_1_3_js
         addStylesheetEither $ Left $ StaticR plugins_exinplaceeditor_exinplaceeditor_css
         addScriptEither $ Left $ StaticR plugins_watermark_jquery_watermark_js
+        addScriptEither $ Left $ StaticR plugins_ajaxzip2_ajaxzip2_js
         addCassius $(Settings.cassiusFile "default-layout")
         addJulius $(Settings.juliusFile "default-layout")
       hamletToRepHtml $(Settings.hamletFile "default-layout")
@@ -177,12 +179,14 @@ instance Yesod BISocie where
     -- users receiving stale content.
     addStaticContent ext' _ content = do
         let fn = base64md5 content ++ '.' : ext'
-        let content' =
+        let content' = content
+            {--
                 if ext' == "js"
                     then case minifym content of
                             Left _ -> content
                             Right y -> y
                     else content
+--}
         let statictmp = Settings.staticdir ++ "/tmp/"
         liftIO $ createDirectoryIfMissing True statictmp
         let fn' = statictmp ++ fn

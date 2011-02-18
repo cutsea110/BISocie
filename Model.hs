@@ -51,12 +51,14 @@ Profile
     graduateYear Int Maybe Update
     branch String Update
     
+    zip String Update
     address String Update
     longitude Double Maybe Ne Update
     latitude Double Maybe Ne Update
     tel String Update
     station String Update
     
+    homeZip String Update
     homeAddress String Update
     homeLongitude Double Maybe Ne Update
     homeLatitude Double Maybe Ne Update

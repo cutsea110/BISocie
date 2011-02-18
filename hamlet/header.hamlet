@@ -1,6 +1,6 @@
 #bisocie-title
   %a!href=@RootR@
-    %h1 BISocie
+    %img!src=@StaticR.img_bisocie_logo_jpg@
 #userbox
   $maybe mu u
     ログイン中 $

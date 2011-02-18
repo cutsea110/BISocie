@@ -1,11 +1,12 @@
 $(document).ready(function(){
-  $('#projectids').change(function(){
+  $('#projectid').change(function(){
     reload_statuses();
     reload_assigns();
     reload_search_result();
   });
 
-  $('#statuses, #assigns').change(function(){
+  $('#status, #assign, #limitdatefrom, #limitdateto, #updatedfrom, #updatedto')
+  .change(function(){
     reload_search_result();
   });
 
@@ -20,14 +21,13 @@ function reload_search_result() {
 
   // search
   var keys = '';
-  $('#projectids option:selected').each(function(){
-    keys = keys + 'projectid=' + encodeURI( $(this).val() ) + '&';
+  $('#projectid option:selected, #status option:selected, #assign option:selected')
+  .each(function(){
+    keys = keys + $(this).parent().attr('name') + '=' + encodeURI( $(this).val() ) + '&';
   });
-  $('#statuses option:selected').each(function(){
-    keys = keys + 'status=' + encodeURI( $(this).val() ) + '&';
-  });
-  $('#assigns option:selected').each(function(){
-    keys = keys + 'assign=' + encodeURI( $(this).val() ) + '&';
+  $('#limitdatefrom, #limitdateto, #updatedfrom, #updatedto').each(function(){
+    if ($(this).val() != "")
+       keys = keys + $(this).attr('name') + '=' + encodeURI( $(this).val() ) + '&';
   });
 
   $.ajax({
@@ -75,18 +75,17 @@ function reload_search_result() {
 function reload_statuses() {
   // save selected
   var selected = {};
-  $('#statuses option:selected').each(function(){
+  $('#status option:selected').each(function(){
     selected[$(this).val()] = $(this).val();
   });
   // clear
-  $('#statuses option').remove();
+  $('#status option').remove();
 
   // get statuses
   var keys = '';
-  $('#projectids option:selected').each(function(){
-    keys = keys + 'projectid=' + encodeURI( $(this).val() ) + '&';
+  $('#projectid option:selected').each(function(){
+    keys = keys + $(this).parent().attr('name') + '=' + encodeURI( $(this).val() ) + '&';
   });
-
   $.ajax({
     async: false,
     type: 'GET',
@@ -98,7 +97,7 @@ function reload_statuses() {
       $.each(slist, function(i, s){
         var opt = $('<option/>').text(s);
         if (selected[s]) opt.attr('selected', 'selected');
-        $('#statuses').append(opt);
+        $('#status').append(opt);
       });
     },
     error: function (res, status) {
@@ -109,16 +108,16 @@ function reload_statuses() {
 function reload_assigns() {
   // save selected
   var selected = {};
-  $('#assigns option:selected').each(function(){
+  $('#assign option:selected').each(function(){
     selected[$(this).val()] = $(this).val();
   });
   // clear
-  $('#assigns option').remove();
+  $('#assign option').remove();
 
   // get participants
   var keys = '';
-  $('#projectids option:selected').each(function(){
-    keys = keys + 'projectid=' + encodeURI( $(this).val() ) + '&';
+  $('#projectid option:selected').each(function(){
+    keys = keys + $(this).parent().attr('name') + '=' + encodeURI( $(this).val() ) + '&';
   });
 
   $.ajax({
@@ -132,7 +131,7 @@ function reload_assigns() {
       $.each(alist, function(i, a){
         var opt = $('<option/>').val(a.uid).text(a.name);
         if (selected[a.uid]) opt.attr('selected', 'selected');
-        $('#assigns').append(opt);
+        $('#assign').append(opt);
       });
     },
     error: function (res, status) {

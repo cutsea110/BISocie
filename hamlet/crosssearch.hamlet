@@ -18,24 +18,24 @@
         %th 期限
       %tr
         %td!rowspan=3
-          %select#projectids!name=projectid!multiple=multiple!size=5
+          %select#projectid!name=projectid!multiple=multiple!size=5
             $forall prjs p
               %option!selected=selected!value=$show.projectBisId.p$ $projectBisName.p$
         %td!rowspan=3
-          %select#statuses!name=status!multiple=multiple!size=5
+          %select#status!name=status!multiple=multiple!size=5
         %td!rowspan=3
-          %select#assigns!name=assign!multiple=multiple!size=5
+          %select#assign!name=assign!multiple=multiple!size=5
         %td
-          %input.date!type=date!name=limitdatefrom
+          %input.date#limitdatefrom!type=date!name=limitdatefrom
           〜
-          %input.date!type=date!name=limitdateto
+          %input.date#limitdateto!type=date!name=limitdateto
       %tr
         %th 更新日
       %tr
         %td
-          %input.date!type=date!name=updatedfrom
+          %input.date#updatedfrom!type=date!name=updatedfrom
           〜
-          %input.date!type=date!name=updatedto
+          %input.date#updatedto!type=date!name=updatedto
 
 
   %table.list

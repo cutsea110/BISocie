@@ -25,7 +25,7 @@ getAssignListR = do
   let pids = map read pids'
   runDB $ do
     ptcpts <- selectList [ParticipantsUserEq selfid, ParticipantsProjectIn pids] [] 0 0
-    prjids <- forM ptcpts $ \(_, p) -> return $ participantsProject p
+    let prjids =  map (participantsProject . snd) ptcpts
     users' <- selectList [ParticipantsProjectIn prjids] [] 0 0
     users'' <- forM users' $ \(_, p) -> do
       let uid = participantsUser p
@@ -65,6 +65,7 @@ getCrossSearchR :: Handler RepHtml
 getCrossSearchR = do
   (selfid, self) <- requireAuth
   let cancreateproject = userRole self >= Teacher
+      viewablehumannet = userRole self >= Teacher
   runDB $ do
     ptcpts <- selectList [ParticipantsUserEq selfid] [] 0 0
     prjids <- forM ptcpts $ \(_, ptcpt) -> do

@@ -35,7 +35,7 @@ share2 mkPersist (mkMigrate "migrateAll") [$persist|
 User
     ident String
     password String Maybe Update
-    role Role Update
+    role Role Update Eq
     familyName String Update
     givenName String Update
     email String Update
@@ -44,7 +44,7 @@ User
     UniqueUser ident
     
 Profile
-    user UserId
+    user UserId In
     birth Day Update
     
     entryYear Int Update

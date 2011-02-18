@@ -7,7 +7,8 @@
     %a!href=@ProjectR.pid@ プロジェクト設定
 
 #main-content
-  %h3 $projectName.prj$ プロジェクト設定
+  %h3 $projectName.prj$ プロジェクト設定 $
+    %button#button-delete-confirm.link!type=submit!name=_method!value=delete このプロジェクトを削除する.
 
   %form!method=post!action=@ProjectR.pid@
     %input!type=hidden!name=_method!value=modify
@@ -66,3 +67,15 @@
   #search-result.scroll
 
 ^help^
+
+#delete-confirm.alert
+  削除をすると二度と元に戻すことはできません。
+  本当に削除しますか？
+
+#delete-success
+  プロジェクトを削除しました。
+  このダイアログを閉じてください。
+
+#delete-failed.errors
+  プロジェクトを削除できませんでした。
+  このダイアログを閉じてください。

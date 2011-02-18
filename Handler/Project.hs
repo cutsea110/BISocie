@@ -86,7 +86,8 @@ postProjectR pid = do
   _method <- lookupPostParam "_method"
   case _method of
     Just "modify" -> putProjectR pid
-    _             -> invalidArgs ["The possible values of '_method' is modify"]
+    Just "delete" -> deleteProjectR pid
+    _             -> invalidArgs ["The possible values of '_method' are modify or delete"]
 
 putProjectR :: ProjectId -> Handler RepJson
 putProjectR pid = do
@@ -133,3 +134,25 @@ putProjectR pid = do
     showJScalar = jsonScalar . show
     showMaybeJScalar :: Maybe String -> Json
     showMaybeJScalar = jsonScalar . showmaybe
+
+deleteProjectR :: ProjectId -> Handler RepJson
+deleteProjectR pid = do
+  (selfid, self) <- requireAuth
+  runDB $ do
+    p <- getBy $ UniqueParticipants pid selfid
+    let viewable = p /= Nothing
+        deletable = viewable && userRole self >= Teacher
+    unless deletable $ 
+      lift $ permissionDenied "あなたはこのプロジェクトすることはできません."
+    issues <- selectList [IssueProjectEq pid] [] 1 0
+    if issues == [] 
+      then do
+      deleteWhere [ParticipantsProjectEq pid]
+      delete pid
+      lift $ do
+        cacheSeconds 10 -- FIXME
+        jsonToRepJson $ jsonMap [("deleted", jsonScalar $ show pid)]
+      else do
+      lift $ do
+        cacheSeconds 10 -- FIXME
+        jsonToRepJson $ jsonMap [("error", jsonScalar $ "このプロジェクトは削除できませんでした.")]

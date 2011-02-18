@@ -92,7 +92,7 @@ mkYesodData "BISocie" [$parseRoutes|
 /human-network HumanNetworkR GET
 /user-address.json UserLocationsR GET
 /project NewProjectR GET POST
-/project/#ProjectId ProjectR GET POST PUT
+/project/#ProjectId ProjectR GET POST PUT DELETE
 
 /participantslist/#ProjectId ParticipantsListR GET
 /participants/#ProjectId ParticipantsR POST
@@ -158,6 +158,7 @@ instance Yesod BISocie where
         addStylesheetEither $ Left $ StaticR plugins_exinplaceeditor_exinplaceeditor_css
         addScriptEither $ Left $ StaticR plugins_watermark_jquery_watermark_js
         addScriptEither $ Left $ StaticR plugins_ajaxzip2_ajaxzip2_js
+        addScriptEither $ Left $ StaticR plugins_confirm_jquery_confirm_js
         addCassius $(Settings.cassiusFile "default-layout")
         addJulius $(Settings.juliusFile "default-layout")
       hamletToRepHtml $(Settings.hamletFile "default-layout")

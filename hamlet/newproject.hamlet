@@ -10,8 +10,21 @@
       %a!href=@HumanNetworkR@ ヒューマンネットワーク
 
 #main-content
-  .warnings
-     プロジェクトを新規に作成します.
+  %h3 プロジェクト設定
 
   %form!method=post!action=@NewProjectR@
-    %button!type=submit!name=_method!value=create プロジェクト作成
+    %dl
+      %dt プロジェクト名
+      %dd
+        %input#name.watermark!type=text!name=name!placeholder=(プロジェクト名)
+      %dt 概要
+      %dd
+        %textarea#description.watermark!type=text!name=description!placeholder=(プロジェクト概要)
+      %dt ステータス
+        %button.link#button-status-syntax-help!type=submit ヘルプ
+      %dd
+        %textarea#statuses.watermark!name=statuses!placeholder=(ステータス設定) $inintstatuses$
+
+    %button!type=submit!name=_method!value=create プロジェクトを作成する
+
+^help^

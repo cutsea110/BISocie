@@ -1,14 +1,4 @@
 $(document).ready(function(){
-  $('#status-syntax-help').hide().attr('title','ステータス書式説明').dialog({
-    autoOpen: false,
-    width: 500,
-    modal: false
-  });
-  $('#button-status-syntax-help').click(function(){
-    $('#status-syntax-help').dialog('open');
-    return false;
-  });
-
   $('#search-users').hide().attr('title', 'ユーザ検索').dialog({
     autoOpen: false,
     width: 500,

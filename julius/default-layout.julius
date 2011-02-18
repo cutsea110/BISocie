@@ -1,6 +1,12 @@
 $(document).ready(function(){
   $("#message").fadeOut(3000, function(){$(this).remove();});
 
+  $(".login-options").attr("title","Login to Kestrel").dialog({
+    autoOpen: true,
+    width: 520,
+    modal: true
+  });
+
   $(".watermark").watermark();
 
   AjaxZip2.JSONDATA = '%aprt%' + '/static/plugins/ajaxzip2/data';

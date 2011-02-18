@@ -1,4 +1,18 @@
 $(document).ready(function(){
+  $('#popup-profile').hide().attr('title','プロフィール').dialog({
+    autoOpen: false,
+    width: 300,
+    modal: false
+  });
+  $('a.profile').click(function(){
+    $('#popup-profile table').remove();
+    $('#popup-profile').dialog({title: $(this).text()+'のプロフィール'}).dialog('open');
+    $.get($(this).attr('href'), function(res){
+      $('#popup-profile').append($(res).find('table[class=profile]'));
+    })
+    return false;
+  });
+
   $('a.profile').each(function(i){
     $('body').append("<div class='prof-tooltip' id='prof-tooltip-" + i + "'></div>");
     var my_tooltip = $("#prof-tooltip-" + i)

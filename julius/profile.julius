@@ -1,5 +1,4 @@
 $(document).ready(function(){
-
   if ($('#cloc').length>0) {
      $("#cloc").after("<div id='map_canvas'></div>");
      geocoder = new google.maps.Geocoder();

@@ -9,23 +9,37 @@
 
 #main-content
   .searchbox
-    %table.nostyle
+    %table
+      %caption 検索条件
       %tr
         %th プロジェクト
         %th ステータス
         %th アサイン
+        %th 期限
       %tr
-        %td
+        %td!rowspan=3
           %select#projectids!name=projectid!multiple=multiple!size=5
             $forall prjs p
               %option!selected=selected!value=$show.projectBisId.p$ $projectBisName.p$
-        %td
+        %td!rowspan=3
           %select#statuses!name=status!multiple=multiple!size=5
-        %td
+        %td!rowspan=3
           %select#assigns!name=assign!multiple=multiple!size=5
+        %td
+          %input.date!type=date!name=limitdatefrom
+          〜
+          %input.date!type=date!name=limitdateto
+      %tr
+        %th 更新日
+      %tr
+        %td
+          %input.date!type=date!name=updatedfrom
+          〜
+          %input.date!type=date!name=updatedto
+
 
   %table.list
-    %caption クロスサーチ
+    %caption 対象案件一覧
     %thead
       %th プロジェクト名
       %th No

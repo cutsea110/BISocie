@@ -65,8 +65,8 @@ getProfileR uid = do
             viewprof = (ProfileR uid, [("mode", "v")])
             editprof = (ProfileR uid, [("mode", "e")])
             (y,_,_) = toGregorian $ utctDay now
-        unless viewable $ 
-          lift $ permissionDenied "あなたはこのユーザプロファイルを見ることはできません."
+--        unless viewable $ 
+--          lift $ permissionDenied "あなたはこのユーザプロファイルを見ることはできません."
         mprof <- getProf user y
         lift $ defaultLayout $ do
           setTitle $ string "Profile"

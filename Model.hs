@@ -231,6 +231,10 @@ initUser uid = User { userIdent=uid
                     , userActive=True
                     }
 
+toInFilter :: ([a] -> Filter b) -> [a] -> [Filter b]
+toInFilter _ [] = []
+toInFilter f xs = [f xs]
+
 userFullName :: User -> String
 userFullName u = userFamilyName u ++ " " ++ userGivenName u
     

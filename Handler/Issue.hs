@@ -88,10 +88,13 @@ getCrossSearchR = do
 postCrossSearchR :: Handler RepJson
 postCrossSearchR = do
   (selfid, self) <- requireAuth
+  r <- getUrlRender
   ps' <- lookupPostParams "projectid"
   ss' <- lookupPostParams "status"
   as' <- lookupPostParams "assign"
-  let (pS, sS, aS) = (map read ps', ss', map (Just . read) as')
+  let (pS, sS, aS) = (toInFilter IssueProjectIn $ map read ps', 
+                      toInFilter IssueStatusIn ss', 
+                      toInFilter IssueAssignIn $ map (Just . read) as')
   runDB $ do
     ptcpts' <- selectList [ParticipantsUserEq selfid] [] 0 0
     prjs <- forM ptcpts' $ \(_, p) -> do
@@ -103,7 +106,7 @@ postCrossSearchR = do
                               , projectBisDescription=projectDescription prj
                               , projectBisStatuses=es
                               })
-    issues' <- selectList [IssueProjectIn pS, IssueStatusIn sS, IssueAssignIn aS] [IssueUdateDesc] 0 0
+    issues' <- selectList (pS ++ sS ++ aS) [IssueUdateDesc] 0 0
     issues <- forM issues' $ \(id, i) -> do
       cu <- get404 $ issueCuser i
       uu <- get404 $ issueUuser i
@@ -114,20 +117,24 @@ postCrossSearchR = do
       return $ (prj, IssueBis id i cu uu mau)
     lift $ do
       cacheSeconds 10 -- FIXME
-      jsonToRepJson $ jsonMap [("issues", jsonList $ map go issues)]
+      jsonToRepJson $ jsonMap [("issues", jsonList $ map (go r) issues)]
   where
     colorAndEffect s es = case lookupStatus s es of
       Nothing -> ("", "")
       Just (_, c, e) -> (fromMaybe "" c, fromMaybe "" (fmap show e))
-    go (p, i) = 
+    go r (p, i) = 
       let (c, e) = colorAndEffect (issueStatus $ issueBisIssue i) (projectBisStatuses p)
+          projectRoute = IssueListR $ projectBisId p
+          issueRoute = IssueR (projectBisId p) (issueNumber $ issueBisIssue i)
       in
       jsonMap [ ("id", jsonScalar $ show $ issueBisId i)
               , ("effect", jsonScalar e)
               , ("color", jsonScalar c)
               , ("project", jsonScalar $ projectBisName p)
+              , ("projecturi", jsonScalar $ r $ projectRoute)
               , ("no", jsonScalar $ show $ issueNumber $ issueBisIssue i)
               , ("subject", jsonScalar $ issueSubject $ issueBisIssue i)
+              , ("issueuri", jsonScalar $ r $ issueRoute)
               , ("status", jsonScalar $ issueStatus $ issueBisIssue i)
               , ("assign", showMaybeJScalar $ fmap userFullName $ issueBisAssign i)
               , ("limitdate", jsonScalar $ showLimitdate $ issueBisIssue i)

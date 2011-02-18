@@ -8,8 +8,9 @@
 
 #main-content
   %h3 $projectName.prj$ プロジェクト設定
-    %form.inline!method=get!action=@IssueListR.pid@
-      %button.link!type=submit キャンセル
+    $if editable
+      %form.inline!method=get!action=@IssueListR.pid@
+        %button.link!type=submit キャンセル
 
   %form!method=post!action=@ProjectR.pid@
     %input!type=hidden!name=_method!value=modify

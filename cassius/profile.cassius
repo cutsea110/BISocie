@@ -22,6 +22,9 @@ th.number, td.number
 #myavatar
   width: 100px
 
+#avatar
+  text-align: center
+
 input[type=address]
   width: 400px
 

@@ -17,12 +17,12 @@
         %th 件名: $
           %span.alert (必須)
         %td
-          %input#subject.watermark.required!type=text!name=subject!placeholder=案件名...
+          %input#subject.watermark.required!type=text!name=subject!placeholder="案件名..."
       %tr
         %th 内容: $
           %span.alert (必須)
         %td
-          %textarea#content.watermark.required!name=content!placeholder=内容を書く...
+          %textarea#content.watermark.required!name=content!placeholder="内容を書く..."
       %tr
         %th アサイン:
         %td

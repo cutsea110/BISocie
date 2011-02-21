@@ -50,7 +50,7 @@ getStatusListR = do
     prjs <- forM ptcpts $ \(_, p) -> do
       let pid = participantsProject p
       prj <- get404 pid
-      let (Right es) = statuses $ projectStatuses prj
+      let (Right es) = parseStatuses $ projectStatuses prj
       return $ ProjectBis { projectBisId=pid
                           , projectBisName=projectName prj
                           , projectBisDescription=projectDescription prj
@@ -74,7 +74,7 @@ getCrossSearchR = do
       p <- get404 pid
       return (pid, p)
     prjs <- forM prjs' $ \(pid, p) -> do
-      let (Right es) = statuses $ projectStatuses p
+      let (Right es) = parseStatuses $ projectStatuses p
       return $ ProjectBis { projectBisId=pid
                           , projectBisName=projectName p
                           , projectBisDescription=projectDescription p
@@ -109,7 +109,7 @@ postCrossSearchR = do
     prjs <- forM ptcpts' $ \(_, p) -> do
       let pid = participantsProject p
       prj <- get404 pid
-      let (Right es) = statuses $ projectStatuses prj
+      let (Right es) = parseStatuses $ projectStatuses prj
       return (pid, ProjectBis { projectBisId=pid
                               , projectBisName=projectName prj
                               , projectBisDescription=projectDescription prj
@@ -165,7 +165,7 @@ getIssueListR pid = do
     unless viewable $ 
       lift $ permissionDenied "あなたはこのプロジェクトの参加者ではありません."
     prj' <- get404 pid
-    let (Right es) = statuses $ projectStatuses prj'
+    let (Right es) = parseStatuses $ projectStatuses prj'
         prj = ProjectBis { projectBisId=pid
                          , projectBisName=projectName prj'
                          , projectBisDescription=projectDescription prj'
@@ -203,7 +203,7 @@ getNewIssueR pid = do
       lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
     prj <- get404 pid
     ptcpts <- selectParticipants pid
-    let (Right stss) = statuses $ projectStatuses prj
+    let (Right stss) = parseStatuses $ projectStatuses prj
     lift $ defaultLayout $ do
       setTitle $ string "新規案件作成"
       addCassius $(cassiusFile "issue")
@@ -319,7 +319,7 @@ getIssueR pid ino = do
                                 })
     prj <- get404 pid
     ptcpts <- selectParticipants pid
-    let (Right stss) = statuses $ projectStatuses prj
+    let (Right stss) = parseStatuses $ projectStatuses prj
         isAssign = case issueAssign issue of
           Nothing -> const False
           Just uid -> (==uid)

@@ -9,6 +9,7 @@ import Database.Persist.TH (share2, derivePersistField)
 import Database.Persist.Base
 import Database.Persist.GenericSql (mkMigrate)
 import System.Locale
+import Data.Char (isHexDigit)
 import Data.Int
 import Data.Time
 import Data.List (intercalate)
@@ -147,6 +148,53 @@ lookupProjectBis pid (p:ps) = if pid == (projectBisId p)
                               then Just p
                               else lookupProjectBis pid ps
 
+
+parseStatuses :: String -> Either ParseError [(String, Maybe Color, Maybe Effect)]
+parseStatuses s = parse statuses "parse statuses" 
+                  $ if last s == '\n' then s else s ++ "\n"
+
+eol = try (P.string "\n\r")
+      <|> try (P.string "\r\n")
+      <|> P.string "\n"
+      <|> P.string "\r"
+
+statuses = endBy status eol
+
+status = do
+  e <- effect
+  s <- many1 (noneOf "\r\n#")
+  c <- color
+  return (s, c, e)
+
+effect = do
+  try (oneOf "!=") >>= \e ->
+      case e of
+        '!' -> return $ Just Impact
+        '=' -> return $ Just Strike
+  <|> return Nothing
+
+color = do
+  try (char '#')
+  color'
+  <|>
+  (many (noneOf "\r\n") >> return Nothing)
+  where
+    color' = do
+      c <- many (noneOf "\r\n")
+      if (length c == 3 || length c == 6) && all isHexDigit c
+        then return $ Just ("#" ++ (take 6 $ concat $ repeat c))
+        else do
+        let known = lookup c [ ("赤", "#ffcccc")
+                             , ("緑", "#ccffcc")
+                             , ("青", "#ccccff")
+                             , ("灰", "#888888")
+                             , ("黄", "#ffffcc")]
+        case known of
+          Nothing -> return $ Just c
+          Just k  -> return $ Just k
+
+             
+{--
 -- | Parse Statuses
 statuses :: String -> Either ParseError [(String, Maybe Color, Maybe Effect)]
 statuses = mapM (parse status "status parser") . lines
@@ -206,7 +254,7 @@ color = do
       b <- hexDigit
       eof
       return $ Just ['#',r,r,g,g,b,b]
-
+--}
 
 data IssueBis = IssueBis { issueBisId :: IssueId
                          , issueBisIssue :: Issue

@@ -19,6 +19,11 @@ th.number, td.number
   width: 400px
   margin-top: 5px
 
+#area_map
+  height: 400px
+  width: 460px
+  margin-top: 5px
+
 #myavatar
   width: 100px
 

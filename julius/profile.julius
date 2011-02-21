@@ -1,4 +1,39 @@
 $(document).ready(function(){
+  $('#desired-human-network').hide().attr('title', 'ヒューマンネットワーク').dialog({
+    autoOpen: false,
+    width: 500,
+    modal: false
+  });
+  $('#search-human-network').click(function(){
+    $('#desired-human-network').dialog('open');
+
+    var area = $('#desired-work-location').text();
+    areamap = new google.maps.Map(document.getElementById('area_map'), {
+      zoom: 8,
+      mapTypeId: google.maps.MapTypeId.ROADMAP
+    });
+    areageo = new google.maps.Geocoder();
+    areageo.geocode({'address': area}, function(results, status) {
+      if (status == google.maps.GeocoderStatus.OK) {
+        areamap.setCenter(results[0].geometry.location);
+      } else {
+        alert("Geocode was not successful for the following reason: " + status);
+      }
+    });
+
+    $.getJSON('@UserLocationsR@', function(data){
+        for (var i = 0; i < data.locations.length; ++i) {
+            var marker = new google.maps.Marker({
+                map: areamap,
+                position: new google.maps.LatLng(data.locations[i].lat, data.locations[i].lng),
+                title: data.locations[i].name
+            });
+            addMarkerLink(marker, data.locations[i].uri);
+        }
+    });
+    
+  });
+
   if ($('#cloc').length>0) {
      $('#czip').blur(function(){
        AjaxZip2.zip2addr(this, 'address', 'address');
@@ -86,3 +121,9 @@ $(document).ready(function(){
   });
 
 });
+
+function addMarkerLink(marker, uri) {
+    google.maps.event.addListener(marker, "click", function(){
+        document.location = uri;
+    });
+}

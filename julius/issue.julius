@@ -4,13 +4,17 @@ $(document).ready(function(){
     width: 460,
     modal: false
   });
-  $('a.profile').click(function(){
+  $('a.profile')
+  .click(function(){
     $('#popup-profile table').remove();
     $('#popup-profile').dialog({title: $(this).text()+'のプロフィール'}).dialog('open');
     $.get($(this).attr('href'), function(res){
       $('#popup-profile').append($(res).find('table[class=profile]'));
     })
     return false;
+  })
+  .dblclick(function(){
+    location.href = $(this).attr('href');
   });
 
   $('a.profile').each(function(i){

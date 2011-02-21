@@ -13,7 +13,7 @@ $(document).ready(function(){
       mapTypeId: google.maps.MapTypeId.ROADMAP
     });
     areageo = new google.maps.Geocoder();
-    areageo.geocode({'address': area}, function(results, status) {
+    areageo.geocode({'region': 'jp', 'address': area}, function(results, status) {
       if (status == google.maps.GeocoderStatus.OK) {
         areamap.setCenter(results[0].geometry.location);
       } else {

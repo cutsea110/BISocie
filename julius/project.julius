@@ -172,9 +172,8 @@ function mkUser(u, ps){
             .addClass(u.role+' user-logo'),
       c = $('<input/>').attr({type:'checkbox'}),
       avatar = $("<img class='avatar'/>").attr({src: u.avatar}),
-      s =$('<span/>').text(u.name),
+      s =$('<a/>').attr({href: u.uri}).text(u.name),
       mail = $('<img/>').addClass('mail');
-
   if (ps[u.id]){
     switch (ps[u.id].receivemail){
       case 'True':

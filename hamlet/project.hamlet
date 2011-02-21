@@ -1,81 +1,81 @@
-%ul.tabs
-  %li
-    %a!href=@IssueListR.pid@ $projectName.prj$ 案件一覧
-  %li
-    %a!href=@NewIssueR.pid@ 案件追加
-  %li.selected
-    %a!href=@ProjectR.pid@ プロジェクト設定
-
-#main-content
-  %h3 $projectName.prj$ プロジェクト設定 $
-    %button#button-delete-confirm.link!type=submit!name=_method!value=delete このプロジェクトを削除する.
-
-  %form!method=post!action=@ProjectR.pid@
-    %input!type=hidden!name=_method!value=modify
-    %dl
-      %dt プロジェクト名 $
+<ul .tabs>
+  <li>
+    <a href="@{IssueListR pid}">#{projectName prj} 案件一覧
+  <li>
+    <a href="@{NewIssueR pid}">案件追加
+  <li .selected>
+    <a href="@{ProjectR pid}">プロジェクト設定
+\
+<div id="main-content">
+  <h3>#{projectName prj} プロジェクト設定 
+    <button id="button-delete-confirm" type="submit" name="_method" value="delete" .link>このプロジェクトを削除する.
+  \
+  <form method="post" action="@{ProjectR pid}">
+    <input type="hidden" name="_method" value="modify">
+    <dl>
+      <dt>プロジェクト名 
         $if editable
-          %span.alert (必須)
-      %dd
+          <span .alert>(必須)
+      <dd>
         $if editable
-          %input#name.inplaceedit!type=text!name=name!placeholder=(プロジェクト名)!uri=@ProjectR.pid@!value=$projectName.prj$
+          <input id="name" type="text" name="name" placeholder="(プロジェクト名)" uri="@{ProjectR pid}" value="#{projectName prj}" .inplaceedit>
         $else
-          $projectName.prj$
-      %dt 概要 $
+          \#{projectName prj}
+      <dt>概要 
         $if editable
-          %span.alert (必須)
-      %dd
+          <span .alert>(必須)
+      <dd>
         $if editable
-          %textarea#description.inplaceedit!type=text!name=description!placeholder=(プロジェクト概要)!uri=@ProjectR.pid@ $projectDescription.prj$
+          <textarea id="description" type="text" name="description" placeholder="(プロジェクト概要)" uri="@{ProjectR pid}" .inplaceedit>#{projectDescription prj}
         $else
-          $showMultilineText.projectDescription.prj$
-      %dt ステータス $
+          \#{showMultilineText (projectDescription prj)}
+      <dt>ステータス 
         $if editable
-          %span.alert (必須) $
-        %button.link#button-status-syntax-help!type=submit ヘルプ
-      %dd
+          <span .alert>(必須) 
+        <button id="button-status-syntax-help" type="submit" .link>ヘルプ
+      <dd>
         $if editable
-          %textarea#statuses.inplaceedit!name=statuses!placeholder=(ステータス設定)!uri=@ProjectR.pid@ $projectStatuses.prj$
+          <textarea id="statuses" name="statuses" placeholder="(ステータス設定)" uri="@{ProjectR pid}" .inplaceedit>#{projectStatuses prj}
         $else
-          $showMultilineText.(projectStatuses.prj)$
-      %dt 参加者
+          \#{showMultilineText (projectStatuses prj)}
+      <dt>参加者
         $if editable
-          %button#button-search-users.link 参加者追加
-      %dd
-        #participants
-
-#search-users
-  %label!for=search-bay-name 名前:
-  %input#search-by-name!type=text!name=username
-
-  %input#select-teacher!type=checkbox!value=Teacher
-  %label!for=select-teacher 教職員:
-  %input#select-student!type=checkbox!value=Student
-  %label!for=select-student 在校生/卒業生:
-  %input#select-admin!type=checkbox!value=Admin
-  %label!for=select-admin 管理者:
-  %label!for=select-entry-year 入学年度:
-  %select#select-entry-year
-    %option
-    $forall eyears ey
-      %option!value=$show.ey$ $show.ey$
-
-
-  %input#all-filtered-set!type=button!value=全選択
-  %input#all-filtered-reset!type=button!value=全解除
-
-  #search-result.scroll
-
-^help^
-
-#delete-confirm.alert
-  削除をすると二度と元に戻すことはできません。
-  本当に削除しますか？
-
-#delete-success
-  プロジェクトを削除しました。
-  このダイアログを閉じてください。
-
-#delete-failed.errors
-  プロジェクトを削除できませんでした。
-  このダイアログを閉じてください。
+          <button id="button-search-users" .link>参加者追加
+      <dd>
+        <div id="participants">
+\
+<div id="search-users">
+  <label for="search-bay-name">名前:
+  <input id="search-by-name" type="text" name="username">
+  \
+  <input id="select-teacher" type="checkbox" value="Teacher">
+  <label for="select-teacher">教職員:
+  <input id="select-student" type="checkbox" value="Student">
+  <label for="select-student">在校生/卒業生:
+  <input id="select-admin" type="checkbox" value="Admin">
+  <label for="select-admin">管理者:
+  <label for="select-entry-year">入学年度:
+  <select id="select-entry-year">
+    <option>
+    $forall ey <- eyears
+      <option value="#{show ey}">#{show ey}
+  \
+  \
+  <input id="all-filtered-set" type="button" value="全選択">
+  <input id="all-filtered-reset" type="button" value="全解除">
+  \
+  <div id="search-result" .scroll>
+\
+\^{help}
+\
+<div id="delete-confirm" .alert>
+  \削除をすると二度と元に戻すことはできません。
+  \本当に削除しますか？
+\
+<div id="delete-success">
+  \プロジェクトを削除しました。
+  \このダイアログを閉じてください。
+\
+<div id="delete-failed" .errors>
+  \プロジェクトを削除できませんでした。
+  \このダイアログを閉じてください。

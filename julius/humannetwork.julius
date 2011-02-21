@@ -1,7 +1,7 @@
 $(function(){
     var latlng = new google.maps.LatLng(35.7846244, 139.90640959999996);
 
-    $.getJSON('@UserLocationsR@', function(data){
+    $.getJSON('@{UserLocationsR}', function(data){
         var map = new google.maps.Map(document.getElementById("global_map_canvas"), {
             zoom: 9,
             scrollwheel: true,

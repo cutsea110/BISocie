@@ -1,21 +1,22 @@
-!!!
-%html
-    %head
-      %title $pageTitle.pc$
-      ^pageHead.pc^
-    %body
-      #main
-        #ui-header.clearfix
-          ^header^
-        #ui-main
-          $maybe mmsg msg
-              #message $msg$
-          %ul#breadcrumbs
-            $if (not (null parents))
-              $forall parents p
-                %li
-                  %a!href=@fst.p@ $snd.p$
-            %li $title$
-          ^pageBody.pc^
-        #ui-footer
-          ^footer^
+\<!DOCTYPE html>
+
+<html>
+    <head>
+      <title>#{pageTitle pc}
+      \^{pageHead pc}
+    <body>
+      <div id="main">
+        <div id="ui-header" .clearfix>
+          \^{header}
+        <div id="ui-main">
+          $maybe msg <- mmsg
+              <div id="message">#{msg}
+          <ul id="breadcrumbs">
+            $if not (null parents)
+              $forall p <- parents
+                <li>
+                  <a href="@{fst p}">#{snd p}
+            <li>#{title}
+          \^{pageBody pc}
+        <div id="ui-footer">
+          \^{footer}

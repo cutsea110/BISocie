@@ -1,78 +1,78 @@
-%ul.tabs
-  %li
-    %a!href=@HomeR.selfid@ ホーム
-  %li.selected
-    %a!href=@?viewprof@ プロフィール
-
-#main-content
-  %h3 $userIdent.user$のプロフィール
+<ul .tabs>
+  <li>
+    <a href="@{HomeR selfid}">ホーム
+  <li .selected>
+    <a href="@?{viewprof}">プロフィール
+\
+<div id="main-content">
+  <h3>#{userIdent user}のプロフィール
     $if editable
-      %form.inline!method=get!action=@ProfileR.uid@
-        %input!type=hidden!name=mode!value=e
-        %button.link!type=submit 編集する
-
-  %table.profile
-    %tr
-      %th アバター
-      %td
-        #avatar
-          %img#myavatar.avatar!src=@AvatarImageR.uid@
+      <form method="get" action="@{ProfileR uid}" .inline>
+        <input type="hidden" name="mode" value="e">
+        <button type="submit" .link>編集する
+  \
+  <table .profile>
+    <tr>
+      <th>アバター
+      <td>
+        <div id="avatar">
+          <img id="myavatar" src="@{AvatarImageR uid}" .avatar>
     $if viewable
-      %tr
-        %th
-          $if (isStudent user)
-            学籍番号
+      <tr>
+        <th>
+          $if isStudent user
+            \学籍番号
           $else
-            教職員番号
-        %td!colspan=3 $userIdent.user$
-      %tr
-        %th メールアドレス
-        %td!colspan=3 $userEmail.user$
-    %tr
-      %th 氏名
-      %td!colspan=3 $userFullName.user$
+            \教職員番号
+        <td colspan="3">#{userIdent user}
+      <tr>
+        <th>メールアドレス
+        <td colspan="3">#{userEmail user}
+    <tr>
+      <th>氏名
+      <td colspan="3">#{userFullName user}
     $if viewable
-      $maybe mprof prof
-        %tr
-          %th 生年月日
-          %td!colspan=3 $show.profileBirth.prof$
-        %tr
-          %th 在籍年度
-          %td!colspan=3 $showEntryYear.prof$ 〜 $showGraduateYear.prof$
-        %tr
-          %th 所属ブランチ
-          %td!colspan=3 $profileBranch.prof$
-        %tr
-          %th 現住所
-          %td!colspan=3 〒 $profileZip.prof$ $profileAddress.prof$
-              %input#clon!type=hidden!name=longitude!value=$showMaybeDouble.profileLongitude.prof$
-              %input#clat!type=hidden!name=latitude!value=$showMaybeDouble.profileLatitude.prof$
-              %input#cloc!type=hidden!name=address!value=$profileAddress.prof$
-        %tr
-          %th 電話番号
-          %td!colspan=3 $profileTel.prof$
-        %tr
-          %th 最寄駅
-          %td!colspan=3 $profileStation.prof$
-        %tr
-          %th 実家住所
-          %td!colspan=3 〒 $profileHomeZip.prof$ $profileHomeAddress.prof$
-              %input#hlon!type=hidden!name=homeLongitude!value=$showMaybeDouble.profileHomeLongitude.prof$
-              %input#hlat!type=hidden!name=homeLatitude!value=$showMaybeDouble.profileHomeLatitude.prof$
-              %input#hloc!type=hidden!name=homeAddress!value=$profileHomeAddress.prof$
-        %tr
-          %th 実家電話番号
-          %td!colspan=3 $profileHomeTel.prof$
-        %tr
-          %th 希望進路
-          %td!colspan=3 $showmaybe.profileDesiredCourse.prof$
-        %tr
-          %th 希望勤務地
-          %td#desired-work-location!colspan=3
-           %a!href="#"#search-human-network $showmaybe.profileDesiredWorkLocation.prof$
-        %tr
-          %th 勤務(予定)先
-          %td!colspan=3 $showmaybe.profileEmployment.prof$
-
-#desired-human-network.center
-  #area_map
+      $maybe prof <- mprof
+        <tr>
+          <th>生年月日
+          <td colspan="3">#{show (profileBirth prof)}
+        <tr>
+          <th>在籍年度
+          <td colspan="3">#{showEntryYear prof} 〜 #{showGraduateYear prof}
+        <tr>
+          <th>所属ブランチ
+          <td colspan="3">#{profileBranch prof}
+        <tr>
+          <th>現住所
+          <td colspan="3">〒 #{profileZip prof} #{profileAddress prof}
+              <input id="clon" type="hidden" name="longitude" value="#{showMaybeDouble (profileLongitude prof)}">
+              <input id="clat" type="hidden" name="latitude" value="#{showMaybeDouble (profileLatitude prof)}">
+              <input id="cloc" type="hidden" name="address" value="#{profileAddress prof}">
+        <tr>
+          <th>電話番号
+          <td colspan="3">#{profileTel prof}
+        <tr>
+          <th>最寄駅
+          <td colspan="3">#{profileStation prof}
+        <tr>
+          <th>実家住所
+          <td colspan="3">〒 #{profileHomeZip prof} #{profileHomeAddress prof}
+              <input id="hlon" type="hidden" name="homeLongitude" value="#{showMaybeDouble (profileHomeLongitude prof)}">
+              <input id="hlat" type="hidden" name="homeLatitude" value="#{showMaybeDouble (profileHomeLatitude prof)}">
+              <input id="hloc" type="hidden" name="homeAddress" value="#{profileHomeAddress prof}">
+        <tr>
+          <th>実家電話番号
+          <td colspan="3">#{profileHomeTel prof}
+        <tr>
+          <th>希望進路
+          <td colspan="3">#{showmaybe (profileDesiredCourse prof)}
+        <tr>
+          <th>希望勤務地
+          <td id="desired-work-location" colspan="3">
+           <a href="#" id="search-human-network">#{showmaybe (profileDesiredWorkLocation prof)}
+        <tr>
+          <th>勤務(予定)先
+          <td colspan="3">#{showmaybe (profileEmployment prof)}
+\
+<div id="desired-human-network" .center>
+  <div id="area_map">

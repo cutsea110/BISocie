@@ -1,19 +1,4 @@
-import Network.Wai.Handler.DevelServer (run)
-import Control.Concurrent (forkIO)
+import Yesod (develServer)
 
 main :: IO ()
-main = do
-    mapM_ putStrLn
-        [ "Starting your server process. Code changes will be automatically"
-        , "loaded as you save your files. Type \"quit\" to exit."
-        , "You can view your app at http://localhost:3001/"
-        , ""
-        ]
-    _ <- forkIO $ run 3001 "Controller" "withBISocie" ["hamlet"]
-    go
-  where
-    go = do
-        x <- getLine
-        case x of
-            'q':_ -> putStrLn "Quitting, goodbye!"
-            _ -> go
+main = develServer 3001 "Controller" "withBISocie"

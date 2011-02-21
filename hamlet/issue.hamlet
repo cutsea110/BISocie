@@ -1,55 +1,55 @@
-%ul.tabs
-  %li.selected
-    %a!href=@(IssueR.pid).ino@ $show.ino$ : $issueSubject.issue$
-  %li
-    %a!href=@NewIssueR.pid@ 案件追加
-
-#main-content
-  %h3 $show.ino$ : $issueSubject.issue$
-
-  %form.validate!method=post!enctype=multipart/form-data!action=@(CommentR.pid).ino@
-    %table.nostyle
-      %tr
-        %th 内容: $
-          %span.alert (必須)
-        %td
-          %textarea#content.watermark.required!placeholder="内容..."!name=content
-      %tr
-        %th アサイン:
-        %td
-          %select!name=assign
-            %option!selected
-            $forall ptcpts p
-              %option!:isAssign.fst.p:selected!value=$show.fst.p$ $userFullName.snd.p$
-      %tr
-        %th ステータス
-        %td
-          %select!name=status
-            $forall stss s
-              %option!:isStatus.fst3.s:selected $fst3.s$
-      %tr
-        %th 期限:
-        %td
-          %input.watermark.date!placeholder=yyyy-mm-dd!type=date!name=limitdate!value=$showLimitdate.issue$
-      %tr
-        %th 添付ファイル
-        %td
-          %input!type=file!name=attached
-
-    %button!type=submit!name=_method!value=add 投稿
-
-  %ul#issue-thread
-    $forall comments c
-      .post-head
-        %img.avatar!src=@AvatarImageR.fst.commentBisCuser.snd.c@
-        %a.profile!href=@ProfileR.fst.commentBisCuser.snd.c@
-           $userFullName.snd.commentBisCuser.snd.c$
-        \  $showDate.commentBisCdate.snd.c$ $commentBisStatus.snd.c$
-      %pre.post-body
-        $commentBisContent.snd.c$
-        $maybe (commentBisAttached (snd c)) f
-          .attached
-            添付ファイル: $
-            %a!href=@(AttachedFileR.fst.c).(fst.f)@ $fileHeaderFullname.snd.f$
-
-#popup-profile
+<ul .tabs>
+  <li .selected>
+    <a href="@{IssueR pid ino}">#{show ino} : #{issueSubject issue}
+  <li>
+    <a href="@{NewIssueR pid}">案件追加
+\
+<div id="main-content">
+  <h3>#{show ino} : #{issueSubject issue}
+  \
+  <form method="post" enctype="multipart/form-data" action="@{CommentR pid ino}" .validate>
+    <table .nostyle>
+      <tr>
+        <th>内容: 
+          <span .alert>(必須)
+        <td>
+          <textarea id="content" placeholder="内容..." name="content" .watermark .required>
+      <tr>
+        <th>アサイン:
+        <td>
+          <select name="assign">
+            <option selected="">
+            $forall p <- ptcpts
+              <option :isAssign (fst p):selected="" value="#{show (fst p)}">#{userFullName (snd p)}
+      <tr>
+        <th>ステータス
+        <td>
+          <select name="status">
+            $forall s <- stss
+              <option :isStatus (fst3 s):selected="">#{fst3 s}
+      <tr>
+        <th>期限:
+        <td>
+          <input placeholder="yyyy-mm-dd" type="date" name="limitdate" value="#{showLimitdate issue}" .watermark .date>
+      <tr>
+        <th>添付ファイル
+        <td>
+          <input type="file" name="attached">
+    \
+    <button type="submit" name="_method" value="add">投稿
+  \
+  <ul id="issue-thread">
+    $forall c <- comments
+      <div .post-head>
+        <img src="@{AvatarImageR (fst (commentBisCuser (snd c)))}" .avatar>
+        <a href="@{ProfileR (fst (commentBisCuser (snd c)))}" .profile>
+           \#{userFullName (snd (commentBisCuser (snd c)))}
+        \  #{showDate (commentBisCdate (snd c))} #{commentBisStatus (snd c)}
+      <pre .post-body>
+        \#{commentBisContent (snd c)}
+        $maybe f <- commentBisAttached (snd c)
+          <div .attached>
+            \添付ファイル: 
+            <a href="@{AttachedFileR (fst c) (fst f)}">#{fileHeaderFullname (snd f)}
+\
+<div id="popup-profile">

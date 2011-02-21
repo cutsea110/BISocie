@@ -7,7 +7,7 @@ $(document).ready(function(){
 
   $('#button-search-users').click(function(){
     $('#search-users').dialog('open');
-    $.getJSON('@UserListR@', function(json){
+    $.getJSON('@{UserListR}', function(json){
       var us = json.userlist;
       $('#search-result .user-logo').remove();
       $.each(us, function(i, u){

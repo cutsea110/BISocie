@@ -65,23 +65,25 @@ postNewProjectR = do
 getProjectR :: ProjectId -> Handler RepHtml
 getProjectR pid = do
   (selfid, self) <- requireAuth
-  runDB $ do 
+  now <- liftIO getCurrentTime
+  let (y,_,_) = toGregorian $ utctDay now
+      eyears = [Settings.entryStartYear..y+5]
+      help = $(Settings.hamletFile "help")
+  (viewable, editable, prj) <- 
+    runDB $ do 
     p <- getBy $ UniqueParticipants pid selfid
     let viewable = p /= Nothing
         editable = viewable && userRole self >= Teacher
     unless viewable $ 
       lift $ permissionDenied "あなたはこのプロジェクトの参加者ではありません."
     prj <- get404 pid
-    now <- liftIO getCurrentTime
-    let (y,_,_) = toGregorian $ utctDay now
-        eyears = [Settings.entryStartYear..y+5]
-        help = $(Settings.hamletFile "help")
-    lift $ defaultLayout $ do
-      setTitle $ string $ projectName prj
-      addCassius $(cassiusFile "project")
-      addJulius $(juliusFile "help")
-      addJulius $(juliusFile "project")
-      addHamlet $(hamletFile "project")
+    return (viewable, editable, prj)
+  defaultLayout $ do
+    setTitle $ string $ projectName prj
+    addCassius $(cassiusFile "project")
+    addJulius $(juliusFile "help")
+    addJulius $(juliusFile "project")
+    addHamlet $(hamletFile "project")
 
 
 postProjectR :: ProjectId -> Handler RepJson
@@ -95,43 +97,40 @@ postProjectR pid = do
 putProjectR :: ProjectId -> Handler RepJson
 putProjectR pid = do
   (selfid, self) <- requireAuth
-  runDB $ do
+  nm' <- lookupPostParam "name"
+  ds' <- lookupPostParam "description"
+  st' <- lookupPostParam "statuses"
+  now <- liftIO getCurrentTime
+
+  prj <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
     let viewable = p /= Nothing
         editable = viewable && userRole self >= Teacher
     unless editable $ 
       lift $ permissionDenied "あなたはこのプロジェクトの設定を編集できません."
     prj <- get404 pid
-    Just nm <- do
-      nm' <- lift $ lookupPostParam "name"
-      case nm' of
+    Just nm <- case nm' of
         Nothing -> return $ Just $ projectName prj
         Just "" -> lift $ invalidArgs ["プロジェクト名は入力必須項目です."]
         Just nm'' -> return $ Just nm''
-    Just ds <- do
-      ds' <- lift $ lookupPostParam "description"
-      case ds' of
+    Just ds <- case ds' of
         Nothing -> return $ Just $ projectDescription prj
         Just "" -> lift $ invalidArgs ["概要は入力必須項目です."]
         Just ds'' -> return $ Just ds''
-    Just st <- do
-      st' <- lift $ lookupPostParam "statuses"
-      case st' of
+    Just st <- case st' of
         Nothing -> return $ Just $ projectStatuses prj
         Just "" -> lift $ invalidArgs ["ステータスは入力必須項目です."]
         Just st'' -> return $ Just st''
-    now <- liftIO getCurrentTime
     update pid [ ProjectName nm
                , ProjectDescription ds
                , ProjectStatuses st
                , ProjectUdate now]
-    prj <- get404 pid
-    lift $ do
-      cacheSeconds 10 -- FIXME
-      jsonToRepJson $ jsonMap [ ("name", jsonScalar $ projectName prj)
-                              , ("description", jsonScalar $ projectDescription prj)
-                              , ("statuses", jsonScalar $ projectStatuses prj)
-                              ]
+    get404 pid
+  cacheSeconds 10 -- FIXME
+  jsonToRepJson $ jsonMap [ ("name", jsonScalar $ projectName prj)
+                          , ("description", jsonScalar $ projectDescription prj)
+                          , ("statuses", jsonScalar $ projectStatuses prj)
+                          ]
   where
     showJScalar :: (Show a) => a -> Json
     showJScalar = jsonScalar . show
@@ -141,7 +140,7 @@ putProjectR pid = do
 deleteProjectR :: ProjectId -> Handler RepJson
 deleteProjectR pid = do
   (selfid, self) <- requireAuth
-  runDB $ do
+  deleted <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
     let viewable = p /= Nothing
         deletable = viewable && userRole self >= Teacher
@@ -152,10 +151,9 @@ deleteProjectR pid = do
       then do
       deleteWhere [ParticipantsProjectEq pid]
       delete pid
-      lift $ do
-        cacheSeconds 10 -- FIXME
-        jsonToRepJson $ jsonMap [("deleted", jsonScalar $ show pid)]
-      else do
-      lift $ do
-        cacheSeconds 10 -- FIXME
-        jsonToRepJson $ jsonMap [("error", jsonScalar $ "このプロジェクトは削除できませんでした.")]
+      return True
+      else return False
+  cacheSeconds 10 -- FIXME
+  if deleted
+    then jsonToRepJson $ jsonMap [("deleted", jsonScalar $ show pid)]
+    else jsonToRepJson $ jsonMap [("error", jsonScalar $ "このプロジェクトは削除できませんでした.")]

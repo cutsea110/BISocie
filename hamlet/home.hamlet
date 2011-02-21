@@ -1,30 +1,29 @@
-%ul.tabs
-  %li.selected
-    %a!href=@HomeR.selfid@ ホーム
+<ul .tabs>
+  <li .selected>
+    <a href="@{HomeR selfid}">ホーム
   $if cancreateproject
-    %li
-      %a!href=@NewProjectR@ プロジェクト新規作成
-  %li
-    %a!href=@CrossSearchR@ クロスサーチ
+    <li>
+      <a href="@{NewProjectR}">プロジェクト新規作成
+  <li>
+    <a href="@{CrossSearchR}">クロスサーチ
   $if viewablehumannet
-    %li
-      %a!href=@HumanNetworkR@ ヒューマンネットワーク
-
-#main-content
-  %table.list
-    %caption 参加プロジェクト一覧
-    %thead
-      %th プロジェクト名
-      %th 概要
-      %th 作成日
-      %th 更新日
-    %tbody
-      $forall prjs p
-        %tr!class=$fst.p$
-          %td
-            %a!href=@IssueListR.fst.snd.p@ $projectName.snd.snd.p$
-          %td
-            %a!href=@ProjectR.fst.snd.p@ $showShortenText.projectDescription.snd.snd.p$
-          %td $showDate.projectCdate.snd.snd.p$
-          %td $showDate.projectUdate.snd.snd.p$
-
+    <li>
+      <a href="@{HumanNetworkR}">ヒューマンネットワーク
+\
+<div id="main-content">
+  <table .list>
+    <caption>参加プロジェクト一覧
+    <thead>
+      <th>プロジェクト名
+      <th>概要
+      <th>作成日
+      <th>更新日
+    <tbody>
+      $forall p <- prjs
+        <tr class="#{fst p}">
+          <td>
+            <a href="@{IssueListR (fst (snd p))}">#{projectName (snd (snd p))}
+          <td>
+            <a href="@{ProjectR (fst (snd p))}">#{showShortenText (projectDescription (snd (snd p)))}
+          <td>#{showDate (projectCdate (snd (snd p)))}
+          <td>#{showDate (projectUdate (snd (snd p)))}

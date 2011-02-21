@@ -58,48 +58,51 @@ getProfileR uid = do
     viewProf :: Handler RepHtml
     viewProf = do
       (selfid, self) <- requireAuth
-      runDB $ do
-        user <- get404 uid
-        now <- liftIO getCurrentTime
-        let viewable = self == user || userRole self > userRole user
-            editable = self == user || userRole self > userRole user
-            viewprof = (ProfileR uid, [("mode", "v")])
-            editprof = (ProfileR uid, [("mode", "e")])
-            (y,_,_) = toGregorian $ utctDay now
---        unless viewable $ 
---          lift $ permissionDenied "あなたはこのユーザプロファイルを見ることはできません."
-        mprof <- getProf user y
-        lift $ defaultLayout $ do
-          setTitle $ string "Profile"
-          addCassius $(cassiusFile "profile")
-          addScriptRemote "http://maps.google.com/maps/api/js?sensor=false"
-          addJulius $(juliusFile "profile")
-          addHamlet $(hamletFile "viewProfile")
+      now <- liftIO getCurrentTime
+      (user, viewable, editable, viewprof, editprof, mprof) <- 
+        runDB $ do
+          user <- get404 uid
+          let viewable = self == user || userRole self > userRole user
+              editable = self == user || userRole self > userRole user
+              viewprof = (ProfileR uid, [("mode", "v")])
+              editprof = (ProfileR uid, [("mode", "e")])
+              (y,_,_) = toGregorian $ utctDay now
+          mprof <- getProf user y
+          return (user, viewable, editable, viewprof, editprof, mprof)
+      defaultLayout $ do
+        setTitle $ string "Profile"
+        addCassius $(cassiusFile "profile")
+        addScriptRemote "http://maps.google.com/maps/api/js?sensor=false"
+        addJulius $(juliusFile "profile")
+        addHamlet $(hamletFile "viewProfile")
     
     editProf :: Handler RepHtml
     editProf = do
       (selfid, self) <- requireAuth
-      runDB $ do
-        user <- get404 uid
-        now <- liftIO getCurrentTime
-        let viewable = self == user || userRole self > userRole user
-            editable = self == user || userRole self > userRole user
-            viewprof = (ProfileR uid, [("mode", "v")])
-            editprof = (ProfileR uid, [("mode", "e")])
-            (y,_,_) = toGregorian $ utctDay now
-        unless editable $ 
-          lift $ permissionDenied "あなたはこのユーザプロファイルを編集することはできません."
-        mprof <- getProf user y
-        let eyears = zipWith (\y1 y2 -> (y1==y2, y1)) [Settings.entryStartYear..y+5] $ 
-                     repeat (fromMaybe y (fmap (toInteger.profileEntryYear) mprof))
-            gyears = zipWith (\y1 y2 -> (Just y1==y2, y1)) [Settings.graduateStartYear..y+5] $
-                     repeat (fromMaybe Nothing (fmap (fmap toInteger.profileGraduateYear) mprof))
-        lift $ defaultLayout $ do
-          setTitle $ string "Profile"
-          addCassius $(cassiusFile "profile")
-          addScriptRemote "http://maps.google.com/maps/api/js?sensor=false"
-          addJulius $(juliusFile "profile")
-          addHamlet $(hamletFile "editProfile")
+      now <- liftIO getCurrentTime
+      
+      (user, viewable, editable, viewprof, editprof, mprof, eyears, gyears) <-
+        runDB $ do
+          user <- get404 uid
+          let viewable = self == user || userRole self > userRole user
+              editable = self == user || userRole self > userRole user
+              viewprof = (ProfileR uid, [("mode", "v")])
+              editprof = (ProfileR uid, [("mode", "e")])
+              (y,_,_) = toGregorian $ utctDay now
+          unless editable $ 
+            lift $ permissionDenied "あなたはこのユーザプロファイルを編集することはできません."
+          mprof <- getProf user y
+          let eyears = zipWith (\y1 y2 -> (y1==y2, y1)) [Settings.entryStartYear..y+5] $ 
+                       repeat (fromMaybe y (fmap (toInteger.profileEntryYear) mprof))
+              gyears = zipWith (\y1 y2 -> (Just y1==y2, y1)) [Settings.graduateStartYear..y+5] $
+                       repeat (fromMaybe Nothing (fmap (fmap toInteger.profileGraduateYear) mprof))
+          return (user, viewable, editable, viewprof, editprof, mprof, eyears, gyears)
+      defaultLayout $ do
+        setTitle $ string "Profile"
+        addCassius $(cassiusFile "profile")
+        addScriptRemote "http://maps.google.com/maps/api/js?sensor=false"
+        addJulius $(juliusFile "profile")
+        addHamlet $(hamletFile "editProfile")
 
 postProfileR :: UserId -> Handler RepHtml
 postProfileR uid = do
@@ -111,7 +114,8 @@ postProfileR uid = do
 putProfileR :: UserId -> Handler RepHtml
 putProfileR uid = do
   (selfid, self) <- requireAuth
-  (bir, ey, gy, br, zip, adr, lon, lat, tel, st, hzip, hadr, hlon, hlat, htel, dc, dwl, emp) <- runFormPost' $ (,,,,,,,,,,,,,,,,,)
+  (bir, ey, gy, br, zip, adr, lon, lat, tel, st, hzip, hadr, hlon, hlat, htel, dc, dwl, emp) <- 
+    runFormPost' $ (,,,,,,,,,,,,,,,,,)
     <$> dayInput "birth"
     <*> intInput "entryYear"
     <*> maybeIntInput "graduateYear"
@@ -134,6 +138,11 @@ putProfileR uid = do
       lat' = fromMaybe Nothing (fmap (Just . read) lat)
       hlon' = fromMaybe Nothing (fmap (Just . read) hlon)
       hlat' = fromMaybe Nothing (fmap (Just . read) hlat)
+  (em, fn, gn) <- 
+    runFormPost' $ (,,)
+    <$> emailInput "email"
+    <*> stringInput "familyName"
+    <*> stringInput "givenName"
   runDB $ do
     -- validate
     user <- get404 uid
@@ -141,11 +150,6 @@ putProfileR uid = do
     unless editable $ 
       lift $ permissionDenied "あなたはこのユーザプロファイルを編集することはできません."
       -- update user
-    (em, fn, gn) <- 
-      lift $ runFormPost' $ (,,)
-      <$> emailInput "email"
-      <*> stringInput "familyName"
-      <*> stringInput "givenName"
     update uid [UserEmail em, UserFamilyName fn, UserGivenName gn]
     mprof <- getBy $ UniqueProfile uid
     case mprof of
@@ -191,18 +195,19 @@ putProfileR uid = do
                    , ProfileEmployment emp
                    ]
         return pid
-    lift $ redirectParams RedirectTemporary (ProfileR uid) [("mode", "e")]
+  redirectParams RedirectTemporary (ProfileR uid) [("mode", "e")]
     
 getAvatarImageR :: UserId -> Handler RepHtml
 getAvatarImageR uid = do
   _ <- requireAuth
-  runDB $ do
+  (fid, f) <- runDB $ do
     u <- get404 uid
     case userAvatar u of
       Nothing -> lift $ redirect RedirectTemporary $ StaticR img_no_image_png
       Just fid -> do
         f <- get404 fid
-        lift $ getFileR (fileHeaderCreator f) fid
+        return (fid, f)
+  getFileR (fileHeaderCreator f) fid
 
 postAvatarR :: UserId -> Handler RepJson
 postAvatarR uid = do
@@ -216,8 +221,7 @@ postAvatarR uid = do
     unless editable $
       lift $ permissionDenied "あなたはこのユーザのアバターを変更することはできません."
     update uid [UserAvatar avatar]
-    lift $ do
-      cacheSeconds 10 -- FIXME
-      jsonToRepJson $ jsonMap [ ("uri", jsonScalar $ r $ AvatarImageR uid)
-                              , ("avatar", jsonScalar $ showmaybe $ mfhid)
-                              ]
+  cacheSeconds 10 -- FIXME
+  jsonToRepJson $ jsonMap [ ("uri", jsonScalar $ r $ AvatarImageR uid)
+                          , ("avatar", jsonScalar $ showmaybe $ mfhid)
+                          ]

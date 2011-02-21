@@ -6,7 +6,7 @@ $(document).ready(function(){
     buttons: {
       '閉じる': function(){
         $(this).dialog('close');
-        location.href='@HomeR.selfid@';
+        location.href='@{HomeR selfid}';
       }
     }
   });
@@ -32,7 +32,7 @@ $(document).ready(function(){
         $.ajax({
           async: false,
           type: 'POST',
-          url: '@ProjectR.pid@',
+          url: '@{ProjectR pid}',
           dataType: 'json',
           data: {_method: 'delete'},
           success: function(json){
@@ -65,10 +65,10 @@ $(document).ready(function(){
 
   $('#button-search-users').click(function(){
     $('#search-users').dialog('open');
-    $.getJSON('@UserListR@', function(json){
+    $.getJSON('@{UserListR}', function(json){
       var us = json.userlist;
       $('#search-result .user-logo').remove();
-      $.getJSON('@ParticipantsListR.pid@', function(json) {
+      $.getJSON('@{ParticipantsListR pid}', function(json) {
        var ps = json2hash(json.participants);
          $.each(us, function(i, u){
           $('#search-result').append(mkUser(u, ps));
@@ -150,7 +150,7 @@ function reloading_participants() {
    // clear
    $('#participants .user-logo').remove();
    // load
-   $.getJSON('@ParticipantsListR.pid@', {uncache: (new Date).getTime()}, function(json) {
+   $.getJSON('@{ParticipantsListR pid}', {uncache: (new Date).getTime()}, function(json) {
      var ps = json2hash(json.participants);
      $.each(json.participants, function(i, u){
        $('#participants').append(mkUser(u, ps));
@@ -177,17 +177,17 @@ function mkUser(u, ps){
   if (ps[u.id]){
     switch (ps[u.id].receivemail){
       case 'True':
-            mail.attr({src: '@StaticR.img_mail_accept_png@'});
+            mail.attr({src: '@{StaticR img_mail_accept_png}'});
             break;
       case 'False':
-            mail.attr({src: '@StaticR.img_mail_error_png@'});
+            mail.attr({src: '@{StaticR img_mail_error_png}'});
             break;
     }
   }else{
-    mail.attr({src: '@StaticR.img_mail_checked_png@'});
+    mail.attr({src: '@{StaticR img_mail_checked_png}'});
   }
 
-  if('%show.editable%'=='False')
+  if('#{show editable}'=='False')
     return div.append(s).append(mail).append(avatar);
 
   if (ps[u.id])c.attr('checked', true);
@@ -208,16 +208,16 @@ function modifyParticipant(c){
   $.ajax({
     async: false,
     type: 'POST',
-    url: '@ParticipantsR.pid@',
+    url: '@{ParticipantsR pid}',
     dataType: 'json',
     data: {_method: method, uid: uid},
     success: function (json) {
       switch (json.participants.status) {
         case 'added':
-          mail.attr({src: '@StaticR.img_mail_accept_png@'});
+          mail.attr({src: '@{StaticR img_mail_accept_png}'});
           break;
         case 'deleted':
-          mail.attr({src: '@StaticR.img_mail_checked_png@'});
+          mail.attr({src: '@{StaticR img_mail_checked_png}'});
           break;
       }
     },

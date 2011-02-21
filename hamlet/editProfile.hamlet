@@ -104,7 +104,7 @@
         %tr
           %th 希望勤務地
           %td!colspan=3
-            %input.watermark!placeholder=関東!type=text!name=desiredWorkLocation!value=$showmaybe.profileDesiredWorkLocation.snd.prof$
+            %input.watermark!placeholder="都内"!type=text!name=desiredWorkLocation!value=$showmaybe.profileDesiredWorkLocation.snd.prof$
         %tr
           %th 勤務(予定)先
           %td!colspan=3

@@ -68,7 +68,11 @@
           %td!colspan=3 $showmaybe.profileDesiredCourse.snd.prof$
         %tr
           %th 希望勤務地
-          %td!colspan=3 $showmaybe.profileDesiredWorkLocation.snd.prof$
+          %td#desired-work-location!colspan=3
+           %a!href="#"#search-human-network $showmaybe.profileDesiredWorkLocation.snd.prof$
         %tr
           %th 勤務(予定)先
           %td!colspan=3 $showmaybe.profileEmployment.snd.prof$
+
+#desired-human-network.center
+  #area_map

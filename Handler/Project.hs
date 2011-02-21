@@ -17,7 +17,10 @@ getNewProjectR = do
       viewablehumannet = userRole self >= Teacher
   unless cancreateproject $ 
     permissionDenied "あなたはプロジェクトを作成することはできません."
+  now <- liftIO getCurrentTime
   let inintstatuses = "!未開始#赤\n着手#緑\n完了#灰\n=却下#灰\n保留\n議論\n報告" :: String
+      (y,_,_) = toGregorian $ utctDay now
+      eyears = [Settings.entryStartYear..y+5]
       help = $(Settings.hamletFile "help")
   defaultLayout $ do
     setTitle $ string "プロジェクト新規作成"

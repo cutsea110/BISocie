@@ -12,12 +12,15 @@
 #status-syntax-help .underline
   text-decoration: underline
 
-.Student
+.Student a
   color: #fb90a0
-.Teacher
+  text-decoration: none
+.Teacher a
   color: #90a0fc
-.Admin
+  text-decoration: none
+.Admin a
   color: #000000
+  text-decoration: none
 
 .scroll
   overflow: scroll

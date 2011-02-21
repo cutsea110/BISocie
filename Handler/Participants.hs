@@ -27,6 +27,7 @@ getParticipantsListR pid = do
   where
     go r (id, u, p, ra) = jsonMap [ ("id", jsonScalar $ show id)
                                   , ("ident", jsonScalar $ userIdent u)
+                                  , ("uri", jsonScalar $ r $ ProfileR id)
                                   , ("name", jsonScalar $ userFullName u)
                                   , ("role", jsonScalar $ show $ userRole u)
                                   , ("prettyrole", jsonScalar $ userRoleName u)

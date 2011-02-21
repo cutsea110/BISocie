@@ -43,7 +43,7 @@
           %th 生年月日 $
             %span.alert (必須)
           %td!colspan=3
-            %input.date.watermark.required!placeholder=yyyy/mm/dd!type=date!name=birth!value=$show.profileBirth.snd.prof$
+            %input.date.watermark.required!placeholder=yyyy/mm/dd!type=date!name=birth!value=$show.profileBirth.prof$
         %tr
           %th 入学年度 $
             %span.alert (必須)
@@ -61,54 +61,54 @@
           %th 所属ブランチ $
             %span.alert (必須)
           %td!colspan=3
-            %input.watermark.required!placeholder=ブランチ!type=text!name=branch!value=$profileBranch.snd.prof$
+            %input.watermark.required!placeholder=ブランチ!type=text!name=branch!value=$profileBranch.prof$
         %tr
           %th 現住所 $
             %span.alert (必須)
           %td!colspan=3
-            %input#clon!type=hidden!name=longitude!value=$showMaybeDouble.profileLongitude.snd.prof$
-            %input#clat!type=hidden!name=latitude!value=$showMaybeDouble.profileLatitude.snd.prof$
+            %input#clon!type=hidden!name=longitude!value=$showMaybeDouble.profileLongitude.prof$
+            %input#clat!type=hidden!name=latitude!value=$showMaybeDouble.profileLatitude.prof$
             〒
-              %input#czip.watermark.required!placeholder="271-8555"!maxlength=8!type=zip!name=zip!value=$profileZip.snd.prof$
+              %input#czip.watermark.required!placeholder="271-8555"!maxlength=8!type=zip!name=zip!value=$profileZip.prof$
             %br
-            %input#cloc.watermark.required!placeholder="千葉県松戸市岩瀬550"!locprefix=c!type=address!name=address!value=$profileAddress.snd.prof$
+            %input#cloc.watermark.required!placeholder="千葉県松戸市岩瀬550"!locprefix=c!type=address!name=address!value=$profileAddress.prof$
         %tr
           %th 電話番号 $
             %span.alert (必須)
           %td!colspan=3
-            %input.watermark.required!placeholder=090-1234-5678!type=tel!name=tel!value=$profileTel.snd.prof$
+            %input.watermark.required!placeholder=090-1234-5678!type=tel!name=tel!value=$profileTel.prof$
         %tr
           %th 最寄駅 $
             %span.alert (必須)
           %td!colspan=3
-            %input.watermark.required!placeholder=松戸!type=text!name=station!value=$profileStation.snd.prof$
+            %input.watermark.required!placeholder=松戸!type=text!name=station!value=$profileStation.prof$
         %tr
           %th 実家住所 $
             %span.alert (必須)
           %td!colspan=3
-            %input#hlon!type=hidden!name=homeLongitude!value=$showMaybeDouble.profileHomeLongitude.snd.prof$
-            %input#hlat!type=hidden!name=homeLatitude!value=$showMaybeDouble.profileHomeLatitude.snd.prof$
+            %input#hlon!type=hidden!name=homeLongitude!value=$showMaybeDouble.profileHomeLongitude.prof$
+            %input#hlat!type=hidden!name=homeLatitude!value=$showMaybeDouble.profileHomeLatitude.prof$
             〒
-              %input#hzip.watermark.required!placeholder="271-8555"!type=zip!maxlength=8!name=homeZip!value=$profileHomeZip.snd.prof$
+              %input#hzip.watermark.required!placeholder="271-8555"!type=zip!maxlength=8!name=homeZip!value=$profileHomeZip.prof$
             %br
-            %input#hloc.watermark.required!placeholder="千葉県松戸市岩瀬550"!locprefix=h!type=address!name=homeAddress!value=$profileHomeAddress.snd.prof$
+            %input#hloc.watermark.required!placeholder="千葉県松戸市岩瀬550"!locprefix=h!type=address!name=homeAddress!value=$profileHomeAddress.prof$
         %tr
           %th 実家電話番号 $
             %span.alert (必須)
           %td!colspan=3
-            %input.watermark.required!placeholder=098-7654-3210!type=tel!name=homeTel!value=$profileHomeTel.snd.prof$
+            %input.watermark.required!placeholder=098-7654-3210!type=tel!name=homeTel!value=$profileHomeTel.prof$
         %tr
           %th 希望進路
           %td!colspan=3
-            %input.watermark!placeholder=一般職!type=text!name=desiredCourse!value=$showmaybe.profileDesiredCourse.snd.prof$
+            %input.watermark!placeholder=一般職!type=text!name=desiredCourse!value=$showmaybe.profileDesiredCourse.prof$
         %tr
           %th 希望勤務地
           %td!colspan=3
-            %input.watermark!placeholder="都内"!type=text!name=desiredWorkLocation!value=$showmaybe.profileDesiredWorkLocation.snd.prof$
+            %input.watermark!placeholder="都内"!type=text!name=desiredWorkLocation!value=$showmaybe.profileDesiredWorkLocation.prof$
         %tr
           %th 勤務(予定)先
           %td!colspan=3
-            %input.watermark!placeholder=未定!type=text!name=employment!value=$showmaybe.profileEmployment.snd.prof$
+            %input.watermark!placeholder=未定!type=text!name=employment!value=$showmaybe.profileEmployment.prof$
     %button!type=submit!name=_method!value=update 更新する
 
   %form#upload_form!method=post!enctype=multipart/form-data!action=@UploadR@

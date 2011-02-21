@@ -35,44 +35,44 @@
       $maybe mprof prof
         %tr
           %th 生年月日
-          %td!colspan=3 $show.profileBirth.snd.prof$
+          %td!colspan=3 $show.profileBirth.prof$
         %tr
           %th 在籍年度
-          %td!colspan=3 $showEntryYear.snd.prof$ 〜 $showGraduateYear.snd.prof$
+          %td!colspan=3 $showEntryYear.prof$ 〜 $showGraduateYear.prof$
         %tr
           %th 所属ブランチ
-          %td!colspan=3 $profileBranch.snd.prof$
+          %td!colspan=3 $profileBranch.prof$
         %tr
           %th 現住所
-          %td!colspan=3 〒 $profileZip.snd.prof$ $profileAddress.snd.prof$
-              %input#clon!type=hidden!name=longitude!value=$showMaybeDouble.profileLongitude.snd.prof$
-              %input#clat!type=hidden!name=latitude!value=$showMaybeDouble.profileLatitude.snd.prof$
-              %input#cloc!type=hidden!name=address!value=$profileAddress.snd.prof$
+          %td!colspan=3 〒 $profileZip.prof$ $profileAddress.prof$
+              %input#clon!type=hidden!name=longitude!value=$showMaybeDouble.profileLongitude.prof$
+              %input#clat!type=hidden!name=latitude!value=$showMaybeDouble.profileLatitude.prof$
+              %input#cloc!type=hidden!name=address!value=$profileAddress.prof$
         %tr
           %th 電話番号
-          %td!colspan=3 $profileTel.snd.prof$
+          %td!colspan=3 $profileTel.prof$
         %tr
           %th 最寄駅
-          %td!colspan=3 $profileStation.snd.prof$
+          %td!colspan=3 $profileStation.prof$
         %tr
           %th 実家住所
-          %td!colspan=3 〒 $profileHomeZip.snd.prof$ $profileHomeAddress.snd.prof$
-              %input#hlon!type=hidden!name=homeLongitude!value=$showMaybeDouble.profileHomeLongitude.snd.prof$
-              %input#hlat!type=hidden!name=homeLatitude!value=$showMaybeDouble.profileHomeLatitude.snd.prof$
-              %input#hloc!type=hidden!name=homeAddress!value=$profileHomeAddress.snd.prof$
+          %td!colspan=3 〒 $profileHomeZip.prof$ $profileHomeAddress.prof$
+              %input#hlon!type=hidden!name=homeLongitude!value=$showMaybeDouble.profileHomeLongitude.prof$
+              %input#hlat!type=hidden!name=homeLatitude!value=$showMaybeDouble.profileHomeLatitude.prof$
+              %input#hloc!type=hidden!name=homeAddress!value=$profileHomeAddress.prof$
         %tr
           %th 実家電話番号
-          %td!colspan=3 $profileHomeTel.snd.prof$
+          %td!colspan=3 $profileHomeTel.prof$
         %tr
           %th 希望進路
-          %td!colspan=3 $showmaybe.profileDesiredCourse.snd.prof$
+          %td!colspan=3 $showmaybe.profileDesiredCourse.prof$
         %tr
           %th 希望勤務地
           %td#desired-work-location!colspan=3
-           %a!href="#"#search-human-network $showmaybe.profileDesiredWorkLocation.snd.prof$
+           %a!href="#"#search-human-network $showmaybe.profileDesiredWorkLocation.prof$
         %tr
           %th 勤務(予定)先
-          %td!colspan=3 $showmaybe.profileEmployment.snd.prof$
+          %td!colspan=3 $showmaybe.profileEmployment.prof$
 
 #desired-human-network.center
   #area_map

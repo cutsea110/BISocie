@@ -29,32 +29,31 @@ getProfileR uid = do
       else do
         mp <- getBy $ UniqueProfile uid
         case mp of
-          Just _ -> return mp
+          Just (_, p) -> return $ Just p
           Nothing -> do
             now <- liftIO getCurrentTime
             let (y, _, _) = toGregorian $ utctDay now
-            insert $ Profile { profileUser=uid
-                             , profileBirth=fromGregorian (y-18) 1 1
-                             , profileEntryYear=fromInteger y
-                             , profileGraduateYear=Nothing
-                             , profileBranch=""
-                             , profileZip=""
-                             , profileAddress=""
-                             , profileLongitude=Nothing
-                             , profileLatitude=Nothing
-                             , profileTel=""
-                             , profileStation=""
-                             , profileHomeZip=""
-                             , profileHomeAddress=""
-                             , profileHomeLongitude=Nothing
-                             , profileHomeLatitude=Nothing
-                             , profileHomeTel=""
-                             , profileDesiredCourse=Nothing
-                             , profileDesiredWorkLocation=Nothing
-                             , profileEmployment=Nothing
-                             }
-            getBy $ UniqueProfile uid
-      
+            return $ Just $ Profile { profileUser=uid
+                                    , profileBirth=fromGregorian (y-18) 1 1
+                                    , profileEntryYear=fromInteger y
+                                    , profileGraduateYear=Nothing
+                                    , profileBranch=""
+                                    , profileZip=""
+                                    , profileAddress=""
+                                    , profileLongitude=Nothing
+                                    , profileLatitude=Nothing
+                                    , profileTel=""
+                                    , profileStation=""
+                                    , profileHomeZip=""
+                                    , profileHomeAddress=""
+                                    , profileHomeLongitude=Nothing
+                                    , profileHomeLatitude=Nothing
+                                    , profileHomeTel=""
+                                    , profileDesiredCourse=Nothing
+                                    , profileDesiredWorkLocation=Nothing
+                                    , profileEmployment=Nothing
+                                    }
+
       
     viewProf :: Handler RepHtml
     viewProf = do
@@ -92,9 +91,9 @@ getProfileR uid = do
           lift $ permissionDenied "あなたはこのユーザプロファイルを編集することはできません."
         mprof <- getProf user y
         let eyears = zipWith (\y1 y2 -> (y1==y2, y1)) [Settings.entryStartYear..y+5] $ 
-                     repeat (fromMaybe y (fmap (toInteger.profileEntryYear.snd) mprof))
+                     repeat (fromMaybe y (fmap (toInteger.profileEntryYear) mprof))
             gyears = zipWith (\y1 y2 -> (Just y1==y2, y1)) [Settings.graduateStartYear..y+5] $
-                     repeat (fromMaybe Nothing (fmap (fmap toInteger.profileGraduateYear.snd) mprof))
+                     repeat (fromMaybe Nothing (fmap (fmap toInteger.profileGraduateYear) mprof))
         lift $ defaultLayout $ do
           setTitle $ string "Profile"
           addCassius $(cassiusFile "profile")
@@ -112,6 +111,29 @@ postProfileR uid = do
 putProfileR :: UserId -> Handler RepHtml
 putProfileR uid = do
   (selfid, self) <- requireAuth
+  (bir, ey, gy, br, zip, adr, lon, lat, tel, st, hzip, hadr, hlon, hlat, htel, dc, dwl, emp) <- runFormPost' $ (,,,,,,,,,,,,,,,,,)
+    <$> dayInput "birth"
+    <*> intInput "entryYear"
+    <*> maybeIntInput "graduateYear"
+    <*> stringInput "branch"
+    <*> stringInput "zip"
+    <*> stringInput "address"
+    <*> maybeStringInput "longitude"
+    <*> maybeStringInput "latitude"
+    <*> stringInput "tel"
+    <*> stringInput "station"
+    <*> stringInput "homeZip"
+    <*> stringInput "homeAddress"
+    <*> maybeStringInput "homeLongitude"
+    <*> maybeStringInput "homeLatitude"
+    <*> stringInput "homeTel"
+    <*> maybeStringInput "desiredCourse"
+    <*> maybeStringInput "desiredWorkLocation"
+    <*> maybeStringInput "employment"
+  let lon' = fromMaybe Nothing (fmap (Just . read) lon)
+      lat' = fromMaybe Nothing (fmap (Just . read) lat)
+      hlon' = fromMaybe Nothing (fmap (Just . read) hlon)
+      hlat' = fromMaybe Nothing (fmap (Just . read) hlat)
   runDB $ do
     -- validate
     user <- get404 uid
@@ -125,35 +147,30 @@ putProfileR uid = do
       <*> stringInput "familyName"
       <*> stringInput "givenName"
     update uid [UserEmail em, UserFamilyName fn, UserGivenName gn]
-      -- update profile
     mprof <- getBy $ UniqueProfile uid
     case mprof of
-      Nothing -> return ()
+      Nothing -> do
+        insert $ Profile { profileUser=uid
+                         , profileBirth=bir
+                         , profileEntryYear=ey
+                         , profileGraduateYear=gy
+                         , profileBranch=br
+                         , profileZip=zip
+                         , profileAddress=adr
+                         , profileLongitude=lon'
+                         , profileLatitude=lat'
+                         , profileTel=tel
+                         , profileStation=st
+                         , profileHomeZip=hzip
+                         , profileHomeAddress=hadr
+                         , profileHomeLongitude=hlon'
+                         , profileHomeLatitude=hlat'
+                         , profileHomeTel=htel
+                         , profileDesiredCourse=dc
+                         , profileDesiredWorkLocation=dwl
+                         , profileEmployment=emp
+                         }
       Just (pid, _) -> do
-        (bir, ey, gy, br, zip, adr, lon, lat, tel, st, hzip, hadr, hlon, hlat, htel, dc, dwl, emp) <- 
-          lift $ runFormPost' $ (,,,,,,,,,,,,,,,,,)
-          <$> dayInput "birth"
-          <*> intInput "entryYear"
-          <*> maybeIntInput "graduateYear"
-          <*> stringInput "branch"
-          <*> stringInput "zip"
-          <*> stringInput "address"
-          <*> maybeStringInput "longitude"
-          <*> maybeStringInput "latitude"
-          <*> stringInput "tel"
-          <*> stringInput "station"
-          <*> stringInput "homeZip"
-          <*> stringInput "homeAddress"
-          <*> maybeStringInput "homeLongitude"
-          <*> maybeStringInput "homeLatitude"
-          <*> stringInput "homeTel"
-          <*> maybeStringInput "desiredCourse"
-          <*> maybeStringInput "desiredWorkLocation"
-          <*> maybeStringInput "employment"
-        let lon' = fromMaybe Nothing (fmap (Just . read) lon)
-            lat' = fromMaybe Nothing (fmap (Just . read) lat)
-            hlon' = fromMaybe Nothing (fmap (Just . read) hlon)
-            hlat' = fromMaybe Nothing (fmap (Just . read) hlat)
         update pid [ ProfileBirth bir
                    , ProfileEntryYear ey
                    , ProfileGraduateYear gy
@@ -173,6 +190,7 @@ putProfileR uid = do
                    , ProfileDesiredWorkLocation dwl
                    , ProfileEmployment emp
                    ]
+        return pid
     lift $ redirectParams RedirectTemporary (ProfileR uid) [("mode", "e")]
     
 getAvatarImageR :: UserId -> Handler RepHtml

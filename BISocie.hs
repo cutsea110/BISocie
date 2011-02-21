@@ -92,7 +92,7 @@ mkYesodData "BISocie" [$parseRoutes|
 /human-network HumanNetworkR GET
 /user-address.json UserLocationsR GET
 /project NewProjectR GET POST
-/project/#ProjectId ProjectR GET POST PUT
+/project/#ProjectId ProjectR GET POST PUT DELETE
 
 /participantslist/#ProjectId ParticipantsListR GET
 /participants/#ProjectId ParticipantsR POST

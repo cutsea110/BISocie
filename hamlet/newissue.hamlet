@@ -11,20 +11,18 @@
     %form.inline!method=get!action=@IssueListR.pid@
       %button.link!type=submit キャンセル
 
-  %form!method=post!enctype=multipart/form-data!action=@NewIssueR.pid@
+  %form.validate!method=post!enctype=multipart/form-data!action=@NewIssueR.pid@
     %table.nostyle
       %tr
-        %th 件名:
+        %th 件名: $
+          %span.alert (必須)
         %td
-          %input#subject.watermark!type=text!name=subject!placeholder=案件名...
+          %input#subject.watermark.required!type=text!name=subject!placeholder="案件名..."
       %tr
-        %th 内容:
+        %th 内容: $
+          %span.alert (必須)
         %td
-          %textarea#content.watermark!name=content!placeholder=内容を書く...
-      %tr
-        %th 期限:
-        %td
-          %input.watermark.date!type=date!name=limitdate!placeholder=yyyy-mm-dd
+          %textarea#content.watermark.required!name=content!placeholder="内容を書く..."
       %tr
         %th アサイン:
         %td
@@ -38,6 +36,10 @@
           %select!name=status
             $forall stss s
               %option $fst3.s$
+      %tr
+        %th 期限:
+        %td
+          %input.watermark.date!type=date!name=limitdate!placeholder=yyyy-mm-dd
       %tr
         %th 添付ファイル
         %td

@@ -7,16 +7,13 @@
 #main-content
   %h3 $show.ino$ : $issueSubject.issue$
 
-  %form!method=post!enctype=multipart/form-data!action=@(CommentR.pid).ino@
+  %form.validate!method=post!enctype=multipart/form-data!action=@(CommentR.pid).ino@
     %table.nostyle
       %tr
-        %th 内容:
+        %th 内容: $
+          %span.alert (必須)
         %td
-          %textarea#content.watermark!placeholder="内容..."!name=content
-      %tr
-        %th 期限:
-        %td
-          %input.watermark.date!placeholder=yyyy-mm-dd!type=date!name=limitdate!value=$showLimitdate.issue$
+          %textarea#content.watermark.required!placeholder="内容..."!name=content
       %tr
         %th アサイン:
         %td
@@ -30,6 +27,10 @@
           %select!name=status
             $forall stss s
               %option!:isStatus.fst3.s:selected $fst3.s$
+      %tr
+        %th 期限:
+        %td
+          %input.watermark.date!placeholder=yyyy-mm-dd!type=date!name=limitdate!value=$showLimitdate.issue$
       %tr
         %th 添付ファイル
         %td

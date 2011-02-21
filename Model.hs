@@ -79,7 +79,7 @@ Email
 
 Project
     name String Update
-    description String Maybe Update
+    description String Update
     statuses String Update
     issuecounter IssueNo Update Add default=0
     cuser UserId
@@ -131,7 +131,7 @@ data Effect = Impact | Strike deriving (Show, Eq)
 type Color = String
 data ProjectBis = ProjectBis { projectBisId :: ProjectId
                              , projectBisName :: String
-                             , projectBisDescription :: Maybe String
+                             , projectBisDescription :: String
                              , projectBisStatuses :: [(String, Maybe Color, Maybe Effect)]
                              }
 

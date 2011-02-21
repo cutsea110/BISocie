@@ -10,7 +10,7 @@
       %input!type=hidden!name=mode!value=v
       %button.link!type=submit キャンセル
 
-  %form!method=post!action=@ProfileR.uid@
+  %form.validate!method=post!action=@ProfileR.uid@
     %table.profile
       %tr
         %th アバター
@@ -25,32 +25,32 @@
             教職員番号
         %td!colspan=3 $userIdent.user$
       %tr
-        %th メールアドレス
-          .required (必須)
+        %th メールアドレス $
+          %span.alert (必須)
         %td!colspan=3
-          %input.watermark!placeholder="your@@mail.address.ac.jp"!type=email!name=email!value=$userEmail.user$
+          %input.watermark.required!placeholder="your@@mail.address.ac.jp"!type=email!name=email!value=$userEmail.user$
       %tr
-        %th 姓
-          .required (必須)
+        %th 姓 $
+          %span.alert (必須)
         %td
-          %input.watermark!placeholder=聖徳!type=text!name=familyName!value=$userFamilyName.user$
-        %th 名
-          .required (必須)
+          %input.watermark.required!placeholder=聖徳!type=text!name=familyName!value=$userFamilyName.user$
+        %th 名 $
+          %span.alert (必須)
         %td
-          %input.watermark!placeholder=花子!type=text!name=givenName!value=$userGivenName.user$
+          %input.watermark.required!placeholder=花子!type=text!name=givenName!value=$userGivenName.user$
       $maybe mprof prof
         %tr
-          %th 生年月日
-            .required (必須)
+          %th 生年月日 $
+            %span.alert (必須)
           %td!colspan=3
-            %input.date.watermark!placeholder=yyyy/mm/dd!type=date!name=birth!value=$show.profileBirth.snd.prof$
+            %input.date.watermark.required!placeholder=yyyy/mm/dd!type=date!name=birth!value=$show.profileBirth.snd.prof$
         %tr
-          %th 入学年度
-            .required (必須)
+          %th 入学年度 $
+            %span.alert (必須)
           %td
             %select!name=entryYear
               $forall eyears ey
-                %option!:fst.ey:selected $show.snd.ey$
+                %option.required!:fst.ey:selected $show.snd.ey$
           %th 卒業年度
           %td
             %select!name=graduateYear
@@ -58,45 +58,45 @@
               $forall gyears gy
                 %option!:fst.gy:selected $show.snd.gy$
         %tr
-          %th 所属ブランチ
-            .required (必須)
+          %th 所属ブランチ $
+            %span.alert (必須)
           %td!colspan=3
-            %input.watermark!placeholder=ブランチ!type=text!name=branch!value=$profileBranch.snd.prof$
+            %input.watermark.required!placeholder=ブランチ!type=text!name=branch!value=$profileBranch.snd.prof$
         %tr
-          %th 現住所
-            .required (必須)
+          %th 現住所 $
+            %span.alert (必須)
           %td!colspan=3
             %input#clon!type=hidden!name=longitude!value=$showMaybeDouble.profileLongitude.snd.prof$
             %input#clat!type=hidden!name=latitude!value=$showMaybeDouble.profileLatitude.snd.prof$
             〒
-              %input#czip.watermark!placeholder="271-8555"!maxlength=8!type=zip!name=zip!value=$profileZip.snd.prof$
+              %input#czip.watermark.required!placeholder="271-8555"!maxlength=8!type=zip!name=zip!value=$profileZip.snd.prof$
             %br
-            %input#cloc.watermark!placeholder="千葉県松戸市岩瀬550"!locprefix=c!type=address!name=address!value=$profileAddress.snd.prof$
+            %input#cloc.watermark.required!placeholder="千葉県松戸市岩瀬550"!locprefix=c!type=address!name=address!value=$profileAddress.snd.prof$
         %tr
-          %th 電話番号
-            .required (必須)
+          %th 電話番号 $
+            %span.alert (必須)
           %td!colspan=3
-            %input.watermark!placeholder=090-1234-5678!type=tel!name=tel!value=$profileTel.snd.prof$
+            %input.watermark.required!placeholder=090-1234-5678!type=tel!name=tel!value=$profileTel.snd.prof$
         %tr
-          %th 最寄駅
-            .required (必須)
+          %th 最寄駅 $
+            %span.alert (必須)
           %td!colspan=3
-            %input.watermark!placeholder=松戸!type=text!name=station!value=$profileStation.snd.prof$
+            %input.watermark.required!placeholder=松戸!type=text!name=station!value=$profileStation.snd.prof$
         %tr
-          %th 実家住所
-            .required (必須)
+          %th 実家住所 $
+            %span.alert (必須)
           %td!colspan=3
             %input#hlon!type=hidden!name=homeLongitude!value=$showMaybeDouble.profileHomeLongitude.snd.prof$
             %input#hlat!type=hidden!name=homeLatitude!value=$showMaybeDouble.profileHomeLatitude.snd.prof$
             〒
-              %input#hzip.watermark!placeholder="271-8555"!type=zip!maxlength=8!name=homeZip!value=$profileHomeZip.snd.prof$
+              %input#hzip.watermark.required!placeholder="271-8555"!type=zip!maxlength=8!name=homeZip!value=$profileHomeZip.snd.prof$
             %br
-            %input#hloc.watermark!placeholder="千葉県松戸市岩瀬550"!locprefix=h!type=address!name=homeAddress!value=$profileHomeAddress.snd.prof$
+            %input#hloc.watermark.required!placeholder="千葉県松戸市岩瀬550"!locprefix=h!type=address!name=homeAddress!value=$profileHomeAddress.snd.prof$
         %tr
-          %th 実家電話番号
-            .required (必須)
+          %th 実家電話番号 $
+            %span.alert (必須)
           %td!colspan=3
-            %input.watermark!placeholder=098-7654-3210!type=tel!name=homeTel!value=$profileHomeTel.snd.prof$
+            %input.watermark.required!placeholder=098-7654-3210!type=tel!name=homeTel!value=$profileHomeTel.snd.prof$
         %tr
           %th 希望進路
           %td!colspan=3

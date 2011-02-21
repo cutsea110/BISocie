@@ -179,7 +179,7 @@ getIssueListR pid = do
         Nothing -> return Nothing
         Just auid -> get auid
       return $ IssueBis id i cu uu mau
-    let issues = zip (concat $ repeat ["odd"::String,"even"]) issues''
+    let issues = zip (concat $ repeat ["odd","even"]::[String]) issues''
         colorOf = \s -> 
           case lookupStatus s es of
             Nothing -> ""
@@ -220,13 +220,12 @@ postNewIssueR pid = do
     addIssueR :: ProjectId -> Handler RepHtml
     addIssueR pid = do
       (selfid, self) <- requireAuth
-      (sbj, cntnt, ldate, asgn, sts) <- 
-        runFormPost' $ (,,,,)
-        <$> stringInput "subject"
-        <*> stringInput "content"
-        <*> maybeDayInput "limitdate"
-        <*> maybeStringInput "assign"
-        <*> stringInput "status"
+      (sbj, cntnt, ldate, asgn, sts) <- runFormPost' $ (,,,,)
+                                        <$> stringInput "subject"
+                                        <*> stringInput "content"
+                                        <*> maybeDayInput "limitdate"
+                                        <*> maybeStringInput "assign"
+                                        <*> stringInput "status"
       runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
         let addable = p /= Nothing

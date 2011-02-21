@@ -1,12 +1,58 @@
 $(document).ready(function(){
-  $('#status-syntax-help').hide().attr('title','ステータス書式説明').dialog({
+  $('#delete-success').hide().attr('title', '削除成功').dialog({
     autoOpen: false,
-    width: 500,
-    modal: false
+    width:400,
+    modal: true,
+    buttons: {
+      '閉じる': function(){
+        $(this).dialog('close');
+        location.href='@HomeR.selfid@';
+      }
+    }
   });
-  $('#button-status-syntax-help').click(function(){
-    $('#status-syntax-help').dialog('open');
-    return false;
+  $('#delete-failed').hide().attr('title', '削除失敗').dialog({
+    autoOpen: false,
+    width:400,
+    modal: true,
+    buttons: {
+      '閉じる': function(){
+        $(this).dialog('close');
+      }
+    }
+  });
+  $('#delete-confirm').hide().attr('title', '[警告] 確認ダイアログ').dialog({
+    autoOpen: false,
+    width: 400,
+    modal: true,
+    buttons: {
+      'キャンセル': function(){
+        $(this).dialog('close')
+      },
+      '削除する': function(){
+        $.ajax({
+          async: false,
+          type: 'POST',
+          url: '@ProjectR.pid@',
+          dataType: 'json',
+          data: {_method: 'delete'},
+          success: function(json){
+            $('#delete-confirm').dialog('close');
+            if (json.deleted) {
+              $('#delete-success').dialog('open');
+            } else {
+              $('#delete-failed').dialog('open');
+            }
+          },
+          error: function(res, status){
+
+          }
+        });
+      }
+    }
+  });
+
+  $('#button-delete-confirm').click(function(){
+    $('#delete-confirm').dialog('open');
   });
 
   $('#search-users').hide().attr('title', 'ユーザ検索').dialog({

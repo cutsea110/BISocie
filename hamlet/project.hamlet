@@ -7,27 +7,31 @@
     %a!href=@ProjectR.pid@ プロジェクト設定
 
 #main-content
-  %h3 $projectName.prj$ プロジェクト設定
-    $if editable
-      %form.inline!method=get!action=@IssueListR.pid@
-        %button.link!type=submit キャンセル
+  %h3 $projectName.prj$ プロジェクト設定 $
+    %button#button-delete-confirm.link!type=submit!name=_method!value=delete このプロジェクトを削除する.
 
   %form!method=post!action=@ProjectR.pid@
     %input!type=hidden!name=_method!value=modify
     %dl
-      %dt プロジェクト名
+      %dt プロジェクト名 $
+        $if editable
+          %span.alert (必須)
       %dd
         $if editable
           %input#name.inplaceedit!type=text!name=name!placeholder=(プロジェクト名)!uri=@ProjectR.pid@!value=$projectName.prj$
         $else
           $projectName.prj$
-      %dt 概要
+      %dt 概要 $
+        $if editable
+          %span.alert (必須)
       %dd
         $if editable
-          %textarea#description.inplaceedit!type=text!name=description!placeholder=(プロジェクト概要)!uri=@ProjectR.pid@ $showmaybe.projectDescription.prj$
+          %textarea#description.inplaceedit!type=text!name=description!placeholder=(プロジェクト概要)!uri=@ProjectR.pid@ $projectDescription.prj$
         $else
-          $showMultilineText.showmaybe.projectDescription.prj$
-      %dt ステータス
+          $showMultilineText.projectDescription.prj$
+      %dt ステータス $
+        $if editable
+          %span.alert (必須) $
         %button.link#button-status-syntax-help!type=submit ヘルプ
       %dd
         $if editable
@@ -62,63 +66,16 @@
 
   #search-result.scroll
 
-#status-syntax-help
-  %ul
-    %li 1行に1つずつステータス名を書いてください。
-    %li 1行は表示効果、ステータス名、表示色の最大3つのパートから構成されます。
-      このうち、ステータス名は必須で、表示効果と表示色はオプションですが、
-      指定する場合の記述順序は必ず守ってください。
-      %ol
-        %li $
-          %p.underline 表示効果
-          %dl
-            %dt.underline !
-            %dd
-              %b 強調して表示します。
-            %dt.underline =
-            %dd
-              %strike 打ち消し線を表示します。
-            %dt.underline (無し)
-            %dd !も=も付けなければ表示効果はありません。
-        %li $
-          %p.underline ステータス名
-          %p 案件の状態を表す任意の文字列です。(ただし、#を含めることはできません。)
-        %li $
-          %p.underline 表示色
-          %dl 以下の書式により、案件の一覧を表示した時に背景色を変えることが出来ます。
-            %dt.underline #色
-            %dd
-              \#に続けて色を指定します。
-              サポートされている色は以下です。
-              よりこまかく色を指定したい場合には以降の書式を使ってください。
-              %br
-              %span!style="background-color:#ffcccc" #赤
-               \
-              %span!style="background-color:#ccffcc" #緑
-               \
-              %span!style="background-color:#ccccff" #青
-               \
-              %span!style="background-color:#cccccc" #灰
-               \
-              %span!style="background-color:#ffffcc" #黄
-               \
-            %dt.underline #color
-            %dd
-              \#に続けてcolorを指定します。
-              以下は一例です。CSSの色指定を参照してください。
-              %br
-              %span!style="background-color:red" #red
-               \
-              %span!style="background-color:green" #green
-               \
-              %span!style="background-color:blue" #blue
-            %dt.underline #rgb
-            %dd
-              \#に続けて16進表記で3桁もしくは6桁でRGB指定してください。
-              以下は一例です。CSSの色指定を参照してください。
-              %br
-              %span!style="background-color:#f00" #f00
-               \
-              %span!style="background-color:#00ff00" #00ff00
-               \
-              %span!style="background-color:#cc00cc" #cc00cc
+^help^
+
+#delete-confirm.alert
+  削除をすると二度と元に戻すことはできません。
+  本当に削除しますか？
+
+#delete-success
+  プロジェクトを削除しました。
+  このダイアログを閉じてください。
+
+#delete-failed.errors
+  プロジェクトを削除できませんでした。
+  このダイアログを閉じてください。

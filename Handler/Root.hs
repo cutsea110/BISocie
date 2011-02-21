@@ -29,7 +29,7 @@ getHomeR uid = do
         let pid = participantsProject p
         Just prj <- get pid
         return (pid, prj)
-      return $ zip (concat $ repeat ["odd"::String, "even"]) prjs'
+      return $ zip (concat $ repeat ["odd", "even"]::[String]) prjs'
     lift $ defaultLayout $ do
       setTitle $ string $ userFullName self ++ " ホーム"
       addHamlet $(hamletFile "home")

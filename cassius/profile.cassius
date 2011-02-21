@@ -22,8 +22,8 @@ th.number, td.number
 #myavatar
   width: 100px
 
-.required
-  color: red
+#avatar
+  text-align: center
 
 input[type=address]
   width: 400px
@@ -36,3 +36,6 @@ input[type=tel]
 
 input[name=familyName], input[name=givenName]
   width: 100px
+
+input[type=zip]
+  width: 80px

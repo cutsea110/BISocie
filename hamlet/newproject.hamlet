@@ -36,11 +36,13 @@
   <input id="search-by-name" type="text" name="username">
   \
   <input id="select-teacher" type="checkbox" value="Teacher">
-  <label for="select-teacher">教職員:
+  <label for="select-teacher">教員
+  <input id="select-staff" type="checkbox" value="Staff">
+  <label for="select-staff">職員
   <input id="select-student" type="checkbox" value="Student">
-  <label for="select-student">在校生/卒業生:
+  <label for="select-student">在校生/卒業生
   <input id="select-admin" type="checkbox" value="Admin">
-  <label for="select-admin">管理者:
+  <label for="select-admin">管理者
   <label for="select-entry-year">入学年度:
   <select id="select-entry-year">
     <option>

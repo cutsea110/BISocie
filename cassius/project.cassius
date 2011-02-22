@@ -11,6 +11,9 @@
 .Student a
     color: #fb90a0
     text-decoration: none
+.Staff a
+    color: #32cd32
+    text-decoration: none
 .Teacher a
     color: #90a0fc
     text-decoration: none

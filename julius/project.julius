@@ -79,7 +79,7 @@ $(document).ready(function(){
     return false;
   });
 
-  $("#select-teacher,#select-student,#select-admin").click(function(){
+  $("#select-teacher,#select-staff,#select-student,#select-admin").click(function(){
     filter_users();
   });
 
@@ -126,11 +126,15 @@ function filter_users() {
     }
 
     var ct = $("#select-teacher").attr('checked'),
+        co = $("#select-staff").attr('checked'),
         cs = $("#select-student").attr('checked'),
         ca = $("#select-admin").attr('checked');
-    if (ct||cs||ca) {
+    if (ct||co||cs||ca) {
       if (ct) {
         selector = selector + (',' + user + ".Teacher" + select_eyear + contains_name);
+      }
+      if (co) {
+        selector = selector + (',' + user + ".Staff" + select_eyear + contains_name);
       }
       if (cs) {
         selector = selector + (',' + user + ".Student" + select_eyear + contains_name);

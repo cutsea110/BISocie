@@ -51,4 +51,26 @@ $(document).ready(function(){
       my_tooltip.css({left:'-9999px'});
     });
   });
+
+  $('#quotation').hide().attr('title', '引用').dialog({
+    autoOpen: false,
+    width: 400,
+    modal: false,
+    buttons: {
+      'キャンセル': function(){
+        $(this).dialog('close');
+      },
+      '引用する': function(){
+        $(this).dialog('close');
+      }
+    }
+  });
+  $('.post-body').mouseup(function(){
+    var t = $.getSelection();
+    if (t.length>0){
+      $('#quoted-text').text(t);
+      $('#quotation').dialog('open');
+    }
+  });
+
 });

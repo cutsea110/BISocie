@@ -26,7 +26,7 @@ $(document).ready(function(){
     modal: true,
     buttons: {
       'キャンセル': function(){
-        $(this).dialog('close')
+        $(this).dialog('close');
       },
       '削除する': function(){
         $.ajax({

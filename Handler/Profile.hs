@@ -59,16 +59,17 @@ getProfileR uid = do
     viewProf = do
       (selfid, self) <- requireAuth
       now <- liftIO getCurrentTime
-      (user, viewable, editable, viewprof, editprof, mprof) <- 
+      (user, viewable, editable, viewableTel, viewprof, editprof, mprof) <- 
         runDB $ do
           user <- get404 uid
           let viewable = self == user || userRole self > userRole user
               editable = self == user || userRole self > userRole user
+              viewableTel = self == user || userRole self >= Staff
               viewprof = (ProfileR uid, [("mode", "v")])
               editprof = (ProfileR uid, [("mode", "e")])
               (y,_,_) = toGregorian $ utctDay now
           mprof <- getProf user y
-          return (user, viewable, editable, viewprof, editprof, mprof)
+          return (user, viewable, editable, viewableTel, viewprof, editprof, mprof)
       defaultLayout $ do
         setTitle $ string "Profile"
         addCassius $(cassiusFile "profile")
@@ -81,11 +82,12 @@ getProfileR uid = do
       (selfid, self) <- requireAuth
       now <- liftIO getCurrentTime
       
-      (user, viewable, editable, viewprof, editprof, mprof, eyears, gyears) <-
+      (user, viewable, editable, editableTel, viewprof, editprof, mprof, eyears, gyears) <-
         runDB $ do
           user <- get404 uid
           let viewable = self == user || userRole self > userRole user
               editable = self == user || userRole self > userRole user
+              editableTel = self == user || userRole self >= Staff
               viewprof = (ProfileR uid, [("mode", "v")])
               editprof = (ProfileR uid, [("mode", "e")])
               (y,_,_) = toGregorian $ utctDay now
@@ -96,7 +98,7 @@ getProfileR uid = do
                        repeat (fromMaybe y (fmap (toInteger.profileEntryYear) mprof))
               gyears = zipWith (\y1 y2 -> (Just y1==y2, y1)) [Settings.graduateStartYear..y+5] $
                        repeat (fromMaybe Nothing (fmap (fmap toInteger.profileGraduateYear) mprof))
-          return (user, viewable, editable, viewprof, editprof, mprof, eyears, gyears)
+          return (user, viewable, editable, editableTel, viewprof, editprof, mprof, eyears, gyears)
       defaultLayout $ do
         setTitle $ string "Profile"
         addCassius $(cassiusFile "profile")

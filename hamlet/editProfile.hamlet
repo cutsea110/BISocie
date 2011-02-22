@@ -72,11 +72,14 @@
               <input id="czip" placeholder="271-8555" maxlength="8" type="zip" name="zip" value="#{profileZip prof}" .watermark .required>
             <br>
             <input id="cloc" placeholder="千葉県松戸市岩瀬550" locprefix="c" type="address" name="address" value="#{profileAddress prof}" .watermark .required>
-        <tr>
-          <th>電話番号 
-            <span .alert>(必須)
-          <td colspan="3">
-            <input placeholder="090-1234-5678" type="tel" name="tel" value="#{profileTel prof}" .watermark .required>
+        $if editableTel
+          <tr>
+            <th>電話番号 
+              <span .alert>(必須)
+            <td colspan="3">
+              <input placeholder="090-1234-5678" type="tel" name="tel" value="#{profileTel prof}" .watermark .required>
+        $else
+          <input type=hidden name="tel" value="#{profileTel prof}">
         <tr>
           <th>最寄駅 
             <span .alert>(必須)

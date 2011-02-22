@@ -23,7 +23,7 @@
           $if isStudent user
             \学籍番号
           $else
-            \教職員番号
+            \アカウント
         <td colspan="3">#{userIdent user}
       <tr>
         <th>メールアドレス
@@ -48,9 +48,10 @@
               <input id="clon" type="hidden" name="longitude" value="#{showMaybeDouble (profileLongitude prof)}">
               <input id="clat" type="hidden" name="latitude" value="#{showMaybeDouble (profileLatitude prof)}">
               <input id="cloc" type="hidden" name="address" value="#{profileAddress prof}">
-        <tr>
-          <th>電話番号
-          <td colspan="3">#{profileTel prof}
+        $if viewableTel
+          <tr>
+            <th>電話番号
+            <td colspan="3">#{profileTel prof}
         <tr>
           <th>最寄駅
           <td colspan="3">#{profileStation prof}

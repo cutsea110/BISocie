@@ -8,7 +8,8 @@
 \
 <div id="main-content">
   <h3>#{projectName prj} プロジェクト設定 
-    <button id="button-delete-confirm" type="submit" name="_method" value="delete" .link>このプロジェクトを削除する.
+    $if editable
+      <button id="button-delete-confirm" type="submit" name="_method" value="delete" .link>このプロジェクトを削除する.
   \
   <form method="post" action="@{ProjectR pid}">
     <input type="hidden" name="_method" value="modify">

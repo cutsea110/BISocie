@@ -53,8 +53,3 @@
             <a href="@{AttachedFileR (fst c) (fst f)}">#{fileHeaderFullname (snd f)}
 \
 <div id="popup-profile">
-
-\
-<div id="quotation">
-  次の文言を引用しますか?
-  <pre id="quoted-text">

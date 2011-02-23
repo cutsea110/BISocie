@@ -1,16 +1,16 @@
-%ul.tabs
-  %li
-    %a!href=@HomeR.selfid@ ホーム
+<ul .tabs>
+  <li>
+    <a href="@{HomeR selfid}">ホーム
   $if cancreateproject
-    %li
-      %a!href=@NewProjectR@ プロジェクト新規作成
-  %li
-    %a!href=@CrossSearchR@ クロスサーチ
-  %li.selected
-    %a!href=@HumanNetworkR@ ヒューマンネットワーク
-
-#main-content
-
-  %h3 ヒューマンネットワーク
-
-  #global_map_canvas
+    <li>
+      <a href="@{NewProjectR}">プロジェクト新規作成
+  <li>
+    <a href="@{CrossSearchR}">クロスサーチ
+  <li .selected>
+    <a href="@{HumanNetworkR}">ヒューマンネットワーク
+\
+<div id="main-content">
+  \
+  <h3>ヒューマンネットワーク
+  \
+  <div id="global_map_canvas">

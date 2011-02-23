@@ -10,20 +10,19 @@ getParticipantsListR :: ProjectId -> Handler RepJson
 getParticipantsListR pid = do
   (selfid, self) <- requireAuth
   r <- getUrlRender
-  runDB $ do
+  us <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
     let viewable = p /= Nothing
     unless viewable $ 
       lift $ permissionDenied "あなたはこのプロジェクトに参加していません."
     ps' <- selectList [ParticipantsProjectEq pid] [] 0 0
-    us <- forM ps' $ \(id, p) -> do
+    forM ps' $ \(id, p) -> do
       let uid' = participantsUser p
           ra = AvatarImageR uid'
       Just u <- get uid'
       return (uid', u, p, ra)
-    lift $ do
-      cacheSeconds 10 -- FIXME
-      jsonToRepJson $ jsonMap [("participants", jsonList $ map (go r) us)]
+  cacheSeconds 10 -- FIXME
+  jsonToRepJson $ jsonMap [("participants", jsonList $ map (go r) us)]
   where
     go r (id, u, p, ra) = jsonMap [ ("id", jsonScalar $ show id)
                                   , ("ident", jsonScalar $ userIdent u)

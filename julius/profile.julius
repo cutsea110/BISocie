@@ -21,7 +21,7 @@ $(document).ready(function(){
       }
     });
 
-    $.getJSON('@UserLocationsR@', function(data){
+    $.getJSON('@{UserLocationsR}', function(data){
         for (var i = 0; i < data.locations.length; ++i) {
             var marker = new google.maps.Marker({
                 map: areamap,
@@ -101,7 +101,7 @@ $(document).ready(function(){
            var file = $(res).find('file'),
                fhid = file.find('fhid').text();
            // bind avatar
-           $.post('@AvatarR.uid@', {avatar: fhid}, function(json){
+           $.post('@{AvatarR uid}', {avatar: fhid}, function(json){
              var avatar = $("<img id='myavatar'/>").attr({src: json.uri + '?uncache='+(new Date).getTime()});
              $('#myavatar').remove();
              $('#avatar').append(avatar);

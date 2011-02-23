@@ -1,60 +1,69 @@
-#status-syntax-help
-  %ul
-    %li 1行に1つずつステータス名を書いてください。
-    %li 1行は表示効果、ステータス名、表示色の最大3つのパートから構成されます。
-      このうち、ステータス名は必須で、表示効果と表示色はオプションですが、
-      指定する場合の記述順序は必ず守ってください。
-      %ol
-        %li $
-          %p.underline 表示効果
-          %dl
-            %dt.underline !
-            %dd
-              %b 強調して表示します。
-            %dt.underline =
-            %dd
-              %strike 打ち消し線を表示します。
-            %dt.underline (無し)
-            %dd !も=も付けなければ表示効果はありません。
-        %li $
-          %p.underline ステータス名
-          %p 案件の状態を表す任意の文字列です。(ただし、#を含めることはできません。)
-        %li $
-          %p.underline 表示色
-          %dl 以下の書式により、案件の一覧を表示した時に背景色を変えることが出来ます。
-            %dt.underline #色
-            %dd
+<div id="status-syntax-help">
+  <ul>
+    <li>1行に1つずつステータス名を書いてください。
+    <li>1行は表示効果、ステータス名、表示色の最大3つのパートから構成されます。
+      \このうち、ステータス名は必須で、表示効果と表示色はオプションですが、
+      \指定する場合の記述順序は必ず守ってください。
+      <ol>
+        <li>
+          <p .underline>表示効果
+          <dl>
+            <dt .underline>!
+            <dd>
+              <b>強調して表示します。
+            <dt .underline>=
+            <dd>
+              <strike>打ち消し線を表示します。
+            <dt .underline>(無し)
+            <dd>!も=も付けなければ表示効果はありません。
+        <li>
+          <p .underline>ステータス名
+          <p>案件の状態を表す任意の文字列です。(ただし、#を含めることはできません。)
+        <li>
+          <p .underline>表示色
+          <dl>以下の書式により、案件の一覧を表示した時に背景色を変えることが出来ます。
+            <dt .underline>#色
+            <dd>
               \#に続けて色を指定します。
-              サポートされている色は以下です。
-              よりこまかく色を指定したい場合には以降の書式を使ってください。
-              %br
-              %span!style="background-color:#ffcccc" #赤
+              \サポートされている色は以下です。
+              \よりこまかく色を指定したい場合には以降の書式を使ってください。
+              <br>
+              <span style="background-color:#ffcccc">#赤
                \
-              %span!style="background-color:#ccffcc" #緑
+
+              <span style="background-color:#ccffcc">#緑
                \
-              %span!style="background-color:#ccccff" #青
+
+              <span style="background-color:#ccccff">#青
                \
-              %span!style="background-color:#cccccc" #灰
+
+              <span style="background-color:#cccccc">#灰
                \
-              %span!style="background-color:#ffffcc" #黄
+
+              <span style="background-color:#ffffcc">#黄
                \
-            %dt.underline #color
-            %dd
+
+            <dt .underline>#color
+            <dd>
               \#に続けてcolorを指定します。
-              以下は一例です。CSSの色指定を参照してください。
-              %br
-              %span!style="background-color:red" #red
+              \以下は一例です。CSSの色指定を参照してください。
+              <br>
+              <span style="background-color:red">#red
                \
-              %span!style="background-color:green" #green
+
+              <span style="background-color:green">#green
                \
-              %span!style="background-color:blue" #blue
-            %dt.underline #rgb
-            %dd
+
+              <span style="background-color:blue">#blue
+            <dt .underline>#rgb
+            <dd>
               \#に続けて16進表記で3桁もしくは6桁でRGB指定してください。
-              以下は一例です。CSSの色指定を参照してください。
-              %br
-              %span!style="background-color:#f00" #f00
+              \以下は一例です。CSSの色指定を参照してください。
+              <br>
+              <span style="background-color:#f00">#f00
                \
-              %span!style="background-color:#00ff00" #00ff00
+
+              <span style="background-color:#00ff00">#00ff00
                \
-              %span!style="background-color:#cc00cc" #cc00cc
+
+              <span style="background-color:#cc00cc">#cc00cc

@@ -1,12 +1,12 @@
-#bisocie-title
-  %a!href=@RootR@
-    %img!src=@StaticR.img_bisocie_logo_jpg@
-#userbox
-  $maybe mu u
-    ログイン中 $
-    %a!title="プロフィール"!href=@ProfileR.fst.u@ $userFullName.snd.u$
+<div id="bisocie-title">
+  <a href="@{RootR}">
+    <img src="@{StaticR img_bisocie_logo_jpg}">
+<div id="userbox">
+  $maybe u <- mu
+    \ログイン中 
+    <a title="プロフィール" href="@{ProfileR (fst u)}">#{userFullName (snd u)}
     \.
-    %form.inline!method=get!action=@AuthR.LogoutR@
-      %button.link!type=submit ログアウト
-    %form.inline!method=get!action=@AuthR.setpassR@
-      %button.link!type=submit パスワード変更
+    <form method="get" action="@{AuthR LogoutR}" .inline>
+      <button type="submit" .link>ログアウト
+    <form method="get" action="@{AuthR setpassR}" .inline>
+      <button type="submit" .link>パスワード変更

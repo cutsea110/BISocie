@@ -33,7 +33,7 @@ function reload_search_result() {
   $.ajax({
     async: true,
     type: 'POST',
-    url: '@CrossSearchR@',
+    url: '@{CrossSearchR}',
     dataType: 'json',
     data: keys,
     success: function(json){
@@ -89,7 +89,7 @@ function reload_statuses() {
   $.ajax({
     async: false,
     type: 'GET',
-    url: '@StatusListR@',
+    url: '@{StatusListR}',
     dataType: 'json',
     data: keys,
     success: function(json){
@@ -123,7 +123,7 @@ function reload_assigns() {
   $.ajax({
     async: false,
     type: 'GET',
-    url: '@AssignListR@',
+    url: '@{AssignListR}',
     dataType: 'json',
     data: keys,
     success: function(json) {

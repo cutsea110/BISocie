@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell, QuasiQuotes, OverloadedStrings #-}
 module Handler.Root where
 
 import BISocie
@@ -22,17 +22,16 @@ getHomeR uid = do
   unless (selfid==uid) $ permissionDenied "他人のホームを見ることはできません."
   let cancreateproject = userRole self >= Teacher
       viewablehumannet = userRole self >= Teacher
-  runDB $ do
+  prjs <- runDB $ do
     ps <- selectList [ParticipantsUserEq selfid] [] 0 0
-    prjs <- do
-      prjs' <- forM ps $ \(id, p) -> do
+    prjs' <- forM ps $ \(id, p) -> do
         let pid = participantsProject p
         Just prj <- get pid
         return (pid, prj)
-      return $ zip (concat $ repeat ["odd", "even"]::[String]) prjs'
-    lift $ defaultLayout $ do
-      setTitle $ string $ userFullName self ++ " ホーム"
-      addHamlet $(hamletFile "home")
+    return $ zip (concat $ repeat ["odd", "even"]::[String]) prjs'
+  defaultLayout $ do
+    setTitle $ string $ userFullName self ++ " ホーム"
+    addHamlet $(hamletFile "home")
 
 getHumanNetworkR :: Handler RepHtml
 getHumanNetworkR = do
@@ -54,14 +53,13 @@ getUserLocationsR = do
   r <- getUrlRender
   let viewable = userRole self >= Teacher
   unless viewable $ permissionDenied "あなたはこの情報を取得することはできません."
-  runDB $ do
+  profs <- runDB $ do
     us <- selectList [UserRoleEq Student] [] 0 0
     profs' <- selectList [ProfileUserIn $ map fst us] [] 0 0
-    profs <- forM profs' $ \(_, p) -> do
+    forM profs' $ \(_, p) -> do
       let (Just u) = lookup (profileUser p) us
       return (u, p)
-    lift $ do
-      jsonToRepJson $ jsonMap [("locations", jsonList $ map (go r) profs)]
+  jsonToRepJson $ jsonMap [("locations", jsonList $ map (go r) profs)]
   where
     go r (u, p) = 
       jsonMap [ ("uri", jsonScalar $ r $ ProfileR $ profileUser p)

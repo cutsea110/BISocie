@@ -51,4 +51,13 @@ $(document).ready(function(){
       my_tooltip.css({left:'-9999px'});
     });
   });
+
+  $('.post-body').mouseup(function(){
+    var t = $.getSelection();
+    if (t.length>0){
+      var q = '> ' + t.split('\n').join('\n> ');
+      $('#content').insertBeforeSelection('\n' + q);
+    }
+  });
+
 });

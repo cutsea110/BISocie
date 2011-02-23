@@ -1,4 +1,4 @@
-{-# LANGUAGE QuasiQuotes, TypeFamilies, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE QuasiQuotes, TypeFamilies, GeneralizedNewtypeDeriving, TemplateHaskell #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -18,13 +18,14 @@ import Data.Maybe (fromMaybe)
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec as P (string)
 
-data Role =  Student | Teacher | Admin
+data Role =  Student | Teacher | Staff | Admin
           deriving (Read, Show, Eq, Ord, Enum, Bounded)
 derivePersistField "Role"
 
 prettyRoleName :: Role -> String
 prettyRoleName Admin = "管理者"
-prettyRoleName Teacher = "教職員"
+prettyRoleName Staff = "職員"
+prettyRoleName Teacher = "教員"
 prettyRoleName Student = "在校生/卒業生"
 
 type IssueNo = Int

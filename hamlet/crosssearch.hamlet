@@ -1,56 +1,56 @@
-%ul.tabs
-  %li
-    %a!href=@HomeR.selfid@ ホーム
+<ul .tabs>
+  <li>
+    <a href="@{HomeR selfid}">ホーム
   $if cancreateproject
-    %li
-      %a!href=@NewProjectR@ プロジェクト新規作成
-  %li.selected
-    %a!href=@CrossSearchR@ クロスサーチ
+    <li>
+      <a href="@{NewProjectR}">プロジェクト新規作成
+  <li .selected>
+    <a href="@{CrossSearchR}">クロスサーチ
   $if viewablehumannet
-    %li
-      %a!href=@HumanNetworkR@ ヒューマンネットワーク
-
-#main-content
-  .searchbox
-    %table
-      %caption 検索条件
-      %tr
-        %th プロジェクト
-        %th ステータス
-        %th アサイン
-        %th 期限
-      %tr
-        %td!rowspan=3
-          %select#projectid!name=projectid!multiple=multiple!size=5
-            $forall prjs p
-              %option!selected=selected!value=$show.projectBisId.p$ $projectBisName.p$
-        %td!rowspan=3
-          %select#status!name=status!multiple=multiple!size=5
-        %td!rowspan=3
-          %select#assign!name=assign!multiple=multiple!size=5
-        %td
-          %input.date#limitdatefrom!type=date!name=limitdatefrom
-          〜
-          %input.date#limitdateto!type=date!name=limitdateto
-      %tr
-        %th 更新日
-      %tr
-        %td
-          %input.date#updatedfrom!type=date!name=updatedfrom
-          〜
-          %input.date#updatedto!type=date!name=updatedto
-
-
-  %table.list
-    %caption 対象案件一覧
-    %thead
-      %th プロジェクト名
-      %th No
-      %th 件名
-      %th ステータス
-      %th アサイン
-      %th 期限
-      %th 作成者
-      %th 更新者
-      %th 更新日
-    %tbody#cross-search-result
+    <li>
+      <a href="@{HumanNetworkR}">ヒューマンネットワーク
+\
+<div id="main-content">
+  <div .searchbox>
+    <table>
+      <caption>検索条件
+      <tr>
+        <th>プロジェクト
+        <th>ステータス
+        <th>アサイン
+        <th>期限
+      <tr>
+        <td rowspan="3">
+          <select id="projectid" name="projectid" multiple="multiple" size="5">
+            $forall p <- prjs
+              <option selected="selected" value="#{show (projectBisId p)}">#{projectBisName p}
+        <td rowspan="3">
+          <select id="status" name="status" multiple="multiple" size="5">
+        <td rowspan="3">
+          <select id="assign" name="assign" multiple="multiple" size="5">
+        <td>
+          <input id="limitdatefrom" type="date" name="limitdatefrom" .date>
+          \〜
+          <input id="limitdateto" type="date" name="limitdateto" .date>
+      <tr>
+        <th>更新日
+      <tr>
+        <td>
+          <input id="updatedfrom" type="date" name="updatedfrom" .date>
+          \〜
+          <input id="updatedto" type="date" name="updatedto" .date>
+  \
+  \
+  <table .list>
+    <caption>対象案件一覧
+    <thead>
+      <th>プロジェクト名
+      <th>No
+      <th>件名
+      <th>ステータス
+      <th>アサイン
+      <th>期限
+      <th>作成者
+      <th>更新者
+      <th>更新日
+    <tbody id="cross-search-result">

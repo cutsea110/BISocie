@@ -18,8 +18,6 @@ module BISocie
     , StaticRoute (..)
     , AuthRoute (..)
       --
-    , getBy404
-      --
     , UserCrud
     , userCrud
     ) where
@@ -126,12 +124,6 @@ mkYesodData "BISocie" [$parseRoutes|
 -- S3はアクセス制限する
 -- S3は基本公開ベースなので制限をするURIを提供してそこからgetFileRを呼ぶ
 
-getBy404 ukey = do
-  mres <- getBy ukey
-  case mres of
-    Nothing -> lift notFound
-    Just res -> return res
-
 -- Please see the documentation for the Yesod typeclass. There are a number
 -- of settings which can be configured by overriding methods here.
 instance Yesod BISocie where
@@ -158,6 +150,7 @@ instance Yesod BISocie where
         addStylesheetEither $ Left $ StaticR plugins_exinplaceeditor_exinplaceeditor_css
         addScriptEither $ Left $ StaticR plugins_watermark_jquery_watermark_js
         addScriptEither $ Left $ StaticR plugins_ajaxzip2_ajaxzip2_js
+        addScriptEither $ Left $ StaticR plugins_selection_jquery_selection_js
         addCassius $(Settings.cassiusFile "default-layout")
         addJulius $(Settings.juliusFile "default-layout")
       hamletToRepHtml $(Settings.hamletFile "default-layout")
@@ -165,11 +158,7 @@ instance Yesod BISocie where
     -- This is done to provide an optimization for serving static files from
     -- a separate domain. Please see the staticroot setting in Settings.hs
     urlRenderOverride a (StaticR s) =
-        Just $ uncurry (joinPath a Settings.staticroot) $ format s
-      where
-        format = formatPathSegments ss
-        ss :: Site StaticRoute (String -> Maybe (GHandler Static BISocie ChooseRep))
-        ss = getSubSite
+        Just $ uncurry (joinPath a Settings.staticroot) $ renderRoute s
     urlRenderOverride _ _ = Nothing
 
     -- The page to be redirected to when authentication is required.
@@ -248,7 +237,8 @@ instance YesodBreadcrumbs BISocie where
 -- How to run database actions.
 instance YesodPersist BISocie where
     type YesodDB BISocie = SqlPersist
-    runDB db = fmap connPool getYesod >>= Settings.runConnectionPool db
+    runDB db = liftIOHandler 
+               $ fmap connPool getYesod >>= Settings.runConnectionPool db
 
 instance YesodJquery BISocie where
   urlJqueryJs _ = Left $ StaticR js_jquery_1_4_4_min_js

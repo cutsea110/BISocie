@@ -1,13 +1,12 @@
 .login-options h3
-  color: #333
-  clear: both
-  text-align: center
-  margin-bottom: 10px
-  float: left
-  width: 100%
-
+    color: #333
+    clear: both
+    text-align: center
+    margin-bottom: 10px
+    float: left
+    width: 100%
 .login_button
-  margin: 0 1px 0 1px
-  border: none
-  background-color: white
-  background-image: url(@StaticR.img_janrain_png@)
+    margin: 0 1px 0 1px
+    border: none
+    background-color: white
+    background-image: url(@{StaticR img_janrain_png})

@@ -23,6 +23,18 @@ getProfileR uid = do
   where
 -- |  getProf :: (Control.Monad.IO.Class.MonadIO m, PersistBackend m) =>
 --                User -> m (Maybe (Key Profile, Profile))
+    getLab user = 
+      if (userRole user /= Teacher)
+      then return Nothing
+      else do
+        ml <- getBy $ UniqueLaboratory uid
+        case ml of
+          Just (_, l) -> return $ Just l
+          Nothing -> return $ Just $ Laboratory { laboratoryHeadResearcher=uid
+                                                , laboratoryExtensionNumber=Nothing
+                                                , laboratoryRoomNumber=Nothing
+                                                , laboratoryCourses=Nothing
+                                                }
     getProf user y =
       if (userRole user /= Student) 
       then return Nothing 
@@ -59,7 +71,7 @@ getProfileR uid = do
     viewProf = do
       (selfid, self) <- requireAuth
       now <- liftIO getCurrentTime
-      (user, viewable, editable, viewableTel, viewprof, editprof, mprof) <- 
+      (user, viewable, editable, viewableTel, viewprof, editprof, mprof, mlab) <- 
         runDB $ do
           user <- get404 uid
           let viewable = self == user || userRole self > userRole user
@@ -69,7 +81,8 @@ getProfileR uid = do
               editprof = (ProfileR uid, [("mode", "e")])
               (y,_,_) = toGregorian $ utctDay now
           mprof <- getProf user y
-          return (user, viewable, editable, viewableTel, viewprof, editprof, mprof)
+          mlab <- getLab user
+          return (user, viewable, editable, viewableTel, viewprof, editprof, mprof, mlab)
       defaultLayout $ do
         setTitle $ string "Profile"
         addCassius $(cassiusFile "profile")
@@ -82,7 +95,7 @@ getProfileR uid = do
       (selfid, self) <- requireAuth
       now <- liftIO getCurrentTime
       
-      (user, viewable, editable, editableTel, viewprof, editprof, mprof, eyears, gyears) <-
+      (user, viewable, editable, editableTel, viewprof, editprof, mprof, mlab, eyears, gyears) <-
         runDB $ do
           user <- get404 uid
           let viewable = self == user || userRole self > userRole user
@@ -94,11 +107,12 @@ getProfileR uid = do
           unless editable $ 
             lift $ permissionDenied "あなたはこのユーザプロファイルを編集することはできません."
           mprof <- getProf user y
+          mlab <- getLab user
           let eyears = zipWith (\y1 y2 -> (y1==y2, y1)) [Settings.entryStartYear..y+5] $ 
                        repeat (fromMaybe y (fmap (toInteger.profileEntryYear) mprof))
               gyears = zipWith (\y1 y2 -> (Just y1==y2, y1)) [Settings.graduateStartYear..y+5] $
                        repeat (fromMaybe Nothing (fmap (fmap toInteger.profileGraduateYear) mprof))
-          return (user, viewable, editable, editableTel, viewprof, editprof, mprof, eyears, gyears)
+          return (user, viewable, editable, editableTel, viewprof, editprof, mprof, mlab, eyears, gyears)
       defaultLayout $ do
         setTitle $ string "Profile"
         addCassius $(cassiusFile "profile")
@@ -122,9 +136,10 @@ putProfileR uid = do
     permissionDenied "あなたはこのユーザプロファイルを編集することはできません."
   case userRole user of
     Student -> putStudentProf user
-    _       -> putTeacher user
+    Teacher -> putTeacherProf user
+    _       -> putUserProf user
   where
-    putTeacher user = do
+    putUserProf user = do
       (em, fn, gn) <- 
         runFormPost' $ (,,)
         <$> emailInput "email"
@@ -135,6 +150,36 @@ putProfileR uid = do
         update uid [UserEmail em, UserFamilyName fn, UserGivenName gn]
       redirectParams RedirectTemporary (ProfileR uid) [("mode", "e")]
       
+    putTeacherProf user = do
+      (em, fn, gn) <- 
+        runFormPost' $ (,,)
+        <$> emailInput "email"
+        <*> stringInput "familyName"
+        <*> stringInput "givenName"
+      (rn, en, cs) <- 
+        runFormPost' $ (,,)
+        <$> maybeStringInput "roomnumber"
+        <*> maybeStringInput "extensionnumber"
+        <*> maybeStringInput "courses"
+      runDB $ do
+        -- update user
+        update uid [UserEmail em, UserFamilyName fn, UserGivenName gn]
+        mlab <- getBy $ UniqueLaboratory uid
+        case mlab of
+          Nothing -> do
+            insert $ Laboratory { laboratoryHeadResearcher=uid 
+                                , laboratoryRoomNumber=rn
+                                , laboratoryExtensionNumber=en
+                                , laboratoryCourses=cs
+                                }
+          Just (lid, _) -> do
+            update lid [ LaboratoryRoomNumber rn
+                       , LaboratoryExtensionNumber en
+                       , LaboratoryCourses cs
+                       ]
+            return lid
+      redirectParams RedirectTemporary (ProfileR uid) [("mode", "e")]
+    
     putStudentProf user = do
       (em, fn, gn) <- 
         runFormPost' $ (,,)

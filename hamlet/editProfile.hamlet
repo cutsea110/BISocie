@@ -38,6 +38,19 @@
           <span .alert>(必須)
         <td>
           <input placeholder="花子" type="text" name="givenName" value="#{userGivenName user}" .watermark .required>
+      $maybe lab <- mlab
+        <tr>
+          <th>研究室番号
+          <td colspan="3">
+            <input placeholder="1234" type="text" name="roomnumber" value="#{showmaybe (laboratoryRoomNumber lab)}" .watermark>
+        <tr>
+          <th>内線番号
+          <td colspan="3">
+            <input placeholder="1234" type="text" name="extensionnumber" value="#{showmaybe (laboratoryExtensionNumber lab)}" .watermark>
+        <tr>
+          <th>担当科目
+          <td colspan="3">
+            <textarea placeholder="関数プログラミング概論" name="courses" .watermark>#{showmaybe (laboratoryCourses lab)}
       $maybe prof <- mprof
         <tr>
           <th>生年月日 

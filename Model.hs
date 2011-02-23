@@ -71,7 +71,13 @@ Profile
     employment String Maybe Update
     
     UniqueProfile user
-    
+
+Laboratory
+    headResearcher UserId Eq
+    roomNumber String Maybe Update
+    extensionNumber String Maybe Update
+    courses String Maybe Update
+    UniqueLaboratory headResearcher
 
 Email
     email String

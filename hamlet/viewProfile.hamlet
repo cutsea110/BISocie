@@ -32,6 +32,16 @@
       <th>氏名
       <td colspan="3">#{userFullName user}
     $if viewable
+      $maybe lab <- mlab
+        <tr>
+          <th>研究室番号
+          <td colspan="3">#{showmaybe (laboratoryRoomNumber lab)}
+        <tr>
+          <th>内線番号
+          <td colspan="3">#{showmaybe (laboratoryExtensionNumber lab)}
+        <tr>
+          <th>担当科目
+          <td colspan="3">#{showMultilineText (showmaybe (laboratoryCourses lab))}
       $maybe prof <- mprof
         <tr>
           <th>生年月日

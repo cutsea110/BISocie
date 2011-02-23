@@ -15,7 +15,7 @@ pre
     padding: 3px
     border: 1px solid #333333
     white-space: pre-wrap
-    word-wrap: break-word
+    word-wrap: break-all
 div#message
     color: #817134
     backgroud-color: #fdf1d0

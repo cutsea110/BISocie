@@ -5,7 +5,7 @@ textarea#content
     height: 20em
 .post-head
     font-size: 96%
-pre.post-body
+.post-body
     background-color: #ffffee
     border: 1px solid #cccccc
     margin: 0.5em 3em 1em

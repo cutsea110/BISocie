@@ -14,10 +14,19 @@
   <table .list>
     <caption>参加プロジェクト一覧
     <thead>
-      <th>プロジェクト名
-      <th>概要
-      <th>作成日
-      <th>更新日
+      <tr>
+        <td .left>
+          $if prevExist
+            <a href="@?{prevPage}">«前へ
+        <td colspan="2" .center>
+        <td .right>
+          $if nextExist
+            <a href="@?{nextPage}">次へ»
+      <tr>
+        <th>プロジェクト名
+        <th>概要
+        <th>作成日
+        <th>更新日
     <tbody>
       $forall p <- prjs
         <tr class="#{fst p}">
@@ -27,3 +36,12 @@
             <a href="@{ProjectR (fst (snd p))}">#{showShortenText (projectDescription (snd (snd p)))}
           <td>#{showDate (projectCdate (snd (snd p)))}
           <td>#{showDate (projectUdate (snd (snd p)))}
+    <tfoot>
+      <tr>
+        <td .left>
+          $if prevExist
+            <a href="@?{prevPage}">«前へ
+        <td colspan="2" .center>
+        <td .right>
+          $if nextExist
+            <a href="@?{nextPage}">次へ»

@@ -70,6 +70,15 @@ table.list td
 table.list th
     border: solid 1px #000000
     background-color: #d0d0d0
+table.list thead td.left, table.list tfoot td.left
+    border-right: none
+table.list thead td.center, table.list tfoot td.center
+    border-left: none
+    border-right: none
+table.list thead td.right, table.list tfoot td.right
+    border-left: none
+
+
 td.number
     text-align: right
 .clearfix:after

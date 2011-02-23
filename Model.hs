@@ -92,7 +92,7 @@ Project
     issuecounter IssueNo Update Add default=0
     cuser UserId
     cdate UTCTime
-    udate UTCTime Update
+    udate UTCTime Update Desc
 
 Issue
     project ProjectId Eq In

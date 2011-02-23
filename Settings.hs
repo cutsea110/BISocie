@@ -25,6 +25,8 @@ module Settings
     , graduateStartYear
     , mailXHeader
     , mailMessageIdDomain
+    , projectListLimit
+    , issueListLimit
     ) where
 
 import qualified Text.Hamlet as H
@@ -175,3 +177,7 @@ mailXHeader :: String
 mailXHeader = "X-BISocie"
 mailMessageIdDomain :: String
 mailMessageIdDomain = "bisocie.localhost"
+projectListLimit :: Int
+projectListLimit = 100
+issueListLimit :: Int
+issueListLimit =100

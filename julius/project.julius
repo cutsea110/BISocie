@@ -191,7 +191,7 @@ function mkUser(u, ps){
     mail.attr({src: '@{StaticR img_mail_checked_png}'});
   }
 
-  if('#{show editable}'=='False')
+  if('#{show (canEditProjectSetting self)}'=='False')
     return div.append(s).append(mail).append(avatar);
 
   if (ps[u.id])c.attr('checked', true);

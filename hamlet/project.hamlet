@@ -8,39 +8,39 @@
 \
 <div id="main-content">
   <h3>#{projectName prj} プロジェクト設定 
-    $if editable
+    $if (canEditProjectSetting self)
       <button id="button-delete-confirm" type="submit" name="_method" value="delete" .link>このプロジェクトを削除する.
   \
   <form method="post" action="@{ProjectR pid}">
     <input type="hidden" name="_method" value="modify">
     <dl>
       <dt>プロジェクト名 
-        $if editable
+        $if (canEditProjectSetting self)
           <span .alert>(必須)
       <dd>
-        $if editable
+        $if (canEditProjectSetting self)
           <input id="name" type="text" name="name" placeholder="(プロジェクト名)" uri="@{ProjectR pid}" value="#{projectName prj}" .inplaceedit>
         $else
           \#{projectName prj}
       <dt>概要 
-        $if editable
+        $if (canEditProjectSetting self)
           <span .alert>(必須)
       <dd>
-        $if editable
+        $if (canEditProjectSetting self)
           <textarea id="description" type="text" name="description" placeholder="(プロジェクト概要)" uri="@{ProjectR pid}" .inplaceedit>#{projectDescription prj}
         $else
           \#{showMultilineText (projectDescription prj)}
       <dt>ステータス 
-        $if editable
+        $if (canEditProjectSetting self)
           <span .alert>(必須) 
         <button id="button-status-syntax-help" type="submit" .link>ヘルプ
       <dd>
-        $if editable
+        $if (canEditProjectSetting self)
           <textarea id="statuses" name="statuses" placeholder="(ステータス設定)" uri="@{ProjectR pid}" .inplaceedit>#{projectStatuses prj}
         $else
           \#{showMultilineText (projectStatuses prj)}
       <dt>参加者
-        $if editable
+        $if (canEditProjectSetting self)
           <button id="button-search-users" .link>参加者追加
       <dd>
         <div id="participants">

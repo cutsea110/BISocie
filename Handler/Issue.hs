@@ -62,8 +62,6 @@ getStatusListR = do
 getCrossSearchR :: Handler RepHtml
 getCrossSearchR = do
   (selfid, self) <- requireAuth
-  let cancreateproject = userRole self >= Teacher
-      viewablehumannet = userRole self >= Teacher
   prjs <- runDB $ do
     ptcpts <- selectList [ParticipantsUserEq selfid] [] 0 0
     prjids <- forM ptcpts $ \(_, ptcpt) -> do
@@ -158,8 +156,7 @@ getIssueListR pid = do
   (selfid, self) <- requireAuth
   (issues'', prj, es) <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
-    let viewable = p /= Nothing
-    unless viewable $ 
+    unless (p /= Nothing) $ 
       lift $ permissionDenied "あなたはこのプロジェクトの参加者ではありません."
     prj' <- get404 pid
     let (Right es) = parseStatuses $ projectStatuses prj'
@@ -196,8 +193,7 @@ getNewIssueR pid = do
   (selfid, self) <- requireAuth
   (ptcpts, stss, prj) <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
-    let addable = p /= Nothing
-    unless addable $ 
+    unless (p /= Nothing) $ 
       lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
     prj <- get404 pid
     ptcpts <- selectParticipants pid
@@ -228,8 +224,7 @@ postNewIssueR pid = do
       Just fi <- lookupFile "attached"
       runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
-        let addable = p /= Nothing
-        unless addable $ 
+        unless (p /= Nothing) $ 
           lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
         r <- lift getUrlRender
         now <- liftIO getCurrentTime
@@ -299,8 +294,7 @@ getIssueR pid ino = do
   (prj, ptcpts, issue, comments) <- 
     runDB $ do
       p <- getBy $ UniqueParticipants pid selfid
-      let viewable = p /= Nothing
-      unless viewable $ 
+      unless (p /= Nothing) $ 
         lift $ permissionDenied "あなたはこの案件を閲覧することはできません."
       (iid, issue) <- getBy404 $ UniqueIssue pid ino
       cs <- selectList [CommentIssueEq iid] [CommentCdateDesc] 0 0
@@ -355,8 +349,7 @@ postCommentR pid ino = do
       Just fi <- lookupFile "attached"
       runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
-        let addable = p /= Nothing
-        unless addable $ 
+        unless (p /= Nothing) $ 
           lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
         (iid, issue) <- getBy404 $ UniqueIssue pid ino
         [(lastCid, lastC)] <- selectList [CommentIssueEq iid] [CommentCdateDesc] 1 0
@@ -423,8 +416,7 @@ getAttachedFileR cid fid = do
   f <- runDB $ do
     c <- get404 cid
     p <- getBy $ UniqueParticipants (commentProject c) selfid
-    let viewable = p /= Nothing
-    unless viewable $
+    unless (p /= Nothing) $
       lift $ permissionDenied "あなたはこのファイルをダウンロードできません."
     get404 fid
   getFileR (fileHeaderCreator f) fid

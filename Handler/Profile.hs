@@ -24,7 +24,7 @@ getProfileR uid = do
 -- |  getProf :: (Control.Monad.IO.Class.MonadIO m, PersistBackend m) =>
 --                User -> m (Maybe (Key Profile, Profile))
     getLab user = 
-      if (userRole user /= Teacher)
+      if not $ isTeacher user
       then return Nothing
       else do
         ml <- getBy $ UniqueLaboratory uid
@@ -36,7 +36,7 @@ getProfileR uid = do
                                                 , laboratoryCourses=Nothing
                                                 }
     getProf user y =
-      if (userRole user /= Student) 
+      if not $ isStudent user
       then return Nothing 
       else do
         mp <- getBy $ UniqueProfile uid
@@ -71,18 +71,15 @@ getProfileR uid = do
     viewProf = do
       (selfid, self) <- requireAuth
       now <- liftIO getCurrentTime
-      (user, viewable, editable, viewableTel, viewprof, editprof, mprof, mlab) <- 
+      let viewprof = (ProfileR uid, [("mode", "v")])
+          editprof = (ProfileR uid, [("mode", "e")])
+          (y,_,_) = toGregorian $ utctDay now
+      (user, viewprof, editprof, mprof, mlab) <- 
         runDB $ do
           user <- get404 uid
-          let viewable = self == user || userRole self > userRole user
-              editable = self == user || userRole self > userRole user
-              viewableTel = self == user || userRole self >= Staff
-              viewprof = (ProfileR uid, [("mode", "v")])
-              editprof = (ProfileR uid, [("mode", "e")])
-              (y,_,_) = toGregorian $ utctDay now
           mprof <- getProf user y
           mlab <- getLab user
-          return (user, viewable, editable, viewableTel, viewprof, editprof, mprof, mlab)
+          return (user, viewprof, editprof, mprof, mlab)
       defaultLayout $ do
         setTitle $ string "Profile"
         addCassius $(cassiusFile "profile")
@@ -94,17 +91,13 @@ getProfileR uid = do
     editProf = do
       (selfid, self) <- requireAuth
       now <- liftIO getCurrentTime
-      
-      (user, viewable, editable, editableTel, viewprof, editprof, mprof, mlab, eyears, gyears) <-
+      let viewprof = (ProfileR uid, [("mode", "v")])
+          editprof = (ProfileR uid, [("mode", "e")])
+          (y,_,_) = toGregorian $ utctDay now
+      (user, mprof, mlab, eyears, gyears) <-
         runDB $ do
           user <- get404 uid
-          let viewable = self == user || userRole self > userRole user
-              editable = self == user || userRole self > userRole user
-              editableTel = self == user || userRole self >= Staff
-              viewprof = (ProfileR uid, [("mode", "v")])
-              editprof = (ProfileR uid, [("mode", "e")])
-              (y,_,_) = toGregorian $ utctDay now
-          unless editable $ 
+          unless (self `canEdit` user) $ 
             lift $ permissionDenied "あなたはこのユーザプロファイルを編集することはできません."
           mprof <- getProf user y
           mlab <- getLab user
@@ -112,7 +105,7 @@ getProfileR uid = do
                        repeat (fromMaybe y (fmap (toInteger.profileEntryYear) mprof))
               gyears = zipWith (\y1 y2 -> (Just y1==y2, y1)) [Settings.graduateStartYear..y+5] $
                        repeat (fromMaybe Nothing (fmap (fmap toInteger.profileGraduateYear) mprof))
-          return (user, viewable, editable, editableTel, viewprof, editprof, mprof, mlab, eyears, gyears)
+          return (user, mprof, mlab, eyears, gyears)
       defaultLayout $ do
         setTitle $ string "Profile"
         addCassius $(cassiusFile "profile")
@@ -131,8 +124,7 @@ putProfileR :: UserId -> Handler RepHtml
 putProfileR uid = do
   (selfid, self) <- requireAuth
   user <- runDB $ get404 uid
-  let editable = selfid == uid || userRole self > userRole user
-  unless editable $ 
+  unless (self `canEdit` user) $ 
     permissionDenied "あなたはこのユーザプロファイルを編集することはできません."
   case userRole user of
     Student -> putStudentProf user
@@ -279,8 +271,7 @@ postAvatarR uid = do
   let avatar = fmap read mfhid
   runDB $ do
     user <- get404 uid
-    let editable = self == user || userRole self > userRole user
-    unless editable $
+    unless (self `canEdit` user) $
       lift $ permissionDenied "あなたはこのユーザのアバターを変更することはできません."
     update uid [UserAvatar avatar]
   cacheSeconds 10 -- FIXME

@@ -10,8 +10,7 @@ getUserListR :: Handler RepJson
 getUserListR = do
   (selfid, self) <- requireAuth
   r <- getUrlRender
-  let cansearchuser = userRole self >= Teacher
-  unless cansearchuser $ 
+  unless (canSearchUser self) $ 
     permissionDenied "あなたは他のユーザを検索することはできません."
   us <- runDB $ do
     us' <- selectList [UserActiveEq True] [] 0 0

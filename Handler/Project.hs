@@ -13,9 +13,7 @@ import StaticFiles
 getNewProjectR :: Handler RepHtml
 getNewProjectR = do
   (selfid, self) <- requireAuth
-  let cancreateproject = userRole self >= Teacher
-      viewablehumannet = userRole self >= Teacher
-  unless cancreateproject $ 
+  unless (canCreateProject self) $ 
     permissionDenied "あなたはプロジェクトを作成することはできません."
   now <- liftIO getCurrentTime
   let inintstatuses = "!未開始#赤\n着手#緑\n完了#灰\n=却下#灰\n保留\n議論\n報告" :: String
@@ -39,8 +37,7 @@ postNewProjectR = do
     createProject :: Handler RepHtml
     createProject = do
       (selfid, self) <- requireAuth
-      let cancreateproject = userRole self >= Teacher
-      unless cancreateproject $ 
+      unless (canCreateProject self) $ 
         permissionDenied "あなたはプロジェクトを作成することはできません."
       (name, desc, sts) <- runFormPost'$ (,,)
                            <$> stringInput "name"
@@ -69,15 +66,11 @@ getProjectR pid = do
   let (y,_,_) = toGregorian $ utctDay now
       eyears = [Settings.entryStartYear..y+5]
       help = $(Settings.hamletFile "help")
-  (viewable, editable, prj) <- 
-    runDB $ do 
+  prj <- runDB $ do 
     p <- getBy $ UniqueParticipants pid selfid
-    let viewable = p /= Nothing
-        editable = viewable && userRole self >= Teacher
-    unless viewable $ 
+    unless (p /= Nothing) $ 
       lift $ permissionDenied "あなたはこのプロジェクトの参加者ではありません."
-    prj <- get404 pid
-    return (viewable, editable, prj)
+    get404 pid
   defaultLayout $ do
     setTitle $ string $ projectName prj
     addCassius $(cassiusFile "project")
@@ -104,9 +97,7 @@ putProjectR pid = do
 
   prj <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
-    let viewable = p /= Nothing
-        editable = viewable && userRole self >= Teacher
-    unless editable $ 
+    unless (p /= Nothing && canEditProjectSetting self) $ 
       lift $ permissionDenied "あなたはこのプロジェクトの設定を編集できません."
     prj <- get404 pid
     Just nm <- case nm' of
@@ -142,9 +133,7 @@ deleteProjectR pid = do
   (selfid, self) <- requireAuth
   deleted <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
-    let viewable = p /= Nothing
-        deletable = viewable && userRole self >= Teacher
-    unless deletable $ 
+    unless (p /= Nothing && canEditProjectSetting self) $ 
       lift $ permissionDenied "あなたはこのプロジェクトすることはできません."
     issues <- selectList [IssueProjectEq pid] [] 1 0
     if issues == [] 

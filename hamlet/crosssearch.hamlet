@@ -1,12 +1,12 @@
 <ul .tabs>
   <li>
     <a href="@{HomeR selfid}">ホーム
-  $if cancreateproject
+  $if (canCreateProject self)
     <li>
       <a href="@{NewProjectR}">プロジェクト新規作成
   <li .selected>
     <a href="@{CrossSearchR}">クロスサーチ
-  $if viewablehumannet
+  $if (canViewHumannetwork self)
     <li>
       <a href="@{HumanNetworkR}">ヒューマンネットワーク
 \

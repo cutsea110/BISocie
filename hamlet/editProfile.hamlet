@@ -85,7 +85,7 @@
               <input id="czip" placeholder="271-8555" maxlength="8" type="zip" name="zip" value="#{profileZip prof}" .watermark .required>
             <br>
             <input id="cloc" placeholder="千葉県松戸市岩瀬550" locprefix="c" type="address" name="address" value="#{profileAddress prof}" .watermark .required>
-        $if editableTel
+        $if (canEditTel self user)
           <tr>
             <th>電話番号 
               <span .alert>(必須)

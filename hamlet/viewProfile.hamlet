@@ -23,7 +23,7 @@
           $if isStudent user
             \学籍番号
           $else
-            \アカウント
+            \アカウントID
         <td colspan="3">#{userIdent user}
       <tr>
         <th>メールアドレス

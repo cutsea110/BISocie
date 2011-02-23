@@ -45,8 +45,8 @@
         <a href="@{ProfileR (fst (commentBisCuser (snd c)))}" .profile>
            \#{userFullName (snd (commentBisCuser (snd c)))}
         \  #{showDate (commentBisCdate (snd c))} #{commentBisStatus (snd c)}
-      <pre .post-body>
-        \#{commentBisContent (snd c)}
+      <div .post-body>
+        \#{showMultilineText (commentBisContent (snd c))}
         $maybe f <- commentBisAttached (snd c)
           <div .attached>
             \添付ファイル: 

@@ -1,7 +1,7 @@
 <ul .tabs>
   <li>
     <a href="@{HomeR selfid}">ホーム
-  $if cancreateproject
+  $if (canCreateProject self)
     <li>
       <a href="@{NewProjectR}">プロジェクト新規作成
   <li>

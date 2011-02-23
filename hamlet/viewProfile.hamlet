@@ -6,7 +6,7 @@
 \
 <div id="main-content">
   <h3>#{userIdent user}のプロフィール
-    $if editable
+    $if (canEdit self user)
       <form method="get" action="@{ProfileR uid}" .inline>
         <input type="hidden" name="mode" value="e">
         <button type="submit" .link>編集する
@@ -17,13 +17,13 @@
       <td>
         <div id="avatar">
           <img id="myavatar" src="@{AvatarImageR uid}" .avatar>
-    $if viewable
+    $if (canView self user)
       <tr>
         <th>
           $if isStudent user
             \学籍番号
           $else
-            \アカウント
+            \アカウントID
         <td colspan="3">#{userIdent user}
       <tr>
         <th>メールアドレス
@@ -31,7 +31,17 @@
     <tr>
       <th>氏名
       <td colspan="3">#{userFullName user}
-    $if viewable
+    $maybe lab <- mlab
+      <tr>
+        <th>研究室番号
+        <td colspan="3">#{showmaybe (laboratoryRoomNumber lab)}
+      <tr>
+        <th>内線番号
+        <td colspan="3">#{showmaybe (laboratoryExtensionNumber lab)}
+      <tr>
+        <th>担当科目
+        <td colspan="3">#{showMultilineText (showmaybe (laboratoryCourses lab))}
+    $if (canView self user)
       $maybe prof <- mprof
         <tr>
           <th>生年月日
@@ -48,7 +58,7 @@
               <input id="clon" type="hidden" name="longitude" value="#{showMaybeDouble (profileLongitude prof)}">
               <input id="clat" type="hidden" name="latitude" value="#{showMaybeDouble (profileLatitude prof)}">
               <input id="cloc" type="hidden" name="address" value="#{profileAddress prof}">
-        $if viewableTel
+        $if (canViewTel self user)
           <tr>
             <th>電話番号
             <td colspan="3">#{profileTel prof}

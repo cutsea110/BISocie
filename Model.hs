@@ -71,7 +71,13 @@ Profile
     employment String Maybe Update
     
     UniqueProfile user
-    
+
+Laboratory
+    headResearcher UserId Eq
+    roomNumber String Maybe Update
+    extensionNumber String Maybe Update
+    courses String Maybe Update
+    UniqueLaboratory headResearcher
 
 Email
     email String
@@ -194,68 +200,6 @@ color = do
           Nothing -> return $ Just c
           Just k  -> return $ Just k
 
-             
-{--
--- | Parse Statuses
-statuses :: String -> Either ParseError [(String, Maybe Color, Maybe Effect)]
-statuses = mapM (parse status "status parser") . lines
-status = do
-  e <- effect
-  s <- many1 (noneOf "#")
-  c <- color
-  return (s, c, e)
-
-effect = do
-  try (oneOf "!=") >>= \e ->
-      case e of
-        '!' -> return $ Just Impact
-        '=' -> return $ Just Strike
-  <|> return Nothing
-
-color = do
-  try (char '#')
-  c <- color'
-  return c
-  <|>
-  return Nothing
-  where
-    color' = try known
-             <|>
-             try rgb3
-             <|>
-             try rgb6
-             <|> 
-             do
-             c <- many letter
-             if c == ""
-               then return Nothing
-               else return $ Just c
-    known = (char '赤' >> (return $ Just "#ffcccc"))
-            <|>
-            (char '緑' >> (return $ Just "#ccffcc"))
-            <|>
-            (char '青' >> (return $ Just "#ccccff"))
-            <|>
-            (char '灰' >> (return $ Just "#888888"))
-            <|>
-            (char '黄' >> (return $ Just "#ffffcc"))
-      
-    rgb6 = do
-      r1 <- hexDigit
-      r2 <- hexDigit
-      g1 <- hexDigit
-      g2 <- hexDigit
-      b1 <- hexDigit
-      b2 <- hexDigit
-      eof
-      return $ Just ['#',r1,r2,g1,g2,b1,b2]
-    rgb3 = do
-      r <- hexDigit
-      g <- hexDigit
-      b <- hexDigit
-      eof
-      return $ Just ['#',r,r,g,g,b,b]
---}
 
 data IssueBis = IssueBis { issueBisId :: IssueId
                          , issueBisIssue :: Issue
@@ -301,6 +245,9 @@ isStudent u = userRole u == Student
 
 isTeacher :: User -> Bool
 isTeacher u = userRole u == Teacher
+
+isStaff :: User -> Bool
+isStaff u = userRole u == Staff
 
 isAdmin :: User -> Bool
 isAdmin u = userRole u == Admin
@@ -348,3 +295,84 @@ showShortenText = preEscapedString . shorten 16 . safeHead . splitOn "\n"
     safeHead [] = []
     safeHead s = head s
     shorten n s = if length s > n then take n s ++ ".." else s
+
+
+
+
+
+
+-- | Permission System
+canView :: User -> User -> Bool
+u `canView` t = u == t || permitted
+  where
+    permitted = 
+      case (userRole u, userRole t) of
+        (Admin,   _      ) -> True
+        (Teacher, _      ) -> True
+        (Staff,   _      ) -> True
+        (Student, _      ) -> False
+
+canEdit :: User -> User -> Bool
+u `canEdit` t = u == t || permitted
+  where
+    permitted = 
+      case (userRole u, userRole t) of
+        (Admin,   _      ) -> True
+        (Teacher, Student) -> True
+        (Teacher, _      ) -> False
+        (Staff,   Student) -> True
+        (Staff,   _      ) -> False
+        (Student, _      ) -> False
+
+canViewTel :: User -> User -> Bool
+u `canViewTel` t = u == t || permitted
+  where
+    permitted =
+      case (userRole u, userRole t) of
+        (Admin,   Student) -> True
+        (Teacher, Student) -> False
+        (Staff,   Student) -> True
+        (Student, Student) -> False
+
+canEditTel :: User -> User -> Bool
+canEditTel = canViewTel
+
+canCreateProject :: User -> Bool
+canCreateProject u =
+  case userRole u of
+    Admin -> True
+    Teacher -> True
+    Staff -> True
+    Student -> False
+
+canViewHumannetwork :: User -> Bool
+canViewHumannetwork u =
+  case userRole u of
+    Admin -> True
+    Teacher -> True
+    Staff -> True
+    Student -> False
+
+canEditProjectSetting :: User -> Bool
+canEditProjectSetting u =
+  case userRole u of
+    Admin -> True
+    Teacher -> True
+    Staff -> True
+    Student -> False
+
+canViewUserLocations :: User -> Bool
+canViewUserLocations u =
+  case userRole u of
+    Admin -> True
+    Teacher -> True
+    Staff -> True
+    Student -> False
+
+canSearchUser :: User -> Bool
+canSearchUser u =
+  case userRole u of
+    Admin -> True
+    Teacher -> True
+    Staff -> True
+    Student -> False

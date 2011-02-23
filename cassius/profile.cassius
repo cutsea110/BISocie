@@ -32,3 +32,10 @@ input[name=familyName], input[name=givenName]
     width: 100px
 input[type=zip]
     width: 80px
+input[name=roomnumber]
+    width: 80px
+input[name=extensionnumber]
+    width: 80px
+textarea[name=courses]
+    width: 320px
+    height: 10em

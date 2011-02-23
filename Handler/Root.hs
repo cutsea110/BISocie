@@ -20,8 +20,6 @@ getHomeR :: UserId -> Handler RepHtml
 getHomeR uid = do
   (selfid, self) <- requireAuth
   unless (selfid==uid) $ permissionDenied "他人のホームを見ることはできません."
-  let cancreateproject = userRole self >= Teacher
-      viewablehumannet = userRole self >= Teacher
   prjs <- runDB $ do
     ps <- selectList [ParticipantsUserEq selfid] [] 0 0
     prjs' <- forM ps $ \(id, p) -> do
@@ -36,9 +34,7 @@ getHomeR uid = do
 getHumanNetworkR :: Handler RepHtml
 getHumanNetworkR = do
   (selfid, self) <- requireAuth
-  let cancreateproject = userRole self >= Teacher
-      viewablehumannet = userRole self >= Teacher
-  unless viewablehumannet $ 
+  unless (canViewHumannetwork self) $ 
     permissionDenied "あなたはヒューマンエットワークを閲覧することはできません."
   defaultLayout $ do
     setTitle $ string "ヒューマンネットワーク"
@@ -51,8 +47,8 @@ getUserLocationsR :: Handler RepJson
 getUserLocationsR = do
   (selfid, self) <- requireAuth
   r <- getUrlRender
-  let viewable = userRole self >= Teacher
-  unless viewable $ permissionDenied "あなたはこの情報を取得することはできません."
+  unless (canViewUserLocations self) $ 
+    permissionDenied "あなたはこの情報を取得することはできません."
   profs <- runDB $ do
     us <- selectList [UserRoleEq Student] [] 0 0
     profs' <- selectList [ProfileUserIn $ map fst us] [] 0 0

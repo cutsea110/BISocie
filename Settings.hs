@@ -182,7 +182,6 @@ mailMessageIdDomain = "bisocie.localhost"
 projectListLimit :: Int
 projectListLimit = 50
 issueListLimit :: Int
-issueListLimit = 100
+issueListLimit = 50
 pagenateWidth :: Int
 pagenateWidth = 3
-

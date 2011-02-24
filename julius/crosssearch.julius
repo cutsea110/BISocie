@@ -15,11 +15,7 @@ $(document).ready(function(){
   reload_search_result();
 });
 
-function reload_search_result() {
-  // clear
-  $('#cross-search-result tr').remove();
-
-  // search
+function collect_condition(page) {
   var keys = '';
   $('#projectid option:selected, #status option:selected, #assign option:selected')
   .each(function(){
@@ -29,47 +25,92 @@ function reload_search_result() {
     if ($(this).val() != "")
        keys = keys + $(this).attr('name') + '=' + encodeURI( $(this).val() ) + '&';
   });
+  keys = keys + "page=" + page
+  return keys;
+}
 
+function create_issue_line(item) {
+  var tr = $('<tr/>'),
+      project = $('<td/>'),
+      no = $('<td/>').addClass('number').text(item.no),
+      subject = $('<td/>'),
+      status = $('<td/>').text(item.status),
+      assign = $('<td/>').text(item.assign),
+      limitdate = $('<td/>').text(item.limitdate),
+      creator = $('<td/>').text(item.creator),
+      updator = $('<td/>').text(item.updator),
+      updated = $('<td/>').text(item.updated),
+      link2project = $('<a/>').attr({href: item.projecturi}).text(item.project),
+      link2issue = $('<a/>').attr({href: item.issueuri}).text(item.subject);
+  if(item.effect!="") tr.addClass(item.effect);
+  if(item.color!="") tr.attr({bgcolor: item.color});
+  tr.append(project.append(link2project))
+    .append(no)
+    .append(subject.append(link2issue))
+    .append(status)
+    .append(assign)
+    .append(limitdate)
+    .append(creator)
+    .append(updator)
+    .append(updated);
+  return tr;
+}
+
+function reload_search_result() {
+  // clear
+  $('#cross-search-result tr').remove();
+
+  // search
   $.ajax({
     async: true,
     type: 'POST',
     url: '@{CrossSearchR}',
     dataType: 'json',
-    data: keys,
+    data: collect_condition(0),
     success: function(json){
       var ilist = json.issues;
       $.each(ilist, function(i, item){
-        var tr = $('<tr/>'),
-            project = $('<td/>'),
-            no = $('<td/>').addClass('number').text(item.no),
-            subject = $('<td/>'),
-            status = $('<td/>').text(item.status),
-            assign = $('<td/>').text(item.assign),
-            limitdate = $('<td/>').text(item.limitdate),
-            creator = $('<td/>').text(item.creator),
-            updator = $('<td/>').text(item.updator),
-            updated = $('<td/>').text(item.updated),
-            link2project = $('<a/>').attr({href: item.projecturi}).text(item.project),
-            link2issue = $('<a/>').attr({href: item.issueuri}).text(item.subject);
-        if(item.effect!="") tr.addClass(item.effect);
-        if(item.color!="") tr.attr({bgcolor: item.color});
-        tr.append(project.append(link2project))
-          .append(no)
-          .append(subject.append(link2issue))
-          .append(status)
-          .append(assign)
-          .append(limitdate)
-          .append(creator)
-          .append(updator)
-          .append(updated);
+        var tr = create_issue_line(item);
         $('#cross-search-result').append(tr);
-
+        tr.hide().fadeIn();
       });
+      var more = create_twitter_like_more(1),
+          moretr = $('<tr/>').addClass('more').append($('<td colspan="9"/>').append(more));
+      $('#cross-search-result').append(moretr);
     },
     error: function (res, status) {
 
     }
   });
+}
+
+function create_twitter_like_more(next) {
+  var more = $('<div/>').attr({id: 'twitter-like-more-' + next, nextpage: next}).text('more');
+  more.click(function(){
+    $.ajax({
+      async: false,
+      type: 'POST',
+      url: '@{CrossSearchR}',
+      dataType: 'json',
+      data: collect_condition(next),
+      success: function (json) {
+        var ilist = json.issues;
+        $.each(ilist, function(i, item){
+          var tr = create_issue_line(item);
+          $('#cross-search-result').append(tr);
+          tr.hide().fadeIn();
+        });
+        var more = create_twitter_like_more(next+1),
+            moretr = $('<tr/>').addClass('more').append($('<td colspan="9"/>').append(more));
+        $('#cross-search-result').append(moretr);
+        $('#twitter-like-more-' + next).closest('tr').remove();
+      },
+      error: function (res, status) {
+
+      }
+    });
+  });
+  return more;
 }
 
 function reload_statuses() {

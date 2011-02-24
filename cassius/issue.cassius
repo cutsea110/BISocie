@@ -34,3 +34,13 @@ div.prof-tooltip
     margin-bottom: 5px
     border: solid 1px #CCC
     background-color: ivory
+tr.more
+    bgcolor: #cccccc
+tr.more div
+    font-size: 110%
+    font-weight: bold
+    color: #3040f0
+    margin: 5px
+    text-align: center
+tr.more div:hover
+    cursor: pointer

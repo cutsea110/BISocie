@@ -14,7 +14,7 @@ import Network.Mail.Mime
 import qualified Data.Text.Lazy
 import qualified Data.Text.Lazy.Encoding
 
-import qualified Settings (mailXHeader, mailMessageIdDomain)
+import Settings (mailXHeader, mailMessageIdDomain, issueListLimit, pagenateWidth)
 import StaticFiles
 import Handler.S3
 
@@ -93,6 +93,7 @@ postCrossSearchR = do
                                       lookupPostParam "limitdateto")
   (uf', ut') <- uncurry (liftM2 (,)) (lookupPostParam "updatedfrom",
                                       lookupPostParam "updatedto")
+  page' <- lookupPostParam "page"
   let (pS, sS, aS) = (toInFilter IssueProjectIn $ map read ps', 
                       toInFilter IssueStatusIn ss', 
                       toInFilter IssueAssignIn $ map (Just . read) as')
@@ -100,6 +101,9 @@ postCrossSearchR = do
                           maybeToFilter IssueLimitdateLt $ fmap (addDays 1 . read) lt',
                           maybeToFilter IssueUdateGe $ fmap (flip UTCTime 0 . read) uf',
                           maybeToFilter IssueUdateLt $ fmap (flip UTCTime 0 . addDays 1 . read) ut')
+      page = case page' of
+        Nothing -> 0
+        Just p -> max (read p) 0
   issues <- runDB $ do
     ptcpts' <- selectList [ParticipantsUserEq selfid] [] 0 0
     prjs <- forM ptcpts' $ \(_, p) -> do
@@ -111,7 +115,7 @@ postCrossSearchR = do
                               , projectBisDescription=projectDescription prj
                               , projectBisStatuses=es
                               })
-    issues' <- selectList (pS ++ sS ++ aS ++ lF ++ lT ++ uF ++ uT) [IssueUdateDesc] 0 0
+    issues' <- selectList (pS ++ sS ++ aS ++ lF ++ lT ++ uF ++ uT) [IssueUdateDesc] issueListLimit (page*issueListLimit)
     forM issues' $ \(id, i) -> do
       cu <- get404 $ issueCuser i
       uu <- get404 $ issueUuser i
@@ -255,14 +259,14 @@ postNewIssueR pid = do
                                 , commentCdate=now
                                 }
         ptcpts <- selectParticipants pid
-        let msgid = toMessageId iid cid now Settings.mailMessageIdDomain
+        let msgid = toMessageId iid cid now mailMessageIdDomain
         liftIO $ renderSendMail Mail
           { mailHeaders =
                [ ("From", "noreply")
                , ("To", intercalate "," $ map (userEmail.snd) ptcpts)
                , ("Subject", sbj)
                , ("Message-ID", msgid)
-               , (Settings.mailXHeader, show pid)
+               , (mailXHeader, show pid)
                ]
           , mailParts = 
                  [[ Part
@@ -374,8 +378,8 @@ postCommentR pid ino = do
                                 }
         prj <- get404 pid
         ptcpts <- selectParticipants pid
-        let msgid = toMessageId iid cid now Settings.mailMessageIdDomain
-            refid = toMessageId iid lastCid (commentCdate lastC) Settings.mailMessageIdDomain
+        let msgid = toMessageId iid cid now mailMessageIdDomain
+            refid = toMessageId iid lastCid (commentCdate lastC) mailMessageIdDomain
         liftIO $ renderSendMail Mail
           { mailHeaders =
                [ ("From", "noreply")
@@ -384,7 +388,7 @@ postCommentR pid ino = do
                , ("Message-ID", msgid)
                , ("References", refid)
                , ("In-Reply-To", refid)
-               , (Settings.mailXHeader, show pid)
+               , (mailXHeader, show pid)
                ]
           , mailParts = 
                  [[ Part

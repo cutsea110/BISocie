@@ -27,6 +27,7 @@ module Settings
     , mailMessageIdDomain
     , projectListLimit
     , issueListLimit
+    , pagenateWidth
     ) where
 
 import qualified Text.Hamlet as H
@@ -177,7 +178,11 @@ mailXHeader :: String
 mailXHeader = "X-BISocie"
 mailMessageIdDomain :: String
 mailMessageIdDomain = "bisocie.localhost"
+
 projectListLimit :: Int
 projectListLimit = 50
 issueListLimit :: Int
 issueListLimit = 100
+pagenateWidth :: Int
+pagenateWidth = 3
+

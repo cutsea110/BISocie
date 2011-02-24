@@ -2,7 +2,10 @@
 module Handler.Root where
 
 import BISocie
+import Settings
+
 import Control.Monad (unless, forM)
+import Data.List
 
 -- This is a handler function for the GET request method on the RootR
 -- resource pattern. All of your resource patterns are defined in
@@ -20,16 +23,55 @@ getHomeR :: UserId -> Handler RepHtml
 getHomeR uid = do
   (selfid, self) <- requireAuth
   unless (selfid==uid) $ permissionDenied "他人のホームを見ることはできません."
-  prjs <- runDB $ do
+  page' <- lookupGetParam "page"
+  let page = case page' of
+        Nothing -> 0
+        Just p -> max (read p) 0
+  (all, prjs) <- runDB $ do
     ps <- selectList [ParticipantsUserEq selfid] [] 0 0
     prjs' <- forM ps $ \(id, p) -> do
         let pid = participantsProject p
         Just prj <- get pid
         return (pid, prj)
-    return $ zip (concat $ repeat ["odd", "even"]::[String]) prjs'
+    let sorted = sortBy (\(_, p) (_, q) -> projectUdate q `compare` projectUdate p) prjs'
+    return $ (prjs',
+              zip (concat $ repeat ["odd", "even"]::[String]) 
+              $ take projectListLimit $ drop (page*projectListLimit) sorted)
+  let maxpage = ceiling (fromIntegral (length all) / fromIntegral projectListLimit) - 1
+      prevExist = page > 0
+      nextExist = page < maxpage
+      prevPage = (HomeR uid, [("page", show $ max 0 (page-1))])
+      nextPage = (HomeR uid, [("page", show $ max 0 (page+1))])
+      pagenate = intersperse [] $  map (map pageN) $ mkPagenate page maxpage 5
+      pageN = \n -> (n, (HomeR uid, [("page", show n)]))
+      isCurrent = (==page)
+      needPaging = maxpage > 0
+      inc = (+1)
   defaultLayout $ do
     setTitle $ string $ userFullName self ++ " ホーム"
     addHamlet $(hamletFile "home")
+  where
+    
+
+mkPagenate :: Int -> Int -> Int -> [[Int]]
+mkPagenate current max width =
+  if leftConnected && rightConnected
+  then [[ll..rr]]
+  else if leftConnected
+       then [[ll..cr], [rl..rr]]
+       else if rightConnected
+            then [[ll..lr],[cl..rr]]
+            else [[ll..lr],[cl..cr],[rl..rr]]
+  where
+    leftConnected = cl-lr<=3
+    rightConnected = rl-cr<=3
+    ll = 0
+    lr = width
+    cl = current-width
+    cr = current+width
+    rl = max-width
+    rr = max
+
 
 getHumanNetworkR :: Handler RepHtml
 getHumanNetworkR = do

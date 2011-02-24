@@ -29,11 +29,11 @@
                 $forall p <- ps
                   $if isCurrent (fst p)
                     \ 
-                    #{show (fst p)}
+                    #{show (inc (fst p))}
                     \ 
                   $else
                     \ 
-                    <a href="@?{snd p}">#{show (fst p)}
+                    <a href="@?{snd p}">#{show (inc (fst p))}
                     \ 
             $if nextExist
               \ 
@@ -69,11 +69,11 @@
                 $forall p <- ps
                   $if isCurrent (fst p)
                     \ 
-                    #{show (fst p)}
+                    #{show (inc (fst p))}
                     \ 
                   $else
                     \ 
-                    <a href="@?{snd p}">#{show (fst p)}
+                    <a href="@?{snd p}">#{show (inc (fst p))}
                     \ 
             $if nextExist
               \ 

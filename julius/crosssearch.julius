@@ -87,6 +87,9 @@ function reload_search_result() {
 function create_twitter_like_more(next) {
   var more = $('<div/>').attr({id: 'twitter-like-more-' + next, nextpage: next}).text('more');
   more.click(function(){
+    $('#twitter-like-more-' + next).hide();
+    var loading = $('<img/>').attr({src: '@{StaticR img_loading_gif}'});
+    $('#twitter-like-more-' + next).closest('td').append(loading);
     $.ajax({
       async: false,
       type: 'POST',
@@ -101,7 +104,7 @@ function create_twitter_like_more(next) {
           tr.hide().fadeIn();
         });
         var more = create_twitter_like_more(next+1),
-            moretr = $('<tr/>').addClass('more').append($('<td colspan="9"/>').append(more));
+            moretr = $('<tr/>').addClass('more').append($('<td colspan="9"/>').addClass('center').append(more));
         $('#cross-search-result').append(moretr);
         $('#twitter-like-more-' + next).closest('tr').remove();
       },

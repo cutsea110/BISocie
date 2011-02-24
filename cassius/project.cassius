@@ -46,8 +46,9 @@ div.user-logo
     height: 110px
     margin: 0.5em
     vertical-align: top
-div.user-logo span
+div.user-logo a
     font-size: 90%
+    white-space: nowrap
 div.user-logo img.avatar
     max-width: 80px
     max-height: 80px

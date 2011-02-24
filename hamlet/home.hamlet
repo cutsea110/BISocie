@@ -1,12 +1,12 @@
 <ul .tabs>
   <li .selected>
     <a href="@{HomeR selfid}">ホーム
-  $if (canCreateProject self)
+  $if canCreateProject self
     <li>
       <a href="@{NewProjectR}">プロジェクト新規作成
   <li>
     <a href="@{CrossSearchR}">クロスサーチ
-  $if (canViewHumannetwork self)
+  $if canViewHumannetwork self
     <li>
       <a href="@{HumanNetworkR}">ヒューマンネットワーク
 \
@@ -14,18 +14,30 @@
   <table .list>
     <caption>参加プロジェクト一覧
     <thead>
-      <tr>
-        <td .left>
-          $if prevExist
-            <a href="@?{prevPage}">«前へ
-        <td colspan="2" .center>
-          $forall ps <- pagenate
-            $forall p <- ps
-              <a href="@?{snd p}">#{show (fst p)}
-            ...
-        <td .right>
-          $if nextExist
-            <a href="@?{nextPage}">次へ»
+      $if needPaging
+        <tr>
+          <td colspan="4">
+            $if prevExist
+              <a href="@?{prevPage}">«前へ
+              \ 
+            $forall ps <- pagenate
+              $if null ps
+                \ 
+                ...
+                \ 
+              $else
+                $forall p <- ps
+                  $if isCurrent (fst p)
+                    \ 
+                    #{show (fst p)}
+                    \ 
+                  $else
+                    \ 
+                    <a href="@?{snd p}">#{show (fst p)}
+                    \ 
+            $if nextExist
+              \ 
+              <a href="@?{nextPage}">次へ»
       <tr>
         <th>プロジェクト名
         <th>概要
@@ -42,14 +54,27 @@
           <td>#{showDate (projectUdate (snd (snd p)))}
     <tfoot>
       <tr>
-        <td .left>
-          $if prevExist
-            <a href="@?{prevPage}">«前へ
-        <td colspan="2" .center>
-          $forall ps <- pagenate
-            $forall p <- ps
-              <a href="@?{snd p}">#{show (fst p)}
-            ...
-        <td .right>
-          $if nextExist
-            <a href="@?{nextPage}">次へ»
+      $if needPaging
+        <tr>
+          <td colspan="4">
+            $if prevExist
+              <a href="@?{prevPage}">«前へ
+              \ 
+            $forall ps <- pagenate
+              $if null ps
+                \ 
+                ...
+                \ 
+              $else
+                $forall p <- ps
+                  $if isCurrent (fst p)
+                    \ 
+                    #{show (fst p)}
+                    \ 
+                  $else
+                    \ 
+                    <a href="@?{snd p}">#{show (fst p)}
+                    \ 
+            $if nextExist
+              \ 
+              <a href="@?{nextPage}">次へ»

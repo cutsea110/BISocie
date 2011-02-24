@@ -42,8 +42,10 @@ getHomeR uid = do
       nextExist = page < maxpage
       prevPage = (HomeR uid, [("page", show $ max 0 (page-1))])
       nextPage = (HomeR uid, [("page", show $ max 0 (page+1))])
-      pagenate = map (map pageN) $ mkPagenate page maxpage 5
-      pageN = \n -> (n+1, (HomeR uid, [("page", show n)]))
+      pagenate = intersperse [] $  map (map pageN) $ mkPagenate page maxpage 5
+      pageN = \n -> (n, (HomeR uid, [("page", show n)]))
+      isCurrent = (==page)
+      needPaging = maxpage > 1
   defaultLayout $ do
     setTitle $ string $ userFullName self ++ " ホーム"
     addHamlet $(hamletFile "home")

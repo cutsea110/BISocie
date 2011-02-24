@@ -19,6 +19,10 @@
           $if prevExist
             <a href="@?{prevPage}">«前へ
         <td colspan="2" .center>
+          $forall ps <- pagenate
+            $forall p <- ps
+              <a href="@?{snd p}">#{show (fst p)}
+            ...
         <td .right>
           $if nextExist
             <a href="@?{nextPage}">次へ»
@@ -42,6 +46,10 @@
           $if prevExist
             <a href="@?{prevPage}">«前へ
         <td colspan="2" .center>
+          $forall ps <- pagenate
+            $forall p <- ps
+              <a href="@?{snd p}">#{show (fst p)}
+            ...
         <td .right>
           $if nextExist
             <a href="@?{nextPage}">次へ»

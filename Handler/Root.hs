@@ -42,9 +42,33 @@ getHomeR uid = do
       nextExist = page < maxpage
       prevPage = (HomeR uid, [("page", show $ max 0 (page-1))])
       nextPage = (HomeR uid, [("page", show $ max 0 (page+1))])
+      pagenate = map (map pageN) $ mkPagenate page maxpage 5
+      pageN = \n -> (n+1, (HomeR uid, [("page", show n)]))
   defaultLayout $ do
     setTitle $ string $ userFullName self ++ " ホーム"
     addHamlet $(hamletFile "home")
+  where
+    
+
+mkPagenate :: Int -> Int -> Int -> [[Int]]
+mkPagenate current max width =
+  if leftConnected && rightConnected
+  then [[ll..rr]]
+  else if leftConnected
+       then [[ll..cr], [rl..rr]]
+       else if rightConnected
+            then [[ll..lr],[cl..rr]]
+            else [[ll..lr],[cl..cr],[rl..rr]]
+  where
+    leftConnected = cl-lr<=3
+    rightConnected = rl-cr<=3
+    ll = 0
+    lr = width
+    cl = current-width
+    cr = current+width
+    rl = max-width
+    rr = max
+
 
 getHumanNetworkR :: Handler RepHtml
 getHumanNetworkR = do

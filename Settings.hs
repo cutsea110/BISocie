@@ -178,6 +178,6 @@ mailXHeader = "X-BISocie"
 mailMessageIdDomain :: String
 mailMessageIdDomain = "bisocie.localhost"
 projectListLimit :: Int
-projectListLimit = 100
+projectListLimit = 3
 issueListLimit :: Int
-issueListLimit =100
+issueListLimit =3

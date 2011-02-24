@@ -75,6 +75,7 @@ table.list thead td.left, table.list tfoot td.left
 table.list thead td.center, table.list tfoot td.center
     border-left: none
     border-right: none
+    text-align: left
 table.list thead td.right, table.list tfoot td.right
     border-left: none
 

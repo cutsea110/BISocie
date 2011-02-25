@@ -48,8 +48,8 @@ getScheduleR y m = do
                           $ ["schedule-day-cell", toWeekName d] 
                            ++ (if today == day then ["today"] else [])
                            ++ (if currentMonth day then ["currentMonth"] else ["otherMonth"])
-    taskUri :: UserId -> Day -> BISocieRoute
-    taskUri uid d = let (y', m', d') = toGregorian d in TaskR uid y' m' d'
+    taskUri :: Day -> BISocieRoute
+    taskUri d = let (y', m', d') = toGregorian d in TaskR y' m' d'
     showDay :: Day -> String
     showDay = show . thd3 . toGregorian
     currentMonth :: Day -> Bool
@@ -69,12 +69,15 @@ getScheduleR y m = do
     toWeekName 6 = "Saturday"
     toWeekName 7 = "Sunday"
     
-getTaskR :: UserId -> Year -> Month -> Date -> Handler RepJson
-getTaskR uid y m d = do
+getTaskR :: Year -> Month -> Date -> Handler RepJson
+getTaskR y m d = do
   (selfid, _) <- requireAuth
   r <- getUrlRender
   let day = fromGregorian y m d
-  issues <- runDB $ selectList [IssueLimitdateEq $ Just day] [] 0 0
+  issues <- runDB $ do 
+    ptcpts <- selectList [ParticipantsUserEq selfid] [] 0 0
+    let pids = map (participantsProject . snd) ptcpts
+    selectList [IssueLimitdateEq $ Just day, IssueProjectIn pids ] [] 0 0
   cacheSeconds 10 --FIXME
   jsonToRepJson $ jsonMap [("tasks", jsonList $ map (go r) issues)]
   where

@@ -6,6 +6,7 @@ import Settings
 
 import Control.Monad (unless, forM)
 import Data.List
+import Data.Maybe (fromMaybe)
 
 -- This is a handler function for the GET request method on the RootR
 -- resource pattern. All of your resource patterns are defined in
@@ -24,9 +25,7 @@ getHomeR uid = do
   (selfid, self) <- requireAuth
   unless (selfid==uid) $ permissionDenied "他人のホームを見ることはできません."
   page' <- lookupGetParam "page"
-  let page = case page' of
-        Nothing -> 0
-        Just p -> max (read p) 0
+  let page = max 0 $ fromMaybe 0  $ fmap read $ page'
   (all, prjs) <- runDB $ do
     ps <- selectList [ParticipantsUserEq selfid] [] 0 0
     prjs' <- forM ps $ \(id, p) -> do

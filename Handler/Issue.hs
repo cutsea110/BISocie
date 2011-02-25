@@ -86,9 +86,6 @@ getTaskR y m d = do
                                 , ("uri", jsonScalar $ r $ IssueR (issueProject issue) (issueNumber issue))
                                 ]
 
-
-
-
 getAssignListR :: Handler RepJson
 getAssignListR = do
   (selfid, _) <- requireAuth
@@ -172,9 +169,7 @@ postCrossSearchR = do
                           maybeToFilter IssueLimitdateLt $ fmap (addDays 1 . read) lt',
                           maybeToFilter IssueUdateGe $ fmap (flip UTCTime 0 . read) uf',
                           maybeToFilter IssueUdateLt $ fmap (flip UTCTime 0 . addDays 1 . read) ut')
-      page = case page' of
-        Nothing -> 0
-        Just p -> max (read p) 0
+      page =  max 0 $ fromMaybe 0  $ fmap read $ page'
   issues <- runDB $ do
     ptcpts' <- selectList [ParticipantsUserEq selfid] [] 0 0
     prjs <- forM ptcpts' $ \(_, p) -> do

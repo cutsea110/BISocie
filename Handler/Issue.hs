@@ -40,6 +40,7 @@ getScheduleR y m = do
   defaultLayout $ do
     setTitle $ string $ show y ++ "年" ++ show m ++ "月のスケジュール"
     addCassius $(cassiusFile "schedule")
+    addJulius $(juliusFile "schedule")
     addHamlet $(hamletFile "schedule")
   where
     classOf :: Day -> Int -> Day -> String
@@ -47,10 +48,18 @@ getScheduleR y m = do
                           $ ["schedule-day-cell", toWeekName d] 
                            ++ (if today == day then ["today"] else [])
                            ++ (if currentMonth day then ["currentMonth"] else ["otherMonth"])
+    taskUri :: UserId -> Day -> BISocieRoute
+    taskUri uid d = let (y', m', d') = toGregorian d in TaskR uid y' m' d'
     showDay :: Day -> String
     showDay = show . thd3 . toGregorian
     currentMonth :: Day -> Bool
     currentMonth d = let (y', m', _) = toGregorian d in y == y' && m == m'
+    monthmove n cm = let (y', m', _) = toGregorian $ addGregorianMonthsClip n cm
+                     in ScheduleR y' m'
+    prevMonth = monthmove (-1)
+    nextMonth = monthmove 1
+    prevYear = monthmove (-12)
+    nextYear = monthmove 12
     toWeekName :: Int -> String
     toWeekName 1 = "Monday"
     toWeekName 2 = "Tuesday"
@@ -59,6 +68,22 @@ getScheduleR y m = do
     toWeekName 5 = "Friday"
     toWeekName 6 = "Saturday"
     toWeekName 7 = "Sunday"
+    
+getTaskR :: UserId -> Year -> Month -> Date -> Handler RepJson
+getTaskR uid y m d = do
+  (selfid, _) <- requireAuth
+  r <- getUrlRender
+  let day = fromGregorian y m d
+  issues <- runDB $ selectList [IssueLimitdateEq $ Just day] [] 0 0
+  cacheSeconds 10 --FIXME
+  jsonToRepJson $ jsonMap [("tasks", jsonList $ map (go r) issues)]
+  where
+    go r (iid, issue) = jsonMap [ ("id", jsonScalar $ show iid)
+                                , ("subject", jsonScalar $ issueSubject issue)
+                                , ("uri", jsonScalar $ r $ IssueR (issueProject issue) (issueNumber issue))
+                                ]
+
+
 
 
 getAssignListR :: Handler RepJson

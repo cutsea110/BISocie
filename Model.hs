@@ -104,7 +104,7 @@ Issue
     subject String
     assign UserId Maybe Update In
     status String Update In
-    limitdate Day Maybe Update Ge Lt
+    limitdate Day Maybe Update Ge Lt Eq
     cuser UserId
     cdate UTCTime
     uuser UserId Update

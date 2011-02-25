@@ -101,6 +101,7 @@ mkYesodData "BISocie" [$parseRoutes|
 /assign-list AssignListR GET
 /current-schedule CurrentScheduleR GET
 /schedule/#Year/#Month ScheduleR GET
+/task/#UserId/#Year/#Month/#Date TaskR GET
 
 /issuelist/#ProjectId IssueListR GET
 /issue/#ProjectId NewIssueR GET POST

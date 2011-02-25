@@ -37,4 +37,4 @@
      $forall ds <- days
        <tr>
          $forall d <- ds
-           <td class="#{snd d}" uri="@{taskUri selfid (fst d)}">#{showDay (fst d)}
+           <td class="#{snd d}" uri="@{taskUri (fst d)}">#{showDay (fst d)}

@@ -70,12 +70,11 @@ function reload_search_result() {
     success: function(json){
       var ilist = json.issues;
       $.each(ilist, function(i, item){
-        var tr = create_issue_line(item);
-        $('#cross-search-result').append(tr);
-        tr.hide().fadeIn();
+        var tr = create_issue_line(item).hide();
+        $('#cross-search-result').append(tr.fadeIn(400));
       });
       var more = create_twitter_like_more(1),
-          moretr = $('<tr/>').addClass('more').append($('<td colspan="9"/>').append(more));
+          moretr = $('<tr/>').addClass('more').append($('<td colspan="9"/>').addClass('center').append(more));
       $('#cross-search-result').append(moretr);
     },
     error: function (res, status) {
@@ -90,6 +89,7 @@ function create_twitter_like_more(next) {
     $('#twitter-like-more-' + next).hide();
     var loading = $('<img/>').attr({src: '@{StaticR img_loading_gif}'});
     $('#twitter-like-more-' + next).closest('td').append(loading);
+alert('xxx');
     $.ajax({
       async: false,
       type: 'POST',
@@ -99,9 +99,8 @@ function create_twitter_like_more(next) {
       success: function (json) {
         var ilist = json.issues;
         $.each(ilist, function(i, item){
-          var tr = create_issue_line(item);
-          $('#cross-search-result').append(tr);
-          tr.hide().fadeIn();
+          var tr = create_issue_line(item).hide();
+          $('#cross-search-result').append(tr.fadeIn(400));
         });
         var more = create_twitter_like_more(next+1),
             moretr = $('<tr/>').addClass('more').append($('<td colspan="9"/>').addClass('center').append(more));

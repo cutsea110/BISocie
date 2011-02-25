@@ -51,7 +51,6 @@ getHomeR uid = do
     setTitle $ string $ userFullName self ++ " ホーム"
     addCassius $(cassiusFile "home")
     addHamlet $(hamletFile "home")
-  where
     
 getHumanNetworkR :: Handler RepHtml
 getHumanNetworkR = do

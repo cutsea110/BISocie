@@ -70,8 +70,9 @@ function reload_search_result() {
     success: function(json){
       var ilist = json.issues;
       $.each(ilist, function(i, item){
-        var tr = create_issue_line(item).hide();
-        $('#cross-search-result').append(tr.fadeIn(400));
+        var tr = create_issue_line(item);
+        $('#cross-search-result').append(tr);
+        tr.hide().fadeIn();
       });
       var more = create_twitter_like_more(1),
           moretr = $('<tr/>').addClass('more').append($('<td colspan="9"/>').addClass('center').append(more));
@@ -98,8 +99,9 @@ function create_twitter_like_more(next) {
       success: function (json) {
         var ilist = json.issues;
         $.each(ilist, function(i, item){
-          var tr = create_issue_line(item).hide();
-          $('#cross-search-result').append(tr.fadeIn(400));
+          var tr = create_issue_line(item);
+          $('#cross-search-result').append(tr);
+          tr.hide().fadeIn();
         });
         var more = create_twitter_like_more(next+1),
             moretr = $('<tr/>').addClass('more').append($('<td colspan="9"/>').addClass('center').append(more));

@@ -6,8 +6,10 @@ module Handler.Issue where
 import BISocie
 import Control.Applicative ((<$>),(<*>))
 import Control.Monad (unless, forM, mplus, liftM2)
-import Data.List (intercalate, nub)
+import Data.List (intercalate, nub, groupBy)
 import Data.Time
+import Data.Time.Calendar.WeekDate
+import Data.Time.Calendar.OrdinalDate
 import Data.Tuple.HT
 import Data.Maybe (fromMaybe)
 import Network.Mail.Mime
@@ -17,6 +19,47 @@ import qualified Data.Text.Lazy.Encoding
 import Settings (mailXHeader, mailMessageIdDomain, issueListLimit, pagenateWidth)
 import StaticFiles
 import Handler.S3
+
+getCurrentScheduleR :: Handler RepHtml
+getCurrentScheduleR = do
+  now <- liftIO getCurrentTime
+  let (y, m, _) = toGregorian $ utctDay now
+  redirect RedirectTemporary $ ScheduleR y m
+  
+getScheduleR :: Year -> Month -> Handler RepHtml
+getScheduleR y m = do
+  (selfid, self) <- requireAuth
+  now <- liftIO getCurrentTime
+  let today = utctDay now
+      fday = fromGregorian y m 1
+      lday = fromGregorian y m $ gregorianMonthLength y m
+      (fweek, _) = mondayStartWeek fday
+      (lweek, _) = mondayStartWeek lday
+      days = map (map (\(w,d) -> let day = fromWeekDate y w d in (day, classOf day d today)))
+             $ groupBy (\x y -> fst x == fst y) [(w, d)| w <- [fweek..lweek], d <- [1..7]]
+  defaultLayout $ do
+    setTitle $ string $ show y ++ "年" ++ show m ++ "月のスケジュール"
+    addCassius $(cassiusFile "schedule")
+    addHamlet $(hamletFile "schedule")
+  where
+    classOf :: Day -> Int -> Day -> String
+    classOf day d today = intercalate " " 
+                          $ ["schedule-day-cell", toWeekName d] 
+                           ++ (if today == day then ["today"] else [])
+                           ++ (if currentMonth day then ["currentMonth"] else ["otherMonth"])
+    showDay :: Day -> String
+    showDay = show . thd3 . toGregorian
+    currentMonth :: Day -> Bool
+    currentMonth d = let (y', m', _) = toGregorian d in y == y' && m == m'
+    toWeekName :: Int -> String
+    toWeekName 1 = "Monday"
+    toWeekName 2 = "Tuesday"
+    toWeekName 3 = "Wednesday"
+    toWeekName 4 = "Thursday"
+    toWeekName 5 = "Friday"
+    toWeekName 6 = "Saturday"
+    toWeekName 7 = "Sunday"
+
 
 getAssignListR :: Handler RepJson
 getAssignListR = do

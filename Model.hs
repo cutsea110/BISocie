@@ -18,6 +18,10 @@ import Data.Maybe (fromMaybe)
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec as P (string)
 
+type Year = Integer
+type Month = Int
+type Date = Int
+
 data Role =  Student | Teacher | Staff | Admin
           deriving (Read, Show, Eq, Ord, Enum, Bounded)
 derivePersistField "Role"

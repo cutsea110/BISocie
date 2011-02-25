@@ -99,6 +99,8 @@ mkYesodData "BISocie" [$parseRoutes|
 /cross-search CrossSearchR GET POST
 /status-list StatusListR GET
 /assign-list AssignListR GET
+/current-schedule CurrentScheduleR GET
+/schedule/#Year/#Month ScheduleR GET
 
 /issuelist/#ProjectId IssueListR GET
 /issue/#ProjectId NewIssueR GET POST
@@ -170,14 +172,12 @@ instance Yesod BISocie where
     -- users receiving stale content.
     addStaticContent ext' _ content = do
         let fn = base64md5 content ++ '.' : ext'
-        let content' = content
-            {--
+        let content' =
                 if ext' == "js"
                     then case minifym content of
                             Left _ -> content
                             Right y -> y
                     else content
---}
         let statictmp = Settings.staticdir ++ "/tmp/"
         liftIO $ createDirectoryIfMissing True statictmp
         let fn' = statictmp ++ fn
@@ -191,6 +191,9 @@ instance YesodBreadcrumbs BISocie where
   breadcrumb HumanNetworkR = do
     (uid, _) <- requireAuth
     return ("ヒューマンネットワーク", Just $ HomeR uid)
+  breadcrumb (ScheduleR y m) = do
+    (uid, _) <- requireAuth
+    return (show y ++ "年" ++ show m ++ "月のスケジュール", Just $ HomeR uid)
   breadcrumb NewProjectR = do
     (uid, _) <- requireAuth
     return ("新規プロジェクト作成", Just $ HomeR uid)

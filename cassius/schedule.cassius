@@ -1,0 +1,22 @@
+.calendar
+  width: 100%
+
+.calendar tr
+  height: 6em
+
+.schedule-day-cell
+  width: 14.2857%
+  text-align: left
+  vertical-align: top
+
+.schedule-day-cell.today
+  color: blue
+
+.schedule-day-cell.Saturday, .schedule-day-cell.Sunday
+  color: red
+
+.schedule-day-cell.otherMonth
+  filter: alpha(opacity=50)
+  -moz-opacity: 0.50
+  opacity: 0.50
+

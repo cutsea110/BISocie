@@ -141,7 +141,6 @@ instance Yesod BISocie where
       tm <- getRouteToMaster
       let header = $(Settings.hamletFile "header")
           footer = $(Settings.hamletFile "footer")
-          aprt = Settings.approot
       pc <- widgetToPageContent $ do
         widget
         addScriptEither $ urlJqueryJs y

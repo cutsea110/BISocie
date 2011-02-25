@@ -48,6 +48,7 @@ getHomeR uid = do
       inc = (+1)
   defaultLayout $ do
     setTitle $ string $ userFullName self ++ " ホーム"
+    addCassius $(cassiusFile "home")
     addHamlet $(hamletFile "home")
   where
     

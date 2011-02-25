@@ -1,0 +1,11 @@
+table.list
+   font-size: 86%
+   width: 90%
+table.list .name
+   width: 30%
+table.list .desc
+   width: 30%
+table.list .date
+   width: 15%
+
+

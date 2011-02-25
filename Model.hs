@@ -294,7 +294,7 @@ showMultilineText :: String -> Html
 showMultilineText = preEscapedString . intercalate "<br/>" . splitOn "\n"
 
 showShortenText :: String -> Html
-showShortenText = preEscapedString . shorten 16 . safeHead . splitOn "\n"
+showShortenText = preEscapedString . shorten 26 . safeHead . splitOn "\n"
   where
     safeHead [] = []
     safeHead s = head s

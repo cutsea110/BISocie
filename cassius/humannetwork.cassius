@@ -1,5 +1,5 @@
 #global_map_canvas
-    height: 800px
+    height: 600px
     width: 910px
     margin: 10px auto 20px
     -moz-border-radius: 2px

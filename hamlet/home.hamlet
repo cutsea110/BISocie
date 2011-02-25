@@ -22,6 +22,8 @@
             $if prevExist
               <a href="@?{prevPage}">«前へ
               \ 
+            $else
+              «前へ
             $forall ps <- pagenate
               $if null ps
                 \ 
@@ -40,11 +42,13 @@
             $if nextExist
               \ 
               <a href="@?{nextPage}">次へ»
+            $else
+              次へ»
       <tr>
-        <th>プロジェクト名
-        <th>概要
-        <th>作成日
-        <th>更新日
+        <th .name>プロジェクト名
+        <th .desc>概要
+        <th .date>作成日
+        <th .date>更新日
     <tbody>
       $forall p <- prjs
         <tr class="#{fst p}">
@@ -62,6 +66,8 @@
             $if prevExist
               <a href="@?{prevPage}">«前へ
               \ 
+            $else
+              «前へ
             $forall ps <- pagenate
               $if null ps
                 \ 
@@ -80,3 +86,5 @@
             $if nextExist
               \ 
               <a href="@?{nextPage}">次へ»
+            $else
+              次へ»

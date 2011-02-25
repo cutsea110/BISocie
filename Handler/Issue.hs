@@ -224,6 +224,8 @@ postCrossSearchR = do
 getIssueListR :: ProjectId -> Handler RepHtml
 getIssueListR pid = do
   (selfid, self) <- requireAuth
+  page' <- lookupGetParam "page"
+  let page = max 0 $ fromMaybe 0  $ fmap read $ page'
   (issues'', prj, es) <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
     unless (p /= Nothing) $ 

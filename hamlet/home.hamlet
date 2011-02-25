@@ -59,7 +59,6 @@
           <td>#{showDate (projectCdate (snd (snd p)))}
           <td>#{showDate (projectUdate (snd (snd p)))}
     <tfoot>
-      <tr>
       $if needPaging
         <tr>
           <td colspan="4">

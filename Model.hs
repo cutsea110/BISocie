@@ -301,10 +301,6 @@ showShortenText = preEscapedString . shorten 26 . safeHead . splitOn "\n"
     shorten n s = if length s > n then take n s ++ ".." else s
 
 
-
-
-
-
 -- | Permission System
 canView :: User -> User -> Bool
 u `canView` t = u == t || permitted

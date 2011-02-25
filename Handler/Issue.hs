@@ -6,7 +6,7 @@ module Handler.Issue where
 import BISocie
 import Control.Applicative ((<$>),(<*>))
 import Control.Monad (unless, forM, mplus, liftM2)
-import Data.List (intercalate, nub, groupBy)
+import Data.List (intercalate, intersperse, nub, groupBy)
 import Data.Time
 import Data.Time.Calendar.WeekDate
 import Data.Time.Calendar.OrdinalDate
@@ -16,6 +16,7 @@ import Network.Mail.Mime
 import qualified Data.Text.Lazy
 import qualified Data.Text.Lazy.Encoding
 
+import BISocie.Helpers.Util
 import Settings (mailXHeader, mailMessageIdDomain, issueListLimit, pagenateWidth)
 import StaticFiles
 import Handler.S3
@@ -226,7 +227,7 @@ getIssueListR pid = do
   (selfid, self) <- requireAuth
   page' <- lookupGetParam "page"
   let page = max 0 $ fromMaybe 0  $ fmap read $ page'
-  (issues'', prj, es) <- runDB $ do
+  (all, issues'', prj, es) <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
     unless (p /= Nothing) $ 
       lift $ permissionDenied "あなたはこのプロジェクトの参加者ではありません."
@@ -237,7 +238,8 @@ getIssueListR pid = do
                          , projectBisDescription=projectDescription prj'
                          , projectBisStatuses=es
                          }
-    issues' <- selectList [IssueProjectEq pid] [IssueNumberDesc] 0 0
+    issues <- selectList [IssueProjectEq pid] [IssueUdateDesc] 0 0
+    let issues' = take issueListLimit $ drop (page*issueListLimit) issues
     issues'' <- forM issues' $ \issue@(id, i) -> do
       cu <- get404 $ issueCuser i
       uu <- get404 $ issueUuser i
@@ -245,7 +247,7 @@ getIssueListR pid = do
         Nothing -> return Nothing
         Just auid -> get auid
       return $ IssueBis id i cu uu mau
-    return (issues'', prj, es)
+    return (issues, issues'', prj, es)
   let issues = zip (concat $ repeat ["odd","even"]::[String]) issues''
       colorOf = \s -> 
         case lookupStatus s es of
@@ -255,6 +257,17 @@ getIssueListR pid = do
         case lookupStatus s es of
           Nothing -> ""
           Just (_, _, e) -> fromMaybe "" (fmap show e)
+      -- pagenate
+      maxpage = ceiling (fromIntegral (length all) / fromIntegral issueListLimit) - 1
+      prevExist = page > 0
+      nextExist = page < maxpage
+      prevPage = (IssueListR pid, [("page", show $ max 0 (page-1))])
+      nextPage = (IssueListR pid, [("page", show $ max 0 (page+1))])
+      pagenate = intersperse [] $  map (map pageN) $ mkPagenate page maxpage pagenateWidth
+      pageN = \n -> (n, (IssueListR pid, [("page", show n)]))
+      isCurrent = (==page)
+      needPaging = maxpage > 0
+      inc = (+1)
   defaultLayout $ do
     setTitle $ string $ projectBisName prj ++ "案件一覧"
     addCassius $(cassiusFile "issue")

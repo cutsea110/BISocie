@@ -89,7 +89,6 @@ function create_twitter_like_more(next) {
     $('#twitter-like-more-' + next).hide();
     var loading = $('<img/>').attr({src: '@{StaticR img_loading_gif}'});
     $('#twitter-like-more-' + next).closest('td').append(loading);
-alert('xxx');
     $.ajax({
       async: false,
       type: 'POST',

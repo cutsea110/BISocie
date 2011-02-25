@@ -333,6 +333,7 @@ instance YesodAuth BISocie where
     
     loginHandler = do
       defaultLayout $ do
+        setTitle $ string "ログイン"
         addCassius $(Settings.cassiusFile "login")
         addHamlet $(Settings.hamletFile "login")
                   

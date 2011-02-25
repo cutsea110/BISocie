@@ -9,6 +9,8 @@
   $if (canViewHumannetwork self)
     <li>
       <a href="@{HumanNetworkR}">ヒューマンネットワーク
+  <li>
+    <a href="@{CurrentScheduleR}">スケジュール
 \
 <div id="main-content">
   <div .searchbox>

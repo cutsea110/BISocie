@@ -27,6 +27,7 @@ module Settings
     , mailMessageIdDomain
     , projectListLimit
     , issueListLimit
+    , pagenateWidth
     ) where
 
 import qualified Text.Hamlet as H
@@ -182,4 +183,6 @@ mailMessageIdDomain = "bisocie.timedia.co.jp"
 projectListLimit :: Int
 projectListLimit = 50
 issueListLimit :: Int
-issueListLimit = 100
+issueListLimit = 50
+pagenateWidth :: Int
+pagenateWidth = 3

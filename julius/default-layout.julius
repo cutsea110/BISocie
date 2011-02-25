@@ -15,13 +15,15 @@ $(document).ready(function(){
     return valid;
   });
 
+  $(".watermark").watermark();
   $(".login-options").attr("title","Login to BISocie").dialog({
     autoOpen: true,
     width: 520,
-    modal: true
+    modal: true,
+    open: function () {
+      document.getElementById('loginAccountId').focus();
+    }
   });
-
-  $(".watermark").watermark();
 
   AjaxZip2.JSONDATA = '#{aprt}' + '/static/plugins/ajaxzip2/data';
 

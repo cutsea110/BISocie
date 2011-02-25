@@ -1,0 +1,15 @@
+$(document).ready(function(){
+  $('.schedule-day-cell').each(function(){
+    var tday = $(this);
+    $.getJSON(tday.attr('uri'), function(json){
+      var tasks = json.tasks;
+      $.each(tasks, function(i, item){
+        var t = $('<a/>')
+                .attr({href: item.uri})
+                .addClass('task-link')
+                .text(item.subject);
+        tday.append(t);
+      });
+    });
+  });
+});

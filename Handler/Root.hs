@@ -42,7 +42,7 @@ getHomeR uid = do
       nextExist = page < maxpage
       prevPage = (HomeR uid, [("page", show $ max 0 (page-1))])
       nextPage = (HomeR uid, [("page", show $ max 0 (page+1))])
-      pagenate = intersperse [] $  map (map pageN) $ mkPagenate page maxpage 5
+      pagenate = intersperse [] $  map (map pageN) $ mkPagenate page maxpage pagenateWidth
       pageN = \n -> (n, (HomeR uid, [("page", show n)]))
       isCurrent = (==page)
       needPaging = maxpage > 0
@@ -63,8 +63,8 @@ mkPagenate current max width =
             then [[ll..lr],[cl..rr]]
             else [[ll..lr],[cl..cr],[rl..rr]]
   where
-    leftConnected = cl-lr<=3
-    rightConnected = rl-cr<=3
+    leftConnected = cl-lr <= pagenateWidth
+    rightConnected = rl-cr <= pagenateWidth
     ll = 0
     lr = width
     cl = current-width

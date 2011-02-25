@@ -8,6 +8,8 @@
     <a href="@{CrossSearchR}">クロスサーチ
   <li .selected>
     <a href="@{HumanNetworkR}">ヒューマンネットワーク
+  <li>
+    <a href="@{CurrentScheduleR}">スケジュール
 \
 <div id="main-content">
   \

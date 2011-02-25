@@ -6,17 +6,85 @@ module Handler.Issue where
 import BISocie
 import Control.Applicative ((<$>),(<*>))
 import Control.Monad (unless, forM, mplus, liftM2)
-import Data.List (intercalate, nub)
+import Data.List (intercalate, nub, groupBy)
 import Data.Time
+import Data.Time.Calendar.WeekDate
+import Data.Time.Calendar.OrdinalDate
 import Data.Tuple.HT
 import Data.Maybe (fromMaybe)
 import Network.Mail.Mime
 import qualified Data.Text.Lazy
 import qualified Data.Text.Lazy.Encoding
 
-import qualified Settings (mailXHeader, mailMessageIdDomain)
+import Settings (mailXHeader, mailMessageIdDomain, issueListLimit, pagenateWidth)
 import StaticFiles
 import Handler.S3
+
+getCurrentScheduleR :: Handler RepHtml
+getCurrentScheduleR = do
+  now <- liftIO getCurrentTime
+  let (y, m, _) = toGregorian $ utctDay now
+  redirect RedirectTemporary $ ScheduleR y m
+  
+getScheduleR :: Year -> Month -> Handler RepHtml
+getScheduleR y m = do
+  (selfid, self) <- requireAuth
+  now <- liftIO getCurrentTime
+  let today = utctDay now
+      fday = fromGregorian y m 1
+      lday = fromGregorian y m $ gregorianMonthLength y m
+      (fweek, _) = mondayStartWeek fday
+      (lweek, _) = mondayStartWeek lday
+      days = map (map (\(w,d) -> let day = fromWeekDate y w d in (day, classOf day d today)))
+             $ groupBy (\x y -> fst x == fst y) [(w, d)| w <- [fweek..lweek], d <- [1..7]]
+  defaultLayout $ do
+    setTitle $ string $ show y ++ "年" ++ show m ++ "月のスケジュール"
+    addCassius $(cassiusFile "schedule")
+    addJulius $(juliusFile "schedule")
+    addHamlet $(hamletFile "schedule")
+  where
+    classOf :: Day -> Int -> Day -> String
+    classOf day d today = intercalate " " 
+                          $ ["schedule-day-cell", toWeekName d] 
+                           ++ (if today == day then ["today"] else [])
+                           ++ (if currentMonth day then ["currentMonth"] else ["otherMonth"])
+    taskUri :: UserId -> Day -> BISocieRoute
+    taskUri uid d = let (y', m', d') = toGregorian d in TaskR uid y' m' d'
+    showDay :: Day -> String
+    showDay = show . thd3 . toGregorian
+    currentMonth :: Day -> Bool
+    currentMonth d = let (y', m', _) = toGregorian d in y == y' && m == m'
+    monthmove n cm = let (y', m', _) = toGregorian $ addGregorianMonthsClip n cm
+                     in ScheduleR y' m'
+    prevMonth = monthmove (-1)
+    nextMonth = monthmove 1
+    prevYear = monthmove (-12)
+    nextYear = monthmove 12
+    toWeekName :: Int -> String
+    toWeekName 1 = "Monday"
+    toWeekName 2 = "Tuesday"
+    toWeekName 3 = "Wednesday"
+    toWeekName 4 = "Thursday"
+    toWeekName 5 = "Friday"
+    toWeekName 6 = "Saturday"
+    toWeekName 7 = "Sunday"
+    
+getTaskR :: UserId -> Year -> Month -> Date -> Handler RepJson
+getTaskR uid y m d = do
+  (selfid, _) <- requireAuth
+  r <- getUrlRender
+  let day = fromGregorian y m d
+  issues <- runDB $ selectList [IssueLimitdateEq $ Just day] [] 0 0
+  cacheSeconds 10 --FIXME
+  jsonToRepJson $ jsonMap [("tasks", jsonList $ map (go r) issues)]
+  where
+    go r (iid, issue) = jsonMap [ ("id", jsonScalar $ show iid)
+                                , ("subject", jsonScalar $ issueSubject issue)
+                                , ("uri", jsonScalar $ r $ IssueR (issueProject issue) (issueNumber issue))
+                                ]
+
+
+
 
 getAssignListR :: Handler RepJson
 getAssignListR = do
@@ -93,6 +161,7 @@ postCrossSearchR = do
                                       lookupPostParam "limitdateto")
   (uf', ut') <- uncurry (liftM2 (,)) (lookupPostParam "updatedfrom",
                                       lookupPostParam "updatedto")
+  page' <- lookupPostParam "page"
   let (pS, sS, aS) = (toInFilter IssueProjectIn $ map read ps', 
                       toInFilter IssueStatusIn ss', 
                       toInFilter IssueAssignIn $ map (Just . read) as')
@@ -100,6 +169,9 @@ postCrossSearchR = do
                           maybeToFilter IssueLimitdateLt $ fmap (addDays 1 . read) lt',
                           maybeToFilter IssueUdateGe $ fmap (flip UTCTime 0 . read) uf',
                           maybeToFilter IssueUdateLt $ fmap (flip UTCTime 0 . addDays 1 . read) ut')
+      page = case page' of
+        Nothing -> 0
+        Just p -> max (read p) 0
   issues <- runDB $ do
     ptcpts' <- selectList [ParticipantsUserEq selfid] [] 0 0
     prjs <- forM ptcpts' $ \(_, p) -> do
@@ -111,7 +183,7 @@ postCrossSearchR = do
                               , projectBisDescription=projectDescription prj
                               , projectBisStatuses=es
                               })
-    issues' <- selectList (pS ++ sS ++ aS ++ lF ++ lT ++ uF ++ uT) [IssueUdateDesc] 0 0
+    issues' <- selectList (pS ++ sS ++ aS ++ lF ++ lT ++ uF ++ uT) [IssueUdateDesc] issueListLimit (page*issueListLimit)
     forM issues' $ \(id, i) -> do
       cu <- get404 $ issueCuser i
       uu <- get404 $ issueUuser i
@@ -255,14 +327,14 @@ postNewIssueR pid = do
                                 , commentCdate=now
                                 }
         ptcpts <- selectParticipants pid
-        let msgid = toMessageId iid cid now Settings.mailMessageIdDomain
+        let msgid = toMessageId iid cid now mailMessageIdDomain
         liftIO $ renderSendMail Mail
           { mailHeaders =
                [ ("From", "noreply")
                , ("To", intercalate "," $ map (userEmail.snd) ptcpts)
                , ("Subject", sbj)
                , ("Message-ID", msgid)
-               , (Settings.mailXHeader, show pid)
+               , (mailXHeader, show pid)
                ]
           , mailParts = 
                  [[ Part
@@ -374,8 +446,8 @@ postCommentR pid ino = do
                                 }
         prj <- get404 pid
         ptcpts <- selectParticipants pid
-        let msgid = toMessageId iid cid now Settings.mailMessageIdDomain
-            refid = toMessageId iid lastCid (commentCdate lastC) Settings.mailMessageIdDomain
+        let msgid = toMessageId iid cid now mailMessageIdDomain
+            refid = toMessageId iid lastCid (commentCdate lastC) mailMessageIdDomain
         liftIO $ renderSendMail Mail
           { mailHeaders =
                [ ("From", "noreply")
@@ -384,7 +456,7 @@ postCommentR pid ino = do
                , ("Message-ID", msgid)
                , ("References", refid)
                , ("In-Reply-To", refid)
-               , (Settings.mailXHeader, show pid)
+               , (mailXHeader, show pid)
                ]
           , mailParts = 
                  [[ Part

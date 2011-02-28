@@ -170,8 +170,8 @@ postCrossSearchR = do
                         toInFilter IssueAssignIn $ map (Just . read) as')
         (lF, lT, uF, uT) = (maybeToFilter IssueLimitdateGe $ fmap read lf',
                             maybeToFilter IssueLimitdateLt $ fmap (addDays 1 . read) lt',
-                            maybeToFilter IssueUdateGe $ fmap (flip UTCTime 0 . read) uf',
-                            maybeToFilter IssueUdateLt $ fmap (flip UTCTime 0 . addDays 1 . read) ut')
+                            maybeToFilter IssueUdateGe $ fmap (localDayToUTC . read) uf',
+                            maybeToFilter IssueUdateLt $ fmap (localDayToUTC . addDays 1 . read) ut')
         page =  max 0 $ fromMaybe 0  $ fmap read $ page'
     issues' <- selectList (pS ++ sS ++ aS ++ lF ++ lT ++ uF ++ uT) [IssueUdateDesc] issueListLimit (page*issueListLimit)
     forM issues' $ \(id, i) -> do

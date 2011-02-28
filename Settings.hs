@@ -26,6 +26,7 @@ module Settings
     , projectListLimit
     , issueListLimit
     , pagenateWidth
+    , tz
     ) where
 
 import qualified Text.Hamlet as H
@@ -173,3 +174,7 @@ issueListLimit :: Int
 issueListLimit = 3
 pagenateWidth :: Int
 pagenateWidth = 3
+
+-- | TimeZone. this value used as `hoursToTimeZone tz'.
+tz :: Int
+tz = 9

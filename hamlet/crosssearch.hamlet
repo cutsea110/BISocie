@@ -46,13 +46,13 @@
   <table .list>
     <caption>対象案件一覧
     <thead>
-      <th>プロジェクト名
-      <th>No
-      <th>件名
-      <th>ステータス
-      <th>アサイン
-      <th>期限
-      <th>作成者
-      <th>更新者
-      <th>更新日
+      <th .pname>プロジェクト名
+      <th .ino>No
+      <th .subject>件名
+      <th .status>ステータス
+      <th .assign>アサイン
+      <th .limit>期限
+      <th .uname>作成者
+      <th .uname>更新者
+      <th .date>更新日
     <tbody id="cross-search-result">

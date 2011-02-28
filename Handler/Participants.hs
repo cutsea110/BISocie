@@ -12,7 +12,7 @@ getParticipantsListR pid = do
   r <- getUrlRender
   us <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
-    unless (p /= Nothing) $ 
+    unless (p /= Nothing || isAdmin self) $ 
       lift $ permissionDenied "あなたはこのプロジェクトに参加していません."
     ps' <- selectList [ParticipantsProjectEq pid] [] 0 0
     forM ps' $ \(id, p) -> do
@@ -48,7 +48,7 @@ postParticipantsR pid = do
       (selfid, self) <- requireAuth
       runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
-        unless (p /= Nothing && canEditProjectSetting self) $ 
+        unless ((p /= Nothing || isAdmin self) && canEditProjectSetting self) $ 
           lift $ permissionDenied "あなたはこのプロジェクトの参加者を編集できません."
         insert $ Participants pid uid True
       cacheSeconds 10 -- FIXME
@@ -64,7 +64,7 @@ postParticipantsR pid = do
       (selfid, self) <- requireAuth
       runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
-        unless (p /= Nothing && canEditProjectSetting self) $ 
+        unless ((p /= Nothing || isAdmin self) && canEditProjectSetting self) $ 
           lift $ permissionDenied "あなたはこのプロジェクトの参加者を編集できません."
         when (selfid==uid) $ 
           lift $ permissionDenied "自分自身を削除することはできません."

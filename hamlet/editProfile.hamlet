@@ -66,7 +66,7 @@
                 <option :fst ey:selected="" .required>#{show (snd ey)}
           <th>卒業年度
           <td>
-            <select name="graduateYear">
+            <select #graduateYear name="graduateYear">
               <option selected="">
               $forall gy <- gyears
                 <option :fst gy:selected="">#{show (snd gy)}
@@ -116,15 +116,15 @@
         <tr>
           <th>希望進路
           <td colspan="3">
-            <input placeholder="一般職" type="text" name="desiredCourse" value="#{showmaybe (profileDesiredCourse prof)}" .watermark>
+            <input #desiredCourse placeholder="一般職" type="text" name="desiredCourse" value="#{showmaybe (profileDesiredCourse prof)}" .watermark .required>
         <tr>
           <th>希望勤務地
           <td colspan="3">
-            <input placeholder="都内" type="text" name="desiredWorkLocation" value="#{showmaybe (profileDesiredWorkLocation prof)}" .watermark>
+            <input #desiredWorkLocation placeholder="都内" type="text" name="desiredWorkLocation" value="#{showmaybe (profileDesiredWorkLocation prof)}" .watermark .required>
         <tr>
           <th>勤務(予定)先
           <td colspan="3">
-            <input placeholder="未定" type="text" name="employment" value="#{showmaybe (profileEmployment prof)}" .watermark>
+            <input #employment placeholder="未定" type="text" name="employment" value="#{showmaybe (profileEmployment prof)}" .watermark .required>
     <button type="submit" name="_method" value="update">更新する
   \
   <form id="upload_form" method="post" enctype="multipart/form-data" action="@{UploadR}">

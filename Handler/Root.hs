@@ -2,10 +2,12 @@
 module Handler.Root where
 
 import BISocie
+import BISocie.Helpers.Util
 import Settings
 
 import Control.Monad (unless, forM)
 import Data.List
+import Data.Maybe (fromMaybe)
 
 -- This is a handler function for the GET request method on the RootR
 -- resource pattern. All of your resource patterns are defined in
@@ -24,15 +26,16 @@ getHomeR uid = do
   (selfid, self) <- requireAuth
   unless (selfid==uid) $ permissionDenied "他人のホームを見ることはできません."
   page' <- lookupGetParam "page"
-  let page = case page' of
-        Nothing -> 0
-        Just p -> max (read p) 0
+  let page = max 0 $ fromMaybe 0  $ fmap read $ page'
   (all, prjs) <- runDB $ do
+    prjs' <- viewableProjects (selfid, self)
+    {--
     ps <- selectList [ParticipantsUserEq selfid] [] 0 0
     prjs' <- forM ps $ \(id, p) -> do
         let pid = participantsProject p
         Just prj <- get pid
         return (pid, prj)
+    --}
     let sorted = sortBy (\(_, p) (_, q) -> projectUdate q `compare` projectUdate p) prjs'
     return $ (prjs',
               zip (concat $ repeat ["odd", "even"]::[String]) 
@@ -49,30 +52,9 @@ getHomeR uid = do
       inc = (+1)
   defaultLayout $ do
     setTitle $ string $ userFullName self ++ " ホーム"
+    addCassius $(cassiusFile "home")
     addHamlet $(hamletFile "home")
-  where
     
-
-mkPagenate :: Int -> Int -> Int -> [[Int]]
-mkPagenate current max width =
-  if leftConnected && rightConnected
-  then [[ll..rr]]
-  else if leftConnected
-       then [[ll..cr], [rl..rr]]
-       else if rightConnected
-            then [[ll..lr],[cl..rr]]
-            else [[ll..lr],[cl..cr],[rl..rr]]
-  where
-    leftConnected = cl-lr <= pagenateWidth
-    rightConnected = rl-cr <= pagenateWidth
-    ll = 0
-    lr = width
-    cl = current-width
-    cr = current+width
-    rl = max-width
-    rr = max
-
-
 getHumanNetworkR :: Handler RepHtml
 getHumanNetworkR = do
   (selfid, self) <- requireAuth

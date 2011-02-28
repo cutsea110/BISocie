@@ -9,6 +9,7 @@ import Database.Persist.TH (share2, derivePersistField)
 import Database.Persist.Base
 import Database.Persist.GenericSql (mkMigrate)
 import System.Locale
+import Control.Monad (forM)
 import Data.Char (isHexDigit)
 import Data.Int
 import Data.Time
@@ -294,15 +295,11 @@ showMultilineText :: String -> Html
 showMultilineText = preEscapedString . intercalate "<br/>" . splitOn "\n"
 
 showShortenText :: String -> Html
-showShortenText = preEscapedString . shorten 16 . safeHead . splitOn "\n"
+showShortenText = preEscapedString . shorten 26 . safeHead . splitOn "\n"
   where
     safeHead [] = []
     safeHead s = head s
     shorten n s = if length s > n then take n s ++ ".." else s
-
-
-
-
 
 
 -- | Permission System
@@ -380,3 +377,26 @@ canSearchUser u =
     Teacher -> True
     Staff -> True
     Student -> False
+
+viewableProjects :: (PersistBackend m) => (UserId, User) -> m [(Key Project, Project)]
+viewableProjects (selfid, self) =
+  if isAdmin self
+  then selectList [] [] 0 0
+  else do
+    ps <- selectList [ParticipantsUserEq selfid] [] 0 0
+    forM ps $ \(id, p) -> do
+      let pid = participantsProject p
+      Just prj <- get pid
+      return (pid, prj)
+
+viewableProjects' (selfid, self) prjids =
+  if isAdmin self
+  then forM prjids $ \pid -> do
+    p <- get404 pid
+    return (pid, p)
+  else do
+    ptcpts <- selectList [ParticipantsUserEq selfid, ParticipantsProjectIn prjids] [] 0 0
+    forM ptcpts $ \(_, p) -> do
+      let pid = participantsProject p
+      prj <- get404 pid
+      return (pid, prj)

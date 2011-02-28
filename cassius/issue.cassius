@@ -44,3 +44,24 @@ tr.more div
     text-align: center
 tr.more div:hover
     cursor: pointer
+
+table.list
+    font-size: 86%
+    width: 100%
+table.list .pname
+    width: 15%
+table.list .ino
+    width: 3%
+table.list .subject
+    width: 20%
+table.list .status
+    width: 8%
+table.list .assign
+    width: 9%
+table.list .limit
+    width: 9%
+table.list .uname
+    width: 10%
+table.list .date
+    width: 15%
+

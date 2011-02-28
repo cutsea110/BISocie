@@ -68,7 +68,7 @@ getProjectR pid = do
       help = $(Settings.hamletFile "help")
   prj <- runDB $ do 
     p <- getBy $ UniqueParticipants pid selfid
-    unless (p /= Nothing) $ 
+    unless (p /= Nothing || isAdmin self) $ 
       lift $ permissionDenied "あなたはこのプロジェクトの参加者ではありません."
     get404 pid
   defaultLayout $ do
@@ -134,7 +134,7 @@ deleteProjectR pid = do
   deleted <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
     unless (p /= Nothing && canEditProjectSetting self) $ 
-      lift $ permissionDenied "あなたはこのプロジェクトすることはできません."
+      lift $ permissionDenied "あなたはこのプロジェクトを削除することはできません."
     issues <- selectList [IssueProjectEq pid] [] 1 0
     if issues == [] 
       then do

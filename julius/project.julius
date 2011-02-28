@@ -44,7 +44,8 @@ $(document).ready(function(){
             }
           },
           error: function(res, status){
-
+            $('#delete-confirm').dialog('close');
+            $('#delete-failed').dialog('open');
           }
         });
       }

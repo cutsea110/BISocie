@@ -72,12 +72,12 @@ getScheduleR y m = do
     
 getTaskR :: Year -> Month -> Date -> Handler RepJson
 getTaskR y m d = do
-  (selfid, _) <- requireAuth
+  (selfid, self) <- requireAuth
   r <- getUrlRender
   let day = fromGregorian y m d
-  issues <- runDB $ do 
+  issues <- runDB $ do
     ptcpts <- selectList [ParticipantsUserEq selfid] [] 0 0
-    let pids = map (participantsProject . snd) ptcpts
+    let pids = map (participantsProject.snd) ptcpts
     selectList [IssueLimitdateEq $ Just day, IssueProjectIn pids ] [] 0 0
   cacheSeconds 10 --FIXME
   jsonToRepJson $ jsonMap [("tasks", jsonList $ map (go r) issues)]
@@ -89,18 +89,18 @@ getTaskR y m d = do
 
 getAssignListR :: Handler RepJson
 getAssignListR = do
-  (selfid, _) <- requireAuth
+  (selfid, self) <- requireAuth
   pids' <- lookupGetParams "projectid"
   let pids = map read pids'
   users <- runDB $ do
-    ptcpts <- selectList [ParticipantsUserEq selfid, ParticipantsProjectIn pids] [] 0 0
-    let prjids =  map (participantsProject . snd) ptcpts
-    users' <- selectList [ParticipantsProjectIn prjids] [] 0 0
-    users'' <- forM users' $ \(_, p) -> do
-      let uid = participantsUser p
+    prjs <- viewableProjects' (selfid, self) pids
+    let prjids =  map fst prjs
+    ptcpts <- selectList [ParticipantsProjectIn prjids] [] 0 0
+    let uids = nub $ map (participantsUser.snd) ptcpts
+    users'' <- forM uids $ \uid -> do
       u <- get404 uid
       return (uid, u)
-    return $ nub users''
+    return users''
   cacheSeconds 10 -- FIXME
   jsonToRepJson $ jsonMap [("assigns", jsonList $ map go users)]
   where
@@ -110,14 +110,12 @@ getAssignListR = do
 
 getStatusListR :: Handler RepJson
 getStatusListR = do
-  (selfid, _) <- requireAuth
+  (selfid, self) <- requireAuth
   prjids' <- lookupGetParams "projectid"
   let prjids = map read prjids'
   statuses <- runDB $ do
-    ptcpts <- selectList [ParticipantsUserEq selfid, ParticipantsProjectIn prjids] [] 0 0
-    prjs <- forM ptcpts $ \(_, p) -> do
-      let pid = participantsProject p
-      prj <- get404 pid
+    prjs' <- viewableProjects' (selfid, self) prjids
+    prjs <- forM prjs' $ \(pid, prj) -> do
       let (Right es) = parseStatuses $ projectStatuses prj
       return $ ProjectBis { projectBisId=pid
                           , projectBisName=projectName prj
@@ -132,12 +130,7 @@ getCrossSearchR :: Handler RepHtml
 getCrossSearchR = do
   (selfid, self) <- requireAuth
   prjs <- runDB $ do
-    ptcpts <- selectList [ParticipantsUserEq selfid] [] 0 0
-    prjids <- forM ptcpts $ \(_, ptcpt) -> do
-      return $ participantsProject ptcpt
-    prjs' <- forM prjids $ \ pid -> do
-      p <- get404 pid
-      return (pid, p)
+    prjs' <- viewableProjects (selfid, self)
     forM prjs' $ \(pid, p) -> do
       let (Right es) = parseStatuses $ projectStatuses p
       return $ ProjectBis { projectBisId=pid
@@ -163,25 +156,23 @@ postCrossSearchR = do
   (uf', ut') <- uncurry (liftM2 (,)) (lookupPostParam "updatedfrom",
                                       lookupPostParam "updatedto")
   page' <- lookupPostParam "page"
-  let (pS, sS, aS) = (toInFilter IssueProjectIn $ map read ps', 
-                      toInFilter IssueStatusIn ss', 
-                      toInFilter IssueAssignIn $ map (Just . read) as')
-      (lF, lT, uF, uT) = (maybeToFilter IssueLimitdateGe $ fmap read lf',
-                          maybeToFilter IssueLimitdateLt $ fmap (addDays 1 . read) lt',
-                          maybeToFilter IssueUdateGe $ fmap (flip UTCTime 0 . read) uf',
-                          maybeToFilter IssueUdateLt $ fmap (flip UTCTime 0 . addDays 1 . read) ut')
-      page =  max 0 $ fromMaybe 0  $ fmap read $ page'
   issues <- runDB $ do
-    ptcpts' <- selectList [ParticipantsUserEq selfid] [] 0 0
-    prjs <- forM ptcpts' $ \(_, p) -> do
-      let pid = participantsProject p
-      prj <- get404 pid
+    prjs' <- viewableProjects' (selfid, self) $ map read ps'
+    prjs <- forM prjs' $ \(pid, prj) -> do
       let (Right es) = parseStatuses $ projectStatuses prj
-      return (pid, ProjectBis { projectBisId=pid
-                              , projectBisName=projectName prj
-                              , projectBisDescription=projectDescription prj
-                              , projectBisStatuses=es
-                              })
+      return $ ProjectBis { projectBisId=pid
+                          , projectBisName=projectName prj
+                          , projectBisDescription=projectDescription prj
+                          , projectBisStatuses=es
+                          }
+    let (pS, sS, aS) = (toInFilter IssueProjectIn $ map fst prjs',
+                        toInFilter IssueStatusIn ss', 
+                        toInFilter IssueAssignIn $ map (Just . read) as')
+        (lF, lT, uF, uT) = (maybeToFilter IssueLimitdateGe $ fmap read lf',
+                            maybeToFilter IssueLimitdateLt $ fmap (addDays 1 . read) lt',
+                            maybeToFilter IssueUdateGe $ fmap (flip UTCTime 0 . read) uf',
+                            maybeToFilter IssueUdateLt $ fmap (flip UTCTime 0 . addDays 1 . read) ut')
+        page =  max 0 $ fromMaybe 0  $ fmap read $ page'
     issues' <- selectList (pS ++ sS ++ aS ++ lF ++ lT ++ uF ++ uT) [IssueUdateDesc] issueListLimit (page*issueListLimit)
     forM issues' $ \(id, i) -> do
       cu <- get404 $ issueCuser i
@@ -189,7 +180,7 @@ postCrossSearchR = do
       mau <- case issueAssign i of
         Nothing -> return Nothing
         Just auid -> get auid
-      let (Just prj) = lookup (issueProject i) prjs
+      let (Just prj) = lookupProjectBis (issueProject i) prjs
       return $ (prj, IssueBis id i cu uu mau)
   cacheSeconds 10 -- FIXME
   jsonToRepJson $ jsonMap [("issues", jsonList $ map (go r) issues)]
@@ -229,7 +220,7 @@ getIssueListR pid = do
   let page = max 0 $ fromMaybe 0  $ fmap read $ page'
   (all, issues'', prj, es) <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
-    unless (p /= Nothing) $ 
+    unless (p /= Nothing || isAdmin self) $ 
       lift $ permissionDenied "あなたはこのプロジェクトの参加者ではありません."
     prj' <- get404 pid
     let (Right es) = parseStatuses $ projectStatuses prj'
@@ -379,7 +370,7 @@ getIssueR pid ino = do
   (prj, ptcpts, issue, comments) <- 
     runDB $ do
       p <- getBy $ UniqueParticipants pid selfid
-      unless (p /= Nothing) $ 
+      unless (p /= Nothing || isAdmin self) $ 
         lift $ permissionDenied "あなたはこの案件を閲覧することはできません."
       (iid, issue) <- getBy404 $ UniqueIssue pid ino
       cs <- selectList [CommentIssueEq iid] [CommentCdateDesc] 0 0
@@ -435,7 +426,7 @@ postCommentR pid ino = do
       runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
         unless (p /= Nothing) $ 
-          lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
+          lift $ permissionDenied "あなたはこのプロジェクトに投稿することはできません."
         (iid, issue) <- getBy404 $ UniqueIssue pid ino
         [(lastCid, lastC)] <- selectList [CommentIssueEq iid] [CommentCdateDesc] 1 0
         let ldate = limit `mplus` issueLimitdate issue
@@ -497,11 +488,11 @@ postCommentR pid ino = do
         
 getAttachedFileR :: CommentId -> FileHeaderId -> Handler RepHtml
 getAttachedFileR cid fid = do
-  (selfid, _) <- requireAuth
+  (selfid, self) <- requireAuth
   f <- runDB $ do
     c <- get404 cid
     p <- getBy $ UniqueParticipants (commentProject c) selfid
-    unless (p /= Nothing) $
+    unless (p /= Nothing || isAdmin self) $
       lift $ permissionDenied "あなたはこのファイルをダウンロードできません."
     get404 fid
   getFileR (fileHeaderCreator f) fid

@@ -76,8 +76,8 @@ getTaskR y m d = do
   r <- getUrlRender
   let day = fromGregorian y m d
   issues <- runDB $ do
-    prjs <- viewableProjects (selfid, self)
-    let pids = map fst prjs
+    ptcpts <- selectList [ParticipantsUserEq selfid] [] 0 0
+    let pids = map (participantsProject.snd) ptcpts
     selectList [IssueLimitdateEq $ Just day, IssueProjectIn pids ] [] 0 0
   cacheSeconds 10 --FIXME
   jsonToRepJson $ jsonMap [("tasks", jsonList $ map (go r) issues)]
@@ -269,7 +269,7 @@ getNewIssueR pid = do
   (selfid, self) <- requireAuth
   (ptcpts, stss, prj) <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
-    unless (p /= Nothing || isAdmin self) $ 
+    unless (p /= Nothing) $ 
       lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
     prj <- get404 pid
     ptcpts <- selectParticipants pid
@@ -300,7 +300,7 @@ postNewIssueR pid = do
       Just fi <- lookupFile "attached"
       runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
-        unless (p /= Nothing || isAdmin self) $ 
+        unless (p /= Nothing) $ 
           lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
         r <- lift getUrlRender
         now <- liftIO getCurrentTime
@@ -425,8 +425,8 @@ postCommentR pid ino = do
       Just fi <- lookupFile "attached"
       runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
-        unless (p /= Nothing || isAdmin self) $ 
-          lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
+        unless (p /= Nothing) $ 
+          lift $ permissionDenied "あなたはこのプロジェクトに投稿することはできません."
         (iid, issue) <- getBy404 $ UniqueIssue pid ino
         [(lastCid, lastC)] <- selectList [CommentIssueEq iid] [CommentCdateDesc] 1 0
         let ldate = limit `mplus` issueLimitdate issue

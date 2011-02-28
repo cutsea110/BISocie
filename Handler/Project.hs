@@ -97,7 +97,7 @@ putProjectR pid = do
 
   prj <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
-    unless ((p /= Nothing || isAdmin self) && canEditProjectSetting self) $ 
+    unless (p /= Nothing && canEditProjectSetting self) $ 
       lift $ permissionDenied "あなたはこのプロジェクトの設定を編集できません."
     prj <- get404 pid
     Just nm <- case nm' of
@@ -133,7 +133,7 @@ deleteProjectR pid = do
   (selfid, self) <- requireAuth
   deleted <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
-    unless ((p /= Nothing || isAdmin self) && canEditProjectSetting self) $ 
+    unless (p /= Nothing && canEditProjectSetting self) $ 
       lift $ permissionDenied "あなたはこのプロジェクトを削除することはできません."
     issues <- selectList [IssueProjectEq pid] [] 1 0
     if issues == [] 

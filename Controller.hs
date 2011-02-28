@@ -12,6 +12,7 @@ import Yesod.Helpers.Static
 import Yesod.Helpers.Auth
 import Database.Persist.GenericSql
 import Data.ByteString (ByteString)
+import Network.Wai
 
 -- Import all relevant handler modules here.
 import Handler.Root
@@ -42,7 +43,8 @@ getRobotsR = return $ RepPlain $ toContent ("User-agent: *" :: ByteString)
 withBISocie :: (Application -> IO a) -> IO a
 withBISocie f = Settings.withConnectionPool $ \p -> do
     runConnectionPool (runMigration migrateAll) p
-    let h = BISocie s p
-    toWaiApp h >>= f
+    http <- toWaiApp $ BISocie s p False
+    https <- toWaiApp $ BISocie s p True
+    f $ \req -> (if isSecure req then https else http) req
   where
     s = static Settings.staticdir

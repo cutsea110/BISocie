@@ -17,9 +17,7 @@ module Settings
     , approot
     , staticroot
     , staticdir
-    , rootRelativePath
     , s3dir
-    , s3root
       --
     , entryStartYear
     , graduateStartYear
@@ -48,17 +46,9 @@ approot :: String
 -- you would probably want it to be:
 -- > approot = "http://www.yesod.com"
 -- Please note that there is no trailing slash.
-approot = "http://localhost:3001"
+approot = "localhost:3001"
 #else
-approot = "http://localhost:3001"
-#endif
-
--- | The base URL for your site's root relative top path with consider apache.
-rootRelativePath :: String
-#ifdef PRODUCTION
-rootRelativePath = "http://localhost:3001"
-#else
-rootRelativePath = "http://localhost:3001"
+approot = "localhost:3001"
 #endif
 
 -- | The location of static files on your system. This is a file system
@@ -80,12 +70,10 @@ staticdir = "static"
 --
 -- To see how this value is used, see urlRenderOverride in BISocie.hs
 staticroot :: String
-staticroot = approot ++ "/static"
+staticroot = "/static"
 
 s3dir :: FilePath
 s3dir = "s3"
-s3root :: String
-s3root = approot ++ "/s3"
 
 -- | The database connection string. The meaning of this string is backend-
 -- specific.
@@ -180,8 +168,8 @@ mailMessageIdDomain :: String
 mailMessageIdDomain = "bisocie.localhost"
 
 projectListLimit :: Int
-projectListLimit = 50
+projectListLimit = 3
 issueListLimit :: Int
-issueListLimit = 50
+issueListLimit = 3
 pagenateWidth :: Int
 pagenateWidth = 3

@@ -134,7 +134,7 @@ deleteProjectR pid = do
   deleted <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
     unless (p /= Nothing && canEditProjectSetting self) $ 
-      lift $ permissionDenied "あなたはこのプロジェクトすることはできません."
+      lift $ permissionDenied "あなたはこのプロジェクトを削除することはできません."
     issues <- selectList [IssueProjectEq pid] [] 1 0
     if issues == [] 
       then do

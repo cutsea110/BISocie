@@ -9,6 +9,7 @@ import Database.Persist.TH (share2, derivePersistField)
 import Database.Persist.Base
 import Database.Persist.GenericSql (mkMigrate)
 import System.Locale
+import Control.Monad (forM)
 import Data.Char (isHexDigit)
 import Data.Int
 import Data.Time
@@ -376,3 +377,14 @@ canSearchUser u =
     Teacher -> True
     Staff -> True
     Student -> False
+
+viewableProjects :: (PersistBackend m) => (UserId, User) -> m [(Key Project, Project)]
+viewableProjects (selfid, self) = do
+  if isAdmin self
+    then selectList [] [] 0 0
+    else do
+    ps <- selectList [ParticipantsUserEq selfid] [] 0 0
+    forM ps $ \(id, p) -> do
+        let pid = participantsProject p
+        Just prj <- get pid
+        return (pid, prj)

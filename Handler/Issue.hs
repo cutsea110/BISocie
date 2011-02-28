@@ -229,7 +229,7 @@ getIssueListR pid = do
   let page = max 0 $ fromMaybe 0  $ fmap read $ page'
   (all, issues'', prj, es) <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
-    unless (p /= Nothing) $ 
+    unless (p /= Nothing || isAdmin self) $ 
       lift $ permissionDenied "あなたはこのプロジェクトの参加者ではありません."
     prj' <- get404 pid
     let (Right es) = parseStatuses $ projectStatuses prj'
@@ -278,7 +278,7 @@ getNewIssueR pid = do
   (selfid, self) <- requireAuth
   (ptcpts, stss, prj) <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
-    unless (p /= Nothing) $ 
+    unless (p /= Nothing || isAdmin self) $ 
       lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
     prj <- get404 pid
     ptcpts <- selectParticipants pid
@@ -309,7 +309,7 @@ postNewIssueR pid = do
       Just fi <- lookupFile "attached"
       runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
-        unless (p /= Nothing) $ 
+        unless (p /= Nothing || isAdmin self) $ 
           lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
         r <- lift getUrlRender
         now <- liftIO getCurrentTime
@@ -379,7 +379,7 @@ getIssueR pid ino = do
   (prj, ptcpts, issue, comments) <- 
     runDB $ do
       p <- getBy $ UniqueParticipants pid selfid
-      unless (p /= Nothing) $ 
+      unless (p /= Nothing || isAdmin self) $ 
         lift $ permissionDenied "あなたはこの案件を閲覧することはできません."
       (iid, issue) <- getBy404 $ UniqueIssue pid ino
       cs <- selectList [CommentIssueEq iid] [CommentCdateDesc] 0 0
@@ -434,7 +434,7 @@ postCommentR pid ino = do
       Just fi <- lookupFile "attached"
       runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
-        unless (p /= Nothing) $ 
+        unless (p /= Nothing || isAdmin self) $ 
           lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
         (iid, issue) <- getBy404 $ UniqueIssue pid ino
         [(lastCid, lastC)] <- selectList [CommentIssueEq iid] [CommentCdateDesc] 1 0
@@ -497,11 +497,11 @@ postCommentR pid ino = do
         
 getAttachedFileR :: CommentId -> FileHeaderId -> Handler RepHtml
 getAttachedFileR cid fid = do
-  (selfid, _) <- requireAuth
+  (selfid, self) <- requireAuth
   f <- runDB $ do
     c <- get404 cid
     p <- getBy $ UniqueParticipants (commentProject c) selfid
-    unless (p /= Nothing) $
+    unless (p /= Nothing || isAdmin self) $
       lift $ permissionDenied "あなたはこのファイルをダウンロードできません."
     get404 fid
   getFileR (fileHeaderCreator f) fid

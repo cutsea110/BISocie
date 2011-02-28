@@ -72,12 +72,12 @@ getScheduleR y m = do
     
 getTaskR :: Year -> Month -> Date -> Handler RepJson
 getTaskR y m d = do
-  (selfid, _) <- requireAuth
+  (selfid, self) <- requireAuth
   r <- getUrlRender
   let day = fromGregorian y m d
-  issues <- runDB $ do 
-    ptcpts <- selectList [ParticipantsUserEq selfid] [] 0 0
-    let pids = map (participantsProject . snd) ptcpts
+  issues <- runDB $ do
+    prjs <- viewableProjects (selfid, self)
+    let pids = map fst prjs
     selectList [IssueLimitdateEq $ Just day, IssueProjectIn pids ] [] 0 0
   cacheSeconds 10 --FIXME
   jsonToRepJson $ jsonMap [("tasks", jsonList $ map (go r) issues)]
@@ -89,18 +89,18 @@ getTaskR y m d = do
 
 getAssignListR :: Handler RepJson
 getAssignListR = do
-  (selfid, _) <- requireAuth
+  (selfid, self) <- requireAuth
   pids' <- lookupGetParams "projectid"
   let pids = map read pids'
   users <- runDB $ do
-    ptcpts <- selectList [ParticipantsUserEq selfid, ParticipantsProjectIn pids] [] 0 0
-    let prjids =  map (participantsProject . snd) ptcpts
-    users' <- selectList [ParticipantsProjectIn prjids] [] 0 0
-    users'' <- forM users' $ \(_, p) -> do
-      let uid = participantsUser p
+    prjs <- viewableProjects' (selfid, self) pids
+    let prjids =  map fst prjs
+    ptcpts <- selectList [ParticipantsProjectIn prjids] [] 0 0
+    let uids = nub $ map (participantsUser.snd) ptcpts
+    users'' <- forM uids $ \uid -> do
       u <- get404 uid
       return (uid, u)
-    return $ nub users''
+    return users''
   cacheSeconds 10 -- FIXME
   jsonToRepJson $ jsonMap [("assigns", jsonList $ map go users)]
   where
@@ -110,14 +110,12 @@ getAssignListR = do
 
 getStatusListR :: Handler RepJson
 getStatusListR = do
-  (selfid, _) <- requireAuth
+  (selfid, self) <- requireAuth
   prjids' <- lookupGetParams "projectid"
   let prjids = map read prjids'
   statuses <- runDB $ do
-    ptcpts <- selectList [ParticipantsUserEq selfid, ParticipantsProjectIn prjids] [] 0 0
-    prjs <- forM ptcpts $ \(_, p) -> do
-      let pid = participantsProject p
-      prj <- get404 pid
+    prjs' <- viewableProjects' (selfid, self) prjids
+    prjs <- forM prjs' $ \(pid, prj) -> do
       let (Right es) = parseStatuses $ projectStatuses prj
       return $ ProjectBis { projectBisId=pid
                           , projectBisName=projectName prj
@@ -132,12 +130,7 @@ getCrossSearchR :: Handler RepHtml
 getCrossSearchR = do
   (selfid, self) <- requireAuth
   prjs <- runDB $ do
-    ptcpts <- selectList [ParticipantsUserEq selfid] [] 0 0
-    prjids <- forM ptcpts $ \(_, ptcpt) -> do
-      return $ participantsProject ptcpt
-    prjs' <- forM prjids $ \ pid -> do
-      p <- get404 pid
-      return (pid, p)
+    prjs' <- viewableProjects (selfid, self)
     forM prjs' $ \(pid, p) -> do
       let (Right es) = parseStatuses $ projectStatuses p
       return $ ProjectBis { projectBisId=pid
@@ -163,25 +156,23 @@ postCrossSearchR = do
   (uf', ut') <- uncurry (liftM2 (,)) (lookupPostParam "updatedfrom",
                                       lookupPostParam "updatedto")
   page' <- lookupPostParam "page"
-  let (pS, sS, aS) = (toInFilter IssueProjectIn $ map read ps', 
-                      toInFilter IssueStatusIn ss', 
-                      toInFilter IssueAssignIn $ map (Just . read) as')
-      (lF, lT, uF, uT) = (maybeToFilter IssueLimitdateGe $ fmap read lf',
-                          maybeToFilter IssueLimitdateLt $ fmap (addDays 1 . read) lt',
-                          maybeToFilter IssueUdateGe $ fmap (flip UTCTime 0 . read) uf',
-                          maybeToFilter IssueUdateLt $ fmap (flip UTCTime 0 . addDays 1 . read) ut')
-      page =  max 0 $ fromMaybe 0  $ fmap read $ page'
   issues <- runDB $ do
-    ptcpts' <- selectList [ParticipantsUserEq selfid] [] 0 0
-    prjs <- forM ptcpts' $ \(_, p) -> do
-      let pid = participantsProject p
-      prj <- get404 pid
+    prjs' <- viewableProjects' (selfid, self) $ map read ps'
+    prjs <- forM prjs' $ \(pid, prj) -> do
       let (Right es) = parseStatuses $ projectStatuses prj
-      return (pid, ProjectBis { projectBisId=pid
-                              , projectBisName=projectName prj
-                              , projectBisDescription=projectDescription prj
-                              , projectBisStatuses=es
-                              })
+      return $ ProjectBis { projectBisId=pid
+                          , projectBisName=projectName prj
+                          , projectBisDescription=projectDescription prj
+                          , projectBisStatuses=es
+                          }
+    let (pS, sS, aS) = (toInFilter IssueProjectIn $ map fst prjs',
+                        toInFilter IssueStatusIn ss', 
+                        toInFilter IssueAssignIn $ map (Just . read) as')
+        (lF, lT, uF, uT) = (maybeToFilter IssueLimitdateGe $ fmap read lf',
+                            maybeToFilter IssueLimitdateLt $ fmap (addDays 1 . read) lt',
+                            maybeToFilter IssueUdateGe $ fmap (flip UTCTime 0 . read) uf',
+                            maybeToFilter IssueUdateLt $ fmap (flip UTCTime 0 . addDays 1 . read) ut')
+        page =  max 0 $ fromMaybe 0  $ fmap read $ page'
     issues' <- selectList (pS ++ sS ++ aS ++ lF ++ lT ++ uF ++ uT) [IssueUdateDesc] issueListLimit (page*issueListLimit)
     forM issues' $ \(id, i) -> do
       cu <- get404 $ issueCuser i
@@ -189,7 +180,7 @@ postCrossSearchR = do
       mau <- case issueAssign i of
         Nothing -> return Nothing
         Just auid -> get auid
-      let (Just prj) = lookup (issueProject i) prjs
+      let (Just prj) = lookupProjectBis (issueProject i) prjs
       return $ (prj, IssueBis id i cu uu mau)
   cacheSeconds 10 -- FIXME
   jsonToRepJson $ jsonMap [("issues", jsonList $ map (go r) issues)]

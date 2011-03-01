@@ -3,9 +3,11 @@
 module Handler.Project where
 
 import BISocie
-import Control.Monad (unless, forM, mplus)
+import Control.Monad (unless, forM, forM_, mplus)
 import Control.Applicative ((<$>),(<*>))
 import Data.Time
+import System.Directory
+import System.FilePath ((</>))
 
 import qualified Settings
 import StaticFiles
@@ -133,15 +135,38 @@ deleteProjectR pid = do
   (selfid, self) <- requireAuth
   deleted <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
-    unless (p /= Nothing && canEditProjectSetting self) $ 
+    unless ((p /= Nothing || isAdmin self) && canEditProjectSetting self) $ 
       lift $ permissionDenied "あなたはこのプロジェクトを削除することはできません."
-    issues <- selectList [IssueProjectEq pid] [] 1 0
-    if issues == [] 
+    if isAdmin self
       then do
+      -- delete participants
       deleteWhere [ParticipantsProjectEq pid]
+      -- delete comments
+      comments <- selectList [CommentProjectEq pid] [] 0 0
+      deleteWhere [CommentProjectEq pid]
+      -- delete & remove files
+      let fids = filter (/=Nothing) $ map (commentAttached.snd) comments
+      forM_ fids $ \(Just fid) -> do 
+        f <- get404 fid
+        let (UserId uid') = fileHeaderCreator f
+            (FileHeaderId fid') = fid
+            s3dir = Settings.s3dir </> show uid'
+            s3fp = s3dir </> show fid'
+        delete fid
+        liftIO $ removeFile s3fp
+      -- delete issues
+      deleteWhere [IssueProjectEq pid]
+      -- delete project
       delete pid
       return True
-      else return False
+      else do
+      issues <- selectList [IssueProjectEq pid] [] 1 0
+      if issues == [] 
+        then do
+        deleteWhere [ParticipantsProjectEq pid]
+        delete pid
+        return True
+        else return False
   cacheSeconds 10 -- FIXME
   if deleted
     then jsonToRepJson $ jsonMap [("deleted", jsonScalar $ show pid)]

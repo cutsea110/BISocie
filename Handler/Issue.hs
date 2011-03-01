@@ -76,8 +76,8 @@ getTaskR y m d = do
   r <- getUrlRender
   let day = fromGregorian y m d
   issues <- runDB $ do
-    prjs <- viewableProjects (selfid, self)
-    let pids = map fst prjs
+    ptcpts <- selectList [ParticipantsUserEq selfid] [] 0 0
+    let pids = map (participantsProject.snd) ptcpts
     selectList [IssueLimitdateEq $ Just day, IssueProjectIn pids ] [] 0 0
   cacheSeconds 10 --FIXME
   jsonToRepJson $ jsonMap [("tasks", jsonList $ map (go r) issues)]
@@ -170,8 +170,8 @@ postCrossSearchR = do
                         toInFilter IssueAssignIn $ map (Just . read) as')
         (lF, lT, uF, uT) = (maybeToFilter IssueLimitdateGe $ fmap read lf',
                             maybeToFilter IssueLimitdateLt $ fmap (addDays 1 . read) lt',
-                            maybeToFilter IssueUdateGe $ fmap (flip UTCTime 0 . read) uf',
-                            maybeToFilter IssueUdateLt $ fmap (flip UTCTime 0 . addDays 1 . read) ut')
+                            maybeToFilter IssueUdateGe $ fmap (localDayToUTC . read) uf',
+                            maybeToFilter IssueUdateLt $ fmap (localDayToUTC . addDays 1 . read) ut')
         page =  max 0 $ fromMaybe 0  $ fmap read $ page'
     issues' <- selectList (pS ++ sS ++ aS ++ lF ++ lT ++ uF ++ uT) [IssueUdateDesc] issueListLimit (page*issueListLimit)
     forM issues' $ \(id, i) -> do
@@ -269,7 +269,7 @@ getNewIssueR pid = do
   (selfid, self) <- requireAuth
   (ptcpts, stss, prj) <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
-    unless (p /= Nothing || isAdmin self) $ 
+    unless (p /= Nothing) $ 
       lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
     prj <- get404 pid
     ptcpts <- selectParticipants pid
@@ -300,7 +300,7 @@ postNewIssueR pid = do
       Just fi <- lookupFile "attached"
       runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
-        unless (p /= Nothing || isAdmin self) $ 
+        unless (p /= Nothing) $ 
           lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
         r <- lift getUrlRender
         now <- liftIO getCurrentTime
@@ -425,8 +425,8 @@ postCommentR pid ino = do
       Just fi <- lookupFile "attached"
       runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
-        unless (p /= Nothing || isAdmin self) $ 
-          lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
+        unless (p /= Nothing) $ 
+          lift $ permissionDenied "あなたはこのプロジェクトに投稿することはできません."
         (iid, issue) <- getBy404 $ UniqueIssue pid ino
         [(lastCid, lastC)] <- selectList [CommentIssueEq iid] [CommentCdateDesc] 1 0
         let ldate = limit `mplus` issueLimitdate issue

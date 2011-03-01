@@ -19,6 +19,8 @@ import Data.Maybe (fromMaybe)
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec as P (string)
 
+import qualified Settings (tz)
+
 type Year = Integer
 type Month = Int
 type Date = Int
@@ -266,7 +268,12 @@ showMaybeDouble md = case md of
   Just d -> show d
 
 showDate :: UTCTime -> String
-showDate = formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S"
+showDate = formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S" . utc2local
+  where
+    utc2local = utcToLocalTime $ hoursToTimeZone Settings.tz
+
+localDayToUTC :: Day -> UTCTime
+localDayToUTC = localTimeToUTC (hoursToTimeZone Settings.tz) . flip LocalTime (TimeOfDay 0 0 0)
 
 toMessageId :: IssueId -> CommentId -> UTCTime -> String -> String
 toMessageId (IssueId iid) (CommentId cid) time domain = "<" 

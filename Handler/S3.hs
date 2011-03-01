@@ -22,7 +22,7 @@ import System.Directory
 import System.FilePath
 import Web.Encodings (encodeUrl, decodeUrl)
 
-import qualified Settings (approot, rootRelativePath, s3dir, s3root)
+import qualified Settings (s3dir)
 import Settings (widgetFile, cassiusFile)
 
 getUploadR :: Handler RepHtml

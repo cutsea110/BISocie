@@ -29,13 +29,6 @@ getHomeR uid = do
   let page = max 0 $ fromMaybe 0  $ fmap read $ page'
   (all, prjs) <- runDB $ do
     prjs' <- viewableProjects (selfid, self)
-    {--
-    ps <- selectList [ParticipantsUserEq selfid] [] 0 0
-    prjs' <- forM ps $ \(id, p) -> do
-        let pid = participantsProject p
-        Just prj <- get pid
-        return (pid, prj)
-    --}
     let sorted = sortBy (\(_, p) (_, q) -> projectUdate q `compare` projectUdate p) prjs'
     return $ (prjs',
               zip (concat $ repeat ["odd", "even"]::[String]) 

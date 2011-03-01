@@ -15,6 +15,7 @@ module Settings
     , withConnectionPool
     , runConnectionPool
     , approot
+    , rootbase
     , staticroot
     , staticdir
     , s3dir
@@ -51,6 +52,9 @@ approot = "localhost:3001"
 #else
 approot = "localhost:3001"
 #endif
+
+rootbase :: String
+rootbase = ""
 
 -- | The location of static files on your system. This is a file system
 -- path. The default value works properly with your scaffolded site.

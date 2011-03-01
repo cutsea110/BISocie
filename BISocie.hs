@@ -250,7 +250,7 @@ instance YesodJquery BISocie where
   urlJqueryUiCss _ = Left $ StaticR css_jquery_ui_1_8_9_custom_css
 
 instance Item User where
-  itemTitle = userIdent
+  itemTitle = userInfoOneline
 
 type UserCrud = Crud BISocie User
 

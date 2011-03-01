@@ -1,6 +1,6 @@
 <div id="bisocie-title">
   <a href="@{RootR}">
-    <img src="@{StaticR img_bisocie_logo_jpg}">
+    <img src="@{StaticR img_bisocie_logo_png}">
 <div id="userbox">
   $maybe u <- mu
     \ログイン中 

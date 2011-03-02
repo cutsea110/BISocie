@@ -241,6 +241,13 @@ maybeToFilter :: (a -> Filter b) -> Maybe a -> [Filter b]
 maybeToFilter _ Nothing  = []
 maybeToFilter f (Just x) = [f x]
 
+userInfoOneline :: User -> String
+userInfoOneline u = 
+  "[" ++ showPrettyActive u ++ "] " ++ userIdent u ++ " (" ++ userFullName u ++ " , " ++ userRoleName u ++ ")"
+
+showPrettyActive :: User -> String
+showPrettyActive u = if userActive u then "有効" else "無効"
+
 userFullName :: User -> String
 userFullName u = userFamilyName u ++ " " ++ userGivenName u
     

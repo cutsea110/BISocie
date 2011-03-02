@@ -13,6 +13,24 @@ Executable bisocie
      cpp-options:    -DPRODUCTION
      Main-is:        production.hs
      ghc-options:    -Wall -threaded
+
+     Data-files:    favicon.ico
+                  , hamlet/*.hamlet
+                  , cassius/*.cassius
+                  , julius/*.julius
+                  , static/*.css
+                  , static/images/*.png
+                  , static/img/*.png
+                  , static/img/*.gif
+                  , static/js/*.js
+                  , static/plugins/ajaxzip2/*.js
+                  , static/plugins/ajaxzip2/data/*.json
+                  , static/plugins/selection/*.js
+                  , static/plugins/watermark/*.js
+                  , static/plugins/exinplaceeditor/*.js
+                  , static/plugins/exinplaceeditor/*.gif
+                  , static/plugins/upload/*.js
+                  , static/plugins/bubbleup/*.js
   
      Build-depends: base         >= 4       && < 5
                   , yesod        >= 0.7     && < 0.8

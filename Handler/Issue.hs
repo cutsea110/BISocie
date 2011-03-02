@@ -335,7 +335,7 @@ postNewIssueR pid = do
         liftIO $ renderSendMail Mail
           { mailHeaders =
                [ ("From", "noreply")
-               , ("To", intercalate "," $ map (userEmail.snd) ptcpts)
+               , ("Bcc", intercalate "," $ map (userEmail.snd) ptcpts)
                , ("Subject", sbj)
                , ("Message-ID", msgid)
                , (mailXHeader, show pid)
@@ -455,7 +455,7 @@ postCommentR pid ino = do
         liftIO $ renderSendMail Mail
           { mailHeaders =
                [ ("From", "noreply")
-               , ("To", intercalate "," $ map (userEmail.snd) ptcpts)
+               , ("Bcc", intercalate "," $ map (userEmail.snd) ptcpts)
                , ("Subject", issueSubject issue)
                , ("Message-ID", msgid)
                , ("References", refid)

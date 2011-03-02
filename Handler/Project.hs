@@ -3,7 +3,7 @@
 module Handler.Project where
 
 import BISocie
-import Control.Monad (unless, forM, forM_, mplus)
+import Control.Monad (unless, forM_)
 import Control.Applicative ((<$>),(<*>))
 import Data.Time
 import System.Directory
@@ -124,11 +124,6 @@ putProjectR pid = do
                           , ("description", jsonScalar $ projectDescription prj)
                           , ("statuses", jsonScalar $ projectStatuses prj)
                           ]
-  where
-    showJScalar :: (Show a) => a -> Json
-    showJScalar = jsonScalar . show
-    showMaybeJScalar :: Maybe String -> Json
-    showMaybeJScalar = jsonScalar . showmaybe
 
 deleteProjectR :: ProjectId -> Handler RepJson
 deleteProjectR pid = do

@@ -2,9 +2,7 @@
 module Handler.Participants where
 
 import BISocie
-import Control.Monad (unless, when, forM, mplus)
-
-import StaticFiles
+import Control.Monad (unless, when, forM)
 
 getParticipantsListR :: ProjectId -> Handler RepJson
 getParticipantsListR pid = do
@@ -15,23 +13,23 @@ getParticipantsListR pid = do
     unless (p /= Nothing || isAdmin self) $ 
       lift $ permissionDenied "あなたはこのプロジェクトに参加していません."
     ps' <- selectList [ParticipantsProjectEq pid] [] 0 0
-    forM ps' $ \(id, p) -> do
-      let uid' = participantsUser p
+    forM ps' $ \(_, p') -> do
+      let uid' = participantsUser p'
           ra = AvatarImageR uid'
       Just u <- get uid'
-      return (uid', u, p, ra)
+      return (uid', u, p', ra)
   cacheSeconds 10 -- FIXME
   jsonToRepJson $ jsonMap [("participants", jsonList $ map (go r) us)]
   where
-    go r (id, u, p, ra) = jsonMap [ ("id", jsonScalar $ show id)
-                                  , ("ident", jsonScalar $ userIdent u)
-                                  , ("uri", jsonScalar $ r $ ProfileR id)
-                                  , ("name", jsonScalar $ userFullName u)
-                                  , ("role", jsonScalar $ show $ userRole u)
-                                  , ("prettyrole", jsonScalar $ userRoleName u)
-                                  , ("receivemail", jsonScalar $ show $ participantsReceivemail p)
-                                  , ("avatar", jsonScalar $ r ra)
-                                  ]
+    go r (uid, u, p, ra) = jsonMap [ ("id", jsonScalar $ show uid)
+                                   , ("ident", jsonScalar $ userIdent u)
+                                   , ("uri", jsonScalar $ r $ ProfileR uid)
+                                   , ("name", jsonScalar $ userFullName u)
+                                   , ("role", jsonScalar $ show $ userRole u)
+                                   , ("prettyrole", jsonScalar $ userRoleName u)
+                                   , ("receivemail", jsonScalar $ show $ participantsReceivemail p)
+                                   , ("avatar", jsonScalar $ r ra)
+                                   ]
 
 postParticipantsR :: ProjectId -> Handler RepJson
 postParticipantsR pid = do

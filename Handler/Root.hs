@@ -6,7 +6,7 @@ import BISocie.Helpers.Util
 import Settings
 
 import Control.Monad (unless, forM)
-import Data.List
+import Data.List (sortBy, intersperse)
 import Data.Maybe (fromMaybe)
 
 -- This is a handler function for the GET request method on the RootR
@@ -27,13 +27,13 @@ getHomeR uid = do
   unless (selfid==uid) $ permissionDenied "他人のホームを見ることはできません."
   page' <- lookupGetParam "page"
   let page = max 0 $ fromMaybe 0  $ fmap read $ page'
-  (all, prjs) <- runDB $ do
+  (allprjs, prjs) <- runDB $ do
     prjs' <- viewableProjects (selfid, self)
     let sorted = sortBy (\(_, p) (_, q) -> projectUdate q `compare` projectUdate p) prjs'
     return $ (prjs',
               zip (concat $ repeat ["odd", "even"]::[String]) 
               $ take projectListLimit $ drop (page*projectListLimit) sorted)
-  let maxpage = ceiling (fromIntegral (length all) / fromIntegral projectListLimit) - 1
+  let maxpage = ceiling (fromIntegral (length allprjs) / fromIntegral projectListLimit) - 1
       prevExist = page > 0
       nextExist = page < maxpage
       prevPage = (HomeR uid, [("page", show $ max 0 (page-1))])
@@ -62,7 +62,7 @@ getHumanNetworkR = do
 
 getUserLocationsR :: Handler RepJson
 getUserLocationsR = do
-  (selfid, self) <- requireAuth
+  (_, self) <- requireAuth
   r <- getUrlRender
   unless (canViewUserLocations self) $ 
     permissionDenied "あなたはこの情報を取得することはできません."

@@ -2,19 +2,17 @@
 module Handler.User where
 
 import BISocie
-import Control.Monad (unless, forM, mplus)
-
-import StaticFiles
+import Control.Monad (unless, forM)
 
 getUserListR :: Handler RepJson
 getUserListR = do
-  (selfid, self) <- requireAuth
+  (_, self) <- requireAuth
   r <- getUrlRender
   unless (canSearchUser self) $ 
     permissionDenied "あなたは他のユーザを検索することはできません."
   us <- runDB $ do
     us' <- selectList [UserActiveEq True] [] 0 0
-    forM us' $ \u@(uid,u') -> do
+    forM us' $ \u@(uid, _) -> do
       mp' <- getBy $ UniqueProfile uid
       let ra = AvatarImageR uid
       return (u, mp', ra)

@@ -2,7 +2,7 @@ $(document).ready(function(){
   $('#search-users').hide().attr('title', 'ユーザ検索').dialog({
     autoOpen: false,
     width: 500,
-    modal: true
+    modal: false
   });
 
   $('#button-search-users').click(function(){

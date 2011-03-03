@@ -31,21 +31,16 @@ import Yesod.Helpers.Crud
 import Yesod.Form.Jquery
 import System.Directory
 import qualified Data.ByteString.Lazy as L
-import Web.Routes.Site (Site (formatPathSegments))
 import Database.Persist.GenericSql
 import Settings (hamletFile, cassiusFile, juliusFile, widgetFile)
 import Model
-import Data.Maybe (isJust, fromMaybe)
-import Control.Monad (join, unless)
+import Data.Maybe (fromMaybe)
+import Control.Monad (unless)
 import Control.Applicative ((<$>),(<*>),pure)
 import Control.Arrow ((&&&))
-import Network.Mail.Mime
-import qualified Data.Text.Lazy
-import qualified Data.Text.Lazy.Encoding
 import Text.Jasmine (minifym)
 
 import StaticFiles
-import Model
 import qualified Settings
 
 -- | The site argument for your application. This can be a good place to
@@ -224,18 +219,8 @@ instance YesodBreadcrumbs BISocie where
       Just "e" -> return (userFullName u ++ " プロフィール編集", Nothing)
       _        -> return (userFullName u, Nothing)
   
-  -- these pages never call breadcrumb
-  breadcrumb StaticR{} = return ("", Nothing)
-  breadcrumb AuthR{} = return ("", Nothing)
-  
-  breadcrumb FaviconR = return ("", Nothing)
-  breadcrumb RobotsR = return ("", Nothing)
-  
-  breadcrumb UserLocationsR = return ("", Nothing)
-  
-  breadcrumb AdminR{} = return ("", Nothing)  
-  
-  breadcrumb UploadR = return ("", Nothing)
+  -- the others 
+  breadcrumb _ = return ("", Nothing)
   
 
 -- How to run database actions.
@@ -248,9 +233,6 @@ instance YesodJquery BISocie where
   urlJqueryJs _ = Left $ StaticR js_jquery_1_4_4_min_js
   urlJqueryUiJs _ = Left $ StaticR js_jquery_ui_1_8_9_custom_min_js
   urlJqueryUiCss _ = Left $ StaticR css_jquery_ui_1_8_9_custom_css
-
-instance Item User where
-  itemTitle = userInfoOneline
 
 type UserCrud = Crud BISocie User
 

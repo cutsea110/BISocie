@@ -2,12 +2,13 @@
 {-# LANGUAGE QuasiQuotes, CPP #-}
 module Handler.Profile where
 
+import Prelude hiding (zip)
+
 import BISocie
-import Settings (hamletFile, cassiusFile, juliusFile, widgetFile, entryStartYear, graduateStartYear)
+import Settings (entryStartYear, graduateStartYear)
 import StaticFiles
 import Handler.S3
 
-import Yesod.Form.Jquery
 import Control.Monad
 import Control.Applicative
 import Data.Time
@@ -19,10 +20,9 @@ getProfileR uid = do
   case mode of
     Just "v" {- view prof -} -> viewProf
     Just "e" {- edit prof -} -> editProf
+    Just _   {-  default  -} -> viewProf
     Nothing  {-  default  -} -> viewProf
   where
--- |  getProf :: (Control.Monad.IO.Class.MonadIO m, PersistBackend m) =>
---                User -> m (Maybe (Key Profile, Profile))
     getLab user = 
       if not $ isTeacher user
       then return Nothing
@@ -35,7 +35,7 @@ getProfileR uid = do
                                                 , laboratoryRoomNumber=Nothing
                                                 , laboratoryCourses=Nothing
                                                 }
-    getProf user y =
+    getProf user =
       if not $ isStudent user
       then return Nothing 
       else do
@@ -73,13 +73,12 @@ getProfileR uid = do
       now <- liftIO getCurrentTime
       let viewprof = (ProfileR uid, [("mode", "v")])
           editprof = (ProfileR uid, [("mode", "e")])
-          (y,_,_) = toGregorian $ utctDay now
-      (user, viewprof, editprof, mprof, mlab) <- 
+      (user, mprof, mlab) <- 
         runDB $ do
           user <- get404 uid
-          mprof <- getProf user y
+          mprof <- getProf user
           mlab <- getLab user
-          return (user, viewprof, editprof, mprof, mlab)
+          return (user, mprof, mlab)
       defaultLayout $ do
         setTitle $ string "Profile"
         addCassius $(cassiusFile "profile")
@@ -99,7 +98,7 @@ getProfileR uid = do
           user <- get404 uid
           unless (self `canEdit` user) $ 
             lift $ permissionDenied "あなたはこのユーザプロファイルを編集することはできません."
-          mprof <- getProf user y
+          mprof <- getProf user
           mlab <- getLab user
           let eyears = zipWith (\y1 y2 -> (y1==y2, y1)) [Settings.entryStartYear..y+5] $ 
                        repeat (fromMaybe y (fmap (toInteger.profileEntryYear) mprof))
@@ -122,16 +121,16 @@ postProfileR uid = do
 
 putProfileR :: UserId -> Handler RepHtml
 putProfileR uid = do
-  (selfid, self) <- requireAuth
+  (_, self) <- requireAuth
   user <- runDB $ get404 uid
   unless (self `canEdit` user) $ 
     permissionDenied "あなたはこのユーザプロファイルを編集することはできません."
   case userRole user of
-    Student -> putStudentProf user
-    Teacher -> putTeacherProf user
-    _       -> putUserProf user
+    Student -> putStudentProf
+    Teacher -> putTeacherProf
+    _       -> putUserProf
   where
-    putUserProf user = do
+    putUserProf = do
       (em, fn, gn) <- 
         runFormPost' $ (,,)
         <$> emailInput "email"
@@ -142,7 +141,7 @@ putProfileR uid = do
         update uid [UserEmail em, UserFamilyName fn, UserGivenName gn]
       redirectParams RedirectTemporary (ProfileR uid) [("mode", "e")]
       
-    putTeacherProf user = do
+    putTeacherProf = do
       (em, fn, gn) <- 
         runFormPost' $ (,,)
         <$> emailInput "email"
@@ -172,7 +171,7 @@ putProfileR uid = do
             return lid
       redirectParams RedirectTemporary (ProfileR uid) [("mode", "e")]
     
-    putStudentProf user = do
+    putStudentProf = do
       (em, fn, gn) <- 
         runFormPost' $ (,,)
         <$> emailInput "email"
@@ -265,7 +264,7 @@ getAvatarImageR uid = do
 
 postAvatarR :: UserId -> Handler RepJson
 postAvatarR uid = do
-  (selfid, self) <- requireAuth
+  (_, self) <- requireAuth
   r <- getUrlRender
   mfhid <- lookupPostParam "avatar"
   let avatar = fmap read mfhid

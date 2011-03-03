@@ -5,11 +5,14 @@
 module Model where
 
 import Yesod
+import Yesod.Helpers.Crud
 import Database.Persist.TH (share2, derivePersistField)
 import Database.Persist.Base
 import Database.Persist.GenericSql (mkMigrate)
 import System.Locale
 import Control.Monad (forM)
+import Control.Monad.Trans.Class (MonadTrans)
+import Control.Failure (Failure)
 import Data.Char (isHexDigit)
 import Data.Int
 import Data.Time
@@ -142,6 +145,9 @@ FileHeader
     created UTCTime Desc
 |]
 
+instance Item User where
+  itemTitle = userInfoOneline
+
 data Effect = Impact | Strike deriving (Show, Eq)
 type Color = String
 data ProjectBis = ProjectBis { projectBisId :: ProjectId
@@ -157,7 +163,7 @@ lookupStatus x (z@(y,_,_):zs) = if x == y
                                 else lookupStatus x zs
 
 lookupProjectBis :: ProjectId -> [ProjectBis] -> Maybe ProjectBis
-lookupProjectBis pid [] = Nothing
+lookupProjectBis _   [] = Nothing
 lookupProjectBis pid (p:ps) = if pid == (projectBisId p)
                               then Just p
                               else lookupProjectBis pid ps
@@ -167,26 +173,32 @@ parseStatuses :: String -> Either ParseError [(String, Maybe Color, Maybe Effect
 parseStatuses s = parse statuses "parse statuses" 
                   $ if last s == '\n' then s else s ++ "\n"
 
+eol :: CharParser st String
 eol = try (P.string "\n\r")
       <|> try (P.string "\r\n")
       <|> P.string "\n"
       <|> P.string "\r"
 
+statuses :: CharParser st [(String, Maybe Color, Maybe Effect)]
 statuses = endBy status eol
 
+status :: CharParser st (String, Maybe Color, Maybe Effect)
 status = do
   e <- effect
   s <- many1 (noneOf "\r\n#")
   c <- color
   return (s, c, e)
 
+effect :: CharParser st (Maybe Effect)
 effect = do
   try (oneOf "!=") >>= \e ->
       case e of
         '!' -> return $ Just Impact
         '=' -> return $ Just Strike
+        _   -> error "couldn't reach here." -- FIXME
   <|> return Nothing
 
+color :: CharParser st (Maybe Color)
 color = do
   try (char '#')
   color'
@@ -343,11 +355,11 @@ canViewTel :: User -> User -> Bool
 u `canViewTel` t = u == t || permitted
   where
     permitted =
-      case (userRole u, userRole t) of
-        (Admin,   Student) -> True
-        (Teacher, Student) -> False
-        (Staff,   Student) -> True
-        (Student, Student) -> False
+      case userRole u of
+        Admin   -> True
+        Teacher -> False
+        Staff   -> True
+        Student -> False
 
 canEditTel :: User -> User -> Bool
 canEditTel = canViewTel
@@ -392,17 +404,21 @@ canSearchUser u =
     Staff -> True
     Student -> False
 
-viewableProjects :: (PersistBackend m) => (UserId, User) -> m [(Key Project, Project)]
+viewableProjects :: (PersistBackend m) => (UserId, User) -> m [(ProjectId, Project)]
 viewableProjects (selfid, self) =
   if isAdmin self
   then selectList [] [] 0 0
   else do
     ps <- selectList [ParticipantsUserEq selfid] [] 0 0
-    forM ps $ \(id, p) -> do
+    forM ps $ \(_, p) -> do
       let pid = participantsProject p
       Just prj <- get pid
       return (pid, prj)
 
+viewableProjects' :: (PersistBackend (t m),
+                      Control.Failure.Failure ErrorResponse m,
+                      Control.Monad.Trans.Class.MonadTrans t) =>
+                     (UserId, User) -> [Key Project] -> t m [(Key Project, Project)]
 viewableProjects' (selfid, self) prjids =
   if isAdmin self
   then forM prjids $ \pid -> do

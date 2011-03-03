@@ -12,7 +12,7 @@ Cabal-version:       >=1.6
 Executable bisocie
      cpp-options:    -DPRODUCTION
      Main-is:        bisocie.hs
-     ghc-options:    -Wall -threaded
+     ghc-options:    -Wall -threaded -fno-warn-unused-do-bind -fno-warn-type-defaults
 
      Data-files:    favicon.ico
                   , hamlet/*.hamlet
@@ -37,6 +37,8 @@ Executable bisocie
                   , yesod-auth
                   , yesod-static
                   , yesod-form
+                  , failure      >= 0.1     && < 0.2
+                  , transformers
                   , mime-mail
                   , wai
                   , wai-extra

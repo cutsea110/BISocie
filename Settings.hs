@@ -84,9 +84,9 @@ s3dir = "s3"
 -- specific.
 connStr :: String
 #ifdef PRODUCTION
-connStr = "user=devel password=yesoddevel host=localhost port=5432 dbname=bisocie"
+connStr = "user=soubun password=sougoubunnka host=localhost port=5432 dbname=bisocie"
 #else
-connStr = "user=devel password=yesoddevel host=localhost port=5432 dbname=bisocie_debug"
+connStr = "user=soubun password=sougoubunnka host=localhost port=5432 dbname=bisocie_debug"
 #endif
 
 -- | Your application will keep a connection pool and take connections from

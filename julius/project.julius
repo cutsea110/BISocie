@@ -180,11 +180,6 @@ function mkUser(u, ps){
       s =$('<a/>').attr({href: u.uri}).text(u.name),
       mail = $('<img/>').addClass('mail');
 
-  mail.click(function(){
-    toggleSendmailParticipant(mail);
-    reloading_participants();
-  });
-
   if (ps[u.id]){
     switch (ps[u.id].receivemail){
       case 'True':
@@ -204,6 +199,10 @@ function mkUser(u, ps){
   if (ps[u.id])c.attr('checked', true);
   c.click(function(){
     modifyParticipant(c);
+    reloading_participants();
+  });
+  mail.click(function(){
+    toggleSendmailParticipant(mail);
     reloading_participants();
   });
 

@@ -101,8 +101,8 @@ Project
     statuses String Update
     issuecounter IssueNo Update Add default=0
     cuser UserId
-    cdate UTCTime
-    udate UTCTime Update Desc
+    cdate UTCTime default=now()
+    udate UTCTime Update Desc default=now()
 
 Issue
     project ProjectId Eq In
@@ -112,9 +112,9 @@ Issue
     status String Update In
     limitdate Day Maybe Update Ge Lt Eq
     cuser UserId
-    cdate UTCTime
+    cdate UTCTime default=now()
     uuser UserId Update
-    udate UTCTime Update Desc Ge Lt
+    udate UTCTime Update Desc Ge Lt default=now()
     UniqueIssue project number
 
 Comment
@@ -126,12 +126,13 @@ Comment
     limitdate Day Maybe
     attached FileHeaderId Maybe
     cuser UserId
-    cdate UTCTime Desc
+    cdate UTCTime Desc default=now()
 
 Participants
     project ProjectId Eq In
-    user UserId Eq
-    receivemail Bool Eq default=true
+    user UserId Eq Asc
+    receivemail Bool Eq  Update default=true
+    cdate UTCTime Asc default=now()
     UniqueParticipants project user
 
 FileHeader
@@ -142,7 +143,7 @@ FileHeader
     contentType String
     fileSize Int64
     creator UserId Eq
-    created UTCTime Desc
+    created UTCTime Desc default=now()
 |]
 
 instance Item User where

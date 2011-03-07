@@ -58,6 +58,7 @@ postNewProjectR = do
         _ <- insert $ Participants { participantsProject=pid 
                                    , participantsUser=selfid 
                                    , participantsReceivemail=True
+                                   , participantsCdate=now
                                    }
         lift $ redirect RedirectTemporary $ ProjectR pid
 

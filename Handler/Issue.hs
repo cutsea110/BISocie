@@ -328,12 +328,12 @@ postNewIssueR pid = do
                                 , commentCuser=selfid
                                 , commentCdate=now
                                 }
-        ptcpts <- selectParticipants pid
+        emails <- selectMailAddresses pid
         let msgid = toMessageId iid cid now mailMessageIdDomain
         liftIO $ renderSendMail Mail
           { mailHeaders =
                [ ("From", "noreply")
-               , ("Bcc", intercalate "," $ map (userEmail.snd) ptcpts)
+               , ("Bcc", intercalate "," emails)
                , ("Subject", sbj)
                , ("Message-ID", msgid)
                , (mailXHeader, show pid)
@@ -446,13 +446,13 @@ postCommentR pid ino = do
                                 , commentCdate=now
                                 }
         prj <- get404 pid
-        ptcpts <- selectParticipants pid
+        emails <- selectMailAddresses pid
         let msgid = toMessageId iid cid now mailMessageIdDomain
             refid = toMessageId iid lastCid (commentCdate lastC) mailMessageIdDomain
         liftIO $ renderSendMail Mail
           { mailHeaders =
                [ ("From", "noreply")
-               , ("Bcc", intercalate "," $ map (userEmail.snd) ptcpts)
+               , ("Bcc", intercalate "," emails)
                , ("Subject", issueSubject issue)
                , ("Message-ID", msgid)
                , ("References", refid)
@@ -506,6 +506,17 @@ selectParticipants pid = do
       let uid = participantsUser p
       u <- get404 uid
       return (uid, u)
+
+selectMailAddresses :: (PersistBackend (t m),
+                       Control.Failure.Failure ErrorResponse m,
+                       Control.Monad.Trans.Class.MonadTrans t) =>
+                      ProjectId -> t m [String]
+selectMailAddresses pid = do
+  mapM (p2u.snd) =<< selectList [ParticipantsProjectEq pid, ParticipantsReceivemailEq True] [] 0 0
+  where
+    p2u p = do
+      u <- get404 $ participantsUser p
+      return $ userEmail u
 
 storeAttachedFile :: (PersistBackend m, MonadIO m) => UserId -> FileInfo -> m (Maybe FileHeaderId)
 storeAttachedFile uid fi = do

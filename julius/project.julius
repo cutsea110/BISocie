@@ -204,7 +204,7 @@ function mkUser(u, ps){
   mail.click(function(){
     toggleSendmailParticipant(mail);
     reloading_participants();
-  });
+  }).addClass('clickable');
 
   return div.append(c).append(s).append(mail).append(avatar);
 }

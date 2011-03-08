@@ -116,6 +116,7 @@ mkYesodData "BISocie" [$parseRoutes|
 /robots.txt RobotsR GET
 
 /admin AdminR UserCrud userCrud
+/system-batch SystemBatchR GET POST
 
 /s3/upload UploadR POST PUT
 /s3/user/#UserId/file/#FileHeaderId FileR POST DELETE

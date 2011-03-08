@@ -3,11 +3,14 @@ module Handler.Root where
 
 import BISocie
 import BISocie.Helpers.Util
+import BISocie.Helpers.Auth.HashDB (encrypt)
 import Settings
 
-import Control.Monad (unless, forM)
+import Control.Monad (when, unless, forM, forM_)
 import Data.List (sortBy, intersperse)
 import Data.Maybe (fromMaybe)
+import qualified Data.ByteString.Lazy.Char8 as L
+
 
 -- This is a handler function for the GET request method on the RootR
 -- resource pattern. All of your resource patterns are defined in
@@ -80,3 +83,35 @@ getUserLocationsR = do
               , ("lat", jsonScalar $ showMaybeDouble $ profileLatitude p)
               , ("lng", jsonScalar $ showMaybeDouble $ profileLongitude p)
               ]
+
+getSystemBatchR :: Handler RepHtml
+getSystemBatchR = do
+  (_, self) <- requireAuth
+  unless (isAdmin self) $
+    permissionDenied "あなたはこの機能を利用することはできません."
+  defaultLayout $ do
+    setTitle $ string "システムバッチ"
+    addCassius $(cassiusFile "systembatch")
+    addHamlet $(hamletFile "systembatch")
+
+postSystemBatchR :: Handler ()
+postSystemBatchR = do
+  (_, self) <- requireAuth
+  unless (isAdmin self) $
+    permissionDenied "あなたはこの機能を利用することはできません."
+  Just fi <- lookupFile "studentscsv"
+  when (fileName fi /= "" && L.length (fileContent fi) > 0) $ do
+    let ls = L.split '\n' $ fileContent fi
+    runDB $ do
+      forM_ ls $ \l -> do
+        let uid:rawpass:email:fname:gname:_ = map L.unpack $ L.split ',' l
+        insert $ User { userIdent=uid
+                      , userPassword=Just $ encrypt rawpass
+                      , userRole=Student
+                      , userFamilyName=""
+                      , userGivenName=""
+                      , userEmail=email
+                      , userAvatar=Nothing
+                      , userActive=True
+                      }
+    redirect RedirectTemporary SystemBatchR

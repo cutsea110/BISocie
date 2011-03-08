@@ -213,7 +213,7 @@ function modifyParticipant(c){
   var uid = c.closest('div').attr('uid'),
       checked = c.attr('checked'),
       method = checked ? "add" : "del",
-      mail = c.closest('div').find("img[class='mail']");
+      mail = c.closest('div').find("img.mail");
 
   $.ajax({
     async: false,

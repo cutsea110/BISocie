@@ -81,7 +81,6 @@ postParticipantsR pid = do
     modParticipants uid = do
       (selfid, self) <- requireAuth
       mmail <- lookupPostParam "mail"
-      liftIO $ putStrLn $ show mmail
       sendMail <- runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
         unless (p /= Nothing && canEditProjectSetting self) $

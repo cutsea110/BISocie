@@ -52,3 +52,5 @@ div.user-logo a
 div.user-logo img.avatar
     max-width: 80px
     max-height: 80px
+img.mail.clickable:hover
+    cursor: pointer

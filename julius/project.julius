@@ -179,17 +179,18 @@ function mkUser(u, ps){
       avatar = $("<img class='avatar'/>").attr({src: u.avatar}),
       s =$('<a/>').attr({href: u.uri}).text(u.name),
       mail = $('<img/>').addClass('mail');
+
   if (ps[u.id]){
     switch (ps[u.id].receivemail){
       case 'True':
-            mail.attr({src: '@{StaticR img_mail_accept_png}'});
+            mail.attr({src: '@{StaticR img_mail_accept_png}', receivemail: 'send'});
             break;
       case 'False':
-            mail.attr({src: '@{StaticR img_mail_error_png}'});
+            mail.attr({src: '@{StaticR img_mail_error_png}', receivemail: 'stop'});
             break;
     }
   }else{
-    mail.attr({src: '@{StaticR img_mail_checked_png}'});
+    mail.attr({src: '@{StaticR img_mail_checked_png}', receivemail: 'none'});
   }
 
   if('#{show (canEditProjectSetting self)}'=='False')
@@ -200,6 +201,10 @@ function mkUser(u, ps){
     modifyParticipant(c);
     reloading_participants();
   });
+  mail.click(function(){
+    toggleSendmailParticipant(mail);
+    reloading_participants();
+  }).addClass('clickable');
 
   return div.append(c).append(s).append(mail).append(avatar);
 }
@@ -219,10 +224,10 @@ function modifyParticipant(c){
     success: function (json) {
       switch (json.participants.status) {
         case 'added':
-          mail.attr({src: '@{StaticR img_mail_accept_png}'});
+          mail.attr({src: '@{StaticR img_mail_accept_png}', receivemail: 'send'});
           break;
         case 'deleted':
-          mail.attr({src: '@{StaticR img_mail_checked_png}'});
+          mail.attr({src: '@{StaticR img_mail_checked_png}', receivemail: 'none'});
           break;
       }
     },
@@ -230,6 +235,45 @@ function modifyParticipant(c){
       c.attr({checked: !checked});
       var msg = $('<div/>').attr('id', 'message').text($(res.responseText).find('p').text());
       msg.insertBefore($('#ui-main')).fadeOut(3000, function(){msg.remove();});
+    }
+  });
+}
+
+function toggleSendmailParticipant(mail){
+  var uid = mail.closest('div').attr('uid'),
+      method = "mod",
+      sendstop = 'none';
+
+  switch (mail.attr('receivemail')) {
+    case 'send':
+      sendstop = 'stop';
+      break;
+    case 'stop':
+      sendstop = 'send';
+      break;
+    case 'none':
+      // NONE
+      return false;
+  }
+
+  $.ajax({
+    async: false,
+    type: 'POST',
+    url: '@{ParticipantsR pid}',
+    dataType: 'json',
+    data: {_method: method, mail: sendstop, uid: uid},
+    success: function (json) {
+      switch (json.participants.mail) {
+        case "send":
+          mail.attr({src: '@{StaticR img_mail_accept_png}', receivemail: 'send'});
+          break;
+        case "stop":
+          mail.attr({src: '@{StaticR img_mail_error_png}', receivemail: 'stop'});
+          break;
+      }
+    },
+    error: function (res, status) {
+
     }
   });
 }

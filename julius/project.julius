@@ -203,7 +203,8 @@ function mkUser(u, ps){
   });
   mail.click(function(){
     toggleSendmailParticipant(mail);
-    reloading_participants();
+    $("#participants .user-logo[uid='" + u.id + "'] img.mail")
+    .attr({src: mail.attr('src'), receivemail: mail.attr('receivemail')});
   }).addClass('clickable');
 
   return div.append(c).append(s).append(mail).append(avatar);

@@ -60,6 +60,7 @@ Executable bisocie
                   , old-locale
                   , parsec       >= 2.1     && < 3.0
                   , SHA          >= 1.4.1.3 && < 1.5
+                  , utf8-string  >= 0.3.6
   
   -- Modules not exported by this package.
   -- Other-modules:       

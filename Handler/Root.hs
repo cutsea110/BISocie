@@ -6,10 +6,12 @@ import BISocie.Helpers.Util
 import BISocie.Helpers.Auth.HashDB (encrypt)
 import Settings
 
-import Control.Monad (when, unless, forM, forM_)
+import Control.Monad (when, unless, forM)
 import Data.List (sortBy, intersperse)
+import Data.List.Split (splitOn)
 import Data.Maybe (fromMaybe)
 import qualified Data.ByteString.Lazy.Char8 as L
+import Codec.Binary.UTF8.String (encodeString, decodeString)
 
 
 -- This is a handler function for the GET request method on the RootR
@@ -100,18 +102,20 @@ postSystemBatchR = do
   unless (isAdmin self) $
     permissionDenied "あなたはこの機能を利用することはできません."
   Just fi <- lookupFile "studentscsv"
-  when (fileName fi /= "" && L.length (fileContent fi) > 0) $ do
-    let ls = L.split '\n' $ fileContent fi
-    runDB $ do
-      forM_ ls $ \l -> do
-        let uid:rawpass:email:fname:gname:_ = map L.unpack $ L.split ',' l
-        insert $ User { userIdent=uid
-                      , userPassword=Just $ encrypt rawpass
-                      , userRole=Student
-                      , userFamilyName=""
-                      , userGivenName=""
-                      , userEmail=email
-                      , userAvatar=Nothing
-                      , userActive=True
-                      }
-    redirect RedirectTemporary SystemBatchR
+  let recs = filter (not . null) $ lines $ decodeString $ L.unpack $ fileContent fi
+  runDB $ do
+    ids <- forM recs $ \rec -> do
+      let (uid:rawpass:email:fname:gname:_) = splitOn "," rec
+--      return (uid, rawpass, email, fname, gname)
+      insert $ User { userIdent=uid
+                    , userPassword=Just $ encrypt rawpass
+                    , userRole=Student
+                    , userFamilyName=fname
+                    , userGivenName=gname
+                    , userEmail=email
+                    , userAvatar=Nothing
+                    , userActive=True
+                    }
+    liftIO $ putStrLn $ show ids
+  setMessage "学生を登録しました。"
+  redirect RedirectTemporary SystemBatchR

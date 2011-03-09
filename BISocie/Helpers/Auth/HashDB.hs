@@ -116,7 +116,7 @@ getPasswordR = do
             <td>
                 <input type="password" name="new">
         <tr>
-            <th新パスワード(確認)
+            <th>新パスワード(確認)
             <td>
                 <input type="password" name="confirm">
         <tr>

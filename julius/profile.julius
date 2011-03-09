@@ -137,6 +137,7 @@ function graduated(gy) {
   if (gy != null && gy != "") {
     var today = new Date();
         limit = new Date(gy, 4, 1);
+    limit.setFullYear(limit.getFullYear()+1);
     if (today >= limit) g = true;
   }
   return g;

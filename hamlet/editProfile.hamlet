@@ -65,6 +65,7 @@
               $forall ey <- eyears
                 <option :fst ey:selected="" .required>#{show (snd ey)}
           <th>卒業年度
+            <div .help>#{y}年3月卒業の場合は#{(-) y 1}年度卒業です.
           <td>
             <select #graduateYear name="graduateYear">
               <option selected="">

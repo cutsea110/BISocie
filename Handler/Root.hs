@@ -3,11 +3,16 @@ module Handler.Root where
 
 import BISocie
 import BISocie.Helpers.Util
+import BISocie.Helpers.Auth.HashDB (encrypt)
 import Settings
 
-import Control.Monad (unless, forM)
+import Control.Monad (when, unless, forM)
 import Data.List (sortBy, intersperse)
+import Data.List.Split (splitOn)
 import Data.Maybe (fromMaybe)
+import qualified Data.ByteString.Lazy.Char8 as L
+import Codec.Binary.UTF8.String (encodeString, decodeString)
+
 
 -- This is a handler function for the GET request method on the RootR
 -- resource pattern. All of your resource patterns are defined in
@@ -80,3 +85,37 @@ getUserLocationsR = do
               , ("lat", jsonScalar $ showMaybeDouble $ profileLatitude p)
               , ("lng", jsonScalar $ showMaybeDouble $ profileLongitude p)
               ]
+
+getSystemBatchR :: Handler RepHtml
+getSystemBatchR = do
+  (_, self) <- requireAuth
+  unless (isAdmin self) $
+    permissionDenied "あなたはこの機能を利用することはできません."
+  defaultLayout $ do
+    setTitle $ string "システムバッチ"
+    addCassius $(cassiusFile "systembatch")
+    addHamlet $(hamletFile "systembatch")
+
+postSystemBatchR :: Handler ()
+postSystemBatchR = do
+  (_, self) <- requireAuth
+  unless (isAdmin self) $
+    permissionDenied "あなたはこの機能を利用することはできません."
+  Just fi <- lookupFile "studentscsv"
+  let recs = filter (not . null) $ lines $ decodeString $ L.unpack $ fileContent fi
+  runDB $ do
+    ids <- forM recs $ \rec -> do
+      let (uid:rawpass:email:fname:gname:_) = splitOn "," rec
+--      return (uid, rawpass, email, fname, gname)
+      insert $ User { userIdent=uid
+                    , userPassword=Just $ encrypt rawpass
+                    , userRole=Student
+                    , userFamilyName=fname
+                    , userGivenName=gname
+                    , userEmail=email
+                    , userAvatar=Nothing
+                    , userActive=True
+                    }
+    liftIO $ putStrLn $ show ids
+  setMessage "学生を登録しました。"
+  redirect RedirectTemporary SystemBatchR

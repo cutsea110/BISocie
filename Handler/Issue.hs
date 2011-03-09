@@ -6,7 +6,7 @@ module Handler.Issue where
 
 import BISocie
 import Control.Applicative ((<$>),(<*>))
-import Control.Monad (unless, forM, mplus, liftM2)
+import Control.Monad (when, unless, forM, mplus, liftM2)
 import Control.Monad.Trans.Class
 import Control.Monad.IO.Class
 import Control.Failure
@@ -330,16 +330,17 @@ postNewIssueR pid = do
                                 }
         emails <- selectMailAddresses pid
         let msgid = toMessageId iid cid now mailMessageIdDomain
-        liftIO $ renderSendMail Mail
-          { mailHeaders =
-               [ ("From", "noreply")
-               , ("Bcc", intercalate "," emails)
-               , ("Subject", sbj)
-               , ("Message-ID", msgid)
-               , (mailXHeader, show pid)
-               ]
-          , mailParts = 
-                 [[ Part
+        when (not $ null emails) $
+          liftIO $ renderSendMail Mail
+            { mailHeaders =
+                 [ ("From", "noreply")
+                 , ("Bcc", intercalate "," emails)
+                 , ("Subject", sbj)
+                 , ("Message-ID", msgid)
+                 , (mailXHeader, show pid)
+                 ]
+            , mailParts = 
+                   [[ Part
                      { partType = "text/plain; charset=utf-8"
                      , partEncoding = None
                      , partFilename = Nothing
@@ -449,18 +450,19 @@ postCommentR pid ino = do
         emails <- selectMailAddresses pid
         let msgid = toMessageId iid cid now mailMessageIdDomain
             refid = toMessageId iid lastCid (commentCdate lastC) mailMessageIdDomain
-        liftIO $ renderSendMail Mail
-          { mailHeaders =
-               [ ("From", "noreply")
-               , ("Bcc", intercalate "," emails)
-               , ("Subject", issueSubject issue)
-               , ("Message-ID", msgid)
-               , ("References", refid)
-               , ("In-Reply-To", refid)
-               , (mailXHeader, show pid)
-               ]
-          , mailParts = 
-                 [[ Part
+        when (not $ null emails) $
+          liftIO $ renderSendMail Mail
+            { mailHeaders =
+                 [ ("From", "noreply")
+                 , ("Bcc", intercalate "," emails)
+                 , ("Subject", issueSubject issue)
+                 , ("Message-ID", msgid)
+                 , ("References", refid)
+                 , ("In-Reply-To", refid)
+                 , (mailXHeader, show pid)
+                 ]
+            , mailParts = 
+                   [[ Part
                      { partType = "text/plain; charset=utf-8"
                      , partEncoding = None
                      , partFilename = Nothing

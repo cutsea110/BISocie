@@ -52,7 +52,7 @@ User
     givenName String Update
     email String Update
     avatar FileHeaderId Maybe Update
-    active Bool Eq default=true
+    active Bool Update Eq default=true
     UniqueUser ident
     
 Profile

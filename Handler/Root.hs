@@ -104,18 +104,33 @@ postSystemBatchR = do
   Just fi <- lookupFile "studentscsv"
   let recs = filter (not . null) $ lines $ decodeString $ L.unpack $ fileContent fi
   runDB $ do
-    ids <- forM recs $ \rec -> do
+    users <- selectList [] [] 0 0
+    forM recs $ \rec -> do
       let (uid:rawpass:email:fname:gname:_) = splitOn "," rec
---      return (uid, rawpass, email, fname, gname)
-      insert $ User { userIdent=uid
-                    , userPassword=Just $ encrypt rawpass
-                    , userRole=Student
-                    , userFamilyName=fname
-                    , userGivenName=gname
-                    , userEmail=email
-                    , userAvatar=Nothing
-                    , userActive=True
-                    }
-    liftIO $ putStrLn $ show ids
+      case userExist uid users of
+        Nothing ->
+          insert $ User { userIdent=uid
+                        , userPassword=Just (encrypt rawpass)
+                        , userRole=Student
+                        , userFamilyName=fname
+                        , userGivenName=gname
+                        , userEmail=email
+                        , userAvatar=Nothing
+                        , userActive=True
+                        }
+        Just (id', u) -> do
+          update id' [ UserPassword  $ Just (encrypt rawpass)
+                     , UserRole Student
+                     , UserFamilyName fname
+                     , UserGivenName gname
+                     , UserEmail email
+                     , UserActive True
+                     ]
+          return id'
   setMessage "学生を登録しました。"
   redirect RedirectTemporary SystemBatchR
+  where
+    userExist :: String -> [(UserId, User)] -> Maybe (UserId, User)
+    userExist _   [] = Nothing
+    userExist uid (u@(_, u'):us) = 
+      if uid == userIdent u' then Just u else userExist uid us

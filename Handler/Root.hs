@@ -6,12 +6,12 @@ import BISocie.Helpers.Util
 import BISocie.Helpers.Auth.HashDB (encrypt)
 import Settings
 
-import Control.Monad (when, unless, forM)
+import Control.Monad (unless, forM)
 import Data.List (sortBy, intersperse)
 import Data.List.Split (splitOn)
 import Data.Maybe (fromMaybe)
 import qualified Data.ByteString.Lazy.Char8 as L
-import Codec.Binary.UTF8.String (encodeString, decodeString)
+import Codec.Binary.UTF8.String (decodeString)
 
 
 -- This is a handler function for the GET request method on the RootR
@@ -118,7 +118,7 @@ postSystemBatchR = do
                         , userAvatar=Nothing
                         , userActive=True
                         }
-        Just (id', u) -> do
+        Just (id', _) -> do
           update id' [ UserPassword  $ Just (encrypt rawpass)
                      , UserRole Student
                      , UserFamilyName fname

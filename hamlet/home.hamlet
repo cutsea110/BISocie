@@ -45,10 +45,25 @@
             $else
               次へ»
       <tr>
-        <th .name>プロジェクト名
+        <th .name .sortable-header>プロジェクト名
+          \
+          <a href="@?{nameDesc}" .sorter>△
+          \
+          <a href="@?{nameAsc}" .sorter>▽
+          \
         <th .desc>概要
-        <th .date>作成日
-        <th .date>更新日
+        <th .date .sortable-header>作成日
+          \
+          <a href="@?{cdateDesc}" .sorter> △
+          \
+          <a href="@?{cdateAsc}" .sorter> ▽
+          \
+        <th .date .sortable-header>更新日
+          \
+          <a href="@?{udateDesc}" .sorter> △
+          \
+          <a href="@?{udateAsc}" .sorter> ▽
+          \
     <tbody>
       $forall p <- prjs
         <tr class="#{fst p}">

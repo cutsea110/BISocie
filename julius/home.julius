@@ -1,0 +1,11 @@
+$(document).ready(function(){
+  $("a.sorter").hide();
+  $("th.sortable-header").hover(
+    function(){
+      $(this).find("a.sorter").show();
+    },
+    function(){
+      $(this).find("a.sorter").hide();
+    }
+  );
+});

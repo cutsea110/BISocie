@@ -24,6 +24,7 @@ module Settings
     , graduateStartYear
     , mailXHeader
     , mailMessageIdDomain
+    , fromEmailAddress
     , projectListLimit
     , issueListLimit
     , pagenateWidth
@@ -171,6 +172,9 @@ mailXHeader :: String
 mailXHeader = "X-BISocie-Devel"
 mailMessageIdDomain :: String
 mailMessageIdDomain = "bisocie.timedia.co.jp"
+fromEmailAddress :: String
+fromEmailAddress = "cutsea110@gmail.com"
+
 projectListLimit :: Int
 projectListLimit = 50
 issueListLimit :: Int

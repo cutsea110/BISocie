@@ -31,27 +31,45 @@ getHomeR uid = do
   (selfid, self) <- requireAuth
   unless (selfid==uid) $ permissionDenied "他人のホームを見ることはできません."
   page' <- lookupGetParam "page"
+  order' <- lookupGetParam "order"
   let page = max 0 $ fromMaybe 0  $ fmap read $ page'
+      order = fromMaybe ProjectUdateDesc $ fmap read $ order'
+  liftIO $ putStrLn $ show order
   (allprjs, prjs) <- runDB $ do
     prjs' <- viewableProjects (selfid, self)
-    let sorted = sortBy (\(_, p) (_, q) -> projectUdate q `compare` projectUdate p) prjs'
+    let sorted = sortBy (sorter order) prjs'
     return $ (prjs',
               zip (concat $ repeat ["odd", "even"]::[String]) 
               $ take projectListLimit $ drop (page*projectListLimit) sorted)
   let maxpage = ceiling (fromIntegral (length allprjs) / fromIntegral projectListLimit) - 1
       prevExist = page > 0
       nextExist = page < maxpage
-      prevPage = (HomeR uid, [("page", show $ max 0 (page-1))])
-      nextPage = (HomeR uid, [("page", show $ max 0 (page+1))])
+      prevPage = (HomeR uid, [("page", show $ max 0 (page-1)), ("order", show order)])
+      nextPage = (HomeR uid, [("page", show $ max 0 (page+1)), ("order", show order)])
       pagenate = intersperse [] $  map (map pageN) $ mkPagenate page maxpage pagenateWidth
-      pageN = \n -> (n, (HomeR uid, [("page", show n)]))
+      pageN = \n -> (n, (HomeR uid, [("page", show n), ("order", show order)]))
       isCurrent = (==page)
       needPaging = maxpage > 0
       inc = (+1)
+      udateAsc  = (HomeR selfid, [("page", show page), ("order", show ProjectUdateAsc)])
+      udateDesc = (HomeR selfid, [("page", show page), ("order", show ProjectUdateDesc)])
+      cdateAsc  = (HomeR selfid, [("page", show page), ("order", show ProjectCdateAsc)])
+      cdateDesc = (HomeR selfid, [("page", show page), ("order", show ProjectCdateDesc)])
+      nameAsc   = (HomeR selfid, [("page", show page), ("order", show ProjectNameAsc)])
+      nameDesc  = (HomeR selfid, [("page", show page), ("order", show ProjectNameDesc)])
   defaultLayout $ do
     setTitle $ string $ userFullName self ++ " ホーム"
     addCassius $(cassiusFile "home")
+    addJulius $(juliusFile "home")
     addHamlet $(hamletFile "home")
+  where
+    sorter :: Order Project -> (ProjectId, Project) -> (ProjectId, Project) -> Ordering
+    sorter ProjectUdateAsc  (_, p) (_, q) = projectUdate p `compare` projectUdate q
+    sorter ProjectUdateDesc (_, p) (_, q) = projectUdate q `compare` projectUdate p
+    sorter ProjectCdateAsc  (_, p) (_, q) = projectCdate p `compare` projectCdate q
+    sorter ProjectCdateDesc (_, p) (_, q) = projectCdate q `compare` projectCdate p
+    sorter ProjectNameAsc   (_, p) (_, q) = projectName p  `compare` projectName q
+    sorter ProjectNameDesc  (_, p) (_, q) = projectName q  `compare` projectName p
     
 getHumanNetworkR :: Handler RepHtml
 getHumanNetworkR = do

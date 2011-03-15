@@ -7,5 +7,6 @@ table.list .desc
    width: 30%
 table.list .date
    width: 15%
-
-
+table.list .sort-header
+   text-decoration: none
+   color: #4040ff

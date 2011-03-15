@@ -21,7 +21,7 @@ import qualified Data.Text.Lazy
 import qualified Data.Text.Lazy.Encoding
 
 import BISocie.Helpers.Util
-import Settings (mailXHeader, mailMessageIdDomain, issueListLimit, pagenateWidth)
+import Settings (mailXHeader, mailMessageIdDomain, fromEmailAddress, issueListLimit, pagenateWidth)
 import StaticFiles
 import Handler.S3
 
@@ -333,7 +333,7 @@ postNewIssueR pid = do
         when (not $ null emails) $
           liftIO $ renderSendMail Mail
             { mailHeaders =
-                 [ ("From", "noreply")
+                 [ ("From", fromEmailAddress)
                  , ("Bcc", intercalate "," emails)
                  , ("Subject", sbj)
                  , ("Message-ID", msgid)
@@ -453,7 +453,7 @@ postCommentR pid ino = do
         when (not $ null emails) $
           liftIO $ renderSendMail Mail
             { mailHeaders =
-                 [ ("From", "noreply")
+                 [ ("From", fromEmailAddress)
                  , ("Bcc", intercalate "," emails)
                  , ("Subject", issueSubject issue)
                  , ("Message-ID", msgid)

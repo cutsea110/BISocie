@@ -173,7 +173,7 @@ mailXHeader = "X-BISocie-Devel"
 mailMessageIdDomain :: String
 mailMessageIdDomain = "bisocie.timedia.co.jp"
 fromEmailAddress :: String
-fromEmailAddress = "cutsea110@gmail.com"
+fromEmailAddress = "nyama@seitoku.ac.jp"
 
 projectListLimit :: Int
 projectListLimit = 50

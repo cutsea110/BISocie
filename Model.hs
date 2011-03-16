@@ -156,6 +156,15 @@ data ProjectBis = ProjectBis { projectBisId :: ProjectId
                              , projectBisDescription :: String
                              , projectBisStatuses :: [(String, Maybe Color, Maybe Effect)]
                              }
+toProjectBis :: (ProjectId, Project) -> ProjectBis
+toProjectBis (pid, prj) = 
+  let Right es = parseStatuses $ projectStatuses prj
+  in         
+   ProjectBis { projectBisId=pid
+              , projectBisName=projectName prj
+              , projectBisDescription=projectDescription prj
+              , projectBisStatuses=es
+              }
 
 lookupStatus :: (Eq a) => a -> [(a, b, c)] -> Maybe (a, b, c)
 lookupStatus _ [] = Nothing
@@ -404,30 +413,3 @@ canSearchUser u =
     Teacher -> True
     Staff -> True
     Student -> False
-
-viewableProjects :: (PersistBackend m) => (UserId, User) -> m [(ProjectId, Project)]
-viewableProjects (selfid, self) =
-  if isAdmin self
-  then selectList [] [] 0 0
-  else do
-    ps <- selectList [ParticipantsUserEq selfid] [] 0 0
-    forM ps $ \(_, p) -> do
-      let pid = participantsProject p
-      Just prj <- get pid
-      return (pid, prj)
-
-viewableProjects' :: (PersistBackend (t m),
-                      Control.Failure.Failure ErrorResponse m,
-                      Control.Monad.Trans.Class.MonadTrans t) =>
-                     (UserId, User) -> [Key Project] -> t m [(Key Project, Project)]
-viewableProjects' (selfid, self) prjids =
-  if isAdmin self
-  then forM prjids $ \pid -> do
-    p <- get404 pid
-    return (pid, p)
-  else do
-    ptcpts <- selectList [ParticipantsUserEq selfid, ParticipantsProjectIn prjids] [] 0 0
-    forM ptcpts $ \(_, p) -> do
-      let pid = participantsProject p
-      prj <- get404 pid
-      return (pid, prj)

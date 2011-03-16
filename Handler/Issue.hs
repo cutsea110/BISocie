@@ -156,7 +156,7 @@ postCrossSearchR = do
   page <- fmap (max 0 . fromMaybe 0 . fmap read) $ lookupPostParam "page"
   issues <- runDB $ do
     prjs <- if isAdmin self
-            then selectList [] [] 0 0
+            then selectList [ProjectIdIn ps] [] 0 0
             else do
               ps' <- selectList [ParticipantsUserEq selfid, ParticipantsProjectIn ps] [] 0 0
               selectList [ProjectIdIn $ map (participantsProject.snd) ps'] [] 0 0

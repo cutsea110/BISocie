@@ -57,6 +57,8 @@ getHomeR uid = do
       cdateDesc = (HomeR selfid, [("page", show page), ("order", show ProjectCdateDesc)])
       nameAsc   = (HomeR selfid, [("page", show page), ("order", show ProjectNameAsc)])
       nameDesc  = (HomeR selfid, [("page", show page), ("order", show ProjectNameDesc)])
+      colspan = 4
+      paging = $(hamletFile "paging")
   defaultLayout $ do
     setTitle $ string $ userFullName self ++ " ホーム"
     addCassius $(cassiusFile "home")

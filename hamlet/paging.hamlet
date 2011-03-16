@@ -1,0 +1,28 @@
+$if needPaging
+  <tr>
+    <td colspan="#{show colspan}">
+      $if prevExist
+        <a href="@?{prevPage}">«前へ
+        \ 
+      $else
+        «前へ
+      $forall ps <- pagenate
+        $if null ps
+          \ 
+          ...
+          \ 
+        $else
+          $forall p <- ps
+            $if isCurrent (fst p)
+              \ 
+              #{show (inc (fst p))}
+              \ 
+            $else
+              \ 
+              <a href="@?{snd p}">#{show (inc (fst p))}
+              \ 
+      $if nextExist
+        \ 
+        <a href="@?{nextPage}">次へ»
+      $else
+        次へ»

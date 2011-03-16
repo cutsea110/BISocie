@@ -45,7 +45,7 @@ Executable bisocie
                   , directory
                   , bytestring
                   , text
-                  , persistent   >= 0.3.1.1
+                  , persistent   >= 0.4.2
                   , persistent-postgresql
                   , template-haskell
                   , hamlet

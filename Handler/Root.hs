@@ -30,17 +30,18 @@ getHomeR :: UserId -> Handler RepHtml
 getHomeR uid = do
   (selfid, self) <- requireAuth
   unless (selfid==uid) $ permissionDenied "他人のホームを見ることはできません."
-  page' <- lookupGetParam "page"
-  order' <- lookupGetParam "order"
-  let page = max 0 $ fromMaybe 0  $ fmap read $ page'
-      order = fromMaybe ProjectUdateDesc $ fmap read $ order'
+  page <- fmap (max 0 . fromMaybe 0 . fmap read) $ lookupGetParam "page"
+  order <- fmap (fromMaybe ProjectUdateDesc . fmap read) $ lookupGetParam "order"
   liftIO $ putStrLn $ show order
   (allprjs, prjs) <- runDB $ do
-    prjs' <- viewableProjects (selfid, self)
-    let sorted = sortBy (sorter order) prjs'
+    prjs' <- if isAdmin self
+             then selectList [] [order] 0 0
+             else do
+               ps <- selectList [ParticipantsUserEq selfid] [] 0 0
+               selectList [ProjectIdIn (map (participantsProject . snd) ps)] [order] 0 0
     return $ (prjs',
               zip (concat $ repeat ["odd", "even"]::[String]) 
-              $ take projectListLimit $ drop (page*projectListLimit) sorted)
+              $ take projectListLimit $ drop (page*projectListLimit) prjs')
   let maxpage = ceiling (fromIntegral (length allprjs) / fromIntegral projectListLimit) - 1
       prevExist = page > 0
       nextExist = page < maxpage
@@ -64,14 +65,6 @@ getHomeR uid = do
     addCassius $(cassiusFile "home")
     addJulius $(juliusFile "home")
     addHamlet $(hamletFile "home")
-  where
-    sorter :: Order Project -> (ProjectId, Project) -> (ProjectId, Project) -> Ordering
-    sorter ProjectUdateAsc  (_, p) (_, q) = projectUdate p `compare` projectUdate q
-    sorter ProjectUdateDesc (_, p) (_, q) = projectUdate q `compare` projectUdate p
-    sorter ProjectCdateAsc  (_, p) (_, q) = projectCdate p `compare` projectCdate q
-    sorter ProjectCdateDesc (_, p) (_, q) = projectCdate q `compare` projectCdate p
-    sorter ProjectNameAsc   (_, p) (_, q) = projectName p  `compare` projectName q
-    sorter ProjectNameDesc  (_, p) (_, q) = projectName q  `compare` projectName p
     
 getHumanNetworkR :: Handler RepHtml
 getHumanNetworkR = do

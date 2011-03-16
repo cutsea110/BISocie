@@ -7,7 +7,7 @@ import BISocie.Helpers.Auth.HashDB (encrypt)
 import Settings
 
 import Control.Monad (unless, forM)
-import Data.List (sortBy, intersperse)
+import Data.List (intersperse)
 import Data.List.Split (splitOn)
 import Data.Maybe (fromMaybe)
 import qualified Data.ByteString.Lazy.Char8 as L

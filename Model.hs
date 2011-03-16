@@ -10,9 +10,6 @@ import Database.Persist.TH (share2, derivePersistField)
 import Database.Persist.Base
 import Database.Persist.GenericSql (mkMigrate)
 import System.Locale
-import Control.Monad (forM)
-import Control.Monad.Trans.Class (MonadTrans)
-import Control.Failure (Failure)
 import Data.Char (isHexDigit)
 import Data.Int
 import Data.Time

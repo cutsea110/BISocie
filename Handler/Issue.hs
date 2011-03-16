@@ -258,6 +258,8 @@ getIssueListR pid = do
       isCurrent = (==page)
       needPaging = maxpage > 0
       inc = (+1)
+      colspan = 8
+      paging = $(hamletFile "paging")
   defaultLayout $ do
     setTitle $ string $ projectBisName prj ++ "案件一覧"
     addCassius $(cassiusFile "issue")

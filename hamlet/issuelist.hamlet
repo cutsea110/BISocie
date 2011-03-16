@@ -10,34 +10,7 @@
   <table .list>
     <caption>#{projectBisName prj} 案件一覧
     <thead>
-      $if needPaging
-        <tr>
-          <td colspan="8">
-            $if prevExist
-              <a href="@?{prevPage}">«前へ
-              \ 
-            $else
-              «前へ
-            $forall ps <- pagenate
-              $if null ps
-                \ 
-                ...
-                \ 
-              $else
-                $forall p <- ps
-                  $if isCurrent (fst p)
-                    \ 
-                    #{show (inc (fst p))}
-                    \ 
-                  $else
-                    \ 
-                    <a href="@?{snd p}">#{show (inc (fst p))}
-                    \ 
-            $if nextExist
-              \ 
-              <a href="@?{nextPage}">次へ»
-            $else
-              次へ»
+      ^{paging}
       <tr>
         <th>No
         <th>件名
@@ -61,31 +34,4 @@
           <td>#{userFullName (issueBisUpdator (snd issue))}
           <td>#{showDate (issueUdate (issueBisIssue (snd issue)))}
     <tfoot>
-      $if needPaging
-        <tr>
-          <td colspan="8">
-            $if prevExist
-              <a href="@?{prevPage}">«前へ
-              \ 
-            $else
-              «前へ
-            $forall ps <- pagenate
-              $if null ps
-                \ 
-                ...
-                \ 
-              $else
-                $forall p <- ps
-                  $if isCurrent (fst p)
-                    \ 
-                    #{show (inc (fst p))}
-                    \ 
-                  $else
-                    \ 
-                    <a href="@?{snd p}">#{show (inc (fst p))}
-                    \ 
-            $if nextExist
-              \ 
-              <a href="@?{nextPage}">次へ»
-            $else
-              次へ»
+      ^{paging}

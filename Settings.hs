@@ -169,11 +169,11 @@ entryStartYear = 2000
 graduateStartYear :: Integer
 graduateStartYear = 2000
 mailXHeader :: String
-mailXHeader = "X-BISocie-Devel"
+mailXHeader = "X-BISocie-Soubun"
 mailMessageIdDomain :: String
-mailMessageIdDomain = "bisocie.timedia.co.jp"
+mailMessageIdDomain = "bisocie.seitoku.ac.jp"
 fromEmailAddress :: String
-fromEmailAddress = "nyama@seitoku.ac.jp"
+fromEmailAddress = "bisocie@seitoku.ac.jp"
 
 projectListLimit :: Int
 projectListLimit = 50

@@ -18,7 +18,9 @@ module Settings
     , rootbase
     , staticroot
     , staticdir
+    , rootRelativePath
     , s3dir
+    , s3root
       --
     , entryStartYear
     , graduateStartYear
@@ -49,9 +51,17 @@ approot :: String
 -- you would probably want it to be:
 -- > approot = "http://www.yesod.com"
 -- Please note that there is no trailing slash.
-approot = "bisocie.timedia.co.jp"
+approot = "https://bisocie.seitoku.ac.jp"
 #else
-approot = "bisocie.timedia.co.jp"
+approot = "https://bisocie.seitoku.ac.jp"
+#endif
+
+-- | The base URL for your site's root relative top path with consider apache.
+rootRelativePath :: String
+#ifdef PRODUCTION
+rootRelativePath = "https://localhost:3001"
+#else
+rootRelativePath = "https://localhost:3001"
 #endif
 
 rootbase :: String
@@ -76,10 +86,12 @@ staticdir = "static"
 --
 -- To see how this value is used, see urlRenderOverride in BISocie.hs
 staticroot :: String
-staticroot = "/static"
+staticroot = approot ++ "/static"
 
 s3dir :: FilePath
 s3dir = "s3"
+s3root :: String
+s3root = approot ++ "/s3"
 
 -- | The database connection string. The meaning of this string is backend-
 -- specific.
@@ -87,7 +99,7 @@ connStr :: String
 #ifdef PRODUCTION
 connStr = "user=soubun password=sougoubunnka host=localhost port=5432 dbname=bisocie"
 #else
-connStr = "user=soubun password=sougoubunnka host=localhost port=5432 dbname=bisocie_debug"
+connStr = "user=soubun password=sougoubunnka host=localhost port=5432 dbname=bisocie"
 #endif
 
 -- | Your application will keep a connection pool and take connections from

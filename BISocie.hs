@@ -50,7 +50,6 @@ import qualified Settings
 data BISocie = BISocie
     { getStatic :: Static -- ^ Settings for static file serving.
     , connPool :: Settings.ConnectionPool -- ^ Database connection pool.
-    , isHTTPS :: Bool
     }
 
 -- | A useful synonym; most of the handler functions in your application
@@ -127,7 +126,7 @@ mkYesodData "BISocie" [$parseRoutes|
 -- Please see the documentation for the Yesod typeclass. There are a number
 -- of settings which can be configured by overriding methods here.
 instance Yesod BISocie where
-    approot app = (if isHTTPS app then "https://" else "http://") ++ Settings.approot ++ Settings.rootbase
+    approot _ = Settings.approot
     
     defaultLayout widget = do
       mu <- maybeAuth
@@ -157,7 +156,7 @@ instance Yesod BISocie where
     -- This is done to provide an optimization for serving static files from
     -- a separate domain. Please see the staticroot setting in Settings.hs
     urlRenderOverride a (StaticR s) =
-        Just $ uncurry (joinPath a $ approot a ++ Settings.staticroot) $ renderRoute s
+        Just $ uncurry (joinPath a Settings.staticroot) $ renderRoute s
     urlRenderOverride _ _ = Nothing
 
     -- The page to be redirected to when authentication is required.

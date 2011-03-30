@@ -5,6 +5,6 @@ import Network.Wai.Handler.Warp (run)
 
 main :: IO ()
 main = do
-    let port = 3003
+    let port = 3001
     hPutStrLn stderr $ "Application launched, listening on port " ++ show port
     withBISocie $ run port . debug

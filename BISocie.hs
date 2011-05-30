@@ -26,7 +26,6 @@ import Yesod
 import Yesod.Helpers.Static
 import Yesod.Helpers.Auth
 import BISocie.Helpers.Auth.HashDB
-import Yesod.Helpers.Auth.OpenId
 import Yesod.Helpers.Crud
 import Yesod.Form.Jquery
 import System.Directory

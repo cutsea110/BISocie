@@ -1,8 +1,10 @@
 {-# LANGUAGE TemplateHaskell, OverloadedStrings #-}
 module Handler.User where
 
-import BISocie
 import Control.Monad (unless, forM)
+import qualified Data.Text as T
+
+import BISocie
 
 getUserListR :: Handler RepJson
 getUserListR = do
@@ -20,11 +22,11 @@ getUserListR = do
   jsonToRepJson $ jsonMap [("userlist", jsonList $ map (go r) us)]
   where
     go r ((uid, u), mp, ra) = jsonMap [ ("id", jsonScalar $ show uid)
-                                      , ("ident", jsonScalar $ userIdent u)
-                                      , ("uri", jsonScalar $ r $ ProfileR uid)
-                                      , ("name", jsonScalar $ userFullName u)
+                                      , ("ident", jsonScalar $ T.unpack $ userIdent u)
+                                      , ("uri", jsonScalar $ T.unpack $ r $ ProfileR uid)
+                                      , ("name", jsonScalar $ T.unpack $ userFullName u)
                                       , ("role", jsonScalar $ show $ userRole u)
-                                      , ("prettyrole", jsonScalar $ userRoleName u)
-                                      , ("entryYear", jsonScalar $ showmaybe $ fmap (showEntryYear.snd) mp)
-                                      , ("avatar", jsonScalar $ r ra)
+                                      , ("prettyrole", jsonScalar $ T.unpack $ userRoleName u)
+                                      , ("entryYear", jsonScalar $ T.unpack $ showmaybe $ fmap (showEntryYear.snd) mp)
+                                      , ("avatar", jsonScalar $ T.unpack $ r ra)
                                       ]

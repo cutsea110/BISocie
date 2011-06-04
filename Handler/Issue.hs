@@ -19,6 +19,9 @@ import Data.Maybe (fromMaybe)
 import Network.Mail.Mime
 import qualified Data.Text.Lazy
 import qualified Data.Text.Lazy.Encoding
+import Data.Text (Text)
+import qualified Data.Text as T
+import Text.Hamlet (preEscapedText)
 
 import BISocie.Helpers.Util
 import Settings (mailXHeader, mailMessageIdDomain, fromEmailAddress, issueListLimit, pagenateWidth)
@@ -46,7 +49,7 @@ getScheduleR y m = do
       days = map (map (\(w,d) -> let day = fromWeekDate y w d in (day, classOf day d today)))
              $ groupBy (\d1 d2 -> fst d1 == fst d2) [(w, d)| w <- [fweek..lweek], d <- [1..7]]
   defaultLayout $ do
-    setTitle $ string $ show y ++ "年" ++ show m ++ "月のスケジュール"
+    setTitle $ preEscapedText $ showText y +++ "年" +++ showText m +++ "月のスケジュール"
     addCassius $(cassiusFile "schedule")
     addJulius $(juliusFile "schedule")
     addHamlet $(hamletFile "schedule")
@@ -86,14 +89,14 @@ getTaskR y m d = do
   jsonToRepJson $ jsonMap [("tasks", jsonList $ map (go r) issues)]
   where
     go r (iid, issue) = jsonMap [ ("id", jsonScalar $ show iid)
-                                , ("subject", jsonScalar $ issueSubject issue)
-                                , ("uri", jsonScalar $ r $ IssueR (issueProject issue) (issueNumber issue))
+                                , ("subject", jsonScalar $ T.unpack $ issueSubject issue)
+                                , ("uri", jsonScalar $ T.unpack $ r $ IssueR (issueProject issue) (issueNumber issue))
                                 ]
 
 getAssignListR :: Handler RepJson
 getAssignListR = do
   (selfid, self) <- requireAuth
-  pids <- fmap (fmap read) $ lookupGetParams "projectid"
+  pids <- fmap (fmap readText) $ lookupGetParams "projectid"
   users <- runDB $ do
     ps <- if isAdmin self
           then selectList [ParticipantsProjectIn pids] [] 0 0
@@ -105,13 +108,13 @@ getAssignListR = do
   jsonToRepJson $ jsonMap [("assigns", jsonList $ map go users)]
   where
     go (uid, u) = jsonMap [ ("uid", jsonScalar $ show uid)
-                          , ("name", jsonScalar $ userFullName u)
+                          , ("name", jsonScalar $ T.unpack $ userFullName u)
                           ]
 
 getStatusListR :: Handler RepJson
 getStatusListR = do
   (selfid, self) <- requireAuth
-  pids <- fmap (fmap read) $ lookupGetParams "projectid"
+  pids <- fmap (fmap readText) $ lookupGetParams "projectid"
   stss <- runDB $ do
     prjs <- if isAdmin self
             then selectList [ProjectIdIn pids] [] 0 0
@@ -122,7 +125,7 @@ getStatusListR = do
                                let (Right es) = parseStatuses $ projectStatuses prj 
                                in map fst3 es) prjs
   cacheSeconds 10 -- FIXME
-  jsonToRepJson $ jsonMap [("statuses", jsonList $ map jsonScalar stss)]
+  jsonToRepJson $ jsonMap [("statuses", jsonList $ map (jsonScalar . T.unpack) stss)]
 
 getCrossSearchR :: Handler RepHtml
 getCrossSearchR = do
@@ -135,7 +138,7 @@ getCrossSearchR = do
                selectList [ProjectIdIn (map (participantsProject . snd) ps)] [] 0 0
     return $ map toProjectBis prjs'
   defaultLayout $ do
-    setTitle $ string "クロスサーチ"
+    setTitle "クロスサーチ"
     addCassius $(cassiusFile "issue")
     addJulius $(juliusFile "crosssearch")
     addHamlet $(hamletFile "crosssearch")
@@ -144,16 +147,16 @@ postCrossSearchR :: Handler RepJson
 postCrossSearchR = do
   (selfid, self) <- requireAuth
   r <- getUrlRender
-  ps <- fmap (fmap read) $ lookupPostParams "projectid"
+  ps <- fmap (fmap readText) $ lookupPostParams "projectid"
   ss <- lookupPostParams "status"
-  as <- fmap (fmap (Just . read)) $ lookupPostParams "assign"
+  as <- fmap (fmap (Just . readText)) $ lookupPostParams "assign"
   (lf, lt) <- uncurry (liftM2 (,)) 
-              (fmap (fmap read) $ lookupPostParam "limitdatefrom",
-               fmap (fmap (addDays 1 . read)) $ lookupPostParam "limitdateto")
+              (fmap (fmap readText) $ lookupPostParam "limitdatefrom",
+               fmap (fmap (addDays 1 . readText)) $ lookupPostParam "limitdateto")
   (uf, ut) <- uncurry (liftM2 (,)) 
-              (fmap (fmap (localDayToUTC . read)) $ lookupPostParam "updatedfrom",
-               fmap (fmap (localDayToUTC . addDays 1 . read)) $ lookupPostParam "updatedto")
-  page <- fmap (max 0 . fromMaybe 0 . fmap read) $ lookupPostParam "page"
+              (fmap (fmap (localDayToUTC . readText)) $ lookupPostParam "updatedfrom",
+               fmap (fmap (localDayToUTC . addDays 1 . readText)) $ lookupPostParam "updatedto")
+  page <- fmap (max 0 . fromMaybe 0 . fmap readText) $ lookupPostParam "page"
   issues <- runDB $ do
     prjs <- if isAdmin self
             then selectList [ProjectIdIn ps] [] 0 0
@@ -189,25 +192,25 @@ postCrossSearchR = do
       in
       jsonMap [ ("id", jsonScalar $ show $ issueBisId i)
               , ("effect", jsonScalar e)
-              , ("color", jsonScalar c)
-              , ("project", jsonScalar $ projectBisName p)
-              , ("projecturi", jsonScalar $ r $ projectRoute)
+              , ("color", jsonScalar $ T.unpack c)
+              , ("project", jsonScalar $ T.unpack $ projectBisName p)
+              , ("projecturi", jsonScalar $ T.unpack $ r $ projectRoute)
               , ("no", jsonScalar $ show $ issueNumber $ issueBisIssue i)
-              , ("subject", jsonScalar $ issueSubject $ issueBisIssue i)
-              , ("issueuri", jsonScalar $ r $ issueRoute)
-              , ("status", jsonScalar $ issueStatus $ issueBisIssue i)
-              , ("assign", jsonScalar $ showmaybe $ fmap userFullName $ issueBisAssign i)
-              , ("limitdate", jsonScalar $ showLimitdate $ issueBisIssue i)
-              , ("creator", jsonScalar $ userFullName $ issueBisCreator i)
-              , ("updator", jsonScalar $ userFullName $ issueBisUpdator i)
-              , ("updated", jsonScalar $ showDate $ issueUdate $ issueBisIssue i)
+              , ("subject", jsonScalar $ T.unpack $ issueSubject $ issueBisIssue i)
+              , ("issueuri", jsonScalar $ T.unpack $ r $ issueRoute)
+              , ("status", jsonScalar $ T.unpack $ issueStatus $ issueBisIssue i)
+              , ("assign", jsonScalar $ T.unpack $ showmaybe $ fmap userFullName $ issueBisAssign i)
+              , ("limitdate", jsonScalar $ T.unpack $ showLimitdate $ issueBisIssue i)
+              , ("creator", jsonScalar $ T.unpack $ userFullName $ issueBisCreator i)
+              , ("updator", jsonScalar $ T.unpack $ userFullName $ issueBisUpdator i)
+              , ("updated", jsonScalar $ T.unpack $ showDate $ issueUdate $ issueBisIssue i)
               ]
                 
 getIssueListR :: ProjectId -> Handler RepHtml
 getIssueListR pid = do
   (selfid, self) <- requireAuth
   page' <- lookupGetParam "page"
-  let page = max 0 $ fromMaybe 0  $ fmap read $ page'
+  let page = max 0 $ fromMaybe 0  $ fmap readText $ page'
   (alliis, issues'', prj, es) <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
     unless (p /= Nothing || isAdmin self) $ 
@@ -242,17 +245,17 @@ getIssueListR pid = do
       maxpage = ceiling (fromIntegral (length alliis) / fromIntegral issueListLimit) - 1
       prevExist = page > 0
       nextExist = page < maxpage
-      prevPage = (IssueListR pid, [("page", show $ max 0 (page-1))])
-      nextPage = (IssueListR pid, [("page", show $ max 0 (page+1))])
+      prevPage = (IssueListR pid, [("page", showText $ max 0 (page-1))])
+      nextPage = (IssueListR pid, [("page", showText $ max 0 (page+1))])
       pagenate = intersperse [] $  map (map pageN) $ mkPagenate page maxpage pagenateWidth
-      pageN = \n -> (n, (IssueListR pid, [("page", show n)]))
+      pageN = \n -> (n, (IssueListR pid, [("page", showText n)]))
       isCurrent = (==page)
       needPaging = maxpage > 0
       inc = (+1)
       colspan = 8
       paging = $(hamletFile "paging")
   defaultLayout $ do
-    setTitle $ string $ projectBisName prj ++ "案件一覧"
+    setTitle $ preEscapedText $ projectBisName prj +++ "案件一覧"
     addCassius $(cassiusFile "issue")
     addHamlet $(hamletFile "issuelist")
 
@@ -268,7 +271,7 @@ getNewIssueR pid = do
     let (Right stss) = parseStatuses $ projectStatuses prj
     return (ptcpts, stss, prj)
   defaultLayout $ do
-    setTitle $ string "新規案件作成"
+    setTitle "新規案件作成"
     addCassius $(cassiusFile "issue")
     addHamlet $(hamletFile "newissue")
       
@@ -298,7 +301,7 @@ postNewIssueR pid = do
         update pid [ProjectIssuecounterAdd 1, ProjectUdate now]
         prj <- get404 pid
         let ino = projectIssuecounter prj
-            asgn' = fromMaybe Nothing (fmap (Just . read) asgn)
+            asgn' = fromMaybe Nothing (fmap (Just . readText) asgn)
         mfhid <- storeAttachedFile selfid fi
         iid <- insert $ Issue { issueProject=pid
                               , issueNumber=ino
@@ -327,10 +330,10 @@ postNewIssueR pid = do
           liftIO $ renderSendMail Mail
             { mailHeaders =
                  [ ("From", fromEmailAddress)
-                 , ("Bcc", intercalate "," emails)
+                 , ("Bcc", T.intercalate "," emails)
                  , ("Subject", sbj)
                  , ("Message-ID", msgid)
-                 , (mailXHeader, show pid)
+                 , (mailXHeader, showText pid)
                  ]
             , mailParts = 
                    [[ Part
@@ -339,18 +342,18 @@ postNewIssueR pid = do
                      , partFilename = Nothing
                      , partHeaders = []
                      , partContent = Data.Text.Lazy.Encoding.encodeUtf8
-                                     $ Data.Text.Lazy.pack $ unlines
-                                     $ [ "プロジェクト: " ++ projectName prj
-                                       , "案件: " ++ sbj
-                                       , "ステータス: " ++ sts
+                                     $ Data.Text.Lazy.pack $ T.unpack $ T.unlines
+                                     $ [ "プロジェクト: " +++ projectName prj
+                                       , "案件: " +++ sbj
+                                       , "ステータス: " +++ sts
                                        , ""
                                        ]
-                                     ++ lines cntnt 
+                                     ++ T.lines cntnt 
                                      ++ [ ""
-                                        , "イシュー: " ++ r (IssueR pid ino)]
+                                        , "イシュー: " +++ r (IssueR pid ino)]
                                      ++ case mfhid of
                                        Nothing -> []
-                                       Just fid -> ["添付ファイル: " ++ (r $ AttachedFileR cid fid)]
+                                       Just fid -> ["添付ファイル: " +++ (r $ AttachedFileR cid fid)]
                      }
                   ]]
           }
@@ -390,7 +393,7 @@ getIssueR pid ino = do
         Just uid -> (==uid)
       isStatus = (==issueStatus issue)
   defaultLayout $ do
-    setTitle $ string $ issueSubject issue
+    setTitle $ preEscapedText $ issueSubject issue
     addCassius $(cassiusFile "issue")
     addJulius $(juliusFile "issue")
     addHamlet $(hamletFile "issue")
@@ -421,7 +424,7 @@ postCommentR pid ino = do
         (iid, issue) <- getBy404 $ UniqueIssue pid ino
         [(lastCid, lastC)] <- selectList [CommentIssueEq iid] [CommentCdateDesc] 1 0
         let ldate = limit `mplus` issueLimitdate issue
-            asgn' = fromMaybe Nothing (fmap (Just . read) asgn)
+            asgn' = fromMaybe Nothing (fmap (Just . readText) asgn)
         mfhid <- storeAttachedFile selfid fi
         update iid [ IssueUuser selfid
                    , IssueUdate now
@@ -447,12 +450,12 @@ postCommentR pid ino = do
           liftIO $ renderSendMail Mail
             { mailHeaders =
                  [ ("From", fromEmailAddress)
-                 , ("Bcc", intercalate "," emails)
+                 , ("Bcc", T.intercalate "," emails)
                  , ("Subject", issueSubject issue)
                  , ("Message-ID", msgid)
                  , ("References", refid)
                  , ("In-Reply-To", refid)
-                 , (mailXHeader, show pid)
+                 , (mailXHeader, showText pid)
                  ]
             , mailParts = 
                    [[ Part
@@ -461,18 +464,18 @@ postCommentR pid ino = do
                      , partFilename = Nothing
                      , partHeaders = []
                      , partContent = Data.Text.Lazy.Encoding.encodeUtf8
-                                     $ Data.Text.Lazy.pack $ unlines
-                                     $ [ "プロジェクト: " ++ projectName prj
-                                       , "案件: " ++ issueSubject issue
-                                       , "ステータス: " ++ sts
+                                     $ Data.Text.Lazy.pack $ T.unpack $ T.unlines
+                                     $ [ "プロジェクト: " +++ projectName prj
+                                       , "案件: " +++ issueSubject issue
+                                       , "ステータス: " +++ sts
                                        , ""
                                        ]
-                                     ++ lines cntnt 
+                                     ++ T.lines cntnt 
                                      ++ [ ""
-                                        , "イシュー: " ++ r (IssueR pid ino)]
+                                        , "イシュー: " +++ r (IssueR pid ino)]
                                      ++ case mfhid of
                                        Nothing -> []
-                                       Just fid -> ["添付ファイル: " ++ (r $ AttachedFileR cid fid)]
+                                       Just fid -> ["添付ファイル: " +++ (r $ AttachedFileR cid fid)]
                      }
                   ]]
           }
@@ -505,7 +508,7 @@ selectParticipants pid = do
 selectMailAddresses :: (PersistBackend (t m),
                        Control.Failure.Failure ErrorResponse m,
                        Control.Monad.Trans.Class.MonadTrans t) =>
-                      ProjectId -> t m [String]
+                      ProjectId -> t m [Text]
 selectMailAddresses pid = do
   mapM (p2u.snd) =<< selectList [ParticipantsProjectEq pid, ParticipantsReceivemailEq True] [] 0 0
   where

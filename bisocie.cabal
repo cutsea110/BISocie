@@ -1,18 +1,58 @@
 Name:                bisocie
-Version:             0.1
-Synopsis:            the yesod web application.
-Homepage:            https://github.com/cutsea110/BISocie
+Version:             0.2
 License:             BSD3
 License-file:        LICENSE
 Author:              Seitoku Univ. Junior College, Department of Arts and Sciences
 Maintainer:          cutsea110@gmail.com
+Synopsis:            the yesod web application.
+Description:         a BTS written in haskell.
 Category:            Web
-Build-type:          Simple
+Stability:           Experimental
 Cabal-version:       >=1.6
+Build-type:          Simple
+Homepage:            https://github.com/cutsea110/BISocie
+
+Flag production
+     Description:    Build the production executable.
+     Default:        False
+Flag devel
+     Description:    Build for use with "yesod devel"
+     Default:        False
+
+Library
+     if flag(devel)
+         Buildable:  True
+     else
+         Buildable:  False
+     exposed-modules: Controller
+     hs-source-dirs: .
+
+     other-modules:  BISocie
+                     Model
+                     Settings
+                     StaticFiles
+                     Handler.Root
+                     Handler.Profile
+                     Handler.Project
+                     Handler.Issue
+                     Handler.Participants
+                     Handler.User
+                     Handler.S3
+                     BISocie.Helpers.Auth.HashDB
+                     BISocie.Helpers.Util
+
 Executable bisocie
-     cpp-options:    -DPRODUCTION
+     if flag(devel)
+         Buildable: False
+
+     if flag(production)
+         cpp-options:    -DPRODUCTION
+         ghc-options:    -Wall -threaded -fno-warn-unused-do-bind -fno-warn-type-defaults -O2
+     else
+         ghc-options:    -Wall -threaded -fno-warn-unused-do-bind -fno-warn-type-defaults
+
      Main-is:        bisocie.hs
-     ghc-options:    -Wall -threaded -fno-warn-unused-do-bind -fno-warn-type-defaults
+     hs-source-dirs: .
 
      Data-files:    favicon.ico
                   , hamlet/*.hamlet
@@ -33,7 +73,7 @@ Executable bisocie
                   , static/plugins/bubbleup/*.js
   
      Build-depends: base         >= 4       && < 5
-                  , yesod        >= 0.7     && < 0.8
+                  , yesod        >= 0.8     && < 0.9
                   , yesod-auth
                   , yesod-static
                   , yesod-form
@@ -45,13 +85,15 @@ Executable bisocie
                   , directory
                   , bytestring
                   , text
-                  , persistent   >= 0.4.2
-                  , persistent-postgresql
+                  , persistent   >= 0.5.1
+                  , persistent-postgresql >= 0.5.0
+                  , persistent-template
+                  , http-types
                   , template-haskell
                   , hamlet
                   , web-routes
                   , hjsmin       >= 0.0.12  && < 0.1
-                  , web-encodings == 0.3.0.4
+                  , web-encodings == 0.3.0.6
                   , split
                   , utility-ht
                   , warp

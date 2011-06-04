@@ -4,6 +4,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Controller
     ( withBISocie
+    , withDevelApp
     ) where
 
 import BISocie
@@ -13,6 +14,7 @@ import Yesod.Helpers.Auth
 import Database.Persist.GenericSql
 import Data.ByteString (ByteString)
 import Network.Wai
+import Data.Dynamic (Dynamic, toDyn)
 
 -- Import all relevant handler modules here.
 import Handler.Root
@@ -48,3 +50,6 @@ withBISocie f = Settings.withConnectionPool $ \p -> do
     f $ \req -> (if isSecure req then https else http) req
   where
     s = static Settings.staticdir
+
+withDevelApp :: Dynamic
+withDevelApp = toDyn (withBISocie :: (Application -> IO ()) -> IO ())

@@ -8,11 +8,13 @@ import BISocie
 import Settings (entryStartYear, graduateStartYear)
 import StaticFiles
 import Handler.S3
+import BISocie.Helpers.Util
 
 import Control.Monad
 import Control.Applicative
 import Data.Time
 import Data.Maybe (fromMaybe)
+import qualified Data.Text as T
 
 getProfileR :: UserId -> Handler RepHtml
 getProfileR uid = do
@@ -80,7 +82,7 @@ getProfileR uid = do
           mlab <- getLab user
           return (user, mprof, mlab)
       defaultLayout $ do
-        setTitle $ string "Profile"
+        setTitle "Profile"
         addCassius $(cassiusFile "profile")
         addScriptRemote "http://maps.google.com/maps/api/js?sensor=false"
         addJulius $(juliusFile "profile")
@@ -106,7 +108,7 @@ getProfileR uid = do
                        repeat (fromMaybe Nothing (fmap (fmap toInteger.profileGraduateYear) mprof))
           return (user, mprof, mlab, eyears, gyears)
       defaultLayout $ do
-        setTitle $ string "Profile"
+        setTitle "Profile"
         addCassius $(cassiusFile "profile")
         addScriptRemote "http://maps.google.com/maps/api/js?sensor=false"
         addJulius $(juliusFile "profile")
@@ -197,10 +199,10 @@ putProfileR uid = do
         <*> maybeStringInput "desiredCourse"
         <*> maybeStringInput "desiredWorkLocation"
         <*> maybeStringInput "employment"
-      let lon' = fromMaybe Nothing (fmap (Just . read) lon)
-          lat' = fromMaybe Nothing (fmap (Just . read) lat)
-          hlon' = fromMaybe Nothing (fmap (Just . read) hlon)
-          hlat' = fromMaybe Nothing (fmap (Just . read) hlat)
+      let lon' = fromMaybe Nothing (fmap (Just . readText) lon)
+          lat' = fromMaybe Nothing (fmap (Just . readText) lat)
+          hlon' = fromMaybe Nothing (fmap (Just . readText) hlon)
+          hlat' = fromMaybe Nothing (fmap (Just . readText) hlat)
       runDB $ do
         -- update user
         update uid [UserEmail em, UserFamilyName fn, UserGivenName gn]
@@ -267,13 +269,13 @@ postAvatarR uid = do
   (_, self) <- requireAuth
   r <- getUrlRender
   mfhid <- lookupPostParam "avatar"
-  let avatar = fmap read mfhid
+  let avatar = fmap readText mfhid
   runDB $ do
     user <- get404 uid
     unless (self `canEdit` user) $
       lift $ permissionDenied "あなたはこのユーザのアバターを変更することはできません."
     update uid [UserAvatar avatar]
   cacheSeconds 10 -- FIXME
-  jsonToRepJson $ jsonMap [ ("uri", jsonScalar $ r $ AvatarImageR uid)
-                          , ("avatar", jsonScalar $ showmaybe $ mfhid)
+  jsonToRepJson $ jsonMap [ ("uri", jsonScalar $ T.unpack $ r $ AvatarImageR uid)
+                          , ("avatar", jsonScalar $ T.unpack $ showmaybe $ mfhid)
                           ]

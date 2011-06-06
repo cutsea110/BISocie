@@ -3,7 +3,6 @@ module Handler.Root where
 
 import Control.Monad (unless, forM)
 import Data.List (intersperse)
-import Data.List.Split (splitOn)
 import Data.Maybe (fromMaybe)
 import qualified Data.ByteString.Lazy.Char8 as L
 import Codec.Binary.UTF8.String (decodeString)

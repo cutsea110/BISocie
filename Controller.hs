@@ -13,7 +13,6 @@ import Yesod.Helpers.Static
 import Yesod.Helpers.Auth
 import Database.Persist.GenericSql
 import Data.ByteString (ByteString)
-import Network.Wai
 import Data.Dynamic (Dynamic, toDyn)
 
 -- Import all relevant handler modules here.

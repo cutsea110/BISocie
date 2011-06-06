@@ -24,7 +24,7 @@ import qualified Data.Text as T
 import Text.Hamlet (preEscapedText)
 
 import BISocie.Helpers.Util
-import Settings (mailXHeader, mailMessageIdDomain, fromEmailAddress, issueListLimit, pagenateWidth)
+import Settings (mailXHeader, mailMessageIdDomain, fromEmailAddress, issueListLimit, fillGapWidth, pagenateWidth)
 import StaticFiles
 import Handler.S3
 
@@ -247,7 +247,7 @@ getIssueListR pid = do
       nextExist = page < maxpage
       prevPage = (IssueListR pid, [("page", showText $ max 0 (page-1))])
       nextPage = (IssueListR pid, [("page", showText $ max 0 (page+1))])
-      pagenate = intersperse [] $  map (map pageN) $ mkPagenate page maxpage pagenateWidth
+      pagenate = intersperse [] $  map (map pageN) $ mkPagenate fillGapWidth pagenateWidth page maxpage
       pageN = \n -> (n, (IssueListR pid, [("page", showText n)]))
       isCurrent = (==page)
       needPaging = maxpage > 0

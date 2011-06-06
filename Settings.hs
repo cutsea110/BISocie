@@ -28,6 +28,7 @@ module Settings
     , fromEmailAddress
     , projectListLimit
     , issueListLimit
+    , fillGapWidth
     , pagenateWidth
     , tz
     ) where
@@ -191,6 +192,8 @@ projectListLimit :: Int
 projectListLimit = 3
 issueListLimit :: Int
 issueListLimit = 3
+fillGapWidth :: Int
+fillGapWidth = 3
 pagenateWidth :: Int
 pagenateWidth = 3
 

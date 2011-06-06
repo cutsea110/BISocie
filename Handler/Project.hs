@@ -8,6 +8,8 @@ import Control.Applicative ((<$>),(<*>))
 import Data.Time
 import System.Directory
 import System.FilePath ((</>))
+import Text.Hamlet (preEscapedText)
+import qualified Data.Text as T
 
 import qualified Settings
 import StaticFiles
@@ -23,7 +25,7 @@ getNewProjectR = do
       eyears = [Settings.entryStartYear..y+5]
       help = $(Settings.hamletFile "help")
   defaultLayout $ do
-    setTitle $ string "プロジェクト新規作成"
+    setTitle "プロジェクト新規作成"
     addCassius $(cassiusFile "project")
     addJulius $(juliusFile "help")
     addJulius $(juliusFile "newproject")
@@ -75,7 +77,7 @@ getProjectR pid = do
       lift $ permissionDenied "あなたはこのプロジェクトの参加者ではありません."
     get404 pid
   defaultLayout $ do
-    setTitle $ string $ projectName prj
+    setTitle $ preEscapedText $ projectName prj
     addCassius $(cassiusFile "project")
     addJulius $(juliusFile "help")
     addJulius $(juliusFile "project")
@@ -121,9 +123,9 @@ putProjectR pid = do
                , ProjectUdate now]
     get404 pid
   cacheSeconds 10 -- FIXME
-  jsonToRepJson $ jsonMap [ ("name", jsonScalar $ projectName prj)
-                          , ("description", jsonScalar $ projectDescription prj)
-                          , ("statuses", jsonScalar $ projectStatuses prj)
+  jsonToRepJson $ jsonMap [ ("name", jsonScalar $ T.unpack $ projectName prj)
+                          , ("description", jsonScalar $ T.unpack $ projectDescription prj)
+                          , ("statuses", jsonScalar $ T.unpack $ projectStatuses prj)
                           ]
 
 deleteProjectR :: ProjectId -> Handler RepJson

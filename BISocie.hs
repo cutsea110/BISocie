@@ -32,15 +32,17 @@ import System.Directory
 import qualified Data.ByteString.Lazy as L
 import Database.Persist.GenericSql
 import Settings (hamletFile, cassiusFile, juliusFile, widgetFile)
-import Model
 import Data.Maybe (fromMaybe)
 import Control.Monad (unless)
 import Control.Applicative ((<$>),(<*>),pure)
 import Control.Arrow ((&&&))
 import Text.Jasmine (minifym)
+import qualified Data.Text as T
 
+import Model
 import StaticFiles
 import qualified Settings
+import BISocie.Helpers.Util
 
 -- | The site argument for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -166,7 +168,7 @@ instance Yesod BISocie where
     -- expiration dates to be set far in the future without worry of
     -- users receiving stale content.
     addStaticContent ext' _ content = do
-        let fn = base64md5 content ++ '.' : ext'
+        let fn = base64md5 content ++ '.' : T.unpack ext'
         let content' =
                 if ext' == "js"
                     then case minifym content of
@@ -178,7 +180,7 @@ instance Yesod BISocie where
         let fn' = statictmp ++ fn
         exists <- liftIO $ doesFileExist fn'
         unless exists $ liftIO $ L.writeFile fn' content'
-        return $ Just $ Right (StaticR $ StaticRoute ["tmp", fn] [], [])
+        return $ Just $ Right (StaticR $ StaticRoute ["tmp", T.pack fn] [], [])
 
 instance YesodBreadcrumbs BISocie where
   breadcrumb RootR = return ("", Nothing)
@@ -188,7 +190,7 @@ instance YesodBreadcrumbs BISocie where
     return ("ヒューマンネットワーク", Just $ HomeR uid)
   breadcrumb (ScheduleR y m) = do
     (uid, _) <- requireAuth
-    return (show y ++ "年" ++ show m ++ "月のスケジュール", Just $ HomeR uid)
+    return (showText y +++ "年" +++ showText m +++ "月のスケジュール", Just $ HomeR uid)
   breadcrumb NewProjectR = do
     (uid, _) <- requireAuth
     return ("新規プロジェクト作成", Just $ HomeR uid)
@@ -208,14 +210,14 @@ instance YesodBreadcrumbs BISocie where
   breadcrumb (NewIssueR pid) = return ("案件追加", Just $ IssueListR pid)
   breadcrumb (IssueR pid ino) = do
     (_, issue) <- runDB $ getBy404 $ UniqueIssue pid ino
-    return (show (issueNumber issue) ++ ": " ++ issueSubject issue, Just $ IssueListR pid)
+    return (showText (issueNumber issue) +++ ": " +++ issueSubject issue, Just $ IssueListR pid)
   breadcrumb CommentR{} = return ("", Nothing)
   
   breadcrumb (ProfileR uid) = do 
     u <- runDB $ get404 uid
     mode <- lookupGetParam "mode"
     case mode of
-      Just "e" -> return (userFullName u ++ " プロフィール編集", Nothing)
+      Just "e" -> return (userFullName u +++ " プロフィール編集", Nothing)
       _        -> return (userFullName u, Nothing)
   
   -- the others 
@@ -246,7 +248,7 @@ instance ToForm User BISocie where
               <*> pure (fromMaybe Nothing (fmap userAvatar mu))
               <*> boolField "active" (fmap userActive mu)
     where
-      roleopts = map (id &&& show) [minBound..maxBound]
+      roleopts = map (id &&& showText) [minBound..maxBound]
 
 userCrud :: BISocie -> Crud BISocie User
 userCrud = const Crud
@@ -308,22 +310,16 @@ instance YesodAuth BISocie where
               lift $ setMessage "You are now logged in."
               fmap Just $ insert $ initUser $ credsIdent creds
 
-    showAuthId _ = showIntegral
-    readAuthId _ = readIntegral
-
     authPlugins = [ authHashDB ]
     
     loginHandler = do
       defaultLayout $ do
-        setTitle $ string "ログイン"
+        setTitle "ログイン"
         addCassius $(Settings.cassiusFile "login")
         addHamlet $(Settings.hamletFile "login")
                   
 instance YesodAuthHashDB BISocie where
     type AuthHashDBId BISocie = UserId
-
-    showAuthHashDBId _ = showIntegral
-    readAuthHashDBId _ = readIntegral
 
     getPassword uid = runDB $ do
       ma <- get uid

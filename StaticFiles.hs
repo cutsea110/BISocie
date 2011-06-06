@@ -1,6 +1,6 @@
-{-# OPTIONS_GHC -fno-warn-unused-binds #-}
+{-# LANGUAGE QuasiQuotes, TemplateHaskell, TypeFamilies #-}
 module StaticFiles where
 
 import Yesod.Helpers.Static
 
-staticFiles "static"
+$(staticFiles "static")

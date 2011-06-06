@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings #-}
 -- | Settings are centralized, as much as possible, into this file. This
 -- includes database connection settings, static file locations, etc.
 -- In addition, you can configure a number of different aspects of Yesod
@@ -35,17 +36,24 @@ module Settings
 
 import qualified Text.Hamlet as H
 import qualified Text.Cassius as H
+import qualified Text.Lucius as H
 import qualified Text.Julius as H
 import Language.Haskell.TH.Syntax
 import Database.Persist.Postgresql
-import Yesod (MonadPeelIO, addWidget, addCassius, addJulius)
+import Yesod (MonadControlIO, addWidget, addCassius, addJulius)
 import Data.Monoid (mempty)
 import System.Directory (doesFileExist)
+import Data.Text (Text)
+import Data.ByteString (ByteString)
+import qualified Data.Text as T
+
+(+++) :: Text -> Text -> Text
+(+++) = T.append
 
 -- | The base URL for your application. This will usually be different for
 -- development and production. Yesod automatically constructs URLs for you,
 -- so this value must be accurate to create valid links.
-approot :: String
+approot :: Text
 #ifdef PRODUCTION
 -- You probably want to change this. If your domain name was "yesod.com",
 -- you would probably want it to be:
@@ -64,7 +72,7 @@ rootRelativePath = "https://localhost:3001"
 rootRelativePath = "https://localhost:3001"
 #endif
 
-rootbase :: String
+rootbase :: Text
 rootbase = ""
 
 -- | The location of static files on your system. This is a file system
@@ -85,17 +93,17 @@ staticdir = "static"
 -- have to make a corresponding change here.
 --
 -- To see how this value is used, see urlRenderOverride in BISocie.hs
-staticroot :: String
-staticroot = approot ++ "/static"
+staticroot :: Text
+staticroot = approot +++ "/static"
 
 s3dir :: FilePath
 s3dir = "s3"
-s3root :: String
-s3root = approot ++ "/s3"
+s3root :: Text
+s3root = approot +++ "/s3"
 
 -- | The database connection string. The meaning of this string is backend-
 -- specific.
-connStr :: String
+connStr :: Text
 #ifdef PRODUCTION
 connStr = "user=soubun password=sougoubunnka host=localhost port=5432 dbname=bisocie"
 #else
@@ -132,10 +140,11 @@ connectionCount = 10
 -- used; to get the same auto-loading effect, it is recommended that you
 -- use the devel server.
 
-toHamletFile, toCassiusFile, toJuliusFile :: String -> FilePath
+toHamletFile, toCassiusFile, toJuliusFile, toLuciusFile :: String -> FilePath
 toHamletFile x = "hamlet/" ++ x ++ ".hamlet"
 toCassiusFile x = "cassius/" ++ x ++ ".cassius"
 toJuliusFile x = "julius/" ++ x ++ ".julius"
+toLuciusFile x = "lucius/" ++ x ++ ".lucius"
 
 hamletFile :: FilePath -> Q Exp
 hamletFile = H.hamletFile . toHamletFile
@@ -145,6 +154,13 @@ cassiusFile :: FilePath -> Q Exp
 cassiusFile = H.cassiusFile . toCassiusFile
 #else
 cassiusFile = H.cassiusFileDebug . toCassiusFile
+#endif
+
+luciusFile :: FilePath -> Q Exp
+#ifdef PRODUCTION
+luciusFile = H.luciusFile . toLuciusFile
+#else
+luciusFile = H.luciusFileDebug . toLuciusFile
 #endif
 
 juliusFile :: FilePath -> Q Exp
@@ -169,10 +185,10 @@ widgetFile x = do
 -- database actions using a pool, respectively. It is used internally
 -- by the scaffolded application, and therefore you will rarely need to use
 -- them yourself.
-withConnectionPool :: MonadPeelIO m => (ConnectionPool -> m a) -> m a
+withConnectionPool :: MonadControlIO m => (ConnectionPool -> m a) -> m a
 withConnectionPool = withPostgresqlPool connStr connectionCount
 
-runConnectionPool :: MonadPeelIO m => SqlPersist m a -> ConnectionPool -> m a
+runConnectionPool :: MonadControlIO m => SqlPersist m a -> ConnectionPool -> m a
 runConnectionPool = runSqlPool
 
 -- BISocie server settings
@@ -180,11 +196,11 @@ entryStartYear :: Integer
 entryStartYear = 2000
 graduateStartYear :: Integer
 graduateStartYear = 2000
-mailXHeader :: String
+mailXHeader :: ByteString
 mailXHeader = "X-BISocie-Soubun"
-mailMessageIdDomain :: String
+mailMessageIdDomain :: Text
 mailMessageIdDomain = "bisocie.seitoku.ac.jp"
-fromEmailAddress :: String
+fromEmailAddress :: Text
 fromEmailAddress = "bisocie@seitoku.ac.jp"
 
 projectListLimit :: Int

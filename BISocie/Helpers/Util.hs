@@ -1,8 +1,21 @@
 module BISocie.Helpers.Util 
        ( mkPagenate
+       , (+++)
+       , showText
+       , readText
        ) where
 
 import Settings (pagenateWidth)
+import Data.Text (Text)
+import qualified Data.Text as T
+
+
+(+++) :: Text -> Text -> Text
+(+++) = T.append
+showText :: (Show a) => a -> Text
+showText = T.pack . show
+readText :: (Read a) => Text -> a
+readText = read . T.unpack
 
 mkPagenate :: Int -> Int -> Int -> [[Int]]
 mkPagenate current maxpage width =

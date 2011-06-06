@@ -1,9 +1,12 @@
 {-# LANGUAGE TemplateHaskell, OverloadedStrings #-}
 module Handler.Participants where
 
-import BISocie
 import Control.Monad (unless, when, forM)
 import Data.Time
+import qualified Data.Text as T
+
+import BISocie
+import BISocie.Helpers.Util
 
 getParticipantsListR :: ProjectId -> Handler RepJson
 getParticipantsListR pid = do
@@ -23,13 +26,13 @@ getParticipantsListR pid = do
   jsonToRepJson $ jsonMap [("participants", jsonList $ map (go r) us)]
   where
     go r (uid, u, p, ra) = jsonMap [ ("id", jsonScalar $ show uid)
-                                   , ("ident", jsonScalar $ userIdent u)
-                                   , ("uri", jsonScalar $ r $ ProfileR uid)
-                                   , ("name", jsonScalar $ userFullName u)
+                                   , ("ident", jsonScalar $ T.unpack $ userIdent u)
+                                   , ("uri", jsonScalar $ T.unpack $ r $ ProfileR uid)
+                                   , ("name", jsonScalar $ T.unpack $ userFullName u)
                                    , ("role", jsonScalar $ show $ userRole u)
-                                   , ("prettyrole", jsonScalar $ userRoleName u)
+                                   , ("prettyrole", jsonScalar $ T.unpack $ userRoleName u)
                                    , ("receivemail", jsonScalar $ show $ participantsReceivemail p)
-                                   , ("avatar", jsonScalar $ r ra)
+                                   , ("avatar", jsonScalar $ T.unpack $ r ra)
                                    ]
 
 postParticipantsR :: ProjectId -> Handler RepJson
@@ -37,9 +40,9 @@ postParticipantsR pid = do
   _method <- lookupPostParam "_method"
   muid <- lookupPostParam "uid"
   case (_method, muid) of
-    (Just "add", Just uid) -> addParticipants $ read uid
-    (Just "del", Just uid) -> delParticipants $ read uid
-    (Just "mod", Just uid) -> modParticipants $ read uid
+    (Just "add", Just uid) -> addParticipants $ readText uid
+    (Just "del", Just uid) -> delParticipants $ readText uid
+    (Just "mod", Just uid) -> modParticipants $ readText uid
     (_,          Nothing ) -> invalidArgs ["uid query parameter is required."]
     _                      -> invalidArgs ["The possible values of '_method' is add,del,mod."]
   where

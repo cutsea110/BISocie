@@ -2,24 +2,25 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Model where
 
 import Yesod
 import Yesod.Helpers.Crud
-import Database.Persist.TH (share2, derivePersistField)
 import Database.Persist.Base
-import Database.Persist.GenericSql (mkMigrate)
 import System.Locale
 import Data.Char (isHexDigit)
 import Data.Int
 import Data.Time
-import Data.List (intercalate)
-import Data.List.Split (splitOn)
 import Data.Maybe (fromMaybe)
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec as P (string)
+import Data.Text (Text)
+import qualified Data.Text as T
+import Text.Hamlet (preEscapedText)
 
 import qualified Settings (tz)
+import BISocie.Helpers.Util
 
 type Year = Integer
 type Month = Int
@@ -29,7 +30,7 @@ data Role =  Student | Teacher | Staff | Admin
           deriving (Read, Show, Eq, Ord, Enum, Bounded)
 derivePersistField "Role"
 
-prettyRoleName :: Role -> String
+prettyRoleName :: Role -> Text
 prettyRoleName Admin = "管理者"
 prettyRoleName Staff = "職員"
 prettyRoleName Teacher = "教員"
@@ -42,12 +43,12 @@ type IssueNo = Int
 -- http://docs.yesodweb.com/book/persistent/
 share2 mkPersist (mkMigrate "migrateAll") [$persist|
 User
-    ident String
-    password String Maybe Update
+    ident Text
+    password Text Maybe Update
     role Role Update Eq
-    familyName String Update
-    givenName String Update
-    email String Update
+    familyName Text Update
+    givenName Text Update
+    email Text Update
     avatar FileHeaderId Maybe Update
     active Bool Update Eq default=true
     UniqueUser ident
@@ -58,44 +59,44 @@ Profile
     
     entryYear Int Update
     graduateYear Int Maybe Update
-    branch String Update
+    branch Text Update
     
-    zip String Update
-    address String Update
+    zip Text Update
+    address Text Update
     longitude Double Maybe Ne Update
     latitude Double Maybe Ne Update
-    tel String Update
-    station String Update
+    tel Text Update
+    station Text Update
     
-    homeZip String Update
-    homeAddress String Update
+    homeZip Text Update
+    homeAddress Text Update
     homeLongitude Double Maybe Ne Update
     homeLatitude Double Maybe Ne Update
-    homeTel String Update
+    homeTel Text Update
     
-    desiredCourse String Maybe Update
-    desiredWorkLocation String Maybe Update
-    employment String Maybe Update
+    desiredCourse Text Maybe Update
+    desiredWorkLocation Text Maybe Update
+    employment Text Maybe Update
     
     UniqueProfile user
 
 Laboratory
     headResearcher UserId Eq
-    roomNumber String Maybe Update
-    extensionNumber String Maybe Update
-    courses String Maybe Update
+    roomNumber Text Maybe Update
+    extensionNumber Text Maybe Update
+    courses Text Maybe Update
     UniqueLaboratory headResearcher
 
 Email
-    email String
+    email Text
     user UserId Maybe Update
-    verkey String Maybe Update
+    verkey Text Maybe Update
     UniqueEmail email
 
 Project
-    name String Update Asc Desc
-    description String Update
-    statuses String Update
+    name Text Update Asc Desc
+    description Text Update
+    statuses Text Update
     issuecounter IssueNo Update Add default=0
     cuser UserId
     cdate UTCTime Asc Desc default=now()
@@ -104,9 +105,9 @@ Project
 Issue
     project ProjectId Eq In
     number IssueNo Eq Desc Asc
-    subject String
+    subject Text
     assign UserId Maybe Update In
-    status String Update In
+    status Text Update In
     limitdate Day Maybe Update Ge Lt Eq
     cuser UserId
     cdate UTCTime default=now()
@@ -117,9 +118,9 @@ Issue
 Comment
     project ProjectId Eq In
     issue IssueId Eq
-    content String
+    content Text
     assign UserId Maybe
-    status String Eq In
+    status Text Eq In
     limitdate Day Maybe
     attached FileHeaderId Maybe
     cuser UserId
@@ -133,11 +134,11 @@ Participants
     UniqueParticipants project user
 
 FileHeader
-    fullname String Eq
-    efname String
-    name String Eq
-    extension String Eq
-    contentType String
+    fullname Text Eq
+    efname Text
+    name Text Eq
+    extension Text Eq
+    contentType Text
     fileSize Int64
     creator UserId Eq
     created UTCTime Desc default=now()
@@ -147,11 +148,11 @@ instance Item User where
   itemTitle = userInfoOneline
 
 data Effect = Impact | Strike deriving (Show, Eq)
-type Color = String
+type Color = Text
 data ProjectBis = ProjectBis { projectBisId :: ProjectId
-                             , projectBisName :: String
-                             , projectBisDescription :: String
-                             , projectBisStatuses :: [(String, Maybe Color, Maybe Effect)]
+                             , projectBisName :: Text
+                             , projectBisDescription :: Text
+                             , projectBisStatuses :: [(Text, Maybe Color, Maybe Effect)]
                              }
 toProjectBis :: (ProjectId, Project) -> ProjectBis
 toProjectBis (pid, prj) = 
@@ -175,10 +176,17 @@ lookupProjectBis pid (p:ps) = if pid == (projectBisId p)
                               then Just p
                               else lookupProjectBis pid ps
 
-
-parseStatuses :: String -> Either ParseError [(String, Maybe Color, Maybe Effect)]
-parseStatuses s = parse statuses "parse statuses" 
-                  $ if last s == '\n' then s else s ++ "\n"
+parseStatuses :: Text -> Either ParseError [(Text, Maybe Color, Maybe Effect)]
+parseStatuses t = 
+    case ps (T.unpack t) of
+      Right xs -> Right $ map toText xs
+      Left e -> Left e
+    where
+      ps :: String -> Either ParseError [(String, Maybe String, Maybe Effect)]
+      ps s = parse statuses "parse statuses" 
+             $ if last s == '\n' then s else s ++ "\n"
+      toText :: (String, Maybe String, Maybe Effect) -> (Text, Maybe Color, Maybe Effect)
+      toText (s,mc,me) = (T.pack s, fmap T.pack mc, me)
 
 eol :: CharParser st String
 eol = try (P.string "\n\r")
@@ -186,10 +194,10 @@ eol = try (P.string "\n\r")
       <|> P.string "\n"
       <|> P.string "\r"
 
-statuses :: CharParser st [(String, Maybe Color, Maybe Effect)]
+statuses :: CharParser st [(String, Maybe String, Maybe Effect)]
 statuses = endBy status eol
 
-status :: CharParser st (String, Maybe Color, Maybe Effect)
+status :: CharParser st (String, Maybe String, Maybe Effect)
 status = do
   e <- effect
   s <- many1 (noneOf "\r\n#")
@@ -205,7 +213,7 @@ effect = do
         _   -> error "couldn't reach here." -- FIXME
   <|> return Nothing
 
-color :: CharParser st (Maybe Color)
+color :: CharParser st (Maybe String)
 color = do
   try (char '#')
   color'
@@ -234,14 +242,14 @@ data IssueBis = IssueBis { issueBisId :: IssueId
                          , issueBisAssign :: Maybe User
                          }
 data CommentBis = CommentBis { commentBisId :: CommentId
-                             , commentBisContent :: String
-                             , commentBisStatus :: String
+                             , commentBisContent :: Text
+                             , commentBisStatus :: Text
                              , commentBisAttached :: Maybe (FileHeaderId, FileHeader)
                              , commentBisCuser :: (UserId, User)
                              , commentBisCdate :: UTCTime
                              }
 
-initUser :: String -> User
+initUser :: Text -> User
 initUser uid = User { userIdent=uid
                     , userPassword=Nothing
                     , userRole=Student
@@ -260,17 +268,17 @@ maybeToFilter :: (a -> Filter b) -> Maybe a -> [Filter b]
 maybeToFilter _ Nothing  = []
 maybeToFilter f (Just x) = [f x]
 
-userInfoOneline :: User -> String
+userInfoOneline :: User -> Text
 userInfoOneline u = 
-  "[" ++ showPrettyActive u ++ "] " ++ userIdent u ++ " (" ++ userFullName u ++ " , " ++ userRoleName u ++ ")"
+  "[" +++ showPrettyActive u +++ "] " +++ userIdent u +++ " (" +++ userFullName u +++ " , " +++ userRoleName u +++ ")"
 
-showPrettyActive :: User -> String
+showPrettyActive :: User -> Text
 showPrettyActive u = if userActive u then "有効" else "無効"
 
-userFullName :: User -> String
-userFullName u = userFamilyName u ++ " " ++ userGivenName u
+userFullName :: User -> Text
+userFullName u = userFamilyName u +++ " " +++ userGivenName u
     
-userRoleName :: User -> String
+userRoleName :: User -> Text
 userRoleName = prettyRoleName . userRole
 
 isStudent :: User -> Bool
@@ -285,55 +293,55 @@ isStaff u = userRole u == Staff
 isAdmin :: User -> Bool
 isAdmin u = userRole u == Admin
 
-showLimitdate :: Issue -> String
-showLimitdate i = fromMaybe "" (fmap show (issueLimitdate i))
+showLimitdate :: Issue -> Text
+showLimitdate i = fromMaybe "" (fmap showText (issueLimitdate i))
 
-showMaybeDouble :: Maybe Double -> String
+showMaybeDouble :: Maybe Double -> Text
 showMaybeDouble md = case md of
   Nothing -> ""
-  Just d -> show d
+  Just d -> showText d
 
-showDate :: UTCTime -> String
-showDate = formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S" . utc2local
+showDate :: UTCTime -> Text
+showDate = T.pack . formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S" . utc2local
   where
     utc2local = utcToLocalTime $ hoursToTimeZone Settings.tz
 
 localDayToUTC :: Day -> UTCTime
 localDayToUTC = localTimeToUTC (hoursToTimeZone Settings.tz) . flip LocalTime (TimeOfDay 0 0 0)
 
-toMessageId :: IssueId -> CommentId -> UTCTime -> String -> String
+toMessageId :: IssueId -> CommentId -> UTCTime -> Text -> Text
 toMessageId (IssueId iid) (CommentId cid) time domain = "<" 
-                    ++ formatTime defaultTimeLocale "%Y%m%d%H%M%S%q" time
-                    ++ "i" ++ show iid 
-                    ++ "c" ++ show cid 
-                    ++ "@" ++ domain
-                    ++ ">"
+                    +++ T.pack (formatTime defaultTimeLocale "%Y%m%d%H%M%S%q" time)
+                    +++ "i" +++ T.pack (show iid)
+                    +++ "c" +++ T.pack (show cid)
+                    +++ "@" +++ domain
+                    +++ ">"
 
-showBirthDay :: Profile -> String
-showBirthDay = show . profileBirth
+showBirthDay :: Profile -> Text
+showBirthDay = showText . profileBirth
 
-showEntryYear :: Profile -> String
-showEntryYear = show . profileEntryYear
+showEntryYear :: Profile -> Text
+showEntryYear = showText . profileEntryYear
 
-showGraduateYear :: Profile -> String
+showGraduateYear :: Profile -> Text
 showGraduateYear u =  case profileGraduateYear u of
   Nothing -> ""
-  Just y -> show y
+  Just y -> showText y
 
-showmaybe :: Maybe String -> String
+showmaybe :: Maybe Text -> Text
 showmaybe Nothing  = ""
 showmaybe (Just x) = x
 
-showMultilineText :: String -> Html
-showMultilineText = preEscapedString . intercalate "<br/>" . splitOn "\n"
+showMultilineText :: Text -> Html
+showMultilineText = preEscapedText . T.intercalate "<br/>" . T.splitOn "\n"
 
-showShortenText :: String -> Html
-showShortenText = preEscapedString . shorten 26 . safeHead . splitOn "\n"
+showShortenText :: Text -> Html
+showShortenText = preEscapedText . shorten 26 . safeHead . T.splitOn "\n"
   where
-    safeHead [] = []
-    safeHead s = head s
-    shorten n s = if length s > n then take n s ++ ".." else s
-
+    safeHead :: [Text] -> Text
+    safeHead [] = T.empty
+    safeHead (s:_) = s
+    shorten n s = if T.length s > n then T.take n s +++ ".." else s
 
 -- | Permission System
 canView :: User -> User -> Bool

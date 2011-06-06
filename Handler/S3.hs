@@ -20,8 +20,11 @@ import Data.ByteString.Char8 (pack)
 import System.Directory
 import System.FilePath
 import Web.Encodings (encodeUrl)
+import Data.Text (Text)
+import qualified Data.Text as T
 
 import qualified Settings (s3dir)
+import BISocie.Helpers.Util ((+++))
 
 getUploadR :: Handler RepHtml
 getUploadR = do
@@ -31,12 +34,12 @@ getUploadR = do
     addWidget $(widgetFile "s3/upload")
 
 upload :: (PersistBackend m, Control.Monad.IO.Class.MonadIO m) =>
-          Key User -> FileInfo -> m (Maybe (Key FileHeader, String, String, Int64, UTCTime))
+          Key User -> FileInfo -> m (Maybe (Key FileHeader, Text, Text, Int64, UTCTime))
 upload uid@(UserId uid') fi = do
   if fileName fi /= "" && L.length (fileContent fi) > 0
     then do
     now <- liftIO getCurrentTime
-    let (name, ext) = splitExtension $ fileName fi
+    let (name, ext) = splitExtension $ T.unpack $ fileName fi
         efname = encodeUrl $ fileName fi
         fsize = L.length $ fileContent fi
     fid@(FileHeaderId fid') <- 
@@ -44,8 +47,8 @@ upload uid@(UserId uid') fi = do
                         , fileHeaderEfname=efname
                         , fileHeaderContentType=fileContentType fi
                         , fileHeaderFileSize=fsize
-                        , fileHeaderName=name
-                        , fileHeaderExtension=ext
+                        , fileHeaderName=T.pack name
+                        , fileHeaderExtension=T.pack ext
                         , fileHeaderCreator=uid
                         , fileHeaderCreated=now
                         }
@@ -54,7 +57,7 @@ upload uid@(UserId uid') fi = do
     liftIO $ do
       createDirectoryIfMissing True s3dir
       L.writeFile s3fp (fileContent fi)
-    return $ Just (fid, fileName fi, ext, fsize, now)
+    return $ Just (fid, fileName fi, T.pack ext, fsize, now)
     else return Nothing
   
 postUploadR :: Handler RepXml
@@ -100,9 +103,9 @@ getFileR (UserId uid') fid@(FileHeaderId fid') = do
   h <- runDB $ get404 fid
   let s3dir = Settings.s3dir </> show uid'
       s3fp = s3dir </> show fid'
-  setHeader "Content-Type" $ pack $ fileHeaderContentType h
-  setHeader "Content-Disposition" $ pack $ "attachment; filename=" ++ fileHeaderEfname h
-  return $ RepHtml $ ContentFile s3fp
+  setHeader "Content-Type" $ pack $ T.unpack $ fileHeaderContentType h
+  setHeader "Content-Disposition" $ pack $ T.unpack $ "attachment; filename=" +++ fileHeaderEfname h
+  return $ RepHtml $ ContentFile s3fp Nothing
 
 postFileR :: UserId -> FileHeaderId -> Handler RepXml
 postFileR uid fid = do
@@ -145,9 +148,9 @@ getFileListR uid = do
                , fileHeaderFileSize = size
                , fileHeaderCreated = cdate
                }) = 
-      jsonMap [ ("name", jsonScalar name)
-              , ("ext" , jsonScalar ext)
+      jsonMap [ ("name", jsonScalar $ T.unpack name)
+              , ("ext" , jsonScalar $ T.unpack ext)
               , ("size", jsonScalar $ show size)
               , ("cdate", jsonScalar $ show cdate)
-              , ("uri", jsonScalar $ r $ FileR uid fid)
+              , ("uri", jsonScalar $ T.unpack $ r $ FileR uid fid)
               ]

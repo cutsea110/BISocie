@@ -5,7 +5,6 @@ module BISocie.Helpers.Util
        , readText
        ) where
 
-import Settings (pagenateWidth)
 import Data.Text (Text)
 import qualified Data.Text as T
 
@@ -17,8 +16,8 @@ showText = T.pack . show
 readText :: (Read a) => Text -> a
 readText = read . T.unpack
 
-mkPagenate :: Int -> Int -> Int -> [[Int]]
-mkPagenate current maxpage width =
+mkPagenate :: Int -> Int -> Int -> Int -> [[Int]]
+mkPagenate fillGap width current maxpage =
   if leftConnected && rightConnected
   then [[ll..rr]]
   else if leftConnected
@@ -27,12 +26,11 @@ mkPagenate current maxpage width =
             then [[ll..lr],[cl..rr]]
             else [[ll..lr],[cl..cr],[rl..rr]]
   where
-    leftConnected = cl-lr <= pagenateWidth
-    rightConnected = rl-cr <= pagenateWidth
+    leftConnected = cl-lr <= fillGap
+    rightConnected = rl-cr <= fillGap
     ll = 0
     lr = width
     cl = current-width
     cr = current+width
     rl = maxpage-width
     rr = maxpage
-

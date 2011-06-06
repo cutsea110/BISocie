@@ -48,7 +48,7 @@ getHomeR uid = do
       nextExist = page < maxpage
       prevPage = (HomeR uid, [("page", showText $ max 0 (page-1)), ("order", showText order)])
       nextPage = (HomeR uid, [("page", showText $ max 0 (page+1)), ("order", showText order)])
-      pagenate = intersperse [] $  map (map pageN) $ mkPagenate page maxpage pagenateWidth
+      pagenate = intersperse [] $  map (map pageN) $ mkPagenate fillGapWidth pagenateWidth page maxpage
       pageN = \n -> (n, (HomeR uid, [("page", showText n), ("order", showText order)]))
       isCurrent = (==page)
       needPaging = maxpage > 0

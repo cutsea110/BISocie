@@ -283,7 +283,11 @@ userCrud = const Crud
                 (_, u) <- requireAuth
                 unless (isAdmin u) $
                   permissionDenied "You couldn't access user crud."
-                runDB $ delete k
+                runDB $ do
+                  deleteWhere [FileHeaderCreatorEq k]
+                  deleteBy $ UniqueProfile k
+                  deleteBy $ UniqueLaboratory k
+                  delete k
            }
 
 

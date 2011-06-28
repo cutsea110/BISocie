@@ -246,7 +246,7 @@ instance ToForm User BISocie where
               <*> selectField roleopts "role" (fmap userRole mu)
               <*> stringField "familyName" (fmap userFamilyName mu)
               <*> stringField "givenName" (fmap userGivenName mu)
-              <*> emailField "email" (fmap userEmail mu)
+              <*> stringField "email" (fmap userEmail mu)
               <*> pure (fromMaybe Nothing (fmap userAvatar mu))
               <*> boolField "active" (fmap userActive mu)
     where

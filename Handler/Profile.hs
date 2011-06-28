@@ -135,7 +135,7 @@ putProfileR uid = do
     putUserProf = do
       (em, fn, gn) <- 
         runFormPost' $ (,,)
-        <$> emailInput "email"
+        <$> stringInput "email"
         <*> stringInput "familyName"
         <*> stringInput "givenName"
       runDB $ do
@@ -146,7 +146,7 @@ putProfileR uid = do
     putTeacherProf = do
       (em, fn, gn) <- 
         runFormPost' $ (,,)
-        <$> emailInput "email"
+        <$> stringInput "email"
         <*> stringInput "familyName"
         <*> stringInput "givenName"
       (rn, en, cs) <- 
@@ -176,7 +176,7 @@ putProfileR uid = do
     putStudentProf = do
       (em, fn, gn) <- 
         runFormPost' $ (,,)
-        <$> emailInput "email"
+        <$> stringInput "email"
         <*> stringInput "familyName"
         <*> stringInput "givenName"
       (bir, ey, gy, br, zip, adr, lon, lat, tel, st, hzip, hadr, hlon, hlat, htel, dc, dwl, emp) <- 

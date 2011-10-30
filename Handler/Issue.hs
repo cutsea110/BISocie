@@ -2,14 +2,14 @@
 {-# LANGUAGE QuasiQuotes, CPP #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Handler.Issue where
 
 import BISocie
 import Control.Applicative ((<$>),(<*>))
 import Control.Monad (when, unless, forM, mplus, liftM2)
-import Control.Monad.Trans.Class
-import Control.Monad.IO.Class
 import Control.Failure
+import Control.Monad.Trans.Class
 import Data.List (intercalate, intersperse, nub, groupBy)
 import Data.Time
 import Data.Time.Calendar.WeekDate
@@ -21,7 +21,7 @@ import qualified Data.Text.Lazy
 import qualified Data.Text.Lazy.Encoding
 import Data.Text (Text)
 import qualified Data.Text as T
-import Text.Hamlet (preEscapedText)
+import Text.Blaze (preEscapedText)
 
 import BISocie.Helpers.Util
 import Settings (mailXHeader, mailMessageIdDomain, fromEmailAddress, issueListLimit, fillGapWidth, pagenateWidth)
@@ -82,9 +82,9 @@ getTaskR y m d = do
   r <- getUrlRender
   let day = fromGregorian y m d
   issues <- runDB $ do
-    ptcpts <- selectList [ParticipantsUserEq selfid] [] 0 0
+    ptcpts <- selectList [ParticipantsUser ==. selfid] []
     let pids = map (participantsProject.snd) ptcpts
-    selectList [IssueLimitdateEq $ Just day, IssueProjectIn pids ] [] 0 0
+    selectList [IssueLimitdate ==. Just day, IssueProject <-. pids ] []
   cacheSeconds 10 --FIXME
   jsonToRepJson $ jsonMap [("tasks", jsonList $ map (go r) issues)]
   where
@@ -99,11 +99,11 @@ getAssignListR = do
   pids <- fmap (fmap readText) $ lookupGetParams "projectid"
   users <- runDB $ do
     ps <- if isAdmin self
-          then selectList [ParticipantsProjectIn pids] [] 0 0
+          then selectList [ParticipantsProject <-. pids] []
           else do
-            ps' <- selectList [ParticipantsUserEq selfid, ParticipantsProjectIn pids] [] 0 0
-            selectList [ParticipantsProjectIn $ map (participantsProject.snd) ps'] [] 0 0
-    selectList [UserIdIn $ map (participantsUser.snd) ps] [] 0 0
+            ps' <- selectList [ParticipantsUser ==. selfid, ParticipantsProject <-. pids] []
+            selectList [ParticipantsProject <-. (map (participantsProject.snd) ps')] []
+    selectList [UserId <-. (map (participantsUser.snd) ps)] []
   cacheSeconds 10 -- FIXME
   jsonToRepJson $ jsonMap [("assigns", jsonList $ map go users)]
   where
@@ -117,10 +117,10 @@ getStatusListR = do
   pids <- fmap (fmap readText) $ lookupGetParams "projectid"
   stss <- runDB $ do
     prjs <- if isAdmin self
-            then selectList [ProjectIdIn pids] [] 0 0
+            then selectList [ProjectId <-. pids] []
             else do
-              ps <- selectList [ParticipantsUserEq selfid, ParticipantsProjectIn pids] [] 0 0
-              selectList [ProjectIdIn $ map (participantsProject.snd) ps] [] 0 0
+              ps <- selectList [ParticipantsUser ==. selfid, ParticipantsProject <-. pids] []
+              selectList [ProjectId <-. (map (participantsProject.snd) ps)] []
     return $ nub $ concatMap (\(_,prj) -> 
                                let (Right es) = parseStatuses $ projectStatuses prj 
                                in map fst3 es) prjs
@@ -132,10 +132,10 @@ getCrossSearchR = do
   (selfid, self) <- requireAuth
   prjs <- runDB $ do
     prjs' <- if isAdmin self
-             then selectList [] [] 0 0
+             then selectList [] []
              else do
-               ps <- selectList [ParticipantsUserEq selfid] [] 0 0
-               selectList [ProjectIdIn (map (participantsProject . snd) ps)] [] 0 0
+               ps <- selectList [ParticipantsUser ==. selfid] []
+               selectList [ProjectId <-. (map (participantsProject . snd) ps)] []
     return $ map toProjectBis prjs'
   defaultLayout $ do
     setTitle "クロスサーチ"
@@ -150,27 +150,27 @@ postCrossSearchR = do
   ps <- fmap (fmap readText) $ lookupPostParams "projectid"
   ss <- lookupPostParams "status"
   as <- fmap (fmap (Just . readText)) $ lookupPostParams "assign"
-  (lf, lt) <- uncurry (liftM2 (,)) 
+  (lf, lt) <- uncurry (liftM2 (,))
               (fmap (fmap readText) $ lookupPostParam "limitdatefrom",
-               fmap (fmap (addDays 1 . readText)) $ lookupPostParam "limitdateto")
-  (uf, ut) <- uncurry (liftM2 (,)) 
+               fmap (fmap (Just . addDays 1 . readText)) $ lookupPostParam "limitdateto")
+  (uf, ut) <- uncurry (liftM2 (,))
               (fmap (fmap (localDayToUTC . readText)) $ lookupPostParam "updatedfrom",
                fmap (fmap (localDayToUTC . addDays 1 . readText)) $ lookupPostParam "updatedto")
   page <- fmap (max 0 . fromMaybe 0 . fmap readText) $ lookupPostParam "page"
   issues <- runDB $ do
     prjs <- if isAdmin self
-            then selectList [ProjectIdIn ps] [] 0 0
+            then selectList [ProjectId <-. ps] []
             else do
-              ps' <- selectList [ParticipantsUserEq selfid, ParticipantsProjectIn ps] [] 0 0
-              selectList [ProjectIdIn $ map (participantsProject.snd) ps'] [] 0 0
-    let (pS, sS, aS) = (toInFilter IssueProjectIn $ map fst prjs, 
-                        toInFilter IssueStatusIn ss, 
-                        toInFilter IssueAssignIn as)
-        (lF, lT, uF, uT) = (maybeToFilter IssueLimitdateGe lf,
-                            maybeToFilter IssueLimitdateLt lt,
-                            maybeToFilter IssueUdateGe uf,
-                            maybeToFilter IssueUdateLt ut)
-    issues' <- selectList (pS ++ sS ++ aS ++ lF ++ lT ++ uF ++ uT) [IssueUdateDesc] issueListLimit (page*issueListLimit)
+              ps' <- selectList [ParticipantsUser ==. selfid, ParticipantsProject <-. ps] []
+              selectList [ProjectId <-. (map (participantsProject.snd) ps')] []
+    let (pS, sS, aS) = (toInFilter (IssueProject <-.) $ map fst prjs,
+                        toInFilter (IssueStatus <-.) ss, 
+                        toInFilter (IssueAssign <-.) as)
+        (lF, lT, uF, uT) = (maybeToFilter (IssueLimitdate >=.) lf,
+                            maybeToFilter (IssueLimitdate <.) lt,
+                            maybeToFilter (IssueUdate >=.) uf,
+                            maybeToFilter (IssueUdate <.) ut)
+    issues' <- selectList (pS ++ sS ++ aS ++ lF ++ lT ++ uF ++ uT) [Desc IssueUdate, LimitTo issueListLimit, OffsetBy (page*issueListLimit)]
     forM issues' $ \(id', i) -> do
       cu <- get404 $ issueCuser i
       uu <- get404 $ issueUuser i
@@ -222,7 +222,7 @@ getIssueListR pid = do
                          , projectBisDescription=projectDescription prj'
                          , projectBisStatuses=es
                          }
-    issues <- selectList [IssueProjectEq pid] [IssueUdateDesc] 0 0
+    issues <- selectList [IssueProject ==. pid] [Desc IssueUdate]
     let issues' = take issueListLimit $ drop (page*issueListLimit) issues
     issues'' <- forM issues' $ \(id', i) -> do
       cu <- get404 $ issueCuser i
@@ -285,12 +285,12 @@ postNewIssueR pid = do
   where
     addIssueR = do
       (selfid, _) <- requireAuth
-      (sbj, cntnt, ldate, asgn, sts) <- runFormPost' $ (,,,,)
-                                        <$> stringInput "subject"
-                                        <*> stringInput "content"
-                                        <*> maybeDayInput "limitdate"
-                                        <*> maybeStringInput "assign"
-                                        <*> stringInput "status"
+      (sbj, cntnt, ldate, asgn, sts) <- runInputPost $ (,,,,)
+                                        <$> ireq textField "subject"
+                                        <*> ireq textField "content"
+                                        <*> iopt dayField "limitdate"
+                                        <*> iopt textField "assign"
+                                        <*> ireq textField "status"
       Just fi <- lookupFile "attached"
       runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
@@ -298,7 +298,7 @@ postNewIssueR pid = do
           lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
         r <- lift getUrlRender
         now <- liftIO getCurrentTime
-        update pid [ProjectIssuecounterAdd 1, ProjectUdate now]
+        update pid [ProjectIssuecounter +=. 1, ProjectUdate =. now]
         prj <- get404 pid
         let ino = projectIssuecounter prj
             asgn' = fromMaybe Nothing (fmap (Just . readText) asgn)
@@ -368,7 +368,7 @@ getIssueR pid ino = do
       unless (p /= Nothing || isAdmin self) $ 
         lift $ permissionDenied "あなたはこの案件を閲覧することはできません."
       (iid, issue) <- getBy404 $ UniqueIssue pid ino
-      cs <- selectList [CommentIssueEq iid] [CommentCdateDesc] 0 0
+      cs <- selectList [CommentIssue ==. iid] [Desc CommentCdate]
       comments <- forM cs $ \(cid, c) -> do
         let uid = commentCuser c
         u <- get404 uid
@@ -409,11 +409,11 @@ postCommentR pid ino = do
     addCommentR = do
       (selfid, _) <- requireAuth
       (cntnt, limit, asgn, sts) <- 
-        runFormPost' $ (,,,)
-        <$> stringInput "content"
-        <*> maybeDayInput "limitdate"
-        <*> maybeStringInput "assign"
-        <*> stringInput "status"
+        runInputPost $ (,,,)
+        <$> ireq textField "content"
+        <*> iopt dayField "limitdate"
+        <*> iopt textField "assign"
+        <*> ireq textField "status"
       r <- getUrlRender
       now <- liftIO getCurrentTime
       Just fi <- lookupFile "attached"
@@ -422,15 +422,15 @@ postCommentR pid ino = do
         unless (p /= Nothing) $ 
           lift $ permissionDenied "あなたはこのプロジェクトに投稿することはできません."
         (iid, issue) <- getBy404 $ UniqueIssue pid ino
-        [(lastCid, lastC)] <- selectList [CommentIssueEq iid] [CommentCdateDesc] 1 0
+        [(lastCid, lastC)] <- selectList [CommentIssue ==. iid] [Desc CommentCdate, LimitTo 1]
         let ldate = limit `mplus` issueLimitdate issue
             asgn' = fromMaybe Nothing (fmap (Just . readText) asgn)
         mfhid <- storeAttachedFile selfid fi
-        update iid [ IssueUuser selfid
-                   , IssueUdate now
-                   , IssueLimitdate ldate
-                   , IssueAssign asgn'
-                   , IssueStatus sts
+        update iid [ IssueUuser =. selfid
+                   , IssueUdate =. now
+                   , IssueLimitdate =. ldate
+                   , IssueAssign =. asgn'
+                   , IssueStatus =. sts
                    ]
         cid <- insert $ Comment { commentProject=pid
                                 , commentIssue=iid
@@ -492,31 +492,26 @@ getAttachedFileR cid fid = do
     get404 fid
   getFileR (fileHeaderCreator f) fid
 
-
-selectParticipants :: (PersistBackend (t m),
-                       Control.Failure.Failure ErrorResponse m,
-                       Control.Monad.Trans.Class.MonadTrans t) =>
-                      ProjectId -> t m [(UserId, User)]
+selectParticipants :: (Failure ErrorResponse m, MonadTrans t, PersistBackend t m) =>
+     Key t (ProjectGeneric t) -> t m [(Key t User, User)]
 selectParticipants pid = do
-  mapM (p2u.snd) =<< selectList [ParticipantsProjectEq pid] [] 0 0
+  mapM (p2u.snd) =<< selectList [ParticipantsProject ==. pid] []
   where
     p2u p = do
       let uid = participantsUser p
       u <- get404 uid
       return (uid, u)
 
-selectMailAddresses :: (PersistBackend (t m),
-                       Control.Failure.Failure ErrorResponse m,
-                       Control.Monad.Trans.Class.MonadTrans t) =>
-                      ProjectId -> t m [Text]
+selectMailAddresses :: (Failure ErrorResponse m, MonadTrans t, PersistBackend t m) =>
+     Key t (ProjectGeneric t) -> t m [Text]
 selectMailAddresses pid = do
-  mapM (p2u.snd) =<< selectList [ParticipantsProjectEq pid, ParticipantsReceivemailEq True] [] 0 0
+  mapM (p2u.snd) =<< selectList [ParticipantsProject ==. pid, ParticipantsReceivemail ==. True] []
   where
     p2u p = do
       u <- get404 $ participantsUser p
       return $ userEmail u
 
-storeAttachedFile :: (PersistBackend m, MonadIO m) => UserId -> FileInfo -> m (Maybe FileHeaderId)
+storeAttachedFile :: PersistBackend b m => Key backend User -> FileInfo -> b m (Maybe (Key b (FileHeaderGeneric backend)))
 storeAttachedFile uid fi = do
   mf <- upload uid fi
   case mf of

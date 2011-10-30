@@ -8,7 +8,7 @@ import qualified Data.ByteString.Lazy.Char8 as L
 import Codec.Binary.UTF8.String (decodeString)
 import Data.Text (Text)
 import qualified Data.Text as T
-import Text.Hamlet (preEscapedText)
+import Text.Blaze (preEscapedText)
 
 import BISocie
 import BISocie.Helpers.Util
@@ -32,33 +32,33 @@ getHomeR uid = do
   (selfid, self) <- requireAuth
   unless (selfid==uid) $ permissionDenied "他人のホームを見ることはできません."
   page <- fmap (max 0 . fromMaybe 0 . fmap (read . T.unpack)) $ lookupGetParam "page"
-  order <- fmap (fromMaybe ProjectUdateDesc . fmap (read . T.unpack)) $ lookupGetParam "order"
-  liftIO $ putStrLn $ show order
+  ordName <- fmap (fromMaybe "DescProjectUdate") $ lookupGetParam "order"
+  let order = textToOrder ordName
   (allprjs, prjs) <- runDB $ do
     prjs' <- if isAdmin self
-             then selectList [] [order] 0 0
+             then selectList [] [order]
              else do
-               ps <- selectList [ParticipantsUserEq selfid] [] 0 0
-               selectList [ProjectIdIn (map (participantsProject . snd) ps)] [order] 0 0
+               ps <- selectList [ParticipantsUser ==. selfid] []
+               selectList [ProjectId <-. (map (participantsProject . snd) ps)] [order]
     return $ (prjs',
               zip (concat $ repeat ["odd", "even"]::[String]) 
               $ take projectListLimit $ drop (page*projectListLimit) prjs')
   let maxpage = ceiling (fromIntegral (length allprjs) / fromIntegral projectListLimit) - 1
       prevExist = page > 0
       nextExist = page < maxpage
-      prevPage = (HomeR uid, [("page", showText $ max 0 (page-1)), ("order", showText order)])
-      nextPage = (HomeR uid, [("page", showText $ max 0 (page+1)), ("order", showText order)])
+      prevPage = (HomeR uid, [("page", showText $ max 0 (page-1)), ("order", ordName)])
+      nextPage = (HomeR uid, [("page", showText $ max 0 (page+1)), ("order", ordName)])
       pagenate = intersperse [] $  map (map pageN) $ mkPagenate fillGapWidth pagenateWidth page maxpage
-      pageN = \n -> (n, (HomeR uid, [("page", showText n), ("order", showText order)]))
+      pageN = \n -> (n, (HomeR uid, [("page", showText n), ("order", ordName)]))
       isCurrent = (==page)
       needPaging = maxpage > 0
       inc = (+1)
-      udateAsc  = (HomeR selfid, [("page", showText page), ("order", showText ProjectUdateAsc)])
-      udateDesc = (HomeR selfid, [("page", showText page), ("order", showText ProjectUdateDesc)])
-      cdateAsc  = (HomeR selfid, [("page", showText page), ("order", showText ProjectCdateAsc)])
-      cdateDesc = (HomeR selfid, [("page", showText page), ("order", showText ProjectCdateDesc)])
-      nameAsc   = (HomeR selfid, [("page", showText page), ("order", showText ProjectNameAsc)])
-      nameDesc  = (HomeR selfid, [("page", showText page), ("order", showText ProjectNameDesc)])
+      udateAsc  = (HomeR selfid, [("page", showText page), ("order", "AscProjectUdate")])
+      udateDesc = (HomeR selfid, [("page", showText page), ("order", "DescProjectUdate")])
+      cdateAsc  = (HomeR selfid, [("page", showText page), ("order", "AscProjectCdate")])
+      cdateDesc = (HomeR selfid, [("page", showText page), ("order", "DescProjectCdate")])
+      nameAsc   = (HomeR selfid, [("page", showText page), ("order", "AscProjectName")])
+      nameDesc  = (HomeR selfid, [("page", showText page), ("order", "DescProjectName")])
       colspan = 4
       paging = $(hamletFile "paging")
   defaultLayout $ do
@@ -86,8 +86,8 @@ getUserLocationsR = do
   unless (canViewUserLocations self) $ 
     permissionDenied "あなたはこの情報を取得することはできません."
   profs <- runDB $ do
-    us <- selectList [UserRoleEq Student] [] 0 0
-    profs' <- selectList [ProfileUserIn $ map fst us] [] 0 0
+    us <- selectList [UserRole ==. Student] []
+    profs' <- selectList [ProfileUser <-. (map fst us)] []
     forM profs' $ \(_, p) -> do
       let (Just u) = lookup (profileUser p) us
       return (u, p)
@@ -118,7 +118,7 @@ postSystemBatchR = do
   Just fi <- lookupFile "studentscsv"
   let recs = filter (not . T.null) $ T.lines $ T.pack $ decodeString $ L.unpack $ fileContent fi
   runDB $ do
-    users <- selectList [] [] 0 0
+    users <- selectList [] []
     forM recs $ \rec -> do
       let (uid:rawpass:email:fname:gname:_) = T.splitOn "," rec
       case userExist uid users of
@@ -133,12 +133,12 @@ postSystemBatchR = do
                         , userActive=True
                         }
         Just (id', _) -> do
-          update id' [ UserPassword  $ Just (encrypt rawpass)
-                     , UserRole Student
-                     , UserFamilyName fname
-                     , UserGivenName gname
-                     , UserEmail email
-                     , UserActive True
+          update id' [ UserPassword  =. Just (encrypt rawpass)
+                     , UserRole =. Student
+                     , UserFamilyName =. fname
+                     , UserGivenName =. gname
+                     , UserEmail =. email
+                     , UserActive =. True
                      ]
           return id'
   setMessage "学生を登録しました。"

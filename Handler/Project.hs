@@ -1,5 +1,7 @@
 {-# LANGUAGE TemplateHaskell, OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes, CPP #-}
+{-# LANGUAGE GADTs #-}
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 module Handler.Project where
 
 import BISocie
@@ -8,7 +10,7 @@ import Control.Applicative ((<$>),(<*>))
 import Data.Time
 import System.Directory
 import System.FilePath ((</>))
-import Text.Hamlet (preEscapedText)
+import Text.Blaze (preEscapedText)
 import qualified Data.Text as T
 
 import qualified Settings
@@ -43,10 +45,10 @@ postNewProjectR = do
       (selfid, self) <- requireAuth
       unless (canCreateProject self) $ 
         permissionDenied "あなたはプロジェクトを作成することはできません."
-      (name, desc, sts) <- runFormPost'$ (,,)
-                           <$> stringInput "name"
-                           <*> stringInput "description"
-                           <*> stringInput "statuses"
+      (name, desc, sts) <- runInputPost $ (,,)
+                           <$> ireq textField "name"
+                           <*> ireq textField "description"
+                           <*> ireq textField "statuses"
       now <- liftIO getCurrentTime
       runDB $ do
         pid <- insert $ Project { projectName=name
@@ -117,10 +119,10 @@ putProjectR pid = do
         Nothing -> return $ Just $ projectStatuses prj
         Just "" -> lift $ invalidArgs ["ステータスは入力必須項目です."]
         Just st'' -> return $ Just st''
-    update pid [ ProjectName nm
-               , ProjectDescription ds
-               , ProjectStatuses st
-               , ProjectUdate now]
+    update pid [ ProjectName =. nm
+               , ProjectDescription =. ds
+               , ProjectStatuses =. st
+               , ProjectUdate =. now]
     get404 pid
   cacheSeconds 10 -- FIXME
   jsonToRepJson $ jsonMap [ ("name", jsonScalar $ T.unpack $ projectName prj)
@@ -138,30 +140,29 @@ deleteProjectR pid = do
     if isAdmin self
       then do
       -- delete participants
-      deleteWhere [ParticipantsProjectEq pid]
+      deleteWhere [ParticipantsProject ==. pid]
       -- delete comments
-      comments <- selectList [CommentProjectEq pid] [] 0 0
-      deleteWhere [CommentProjectEq pid]
+      comments <- selectList [CommentProject ==. pid] []
+      deleteWhere [CommentProject ==. pid]
       -- delete & remove files
       let fids = filter (/=Nothing) $ map (commentAttached.snd) comments
       forM_ fids $ \(Just fid) -> do 
         f <- get404 fid
-        let (UserId uid') = fileHeaderCreator f
-            (FileHeaderId fid') = fid
-            s3dir = Settings.s3dir </> show uid'
-            s3fp = s3dir </> show fid'
+        let uid = fileHeaderCreator f
+            s3dir = Settings.s3dir </> show uid
+            s3fp = s3dir </> show fid
         delete fid
         liftIO $ removeFile s3fp
       -- delete issues
-      deleteWhere [IssueProjectEq pid]
+      deleteWhere [IssueProject ==. pid]
       -- delete project
       delete pid
       return True
       else do
-      issues <- selectList [IssueProjectEq pid] [] 1 0
+      issues <- selectList [IssueProject ==. pid] []
       if issues == [] 
         then do
-        deleteWhere [ParticipantsProjectEq pid]
+        deleteWhere [ParticipantsProject ==. pid]
         delete pid
         return True
         else return False

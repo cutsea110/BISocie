@@ -3,10 +3,12 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE GADTs #-}
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 module Model where
 
 import Yesod
-import Yesod.Helpers.Crud
+-- import Yesod.Crud -- FIXME
 import Database.Persist.Base
 import System.Locale
 import Data.Char (isHexDigit)
@@ -17,7 +19,7 @@ import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec as P (string)
 import Data.Text (Text)
 import qualified Data.Text as T
-import Text.Hamlet (preEscapedText)
+import Text.Blaze (preEscapedText)
 
 import qualified Settings (tz)
 import BISocie.Helpers.Util
@@ -41,7 +43,7 @@ type IssueNo = Int
 -- You can define all of your database entities here. You can find more
 -- information on persistent and how to declare entities at:
 -- http://docs.yesodweb.com/book/persistent/
-share2 mkPersist (mkMigrate "migrateAll") [$persist|
+share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persist|
 User
     ident Text
     password Text Maybe Update
@@ -144,8 +146,9 @@ FileHeader
     created UTCTime Desc default=now()
 |]
 
-instance Item User where
-  itemTitle = userInfoOneline
+-- FIXME Crud
+--instance Item User where
+--  itemTitle = userInfoOneline
 
 data Effect = Impact | Strike deriving (Show, Eq)
 type Color = Text
@@ -310,10 +313,10 @@ localDayToUTC :: Day -> UTCTime
 localDayToUTC = localTimeToUTC (hoursToTimeZone Settings.tz) . flip LocalTime (TimeOfDay 0 0 0)
 
 toMessageId :: IssueId -> CommentId -> UTCTime -> Text -> Text
-toMessageId (IssueId iid) (CommentId cid) time domain = "<" 
+toMessageId iid cid time domain = "<" 
                     +++ T.pack (formatTime defaultTimeLocale "%Y%m%d%H%M%S%q" time)
-                    +++ "i" +++ T.pack (show iid)
-                    +++ "c" +++ T.pack (show cid)
+                    +++ "i" +++ T.pack (show $ unKey iid)
+                    +++ "c" +++ T.pack (show $ unKey cid)
                     +++ "@" +++ domain
                     +++ ">"
 
@@ -418,3 +421,11 @@ canSearchUser u =
     Teacher -> True
     Staff -> True
     Student -> False
+
+textToOrder :: Text -> SelectOpt (ProjectGeneric backend)
+textToOrder "DescProjectUdate" = Desc ProjectUdate
+textToOrder "AscProjectUdate" = Asc ProjectUdate
+textToOrder "DescProjectCdate" = Desc ProjectCdate
+textToOrder "AscProjectCdate" = Asc ProjectCdate
+textToOrder "AscProjectName" = Asc ProjectName
+textToOrder "DescProjectName" = Desc ProjectName

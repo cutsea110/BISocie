@@ -7,6 +7,7 @@
 module BISocie
     ( BISocie (..)
     , BISocieRoute (..)
+    , BISocieMessage (..)
     , resourcesBISocie
     , Handler
     , Widget
@@ -18,25 +19,23 @@ module BISocie
     , StaticRoute (..)
     , AuthRoute (..)
       --
-    , UserCrud
-    , userCrud
+--    , UserCrud -- FIXME Crud
+--    , userCrud -- FIXME Crud
     ) where
 
 import Yesod
-import Yesod.Helpers.Static
-import Yesod.Helpers.Auth
+import Yesod.Static
+import Yesod.Auth
 import BISocie.Helpers.Auth.HashDB
-import Yesod.Helpers.Auth.OpenId
-import Yesod.Helpers.Crud
+import Yesod.Auth.OpenId
+-- import Yesod.Helpers.Crud -- FIXME
 import Yesod.Form.Jquery
 import System.Directory
 import qualified Data.ByteString.Lazy as L
 import Database.Persist.GenericSql
-import Settings (hamletFile, cassiusFile, juliusFile, widgetFile)
-import Data.Maybe (fromMaybe)
+import qualified Database.Persist.Base
+import Settings (PersistConfig, hamletFile, cassiusFile, juliusFile, widgetFile)
 import Control.Monad (unless)
-import Control.Applicative ((<$>),(<*>),pure)
-import Control.Arrow ((&&&))
 import Text.Jasmine (minifym)
 import qualified Data.Text as T
 
@@ -54,14 +53,6 @@ data BISocie = BISocie
     , connPool :: Settings.ConnectionPool -- ^ Database connection pool.
     , isHTTPS :: Bool
     }
-
--- | A useful synonym; most of the handler functions in your application
--- will need to be of this type.
-type Handler = GHandler BISocie BISocie
-
--- | A useful synonym; most of the widgets functions in your application
--- will need to be of this type.
-type Widget = GWidget BISocie BISocie
 
 -- This is where we define all of the routes in our application. For a full
 -- explanation of the syntax, please see:
@@ -82,7 +73,7 @@ type Widget = GWidget BISocie BISocie
 -- for our application to be in scope. However, the handler functions
 -- usually require access to the BISocieRoute datatype. Therefore, we
 -- split these actions into two functions and place them in separate files.
-mkYesodData "BISocie" [$parseRoutes|
+mkYesodData "BISocie" [parseRoutes|
 / RootR GET
 /home/#UserId HomeR GET
 /human-network HumanNetworkR GET
@@ -117,12 +108,14 @@ mkYesodData "BISocie" [$parseRoutes|
 /favicon.ico FaviconR GET
 /robots.txt RobotsR GET
 
-/admin AdminR UserCrud userCrud
 /system-batch SystemBatchR GET POST
 
 /s3/upload UploadR POST PUT
 /s3/user/#UserId/file/#FileHeaderId FileR POST DELETE
 |]
+-- FIXME Crud route
+-- /admin AdminR UserCrud userCrud
+
 -- S3はアクセス制限する
 -- S3は基本公開ベースなので制限をするURIを提供してそこからgetFileRを呼ぶ
 
@@ -228,15 +221,16 @@ instance YesodBreadcrumbs BISocie where
 
 -- How to run database actions.
 instance YesodPersist BISocie where
-    type YesodDB BISocie = SqlPersist
-    runDB db = liftIOHandler 
-               $ fmap connPool getYesod >>= Settings.runConnectionPool db
+    type YesodPersistBackend BISocie = SqlPersist
+    runDB f = liftIOHandler 
+              $ fmap connPool getYesod >>= Database.Persist.Base.runPool (undefined::Settings.PersistConfig) f
 
 instance YesodJquery BISocie where
   urlJqueryJs _ = Left $ StaticR js_jquery_1_4_4_min_js
   urlJqueryUiJs _ = Left $ StaticR js_jquery_ui_1_8_9_custom_min_js
   urlJqueryUiCss _ = Left $ StaticR css_jquery_ui_1_8_9_custom_css
 
+{--
 type UserCrud = Crud BISocie User
 
 instance ToForm User BISocie where
@@ -291,7 +285,12 @@ userCrud = const Crud
                   deleteBy $ UniqueLaboratory k
                   delete k
            }
+--}
 
+mkMessage "BISocie" "messages" "en"
+
+instance RenderMessage BISocie FormMessage where
+    renderMessage _ _ = defaultFormMessage
 
 instance YesodAuth BISocie where
     type AuthId BISocie = UserId
@@ -332,7 +331,7 @@ instance YesodAuthHashDB BISocie where
       case ma of
         Nothing -> return Nothing
         Just u -> return $ userPassword u
-    setPassword uid encripted = runDB $ update uid [UserPassword $ Just encripted]
+    setPassword uid encripted = runDB $ update uid [UserPassword =. Just encripted]
     getHashDBCreds account = runDB $ do
         ma <- getBy $ UniqueUser account
         case ma of

@@ -16,7 +16,7 @@ getParticipantsListR pid = do
     p <- getBy $ UniqueParticipants pid selfid
     unless (p /= Nothing || isAdmin self) $ 
       lift $ permissionDenied "あなたはこのプロジェクトに参加していません."
-    ps' <- selectList [ParticipantsProjectEq pid] [ParticipantsCdateAsc] 0 0
+    ps' <- selectList [ParticipantsProject ==. pid] [Asc ParticipantsCdate]
     forM ps' $ \(_, p') -> do
       let uid' = participantsUser p'
           ra = AvatarImageR uid'
@@ -90,8 +90,8 @@ postParticipantsR pid = do
           lift $ permissionDenied "あなたはこのプロジェクトの参加者を編集できません."
         (ptcptid, _) <- getBy404 $ UniqueParticipants pid uid
         case mmail of
-          Just "send" -> update ptcptid [ParticipantsReceivemail True] >> return True
-          Just "stop" -> update ptcptid [ParticipantsReceivemail False] >> return False
+          Just "send" -> update ptcptid [ParticipantsReceivemail =. True] >> return True
+          Just "stop" -> update ptcptid [ParticipantsReceivemail =. False] >> return False
           _           -> lift $ invalidArgs ["The possible values of 'mail' is send,stop."]
       cacheSeconds 10 -- FIXME
       jsonToRepJson $ jsonMap [("participants",

@@ -15,6 +15,7 @@ module Settings
     , ConnectionPool
     , withConnectionPool
     , runConnectionPool
+    , PersistConfig
     , approot
     , rootbase
     , staticroot
@@ -44,6 +45,9 @@ import Data.Monoid (mempty)
 import System.Directory (doesFileExist)
 import Data.Text (Text)
 import Data.ByteString (ByteString)
+
+-- | Which Persistent backend this site is using.
+type PersistConfig = PostgresConf
 
 -- | The base URL for your application. This will usually be different for
 -- development and production. Yesod automatically constructs URLs for you,
@@ -90,9 +94,9 @@ s3dir = "s3"
 -- specific.
 connStr :: Text
 #ifdef PRODUCTION
-connStr = "user=cut-sea password=yesoddevel host=localhost port=5432 dbname=bisocie"
+connStr = "user=cutsea110 password=jpnswmr110 host=localhost port=5432 dbname=bisocie"
 #else
-connStr = "user=cut-sea password=yesoddevel host=localhost port=5432 dbname=bisocie_debug"
+connStr = "user=cutsea110 password=jpnswmr110 host=localhost port=5432 dbname=bisocie"
 #endif
 
 -- | Your application will keep a connection pool and take connections from

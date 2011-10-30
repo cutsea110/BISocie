@@ -9,8 +9,8 @@ module Controller
 
 import BISocie
 import Settings
-import Yesod.Helpers.Static
-import Yesod.Helpers.Auth
+import Yesod.Static
+import Yesod.Auth
 import Database.Persist.GenericSql
 import Data.ByteString (ByteString)
 import Network.Wai
@@ -45,8 +45,9 @@ getRobotsR = return $ RepPlain $ toContent ("User-agent: *" :: ByteString)
 withBISocie :: (Application -> IO a) -> IO a
 withBISocie f = Settings.withConnectionPool $ \p -> do
     runConnectionPool (runMigration migrateAll) p
-    http <- toWaiApp $ BISocie s p False
-    https <- toWaiApp $ BISocie s p True
+    s' <- s
+    http <- toWaiApp $ BISocie s' p False
+    https <- toWaiApp $ BISocie s' p True
     f $ \req -> (if isSecure req then https else http) req
   where
     s = static Settings.staticdir

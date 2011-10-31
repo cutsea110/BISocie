@@ -5,7 +5,7 @@ import Control.Monad (unless, when, forM)
 import Data.Time
 import qualified Data.Text as T
 
-import BISocie
+import Foundation
 import BISocie.Helpers.Util
 
 getParticipantsListR :: ProjectId -> Handler RepJson

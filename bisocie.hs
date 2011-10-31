@@ -1,4 +1,4 @@
-import Controller (withBISocie)
+import Application (withBISocie)
 import System.IO (hPutStrLn, stderr)
 import Network.Wai.Middleware.Debug (debug)
 import Network.Wai.Handler.Warp (run)

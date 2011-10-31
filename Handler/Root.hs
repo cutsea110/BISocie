@@ -10,7 +10,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Text.Blaze (preEscapedText)
 
-import BISocie
+import Foundation
 import BISocie.Helpers.Util
 import BISocie.Helpers.Auth.HashDB (encrypt)
 import Settings

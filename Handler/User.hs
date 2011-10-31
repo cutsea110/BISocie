@@ -4,7 +4,7 @@ module Handler.User where
 import Control.Monad (unless, forM)
 import qualified Data.Text as T
 
-import BISocie
+import Foundation
 
 getUserListR :: Handler RepJson
 getUserListR = do

@@ -1,4 +1,4 @@
-import Controller (withBISocie)
+import Application (withBISocie)
 import Network.Wai.Handler.Warp (run)
 
 main :: IO ()

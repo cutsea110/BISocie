@@ -4,7 +4,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE Rank2Types #-}
-module BISocie
+module Foundation
     ( BISocie (..)
     , BISocieRoute (..)
     , BISocieMessage (..)
@@ -40,7 +40,7 @@ import Text.Jasmine (minifym)
 import qualified Data.Text as T
 
 import Model
-import StaticFiles
+import Settings.StaticFiles
 import qualified Settings
 import BISocie.Helpers.Util
 
@@ -65,7 +65,7 @@ data BISocie = BISocie
 -- * Creates the associated type:
 --       type instance Route BISocie = BISocieRoute
 -- * Creates the value resourcesBISocie which contains information on the
---   resources declared below. This is used in Controller.hs by the call to
+--   resources declared below. This is used in Application.hs by the call to
 --   mkYesodDispatch
 --
 -- What this function does *not* do is create a YesodSite instance for

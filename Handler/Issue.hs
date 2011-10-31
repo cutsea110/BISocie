@@ -5,7 +5,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Handler.Issue where
 
-import BISocie
+import Foundation
 import Control.Applicative ((<$>),(<*>))
 import Control.Monad (when, unless, forM, mplus, liftM2)
 import Control.Failure
@@ -25,7 +25,7 @@ import Text.Blaze (preEscapedText)
 
 import BISocie.Helpers.Util
 import Settings (mailXHeader, mailMessageIdDomain, fromEmailAddress, issueListLimit, fillGapWidth, pagenateWidth)
-import StaticFiles
+import Settings.StaticFiles
 import Handler.S3
 
 getCurrentScheduleR :: Handler RepHtml

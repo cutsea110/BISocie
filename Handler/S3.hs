@@ -11,7 +11,7 @@ module Handler.S3
        , upload -- Internal API
        ) where
 
-import BISocie
+import Foundation
 import Data.Time
 import Data.Int
 import qualified Data.ByteString.Lazy as L

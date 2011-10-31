@@ -4,7 +4,7 @@
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 module Handler.Project where
 
-import BISocie
+import Foundation
 import Control.Monad (unless, forM_)
 import Control.Applicative ((<$>),(<*>))
 import Data.Time
@@ -14,7 +14,7 @@ import Text.Blaze (preEscapedText)
 import qualified Data.Text as T
 
 import qualified Settings
-import StaticFiles
+import Settings.StaticFiles
 
 getNewProjectR :: Handler RepHtml
 getNewProjectR = do

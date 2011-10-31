@@ -4,9 +4,9 @@ module Handler.Profile where
 
 import Prelude hiding (zip)
 
-import BISocie
+import Foundation
 import Settings (entryStartYear, graduateStartYear)
-import StaticFiles
+import Settings.StaticFiles
 import Handler.S3
 import BISocie.Helpers.Util
 

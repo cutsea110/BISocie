@@ -138,7 +138,7 @@ instance Yesod BISocie where
     addStaticContent = addStaticContentExternal minifym base64md5 Settings.staticdir (StaticR . flip StaticRoute [])
     
     -- Enable Javascript async loading
-    yepnopeJs _ = Just $ Right $ StaticR js_modernizr_js
+--    yepnopeJs _ = Just $ Right $ StaticR js_modernizr_js
 
 instance YesodBreadcrumbs BISocie where
   breadcrumb RootR = return ("", Nothing)

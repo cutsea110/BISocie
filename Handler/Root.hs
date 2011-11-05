@@ -12,9 +12,6 @@ import Codec.Binary.UTF8.String (decodeString)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Text.Blaze (preEscapedText)
-import Text.Hamlet (hamletFile)
-import Text.Cassius (cassiusFile)
-import Text.Julius (juliusFile)
 
 import Foundation
 import BISocie.Helpers.Util
@@ -66,12 +63,10 @@ getHomeR uid = do
       nameAsc   = (HomeR selfid, [("page", showText page), ("order", "AscProjectName")])
       nameDesc  = (HomeR selfid, [("page", showText page), ("order", "DescProjectName")])
       colspan = 4
-      paging = $(hamletFile "hamlet/paging.hamlet")
+      paging = $(widgetFile "paging")
   defaultLayout $ do
     setTitle $ preEscapedText $ userFullName self +++ " ホーム"
-    addCassius $(cassiusFile "cassius/home.cassius")
-    addJulius $(juliusFile "julius/home.julius")
-    addHamlet $(hamletFile "hamlet/home.hamlet")
+    addWidget $(widgetFile "home")
     
 getHumanNetworkR :: Handler RepHtml
 getHumanNetworkR = do
@@ -80,10 +75,8 @@ getHumanNetworkR = do
     permissionDenied "あなたはヒューマンエットワークを閲覧することはできません."
   defaultLayout $ do
     setTitle "ヒューマンネットワーク"
-    addCassius $(cassiusFile "cassius/humannetwork.cassius")
-    addJulius $(juliusFile "julius/humannetwork.julius")
     addScriptRemote "http://maps.google.com/maps/api/js?sensor=false"
-    addHamlet $(hamletFile "hamlet/humannetwork.hamlet")
+    addWidget $(widgetFile "humannetwork")
 
 getUserLocationsR :: Handler RepJson
 getUserLocationsR = do
@@ -113,8 +106,7 @@ getSystemBatchR = do
     permissionDenied "あなたはこの機能を利用することはできません."
   defaultLayout $ do
     setTitle "システムバッチ"
-    addCassius $(cassiusFile "cassius/systembatch.cassius")
-    addHamlet $(hamletFile "hamlet/systembatch.hamlet")
+    addWidget $(widgetFile "systembatch")
 
 postSystemBatchR :: Handler ()
 postSystemBatchR = do

@@ -23,9 +23,7 @@ import qualified Data.Text.Lazy.Encoding
 import Data.Text (Text)
 import qualified Data.Text as T
 import Text.Blaze (preEscapedText)
-import Text.Hamlet (hamletFile)
 import Text.Cassius (cassiusFile)
-import Text.Julius (juliusFile)
 
 import BISocie.Helpers.Util
 import Settings (mailXHeader, mailMessageIdDomain, fromEmailAddress, issueListLimit, fillGapWidth, pagenateWidth)
@@ -54,9 +52,7 @@ getScheduleR y m = do
              $ groupBy (\d1 d2 -> fst d1 == fst d2) [(w, d)| w <- [fweek..lweek], d <- [1..7]]
   defaultLayout $ do
     setTitle $ preEscapedText $ showText y +++ "年" +++ showText m +++ "月のスケジュール"
-    addCassius $(cassiusFile "cassius/schedule.cassius")
-    addJulius $(juliusFile "julius/schedule.julius")
-    addHamlet $(hamletFile "hamlet/schedule.hamlet")
+    addWidget $(widgetFile "schedule")
   where
     classOf :: Day -> Int -> Day -> String
     classOf day d today = intercalate " " 
@@ -144,8 +140,7 @@ getCrossSearchR = do
   defaultLayout $ do
     setTitle "クロスサーチ"
     addCassius $(cassiusFile "cassius/issue.cassius")
-    addJulius $(juliusFile "julius/crosssearch.julius")
-    addHamlet $(hamletFile "hamlet/crosssearch.hamlet")
+    addWidget $(widgetFile "crosssearch")
 
 postCrossSearchR :: Handler RepJson
 postCrossSearchR = do
@@ -257,11 +252,11 @@ getIssueListR pid = do
       needPaging = maxpage > 0
       inc = (+1)
       colspan = 8
-      paging = $(hamletFile "hamlet/paging.hamlet")
+      paging = $(widgetFile "paging")
   defaultLayout $ do
     setTitle $ preEscapedText $ projectBisName prj +++ "案件一覧"
     addCassius $(cassiusFile "cassius/issue.cassius")
-    addHamlet $(hamletFile "hamlet/issuelist.hamlet")
+    addWidget $(widgetFile "issuelist")
 
 getNewIssueR :: ProjectId -> Handler RepHtml
 getNewIssueR pid = do
@@ -277,7 +272,7 @@ getNewIssueR pid = do
   defaultLayout $ do
     setTitle "新規案件作成"
     addCassius $(cassiusFile "cassius/issue.cassius")
-    addHamlet $(hamletFile "hamlet/newissue.hamlet")
+    addWidget $(widgetFile "newissue")
       
 postNewIssueR :: ProjectId -> Handler RepHtml
 postNewIssueR pid = do
@@ -398,9 +393,7 @@ getIssueR pid ino = do
       isStatus = (==issueStatus issue)
   defaultLayout $ do
     setTitle $ preEscapedText $ issueSubject issue
-    addCassius $(cassiusFile "cassius/issue.cassius")
-    addJulius $(juliusFile "julius/issue.julius")
-    addHamlet $(hamletFile "hamlet/issue.hamlet")
+    addWidget $(widgetFile "issue")
 
 postCommentR :: ProjectId -> IssueNo -> Handler RepHtml
 postCommentR pid ino = do

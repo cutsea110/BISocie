@@ -11,9 +11,7 @@ import Data.Time
 import System.Directory
 import System.FilePath ((</>))
 import Text.Blaze (preEscapedText)
-import Text.Hamlet (hamletFile)
 import Text.Cassius (cassiusFile)
-import Text.Julius (juliusFile)
 import qualified Data.Text as T
 
 import qualified Settings
@@ -28,13 +26,11 @@ getNewProjectR = do
   let inintstatuses = "!未開始#赤\n着手#緑\n完了#灰\n=却下#灰\n保留\n議論\n報告" :: String
       (y,_,_) = toGregorian $ utctDay now
       eyears = [Settings.entryStartYear..y+5]
-      help = $(hamletFile "hamlet/help.hamlet")
+      help = $(widgetFile "help")
   defaultLayout $ do
     setTitle "プロジェクト新規作成"
     addCassius $(cassiusFile "cassius/project.cassius")
-    addJulius $(juliusFile "julius/help.julius")
-    addJulius $(juliusFile "julius/newproject.julius")
-    addHamlet $(hamletFile "hamlet/newproject.hamlet")
+    addWidget $(widgetFile "newproject")
     
 postNewProjectR :: Handler RepHtml
 postNewProjectR = do
@@ -75,7 +71,7 @@ getProjectR pid = do
   now <- liftIO getCurrentTime
   let (y,_,_) = toGregorian $ utctDay now
       eyears = [Settings.entryStartYear..y+5]
-      help = $(hamletFile "hamlet/help.hamlet")
+      help = $(widgetFile "help")
   prj <- runDB $ do 
     p <- getBy $ UniqueParticipants pid selfid
     unless (p /= Nothing || isAdmin self) $ 
@@ -83,11 +79,7 @@ getProjectR pid = do
     get404 pid
   defaultLayout $ do
     setTitle $ preEscapedText $ projectName prj
-    addCassius $(cassiusFile "cassius/project.cassius")
-    addJulius $(juliusFile "julius/help.julius")
-    addJulius $(juliusFile "julius/project.julius")
-    addHamlet $(hamletFile "hamlet/project.hamlet")
-
+    addWidget $(widgetFile "project")
 
 postProjectR :: ProjectId -> Handler RepJson
 postProjectR pid = do

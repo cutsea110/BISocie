@@ -17,9 +17,6 @@ import Control.Applicative
 import Data.Time
 import Data.Maybe (fromMaybe)
 import qualified Data.Text as T
-import Text.Hamlet (hamletFile)
-import Text.Cassius (cassiusFile)
-import Text.Julius (juliusFile)
 
 getProfileR :: UserId -> Handler RepHtml
 getProfileR uid = do
@@ -88,10 +85,9 @@ getProfileR uid = do
           return (user, mprof, mlab)
       defaultLayout $ do
         setTitle "Profile"
-        addCassius $(cassiusFile "cassius/profile.cassius")
         addScriptRemote "http://maps.google.com/maps/api/js?sensor=false"
-        addJulius $(juliusFile "julius/profile.julius")
-        addHamlet $(hamletFile "hamlet/viewProfile.hamlet")
+        addWidget $(widgetFile "profile")
+        addWidget $(widgetFile "viewProfile")
     
     editProf :: Handler RepHtml
     editProf = do
@@ -114,10 +110,9 @@ getProfileR uid = do
           return (user, mprof, mlab, eyears, gyears)
       defaultLayout $ do
         setTitle "Profile"
-        addCassius $(cassiusFile "cassius/profile.cassius")
         addScriptRemote "http://maps.google.com/maps/api/js?sensor=false"
-        addJulius $(juliusFile "julius/profile.julius")
-        addHamlet $(hamletFile "hamlet/editProfile.hamlet")
+        addWidget $(widgetFile "profile")
+        addWidget $(widgetFile "editProfile")
 
 postProfileR :: UserId -> Handler RepHtml
 postProfileR uid = do

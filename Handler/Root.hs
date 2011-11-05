@@ -1,4 +1,7 @@
-{-# LANGUAGE TemplateHaskell, QuasiQuotes, OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell, QuasiQuotes #-} 
+{-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
+{-# OPTIONS_GHC -fno-warn-type-defaults #-}
 module Handler.Root where
 
 import Control.Monad (unless, forM)
@@ -9,6 +12,9 @@ import Codec.Binary.UTF8.String (decodeString)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Text.Blaze (preEscapedText)
+import Text.Hamlet (hamletFile)
+import Text.Cassius (cassiusFile)
+import Text.Julius (juliusFile)
 
 import Foundation
 import BISocie.Helpers.Util
@@ -60,12 +66,12 @@ getHomeR uid = do
       nameAsc   = (HomeR selfid, [("page", showText page), ("order", "AscProjectName")])
       nameDesc  = (HomeR selfid, [("page", showText page), ("order", "DescProjectName")])
       colspan = 4
-      paging = $(hamletFile "paging")
+      paging = $(hamletFile "hamlet/paging.hamlet")
   defaultLayout $ do
     setTitle $ preEscapedText $ userFullName self +++ " ホーム"
-    addCassius $(cassiusFile "home")
-    addJulius $(juliusFile "home")
-    addHamlet $(hamletFile "home")
+    addCassius $(cassiusFile "cassius/home.cassius")
+    addJulius $(juliusFile "julius/home.julius")
+    addHamlet $(hamletFile "hamlet/home.hamlet")
     
 getHumanNetworkR :: Handler RepHtml
 getHumanNetworkR = do
@@ -74,10 +80,10 @@ getHumanNetworkR = do
     permissionDenied "あなたはヒューマンエットワークを閲覧することはできません."
   defaultLayout $ do
     setTitle "ヒューマンネットワーク"
-    addCassius $(cassiusFile "humannetwork")
-    addJulius $(juliusFile "humannetwork")
+    addCassius $(cassiusFile "cassius/humannetwork.cassius")
+    addJulius $(juliusFile "julius/humannetwork.julius")
     addScriptRemote "http://maps.google.com/maps/api/js?sensor=false"
-    addHamlet $(hamletFile "humannetwork")
+    addHamlet $(hamletFile "hamlet/humannetwork.hamlet")
 
 getUserLocationsR :: Handler RepJson
 getUserLocationsR = do
@@ -107,8 +113,8 @@ getSystemBatchR = do
     permissionDenied "あなたはこの機能を利用することはできません."
   defaultLayout $ do
     setTitle "システムバッチ"
-    addCassius $(cassiusFile "systembatch")
-    addHamlet $(hamletFile "systembatch")
+    addCassius $(cassiusFile "cassius/systembatch.cassius")
+    addHamlet $(hamletFile "hamlet/systembatch.hamlet")
 
 postSystemBatchR :: Handler ()
 postSystemBatchR = do

@@ -1,5 +1,7 @@
 {-# LANGUAGE TemplateHaskell, OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes, CPP #-}
+{-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
+{-# OPTIONS_GHC -fno-warn-type-defaults #-}
 module Handler.Profile where
 
 import Prelude hiding (zip)
@@ -15,6 +17,9 @@ import Control.Applicative
 import Data.Time
 import Data.Maybe (fromMaybe)
 import qualified Data.Text as T
+import Text.Hamlet (hamletFile)
+import Text.Cassius (cassiusFile)
+import Text.Julius (juliusFile)
 
 getProfileR :: UserId -> Handler RepHtml
 getProfileR uid = do
@@ -83,10 +88,10 @@ getProfileR uid = do
           return (user, mprof, mlab)
       defaultLayout $ do
         setTitle "Profile"
-        addCassius $(cassiusFile "profile")
+        addCassius $(cassiusFile "cassius/profile.cassius")
         addScriptRemote "http://maps.google.com/maps/api/js?sensor=false"
-        addJulius $(juliusFile "profile")
-        addHamlet $(hamletFile "viewProfile")
+        addJulius $(juliusFile "julius/profile.julius")
+        addHamlet $(hamletFile "hamlet/viewProfile.hamlet")
     
     editProf :: Handler RepHtml
     editProf = do
@@ -109,10 +114,10 @@ getProfileR uid = do
           return (user, mprof, mlab, eyears, gyears)
       defaultLayout $ do
         setTitle "Profile"
-        addCassius $(cassiusFile "profile")
+        addCassius $(cassiusFile "cassius/profile.cassius")
         addScriptRemote "http://maps.google.com/maps/api/js?sensor=false"
-        addJulius $(juliusFile "profile")
-        addHamlet $(hamletFile "editProfile")
+        addJulius $(juliusFile "julius/profile.julius")
+        addHamlet $(hamletFile "hamlet/editProfile.hamlet")
 
 postProfileR :: UserId -> Handler RepHtml
 postProfileR uid = do

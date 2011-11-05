@@ -19,6 +19,7 @@ import Data.ByteString.Char8 (pack)
 import System.Directory
 import System.FilePath
 import Web.Encodings (encodeUrl)
+import Text.Cassius (cassiusFile)
 import Data.Text (Text)
 import qualified Data.Text as T
 
@@ -29,7 +30,7 @@ getUploadR :: Handler RepHtml
 getUploadR = do
   (uid,_) <- requireAuth
   defaultLayout $ do
-    addCassius $(cassiusFile "s3/s3")
+    addCassius $(cassiusFile "cassius/s3/s3.cassius")
     addWidget $(whamletFile "hamlet/s3/upload.hamlet")
 
 upload :: PersistBackend b m =>

@@ -3,6 +3,7 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# OPTIONS_GHC -fno-warn-type-defaults #-}
 module Handler.Issue where
 
 import Foundation
@@ -22,6 +23,9 @@ import qualified Data.Text.Lazy.Encoding
 import Data.Text (Text)
 import qualified Data.Text as T
 import Text.Blaze (preEscapedText)
+import Text.Hamlet (hamletFile)
+import Text.Cassius (cassiusFile)
+import Text.Julius (juliusFile)
 
 import BISocie.Helpers.Util
 import Settings (mailXHeader, mailMessageIdDomain, fromEmailAddress, issueListLimit, fillGapWidth, pagenateWidth)
@@ -50,9 +54,9 @@ getScheduleR y m = do
              $ groupBy (\d1 d2 -> fst d1 == fst d2) [(w, d)| w <- [fweek..lweek], d <- [1..7]]
   defaultLayout $ do
     setTitle $ preEscapedText $ showText y +++ "年" +++ showText m +++ "月のスケジュール"
-    addCassius $(cassiusFile "schedule")
-    addJulius $(juliusFile "schedule")
-    addHamlet $(hamletFile "schedule")
+    addCassius $(cassiusFile "cassius/schedule.cassius")
+    addJulius $(juliusFile "julius/schedule.julius")
+    addHamlet $(hamletFile "hamlet/schedule.hamlet")
   where
     classOf :: Day -> Int -> Day -> String
     classOf day d today = intercalate " " 
@@ -139,9 +143,9 @@ getCrossSearchR = do
     return $ map toProjectBis prjs'
   defaultLayout $ do
     setTitle "クロスサーチ"
-    addCassius $(cassiusFile "issue")
-    addJulius $(juliusFile "crosssearch")
-    addHamlet $(hamletFile "crosssearch")
+    addCassius $(cassiusFile "cassius/issue.cassius")
+    addJulius $(juliusFile "julius/crosssearch.julius")
+    addHamlet $(hamletFile "hamlet/crosssearch.hamlet")
 
 postCrossSearchR :: Handler RepJson
 postCrossSearchR = do
@@ -253,11 +257,11 @@ getIssueListR pid = do
       needPaging = maxpage > 0
       inc = (+1)
       colspan = 8
-      paging = $(hamletFile "paging")
+      paging = $(hamletFile "hamlet/paging.hamlet")
   defaultLayout $ do
     setTitle $ preEscapedText $ projectBisName prj +++ "案件一覧"
-    addCassius $(cassiusFile "issue")
-    addHamlet $(hamletFile "issuelist")
+    addCassius $(cassiusFile "cassius/issue.cassius")
+    addHamlet $(hamletFile "hamlet/issuelist.hamlet")
 
 getNewIssueR :: ProjectId -> Handler RepHtml
 getNewIssueR pid = do
@@ -272,8 +276,8 @@ getNewIssueR pid = do
     return (ptcpts, stss, prj)
   defaultLayout $ do
     setTitle "新規案件作成"
-    addCassius $(cassiusFile "issue")
-    addHamlet $(hamletFile "newissue")
+    addCassius $(cassiusFile "cassius/issue.cassius")
+    addHamlet $(hamletFile "hamlet/newissue.hamlet")
       
 postNewIssueR :: ProjectId -> Handler RepHtml
 postNewIssueR pid = do
@@ -394,9 +398,9 @@ getIssueR pid ino = do
       isStatus = (==issueStatus issue)
   defaultLayout $ do
     setTitle $ preEscapedText $ issueSubject issue
-    addCassius $(cassiusFile "issue")
-    addJulius $(juliusFile "issue")
-    addHamlet $(hamletFile "issue")
+    addCassius $(cassiusFile "cassius/issue.cassius")
+    addJulius $(juliusFile "julius/issue.julius")
+    addHamlet $(hamletFile "hamlet/issue.hamlet")
 
 postCommentR :: ProjectId -> IssueNo -> Handler RepHtml
 postCommentR pid ino = do

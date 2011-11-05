@@ -15,6 +15,7 @@ Homepage:            https://github.com/cutsea110/BISocie
 Flag production
      Description:    Build the production executable.
      Default:        False
+
 Flag devel
      Description:    Build for use with "yesod devel"
      Default:        False
@@ -24,9 +25,8 @@ Library
          Buildable:  True
      else
          Buildable:  False
-     exposed-modules: Application
-     hs-source-dirs: .
 
+     exposed-modules: Application
      other-modules:  Foundation
                      Model
                      Settings
@@ -47,34 +47,17 @@ Executable bisocie
 
      if flag(production)
          cpp-options:    -DPRODUCTION
-         ghc-options:    -Wall -threaded -fno-warn-unused-do-bind -fno-warn-type-defaults -O2
+         ghc-options:    -Wall -threaded -O2
      else
-         ghc-options:    -Wall -threaded -fno-warn-unused-do-bind -fno-warn-type-defaults
+         ghc-options:    -Wall -threaded -O0
 
-     Main-is:        bisocie.hs
-     hs-source-dirs: .
-
-     Data-files:    favicon.ico
-                  , hamlet/*.hamlet
-                  , cassius/*.cassius
-                  , julius/*.julius
-                  , static/*.css
-                  , static/images/*.png
-                  , static/img/*.png
-                  , static/img/*.gif
-                  , static/js/*.js
-                  , static/plugins/ajaxzip2/*.js
-                  , static/plugins/ajaxzip2/data/*.json
-                  , static/plugins/selection/*.js
-                  , static/plugins/watermark/*.js
-                  , static/plugins/exinplaceeditor/*.js
-                  , static/plugins/exinplaceeditor/*.gif
-                  , static/plugins/upload/*.js
-                  , static/plugins/bubbleup/*.js
+     Main-is: main.hs
   
      Build-depends: base         >= 4       && < 5
                   , yesod        >= 0.9     && < 1.0
                   , yesod-auth
+                  , yesod-core
+                  , yesod-default
                   , yesod-static
                   , yesod-form
                   , failure      >= 0.1     && < 0.2
@@ -101,13 +84,9 @@ Executable bisocie
                   , parsec       >= 3.1     && < 3.2
                   , SHA          >= 1.5 && < 1.6
                   , utf8-string  >= 0.3.6
+                  , shakespeare-text
                   , shakespeare-js
                   , shakespeare-css
                   , blaze-html
-  
-  -- Modules not exported by this package.
-  -- Other-modules:       
-  
-  -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
-  -- Build-tools:         
-  
+                  , clientsession
+

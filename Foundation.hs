@@ -1,9 +1,11 @@
-{-# LANGUAGE QuasiQuotes, TemplateHaskell, TypeFamilies #-}
+{-# LANGUAGE QuasiQuotes, TemplateHaskell #-} 
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE CPP #-}
 module Foundation
     ( BISocie (..)
     , BISocieRoute (..)
@@ -29,15 +31,24 @@ import Yesod.Auth
 import BISocie.Helpers.Auth.HashDB
 import Yesod.Auth.OpenId
 -- import Yesod.Helpers.Crud -- FIXME
+import Yesod.Default.Config
+import Yesod.Default.Util (addStaticContentExternal)
+import Yesod.Logger (Logger, logLazyText)
 import Yesod.Form.Jquery
-import System.Directory
 import qualified Data.ByteString.Lazy as L
 import Database.Persist.GenericSql
 import qualified Database.Persist.Base
-import Settings (PersistConfig, hamletFile, cassiusFile, juliusFile, widgetFile)
-import Control.Monad (unless)
+import Settings (PersistConfig, widgetFile)
 import Text.Jasmine (minifym)
-import qualified Data.Text as T
+import Web.ClientSession (getKey)
+import Text.Hamlet (hamletFile)
+import Text.Cassius (cassiusFile)
+import Text.Julius (juliusFile)
+#if PRODUCTION
+import Network.Mail.Mime (sendmail)
+#else
+import qualified Data.Text.Lazy.Encoding
+#endif
 
 import Model
 import Settings.StaticFiles
@@ -49,9 +60,10 @@ import BISocie.Helpers.Util
 -- starts running, such as database connections. Every handler will have
 -- access to the data present here.
 data BISocie = BISocie
-    { getStatic :: Static -- ^ Settings for static file serving.
-    , connPool :: Settings.ConnectionPool -- ^ Database connection pool.
-    , isHTTPS :: Bool
+    { settings :: AppConfig DefaultEnv
+    , getLogger :: Logger
+    , getStatic :: Static -- ^ Settings for static file serving.
+    , connPool :: Database.Persist.Base.PersistConfigPool Settings.PersistConfig -- ^ Database connection pool.
     }
 
 -- This is where we define all of the routes in our application. For a full
@@ -81,7 +93,9 @@ mkYesodData "BISocie" $(parseRoutesFile "config/routes")
 -- Please see the documentation for the Yesod typeclass. There are a number
 -- of settings which can be configured by overriding methods here.
 instance Yesod BISocie where
-    approot app = (if isHTTPS app then "https://" else "http://") +++ Settings.approot +++ Settings.rootbase
+    approot = appRoot . settings
+    
+    encryptKey _ = fmap Just $ getKey "config/client_session_key.aes"
     
     defaultLayout widget = do
       mu <- maybeAuth
@@ -90,8 +104,8 @@ instance Yesod BISocie where
       (title, parents) <- breadcrumbs
       current <- getCurrentRoute
       tm <- getRouteToMaster
-      let header = $(Settings.hamletFile "header")
-          footer = $(Settings.hamletFile "footer")
+      let header = $(hamletFile "hamlet/header.hamlet")
+          footer = $(hamletFile "hamlet/footer.hamlet")
       pc <- widgetToPageContent $ do
         widget
         addScriptEither $ urlJqueryJs y
@@ -104,14 +118,14 @@ instance Yesod BISocie where
         addScriptEither $ Left $ StaticR plugins_watermark_jquery_watermark_js
         addScriptEither $ Left $ StaticR plugins_ajaxzip2_ajaxzip2_js
         addScriptEither $ Left $ StaticR plugins_selection_jquery_selection_js
-        addCassius $(Settings.cassiusFile "default-layout")
-        addJulius $(Settings.juliusFile "default-layout")
-      hamletToRepHtml $(Settings.hamletFile "default-layout")
+        addCassius $(cassiusFile "cassius/default-layout.cassius")
+        addJulius $(juliusFile "julius/default-layout.julius")
+      hamletToRepHtml $(hamletFile "hamlet/default-layout.hamlet")
 
     -- This is done to provide an optimization for serving static files from
     -- a separate domain. Please see the staticroot setting in Settings.hs
-    urlRenderOverride a (StaticR s) =
-        Just $ uncurry (joinPath a $ approot a +++ Settings.staticroot) $ renderRoute s
+    urlRenderOverride y (StaticR s) =
+        Just $ uncurry (joinPath y (Settings.staticroot $ settings y)) $ renderRoute s
     urlRenderOverride _ _ = Nothing
 
     -- The page to be redirected to when authentication is required.
@@ -121,20 +135,10 @@ instance Yesod BISocie where
     -- and names them based on a hash of their content. This allows
     -- expiration dates to be set far in the future without worry of
     -- users receiving stale content.
-    addStaticContent ext' _ content = do
-        let fn = base64md5 content ++ '.' : T.unpack ext'
-        let content' =
-                if ext' == "js"
-                    then case minifym content of
-                            Left _ -> content
-                            Right y -> y
-                    else content
-        let statictmp = Settings.staticdir ++ "/tmp/"
-        liftIO $ createDirectoryIfMissing True statictmp
-        let fn' = statictmp ++ fn
-        exists <- liftIO $ doesFileExist fn'
-        unless exists $ liftIO $ L.writeFile fn' content'
-        return $ Just $ Right (StaticR $ StaticRoute ["tmp", T.pack fn] [], [])
+    addStaticContent = addStaticContentExternal minifym base64md5 Settings.staticdir (StaticR . flip StaticRoute [])
+    
+    -- Enable Javascript async loading
+    yepnopeJs _ = Just $ Right $ StaticR js_modernizr_js
 
 instance YesodBreadcrumbs BISocie where
   breadcrumb RootR = return ("", Nothing)
@@ -279,8 +283,8 @@ instance YesodAuth BISocie where
     loginHandler = do
       defaultLayout $ do
         setTitle "ログイン"
-        addCassius $(Settings.cassiusFile "login")
-        addHamlet $(Settings.hamletFile "login")
+        addCassius $(cassiusFile "cassius/login.cassius")
+        addHamlet $(hamletFile "hamlet/login.hamlet")
                   
 instance YesodAuthHashDB BISocie where
     type AuthHashDBId BISocie = UserId
@@ -300,3 +304,11 @@ instance YesodAuthHashDB BISocie where
                 , hashdbCredsAuthId = Just uid
                 }
     getHashDB = runDB . fmap (fmap userIdent) . get
+
+-- Sends off your mail. Requires sendmail in production!
+deliver :: BISocie -> L.ByteString -> IO ()
+#ifdef PRODUCTION
+deliver _ = sendmail
+#else
+deliver y = logLazyText (getLogger y) . Data.Text.Lazy.Encoding.decodeUtf8
+#endif

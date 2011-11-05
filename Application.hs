@@ -1,20 +1,24 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Application
     ( withBISocie
-    , withDevelApp
+    , withDevelAppPort
     ) where
 
 import Foundation
 import Settings
 import Yesod.Static
 import Yesod.Auth
-import Database.Persist.GenericSql
-import Data.ByteString (ByteString)
-import Network.Wai
+import Yesod.Default.Config
+import Yesod.Default.Main
+import Yesod.Logger (Logger)
 import Data.Dynamic (Dynamic, toDyn)
+import qualified Database.Persist.Base
+import Database.Persist.GenericSql (runMigration)
+import Data.ByteString (ByteString)
 
 -- Import all relevant handler modules here.
 import Handler.Root
@@ -33,7 +37,7 @@ mkYesodDispatch "BISocie" resourcesBISocie
 -- Some default handlers that ship with the Yesod site template. You will
 -- very rarely need to modify this.
 getFaviconR :: Handler ()
-getFaviconR = sendFile "image/x-icon" "favicon.ico"
+getFaviconR = sendFile "image/x-icon" "config/favicon.ico"
 
 getRobotsR :: Handler RepPlain
 getRobotsR = return $ RepPlain $ toContent ("User-agent: *" :: ByteString)
@@ -42,15 +46,19 @@ getRobotsR = return $ RepPlain $ toContent ("User-agent: *" :: ByteString)
 -- performs initialization and creates a WAI application. This is also the
 -- place to put your migrate statements to have automatic database
 -- migrations handled by Yesod.
-withBISocie :: (Application -> IO a) -> IO a
-withBISocie f = Settings.withConnectionPool $ \p -> do
-    runConnectionPool (runMigration migrateAll) p
-    s' <- s
-    http <- toWaiApp $ BISocie s' p False
-    https <- toWaiApp $ BISocie s' p True
-    f $ \req -> (if isSecure req then https else http) req
-  where
-    s = static Settings.staticdir
+withBISocie :: AppConfig DefaultEnv -> Logger -> (Application -> IO ()) -> IO ()
+withBISocie conf logger f = do
+#ifdef PRODUCTION
+  s <- static Settings.staticdir
+#else
+  s <- staticDevel Settings.staticdir
+#endif
+  dbconf <- withYamlEnvironment "config/postgres.yml" (appEnv conf)
+            $ either error return . Database.Persist.Base.loadConfig
+  Database.Persist.Base.withPool (dbconf :: Settings.PersistConfig) $ \p -> do
+    Database.Persist.Base.runPool dbconf (runMigration migrateAll) p
+    let h = BISocie conf logger s p
+    defaultRunner f h
 
-withDevelApp :: Dynamic
-withDevelApp = toDyn (withBISocie :: (Application -> IO ()) -> IO ())
+withDevelAppPort :: Dynamic
+withDevelAppPort = toDyn $ defaultDevelApp withBISocie

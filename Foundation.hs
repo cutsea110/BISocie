@@ -1,12 +1,15 @@
-{-# LANGUAGE QuasiQuotes, TemplateHaskell, TypeFamilies #-}
+{-# LANGUAGE QuasiQuotes, TemplateHaskell #-} 
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE Rank2Types #-}
-module BISocie
+{-# LANGUAGE CPP #-}
+module Foundation
     ( BISocie (..)
     , BISocieRoute (..)
+    , BISocieMessage (..)
     , resourcesBISocie
     , Handler
     , Widget
@@ -18,29 +21,36 @@ module BISocie
     , StaticRoute (..)
     , AuthRoute (..)
       --
-    , UserCrud
-    , userCrud
+--    , UserCrud -- FIXME Crud
+--    , userCrud -- FIXME Crud
     ) where
 
 import Yesod
-import Yesod.Helpers.Static
-import Yesod.Helpers.Auth
+import Yesod.Static
+import Yesod.Auth
 import BISocie.Helpers.Auth.HashDB
-import Yesod.Helpers.Crud
+-- import Yesod.Helpers.Crud -- FIXME
+import Yesod.Default.Config
+import Yesod.Default.Util (addStaticContentExternal)
+import Yesod.Logger (Logger, logLazyText)
 import Yesod.Form.Jquery
-import System.Directory
 import qualified Data.ByteString.Lazy as L
 import Database.Persist.GenericSql
-import Settings (hamletFile, cassiusFile, juliusFile, widgetFile)
-import Data.Maybe (fromMaybe)
-import Control.Monad (unless)
-import Control.Applicative ((<$>),(<*>),pure)
-import Control.Arrow ((&&&))
+import qualified Database.Persist.Base
+import Settings (PersistConfig, widgetFile)
 import Text.Jasmine (minifym)
-import qualified Data.Text as T
+import Web.ClientSession (getKey)
+import Text.Hamlet (hamletFile)
+import Text.Cassius (cassiusFile)
+import Text.Julius (juliusFile)
+#if PRODUCTION
+import Network.Mail.Mime (sendmail)
+#else
+import qualified Data.Text.Lazy.Encoding
+#endif
 
 import Model
-import StaticFiles
+import Settings.StaticFiles
 import qualified Settings
 import BISocie.Helpers.Util
 
@@ -49,17 +59,11 @@ import BISocie.Helpers.Util
 -- starts running, such as database connections. Every handler will have
 -- access to the data present here.
 data BISocie = BISocie
-    { getStatic :: Static -- ^ Settings for static file serving.
-    , connPool :: Settings.ConnectionPool -- ^ Database connection pool.
+    { settings :: AppConfig DefaultEnv
+    , getLogger :: Logger
+    , getStatic :: Static -- ^ Settings for static file serving.
+    , connPool :: Database.Persist.Base.PersistConfigPool Settings.PersistConfig -- ^ Database connection pool.
     }
-
--- | A useful synonym; most of the handler functions in your application
--- will need to be of this type.
-type Handler = GHandler BISocie BISocie
-
--- | A useful synonym; most of the widgets functions in your application
--- will need to be of this type.
-type Widget = GWidget BISocie BISocie
 
 -- This is where we define all of the routes in our application. For a full
 -- explanation of the syntax, please see:
@@ -72,7 +76,7 @@ type Widget = GWidget BISocie BISocie
 -- * Creates the associated type:
 --       type instance Route BISocie = BISocieRoute
 -- * Creates the value resourcesBISocie which contains information on the
---   resources declared below. This is used in Controller.hs by the call to
+--   resources declared below. This is used in Application.hs by the call to
 --   mkYesodDispatch
 --
 -- What this function does *not* do is create a YesodSite instance for
@@ -80,54 +84,17 @@ type Widget = GWidget BISocie BISocie
 -- for our application to be in scope. However, the handler functions
 -- usually require access to the BISocieRoute datatype. Therefore, we
 -- split these actions into two functions and place them in separate files.
-mkYesodData "BISocie" [$parseRoutes|
-/ RootR GET
-/home/#UserId HomeR GET
-/human-network HumanNetworkR GET
-/user-address.json UserLocationsR GET
-/project NewProjectR GET POST
-/project/#ProjectId ProjectR GET POST PUT DELETE
+mkYesodData "BISocie" $(parseRoutesFile "config/routes")
 
-/participantslist/#ProjectId ParticipantsListR GET
-/participants/#ProjectId ParticipantsR POST
-/userlist.json UserListR GET
-
-/cross-search CrossSearchR GET POST
-/status-list StatusListR GET
-/assign-list AssignListR GET
-/current-schedule CurrentScheduleR GET
-/schedule/#Year/#Month ScheduleR GET
-/task/#Year/#Month/#Date TaskR GET
-
-/issuelist/#ProjectId IssueListR GET
-/issue/#ProjectId NewIssueR GET POST
-/issue/#ProjectId/#IssueNo IssueR GET
-/comment/#ProjectId/#IssueNo CommentR POST
-/attached/#CommentId/#FileHeaderId AttachedFileR GET
-
-/profile/#UserId ProfileR GET POST PUT
-/avatar/#UserId AvatarR POST
-/avatar-image/#UserId AvatarImageR GET
-
-/static StaticR Static getStatic
-/auth   AuthR   Auth   getAuth
-
-/favicon.ico FaviconR GET
-/robots.txt RobotsR GET
-
-/admin AdminR UserCrud userCrud
-/system-batch SystemBatchR GET POST
-
-/s3/upload UploadR POST PUT
-/s3/user/#UserId/file/#FileHeaderId FileR POST DELETE
-|]
 -- S3はアクセス制限する
 -- S3は基本公開ベースなので制限をするURIを提供してそこからgetFileRを呼ぶ
 
 -- Please see the documentation for the Yesod typeclass. There are a number
 -- of settings which can be configured by overriding methods here.
 instance Yesod BISocie where
-    approot _ = Settings.approot
+    approot = appRoot . settings
+    
+    encryptKey _ = fmap Just $ getKey "config/client_session_key.aes"
     
     defaultLayout widget = do
       mu <- maybeAuth
@@ -136,8 +103,8 @@ instance Yesod BISocie where
       (title, parents) <- breadcrumbs
       current <- getCurrentRoute
       tm <- getRouteToMaster
-      let header = $(Settings.hamletFile "header")
-          footer = $(Settings.hamletFile "footer")
+      let header = $(hamletFile "hamlet/header.hamlet")
+          footer = $(hamletFile "hamlet/footer.hamlet")
       pc <- widgetToPageContent $ do
         widget
         addScriptEither $ urlJqueryJs y
@@ -150,14 +117,14 @@ instance Yesod BISocie where
         addScriptEither $ Left $ StaticR plugins_watermark_jquery_watermark_js
         addScriptEither $ Left $ StaticR plugins_ajaxzip2_ajaxzip2_js
         addScriptEither $ Left $ StaticR plugins_selection_jquery_selection_js
-        addCassius $(Settings.cassiusFile "default-layout")
-        addJulius $(Settings.juliusFile "default-layout")
-      hamletToRepHtml $(Settings.hamletFile "default-layout")
+        addCassius $(cassiusFile "cassius/default-layout.cassius")
+        addJulius $(juliusFile "julius/default-layout.julius")
+      hamletToRepHtml $(hamletFile "hamlet/default-layout.hamlet")
 
     -- This is done to provide an optimization for serving static files from
     -- a separate domain. Please see the staticroot setting in Settings.hs
-    urlRenderOverride a (StaticR s) =
-        Just $ uncurry (joinPath a Settings.staticroot) $ renderRoute s
+    urlRenderOverride y (StaticR s) =
+        Just $ uncurry (joinPath y (Settings.staticroot $ settings y)) $ renderRoute s
     urlRenderOverride _ _ = Nothing
 
     -- The page to be redirected to when authentication is required.
@@ -167,20 +134,10 @@ instance Yesod BISocie where
     -- and names them based on a hash of their content. This allows
     -- expiration dates to be set far in the future without worry of
     -- users receiving stale content.
-    addStaticContent ext' _ content = do
-        let fn = base64md5 content ++ '.' : T.unpack ext'
-        let content' =
-                if ext' == "js"
-                    then case minifym content of
-                            Left _ -> content
-                            Right y -> y
-                    else content
-        let statictmp = Settings.staticdir ++ "/tmp/"
-        liftIO $ createDirectoryIfMissing True statictmp
-        let fn' = statictmp ++ fn
-        exists <- liftIO $ doesFileExist fn'
-        unless exists $ liftIO $ L.writeFile fn' content'
-        return $ Just $ Right (StaticR $ StaticRoute ["tmp", T.pack fn] [], [])
+    addStaticContent = addStaticContentExternal minifym base64md5 Settings.staticdir (StaticR . flip StaticRoute [])
+    
+    -- Enable Javascript async loading
+--    yepnopeJs _ = Just $ Right $ StaticR js_modernizr_js
 
 instance YesodBreadcrumbs BISocie where
   breadcrumb RootR = return ("", Nothing)
@@ -226,15 +183,16 @@ instance YesodBreadcrumbs BISocie where
 
 -- How to run database actions.
 instance YesodPersist BISocie where
-    type YesodDB BISocie = SqlPersist
-    runDB db = liftIOHandler 
-               $ fmap connPool getYesod >>= Settings.runConnectionPool db
+    type YesodPersistBackend BISocie = SqlPersist
+    runDB f = liftIOHandler 
+              $ fmap connPool getYesod >>= Database.Persist.Base.runPool (undefined::Settings.PersistConfig) f
 
 instance YesodJquery BISocie where
   urlJqueryJs _ = Left $ StaticR js_jquery_1_4_4_min_js
   urlJqueryUiJs _ = Left $ StaticR js_jquery_ui_1_8_9_custom_min_js
   urlJqueryUiCss _ = Left $ StaticR css_jquery_ui_1_8_9_custom_css
 
+{--
 type UserCrud = Crud BISocie User
 
 instance ToForm User BISocie where
@@ -289,7 +247,12 @@ userCrud = const Crud
                   deleteBy $ UniqueLaboratory k
                   delete k
            }
+--}
 
+mkMessage "BISocie" "messages" "en"
+
+instance RenderMessage BISocie FormMessage where
+    renderMessage _ _ = defaultFormMessage
 
 instance YesodAuth BISocie where
     type AuthId BISocie = UserId
@@ -319,8 +282,8 @@ instance YesodAuth BISocie where
     loginHandler = do
       defaultLayout $ do
         setTitle "ログイン"
-        addCassius $(Settings.cassiusFile "login")
-        addHamlet $(Settings.hamletFile "login")
+        addCassius $(cassiusFile "cassius/login.cassius")
+        addHamlet $(hamletFile "hamlet/login.hamlet")
                   
 instance YesodAuthHashDB BISocie where
     type AuthHashDBId BISocie = UserId
@@ -330,7 +293,7 @@ instance YesodAuthHashDB BISocie where
       case ma of
         Nothing -> return Nothing
         Just u -> return $ userPassword u
-    setPassword uid encripted = runDB $ update uid [UserPassword $ Just encripted]
+    setPassword uid encripted = runDB $ update uid [UserPassword =. Just encripted]
     getHashDBCreds account = runDB $ do
         ma <- getBy $ UniqueUser account
         case ma of
@@ -340,3 +303,11 @@ instance YesodAuthHashDB BISocie where
                 , hashdbCredsAuthId = Just uid
                 }
     getHashDB = runDB . fmap (fmap userIdent) . get
+
+-- Sends off your mail. Requires sendmail in production!
+deliver :: BISocie -> L.ByteString -> IO ()
+#ifdef PRODUCTION
+deliver _ = sendmail
+#else
+deliver y = logLazyText (getLogger y) . Data.Text.Lazy.Encoding.decodeUtf8
+#endif

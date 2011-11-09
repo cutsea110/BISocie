@@ -4,7 +4,7 @@ module Handler.User where
 import Control.Monad (unless, forM)
 import qualified Data.Text as T
 
-import BISocie
+import Foundation
 
 getUserListR :: Handler RepJson
 getUserListR = do
@@ -13,7 +13,7 @@ getUserListR = do
   unless (canSearchUser self) $ 
     permissionDenied "あなたは他のユーザを検索することはできません."
   us <- runDB $ do
-    us' <- selectList [UserActiveEq True] [] 0 0
+    us' <- selectList [UserActive ==. True] []
     forM us' $ \u@(uid, _) -> do
       mp' <- getBy $ UniqueProfile uid
       let ra = AvatarImageR uid

@@ -3,10 +3,13 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE GADTs #-}
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+{-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
 module Model where
 
 import Yesod
-import Yesod.Helpers.Crud
+-- import Yesod.Crud -- FIXME
 import Database.Persist.Base
 import System.Locale
 import Data.Char (isHexDigit)
@@ -17,7 +20,7 @@ import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec as P (string)
 import Data.Text (Text)
 import qualified Data.Text as T
-import Text.Hamlet (preEscapedText)
+import Text.Blaze (preEscapedText)
 
 import qualified Settings (tz)
 import BISocie.Helpers.Util
@@ -41,111 +44,11 @@ type IssueNo = Int
 -- You can define all of your database entities here. You can find more
 -- information on persistent and how to declare entities at:
 -- http://docs.yesodweb.com/book/persistent/
-share2 mkPersist (mkMigrate "migrateAll") [$persist|
-User
-    ident Text
-    password Text Maybe Update
-    role Role Update Eq
-    familyName Text Update
-    givenName Text Update
-    email Text Update
-    avatar FileHeaderId Maybe Update
-    active Bool Update Eq default=true
-    UniqueUser ident
-    
-Profile
-    user UserId In
-    birth Day Update
-    
-    entryYear Int Update
-    graduateYear Int Maybe Update
-    branch Text Update
-    
-    zip Text Update
-    address Text Update
-    longitude Double Maybe Ne Update
-    latitude Double Maybe Ne Update
-    tel Text Update
-    station Text Update
-    
-    homeZip Text Update
-    homeAddress Text Update
-    homeLongitude Double Maybe Ne Update
-    homeLatitude Double Maybe Ne Update
-    homeTel Text Update
-    
-    desiredCourse Text Maybe Update
-    desiredWorkLocation Text Maybe Update
-    employment Text Maybe Update
-    
-    UniqueProfile user
+share [mkPersist sqlSettings, mkMigrate "migrateAll"] $(persistFile "config/models")
 
-Laboratory
-    headResearcher UserId Eq
-    roomNumber Text Maybe Update
-    extensionNumber Text Maybe Update
-    courses Text Maybe Update
-    UniqueLaboratory headResearcher
-
-Email
-    email Text
-    user UserId Maybe Update
-    verkey Text Maybe Update
-    UniqueEmail email
-
-Project
-    name Text Update Asc Desc
-    description Text Update
-    statuses Text Update
-    issuecounter IssueNo Update Add default=0
-    cuser UserId
-    cdate UTCTime Asc Desc default=now()
-    udate UTCTime Update Asc Desc default=now()
-
-Issue
-    project ProjectId Eq In
-    number IssueNo Eq Desc Asc
-    subject Text
-    assign UserId Maybe Update In
-    status Text Update In
-    limitdate Day Maybe Update Ge Lt Eq
-    cuser UserId
-    cdate UTCTime default=now()
-    uuser UserId Update
-    udate UTCTime Update Desc Ge Lt default=now()
-    UniqueIssue project number
-
-Comment
-    project ProjectId Eq In
-    issue IssueId Eq
-    content Text
-    assign UserId Maybe
-    status Text Eq In
-    limitdate Day Maybe
-    attached FileHeaderId Maybe
-    cuser UserId
-    cdate UTCTime Desc default=now()
-
-Participants
-    project ProjectId Eq In
-    user UserId Eq Asc
-    receivemail Bool Eq  Update default=true
-    cdate UTCTime Asc default=now()
-    UniqueParticipants project user
-
-FileHeader
-    fullname Text Eq
-    efname Text
-    name Text Eq
-    extension Text Eq
-    contentType Text
-    fileSize Int64
-    creator UserId Eq
-    created UTCTime Desc default=now()
-|]
-
-instance Item User where
-  itemTitle = userInfoOneline
+-- FIXME Crud
+--instance Item User where
+--  itemTitle = userInfoOneline
 
 data Effect = Impact | Strike deriving (Show, Eq)
 type Color = Text
@@ -310,10 +213,10 @@ localDayToUTC :: Day -> UTCTime
 localDayToUTC = localTimeToUTC (hoursToTimeZone Settings.tz) . flip LocalTime (TimeOfDay 0 0 0)
 
 toMessageId :: IssueId -> CommentId -> UTCTime -> Text -> Text
-toMessageId (IssueId iid) (CommentId cid) time domain = "<" 
+toMessageId iid cid time domain = "<" 
                     +++ T.pack (formatTime defaultTimeLocale "%Y%m%d%H%M%S%q" time)
-                    +++ "i" +++ T.pack (show iid)
-                    +++ "c" +++ T.pack (show cid)
+                    +++ "i" +++ T.pack (show $ unKey iid)
+                    +++ "c" +++ T.pack (show $ unKey cid)
                     +++ "@" +++ domain
                     +++ ">"
 
@@ -418,3 +321,11 @@ canSearchUser u =
     Teacher -> True
     Staff -> True
     Student -> False
+
+textToOrder :: Text -> SelectOpt (ProjectGeneric backend)
+textToOrder "DescProjectUdate" = Desc ProjectUdate
+textToOrder "AscProjectUdate" = Asc ProjectUdate
+textToOrder "DescProjectCdate" = Desc ProjectCdate
+textToOrder "AscProjectCdate" = Asc ProjectCdate
+textToOrder "AscProjectName" = Asc ProjectName
+textToOrder "DescProjectName" = Desc ProjectName

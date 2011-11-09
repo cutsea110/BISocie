@@ -1,18 +1,21 @@
 {-# LANGUAGE TemplateHaskell, OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes, CPP #-}
+{-# LANGUAGE GADTs #-}
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 module Handler.Project where
 
-import BISocie
+import Foundation
 import Control.Monad (unless, forM_)
 import Control.Applicative ((<$>),(<*>))
 import Data.Time
 import System.Directory
 import System.FilePath ((</>))
-import Text.Hamlet (preEscapedText)
+import Text.Blaze (preEscapedText)
+import Text.Cassius (cassiusFile)
 import qualified Data.Text as T
 
 import qualified Settings
-import StaticFiles
+import Settings.StaticFiles
 
 getNewProjectR :: Handler RepHtml
 getNewProjectR = do
@@ -23,13 +26,11 @@ getNewProjectR = do
   let inintstatuses = "!未開始#赤\n着手#緑\n完了#灰\n=却下#灰\n保留\n議論\n報告" :: String
       (y,_,_) = toGregorian $ utctDay now
       eyears = [Settings.entryStartYear..y+5]
-      help = $(Settings.hamletFile "help")
+      help = $(widgetFile "help")
   defaultLayout $ do
     setTitle "プロジェクト新規作成"
-    addCassius $(cassiusFile "project")
-    addJulius $(juliusFile "help")
-    addJulius $(juliusFile "newproject")
-    addHamlet $(hamletFile "newproject")
+    addCassius $(cassiusFile "cassius/project.cassius")
+    addWidget $(widgetFile "newproject")
     
 postNewProjectR :: Handler RepHtml
 postNewProjectR = do
@@ -43,10 +44,10 @@ postNewProjectR = do
       (selfid, self) <- requireAuth
       unless (canCreateProject self) $ 
         permissionDenied "あなたはプロジェクトを作成することはできません."
-      (name, desc, sts) <- runFormPost'$ (,,)
-                           <$> stringInput "name"
-                           <*> stringInput "description"
-                           <*> stringInput "statuses"
+      (name, desc, sts) <- runInputPost $ (,,)
+                           <$> ireq textField "name"
+                           <*> ireq textField "description"
+                           <*> ireq textField "statuses"
       now <- liftIO getCurrentTime
       runDB $ do
         pid <- insert $ Project { projectName=name
@@ -70,7 +71,7 @@ getProjectR pid = do
   now <- liftIO getCurrentTime
   let (y,_,_) = toGregorian $ utctDay now
       eyears = [Settings.entryStartYear..y+5]
-      help = $(Settings.hamletFile "help")
+      help = $(widgetFile "help")
   prj <- runDB $ do 
     p <- getBy $ UniqueParticipants pid selfid
     unless (p /= Nothing || isAdmin self) $ 
@@ -78,11 +79,7 @@ getProjectR pid = do
     get404 pid
   defaultLayout $ do
     setTitle $ preEscapedText $ projectName prj
-    addCassius $(cassiusFile "project")
-    addJulius $(juliusFile "help")
-    addJulius $(juliusFile "project")
-    addHamlet $(hamletFile "project")
-
+    addWidget $(widgetFile "project")
 
 postProjectR :: ProjectId -> Handler RepJson
 postProjectR pid = do
@@ -117,10 +114,10 @@ putProjectR pid = do
         Nothing -> return $ Just $ projectStatuses prj
         Just "" -> lift $ invalidArgs ["ステータスは入力必須項目です."]
         Just st'' -> return $ Just st''
-    update pid [ ProjectName nm
-               , ProjectDescription ds
-               , ProjectStatuses st
-               , ProjectUdate now]
+    update pid [ ProjectName =. nm
+               , ProjectDescription =. ds
+               , ProjectStatuses =. st
+               , ProjectUdate =. now]
     get404 pid
   cacheSeconds 10 -- FIXME
   jsonToRepJson $ jsonMap [ ("name", jsonScalar $ T.unpack $ projectName prj)
@@ -138,30 +135,29 @@ deleteProjectR pid = do
     if isAdmin self
       then do
       -- delete participants
-      deleteWhere [ParticipantsProjectEq pid]
+      deleteWhere [ParticipantsProject ==. pid]
       -- delete comments
-      comments <- selectList [CommentProjectEq pid] [] 0 0
-      deleteWhere [CommentProjectEq pid]
+      comments <- selectList [CommentProject ==. pid] []
+      deleteWhere [CommentProject ==. pid]
       -- delete & remove files
       let fids = filter (/=Nothing) $ map (commentAttached.snd) comments
       forM_ fids $ \(Just fid) -> do 
         f <- get404 fid
-        let (UserId uid') = fileHeaderCreator f
-            (FileHeaderId fid') = fid
-            s3dir = Settings.s3dir </> show uid'
-            s3fp = s3dir </> show fid'
+        let uid = fileHeaderCreator f
+            s3dir = Settings.s3dir </> show uid
+            s3fp = s3dir </> show fid
         delete fid
         liftIO $ removeFile s3fp
       -- delete issues
-      deleteWhere [IssueProjectEq pid]
+      deleteWhere [IssueProject ==. pid]
       -- delete project
       delete pid
       return True
       else do
-      issues <- selectList [IssueProjectEq pid] [] 1 0
+      issues <- selectList [IssueProject ==. pid] []
       if issues == [] 
         then do
-        deleteWhere [ParticipantsProjectEq pid]
+        deleteWhere [ParticipantsProject ==. pid]
         delete pid
         return True
         else return False

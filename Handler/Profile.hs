@@ -1,12 +1,14 @@
 {-# LANGUAGE TemplateHaskell, OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes, CPP #-}
+{-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
+{-# OPTIONS_GHC -fno-warn-type-defaults #-}
 module Handler.Profile where
 
 import Prelude hiding (zip)
 
-import BISocie
+import Foundation
 import Settings (entryStartYear, graduateStartYear)
-import StaticFiles
+import Settings.StaticFiles
 import Handler.S3
 import BISocie.Helpers.Util
 
@@ -83,10 +85,9 @@ getProfileR uid = do
           return (user, mprof, mlab)
       defaultLayout $ do
         setTitle "Profile"
-        addCassius $(cassiusFile "profile")
         addScriptRemote "http://maps.google.com/maps/api/js?sensor=false"
-        addJulius $(juliusFile "profile")
-        addHamlet $(hamletFile "viewProfile")
+        addWidget $(widgetFile "profile")
+        addWidget $(widgetFile "viewProfile")
     
     editProf :: Handler RepHtml
     editProf = do
@@ -109,10 +110,9 @@ getProfileR uid = do
           return (user, mprof, mlab, eyears, gyears)
       defaultLayout $ do
         setTitle "Profile"
-        addCassius $(cassiusFile "profile")
         addScriptRemote "http://maps.google.com/maps/api/js?sensor=false"
-        addJulius $(juliusFile "profile")
-        addHamlet $(hamletFile "editProfile")
+        addWidget $(widgetFile "profile")
+        addWidget $(widgetFile "editProfile")
 
 postProfileR :: UserId -> Handler RepHtml
 postProfileR uid = do
@@ -134,29 +134,29 @@ putProfileR uid = do
   where
     putUserProf = do
       (em, fn, gn) <- 
-        runFormPost' $ (,,)
-        <$> stringInput "email"
-        <*> stringInput "familyName"
-        <*> stringInput "givenName"
+        runInputPost $ (,,)
+        <$> ireq textField "email"
+        <*> ireq textField "familyName"
+        <*> ireq textField "givenName"
       runDB $ do
         -- update user
-        update uid [UserEmail em, UserFamilyName fn, UserGivenName gn]
+        update uid [UserEmail =. em, UserFamilyName =. fn, UserGivenName =. gn]
       redirectParams RedirectTemporary (ProfileR uid) [("mode", "e")]
       
     putTeacherProf = do
       (em, fn, gn) <- 
-        runFormPost' $ (,,)
-        <$> stringInput "email"
-        <*> stringInput "familyName"
-        <*> stringInput "givenName"
+        runInputPost $ (,,)
+        <$> ireq textField "email"
+        <*> ireq textField "familyName"
+        <*> ireq textField "givenName"
       (rn, en, cs) <- 
-        runFormPost' $ (,,)
-        <$> maybeStringInput "roomnumber"
-        <*> maybeStringInput "extensionnumber"
-        <*> maybeStringInput "courses"
+        runInputPost $ (,,)
+        <$> iopt textField "roomnumber"
+        <*> iopt textField "extensionnumber"
+        <*> iopt textField "courses"
       runDB $ do
         -- update user
-        update uid [UserEmail em, UserFamilyName fn, UserGivenName gn]
+        update uid [UserEmail =. em, UserFamilyName =. fn, UserGivenName =. gn]
         mlab <- getBy $ UniqueLaboratory uid
         case mlab of
           Nothing -> do
@@ -166,46 +166,46 @@ putProfileR uid = do
                                 , laboratoryCourses=cs
                                 }
           Just (lid, _) -> do
-            update lid [ LaboratoryRoomNumber rn
-                       , LaboratoryExtensionNumber en
-                       , LaboratoryCourses cs
+            update lid [ LaboratoryRoomNumber =. rn
+                       , LaboratoryExtensionNumber =. en
+                       , LaboratoryCourses =. cs
                        ]
             return lid
       redirectParams RedirectTemporary (ProfileR uid) [("mode", "e")]
     
     putStudentProf = do
       (em, fn, gn) <- 
-        runFormPost' $ (,,)
-        <$> stringInput "email"
-        <*> stringInput "familyName"
-        <*> stringInput "givenName"
+        runInputPost $ (,,)
+        <$> ireq textField "email"
+        <*> ireq textField "familyName"
+        <*> ireq textField "givenName"
       (bir, ey, gy, br, zip, adr, lon, lat, tel, st, hzip, hadr, hlon, hlat, htel, dc, dwl, emp) <- 
-        runFormPost' $ (,,,,,,,,,,,,,,,,,)
-        <$> dayInput "birth"
-        <*> intInput "entryYear"
-        <*> maybeIntInput "graduateYear"
-        <*> stringInput "branch"
-        <*> stringInput "zip"
-        <*> stringInput "address"
-        <*> maybeStringInput "longitude"
-        <*> maybeStringInput "latitude"
-        <*> stringInput "tel"
-        <*> stringInput "station"
-        <*> stringInput "homeZip"
-        <*> stringInput "homeAddress"
-        <*> maybeStringInput "homeLongitude"
-        <*> maybeStringInput "homeLatitude"
-        <*> stringInput "homeTel"
-        <*> maybeStringInput "desiredCourse"
-        <*> maybeStringInput "desiredWorkLocation"
-        <*> maybeStringInput "employment"
+        runInputPost $ (,,,,,,,,,,,,,,,,,)
+        <$> ireq dayField "birth"
+        <*> ireq intField "entryYear"
+        <*> iopt intField "graduateYear"
+        <*> ireq textField "branch"
+        <*> ireq textField "zip"
+        <*> ireq textField "address"
+        <*> iopt textField "longitude"
+        <*> iopt textField "latitude"
+        <*> ireq textField "tel"
+        <*> ireq textField "station"
+        <*> ireq textField "homeZip"
+        <*> ireq textField "homeAddress"
+        <*> iopt textField "homeLongitude"
+        <*> iopt textField "homeLatitude"
+        <*> ireq textField "homeTel"
+        <*> iopt textField "desiredCourse"
+        <*> iopt textField "desiredWorkLocation"
+        <*> iopt textField "employment"
       let lon' = fromMaybe Nothing (fmap (Just . readText) lon)
           lat' = fromMaybe Nothing (fmap (Just . readText) lat)
           hlon' = fromMaybe Nothing (fmap (Just . readText) hlon)
           hlat' = fromMaybe Nothing (fmap (Just . readText) hlat)
       runDB $ do
         -- update user
-        update uid [UserEmail em, UserFamilyName fn, UserGivenName gn]
+        update uid [UserEmail =. em, UserFamilyName =. fn, UserGivenName =. gn]
         mprof <- getBy $ UniqueProfile uid
         case mprof of
           Nothing -> do
@@ -230,24 +230,24 @@ putProfileR uid = do
                              , profileEmployment=emp
                              }
           Just (pid, _) -> do
-            update pid [ ProfileBirth bir
-                       , ProfileEntryYear ey
-                       , ProfileGraduateYear gy
-                       , ProfileBranch br
-                       , ProfileZip zip
-                       , ProfileAddress adr
-                       , ProfileLongitude lon'
-                       , ProfileLatitude lat'
-                       , ProfileTel tel
-                       , ProfileStation st
-                       , ProfileHomeZip hzip
-                       , ProfileHomeAddress hadr
-                       , ProfileHomeLongitude hlon'
-                       , ProfileHomeLatitude hlat'
-                       , ProfileHomeTel htel
-                       , ProfileDesiredCourse dc
-                       , ProfileDesiredWorkLocation dwl
-                       , ProfileEmployment emp
+            update pid [ ProfileBirth =. bir
+                       , ProfileEntryYear =. ey
+                       , ProfileGraduateYear =. gy
+                       , ProfileBranch =. br
+                       , ProfileZip =. zip
+                       , ProfileAddress =. adr
+                       , ProfileLongitude =. lon'
+                       , ProfileLatitude =. lat'
+                       , ProfileTel =. tel
+                       , ProfileStation =. st
+                       , ProfileHomeZip =. hzip
+                       , ProfileHomeAddress =. hadr
+                       , ProfileHomeLongitude =. hlon'
+                       , ProfileHomeLatitude =. hlat'
+                       , ProfileHomeTel =. htel
+                       , ProfileDesiredCourse =. dc
+                       , ProfileDesiredWorkLocation =. dwl
+                       , ProfileEmployment =. emp
                        ]
             return pid
       redirectParams RedirectTemporary (ProfileR uid) [("mode", "e")]
@@ -274,7 +274,7 @@ postAvatarR uid = do
     user <- get404 uid
     unless (self `canEdit` user) $
       lift $ permissionDenied "あなたはこのユーザのアバターを変更することはできません."
-    update uid [UserAvatar avatar]
+    update uid [UserAvatar =. avatar]
   cacheSeconds 10 -- FIXME
   jsonToRepJson $ jsonMap [ ("uri", jsonScalar $ T.unpack $ r $ AvatarImageR uid)
                           , ("avatar", jsonScalar $ T.unpack $ showmaybe $ mfhid)

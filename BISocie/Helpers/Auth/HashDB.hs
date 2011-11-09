@@ -16,7 +16,7 @@ module BISocie.Helpers.Auth.HashDB
     ) where
 
 import Yesod
-import Yesod.Helpers.Auth
+import Yesod.Auth
 import Control.Monad (unless)
 import Control.Applicative ((<$>), (<*>))
 import Data.ByteString.Lazy.Char8  (pack)
@@ -47,8 +47,8 @@ class YesodAuth m => YesodAuthHashDB m where
 
 authHashDB :: YesodAuthHashDB m => AuthPlugin m
 authHashDB =
-    AuthPlugin "account" dispatch $ \tm ->
-        [$hamlet|\
+    AuthPlugin "account" dispatch $ \tm -> addHamlet
+        [hamlet|\
 <form method="post" action="@{tm loginR}">
     <table>
         <tr>
@@ -71,9 +71,9 @@ authHashDB =
 
 postLoginR :: YesodAuthHashDB master => GHandler Auth master ()
 postLoginR = do
-    (account, pass) <- runFormPost' $ (,)
-        <$> stringInput "account"
-        <*> stringInput "password"
+    (account, pass) <- runInputPost $ (,)
+        <$> ireq textField "account"
+        <*> ireq textField "password"
     macreds <- getHashDBCreds account
     maid <-
         case (macreds >>= hashdbCredsAuthId) of
@@ -107,7 +107,7 @@ getPasswordR = do
     defaultLayout $ do
         setTitle "パスワード変更"
         addHamlet
-            [$hamlet|\
+            [hamlet|\
 <h3>パスワード変更
 <form method="post" action="@{toMaster setpassR}">
     <table>
@@ -126,9 +126,9 @@ getPasswordR = do
 
 postPasswordR :: YesodAuthHashDB master => GHandler Auth master ()
 postPasswordR = do
-    (new, confirm) <- runFormPost' $ (,)
-        <$> stringInput "new"
-        <*> stringInput "confirm"
+    (new, confirm) <- runInputPost $ (,)
+        <$> ireq textField "new"
+        <*> ireq textField "confirm"
     toMaster <- getRouteToMaster
     unless (new == confirm) $ do
         setMessage "パスワードが合致していません.再度入力しなおしてください."

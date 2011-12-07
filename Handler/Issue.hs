@@ -20,7 +20,6 @@ import Data.Maybe (fromMaybe)
 import Network.Mail.Mime
 import qualified Data.Text.Lazy
 import qualified Data.Text.Lazy.Encoding
-import Data.Text (Text)
 import qualified Data.Text as T
 import Text.Blaze (preEscapedText)
 import Text.Cassius (cassiusFile)
@@ -139,7 +138,7 @@ getCrossSearchR = do
     return $ map toProjectBis prjs'
   defaultLayout $ do
     setTitle "クロスサーチ"
-    addCassius $(cassiusFile "cassius/issue.cassius")
+    addCassius $(cassiusFile "templates/issue.cassius")
     addWidget $(widgetFile "crosssearch")
 
 postCrossSearchR :: Handler RepJson
@@ -255,7 +254,7 @@ getIssueListR pid = do
       paging = $(widgetFile "paging")
   defaultLayout $ do
     setTitle $ preEscapedText $ projectBisName prj +++ "案件一覧"
-    addCassius $(cassiusFile "cassius/issue.cassius")
+    addCassius $(cassiusFile "templates/issue.cassius")
     addWidget $(widgetFile "issuelist")
 
 getNewIssueR :: ProjectId -> Handler RepHtml
@@ -271,7 +270,7 @@ getNewIssueR pid = do
     return (ptcpts, stss, prj)
   defaultLayout $ do
     setTitle "新規案件作成"
-    addCassius $(cassiusFile "cassius/issue.cassius")
+    addCassius $(cassiusFile "templates/issue.cassius")
     addWidget $(widgetFile "newissue")
       
 postNewIssueR :: ProjectId -> Handler RepHtml
@@ -291,7 +290,7 @@ postNewIssueR pid = do
                                         <*> iopt textField "assign"
                                         <*> ireq textField "status"
       Just fi <- lookupFile "attached"
-      runDB $ do
+      ino <- runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
         unless (p /= Nothing) $ 
           lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
@@ -327,12 +326,14 @@ postNewIssueR pid = do
         let msgid = toMessageId iid cid now mailMessageIdDomain
         when (not $ null emails) $
           liftIO $ renderSendMail Mail
-            { mailHeaders =
-                 [ ("From", fromEmailAddress)
-                 , ("Bcc", T.intercalate "," emails)
-                 , ("Subject", sbj)
+            { mailFrom = fromEmailAddress
+            , mailTo = []
+            , mailCc = []
+            , mailBcc = emails
+            , mailHeaders =
+                 [ ("Subject", sbj)
                  , ("Message-ID", msgid)
-                 , (mailXHeader, showText pid)
+                 , (mailXHeader, showIdCounter pid)
                  ]
             , mailParts = 
                    [[ Part
@@ -356,7 +357,8 @@ postNewIssueR pid = do
                      }
                   ]]
           }
-        lift $ redirect RedirectTemporary $ IssueR pid ino
+        return ino
+      redirect RedirectTemporary $ IssueR pid ino
 
 getIssueR :: ProjectId -> IssueNo -> Handler RepHtml
 getIssueR pid ino = do
@@ -445,14 +447,16 @@ postCommentR pid ino = do
             refid = toMessageId iid lastCid (commentCdate lastC) mailMessageIdDomain
         when (not $ null emails) $
           liftIO $ renderSendMail Mail
-            { mailHeaders =
-                 [ ("From", fromEmailAddress)
-                 , ("Bcc", T.intercalate "," emails)
-                 , ("Subject", issueSubject issue)
+            { mailFrom = fromEmailAddress
+            , mailBcc = emails
+            , mailTo = []
+            , mailCc = []
+            , mailHeaders =
+                 [ ("Subject", issueSubject issue)
                  , ("Message-ID", msgid)
                  , ("References", refid)
                  , ("In-Reply-To", refid)
-                 , (mailXHeader, showText pid)
+                 , (mailXHeader, showIdCounter pid)
                  ]
             , mailParts = 
                    [[ Part
@@ -476,7 +480,7 @@ postCommentR pid ino = do
                      }
                   ]]
           }
-        lift $ redirect RedirectTemporary $ IssueR pid ino
+      redirect RedirectTemporary $ IssueR pid ino
         
 getAttachedFileR :: CommentId -> FileHeaderId -> Handler RepHtml
 getAttachedFileR cid fid = do
@@ -500,13 +504,13 @@ selectParticipants pid = do
       return (uid, u)
 
 selectMailAddresses :: (Failure ErrorResponse m, MonadTrans t, PersistBackend t m) =>
-     Key t (ProjectGeneric t) -> t m [Text]
+     Key t (ProjectGeneric t) -> t m [Address]
 selectMailAddresses pid = do
   mapM (p2u.snd) =<< selectList [ParticipantsProject ==. pid, ParticipantsReceivemail ==. True] []
   where
     p2u p = do
       u <- get404 $ participantsUser p
-      return $ userEmail u
+      return $ Address (Just $ userFamilyName u `T.append` userGivenName u) (userEmail u)
 
 storeAttachedFile :: PersistBackend b m => Key backend User -> FileInfo -> b m (Maybe (Key b (FileHeaderGeneric backend)))
 storeAttachedFile uid fi = do

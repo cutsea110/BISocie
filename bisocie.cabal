@@ -75,7 +75,7 @@ Executable bisocie
                   , template-haskell
                   , hamlet
                   , hjsmin       >= 0.0.12  && < 0.1
-                  , web-encodings == 0.3.0.7
+                  , web-encodings >= 0.3 && < 0.4
                   , utility-ht
                   , warp
                   , filepath

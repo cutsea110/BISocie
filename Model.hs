@@ -215,10 +215,14 @@ localDayToUTC = localTimeToUTC (hoursToTimeZone Settings.tz) . flip LocalTime (T
 toMessageId :: IssueId -> CommentId -> UTCTime -> Text -> Text
 toMessageId iid cid time domain = "<" 
                     +++ T.pack (formatTime defaultTimeLocale "%Y%m%d%H%M%S%q" time)
-                    +++ "i" +++ T.pack (show $ unKey iid)
-                    +++ "c" +++ T.pack (show $ unKey cid)
+                    +++ "i" +++ showIdCounter iid
+                    +++ "c" +++ showIdCounter cid
                     +++ "@" +++ domain
                     +++ ">"
+
+showIdCounter :: Key b e -> Text
+showIdCounter (Key (PersistInt64 n)) = showText n
+showIdCounter x = showText $ unKey x
 
 showBirthDay :: Profile -> Text
 showBirthDay = showText . profileBirth

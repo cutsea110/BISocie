@@ -49,7 +49,7 @@ postNewProjectR = do
                            <*> ireq textField "description"
                            <*> ireq textField "statuses"
       now <- liftIO getCurrentTime
-      runDB $ do
+      pid <- runDB $ do
         pid <- insert $ Project { projectName=name
                                 , projectIssuecounter=0
                                 , projectDescription=desc
@@ -63,7 +63,8 @@ postNewProjectR = do
                                    , participantsReceivemail=True
                                    , participantsCdate=now
                                    }
-        lift $ redirect RedirectTemporary $ ProjectR pid
+        return pid
+      redirect RedirectTemporary $ ProjectR pid
 
 getProjectR :: ProjectId -> Handler RepHtml
 getProjectR pid = do

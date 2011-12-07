@@ -4,6 +4,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
+{-# OPTIONS_GHC -fno-warn-missing-fields #-}
 module Handler.Issue where
 
 import Foundation
@@ -139,7 +140,7 @@ getCrossSearchR = do
     return $ map toProjectBis prjs'
   defaultLayout $ do
     setTitle "クロスサーチ"
-    addCassius $(cassiusFile "cassius/issue.cassius")
+    addCassius $(cassiusFile "templates/issue.cassius")
     addWidget $(widgetFile "crosssearch")
 
 postCrossSearchR :: Handler RepJson
@@ -255,7 +256,7 @@ getIssueListR pid = do
       paging = $(widgetFile "paging")
   defaultLayout $ do
     setTitle $ preEscapedText $ projectBisName prj +++ "案件一覧"
-    addCassius $(cassiusFile "cassius/issue.cassius")
+    addCassius $(cassiusFile "templates/issue.cassius")
     addWidget $(widgetFile "issuelist")
 
 getNewIssueR :: ProjectId -> Handler RepHtml
@@ -271,7 +272,7 @@ getNewIssueR pid = do
     return (ptcpts, stss, prj)
   defaultLayout $ do
     setTitle "新規案件作成"
-    addCassius $(cassiusFile "cassius/issue.cassius")
+    addCassius $(cassiusFile "templates/issue.cassius")
     addWidget $(widgetFile "newissue")
       
 postNewIssueR :: ProjectId -> Handler RepHtml

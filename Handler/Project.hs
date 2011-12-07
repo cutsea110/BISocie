@@ -29,7 +29,7 @@ getNewProjectR = do
       help = $(widgetFile "help")
   defaultLayout $ do
     setTitle "プロジェクト新規作成"
-    addCassius $(cassiusFile "cassius/project.cassius")
+    addCassius $(cassiusFile "templates/project.cassius")
     addWidget $(widgetFile "newproject")
     
 postNewProjectR :: Handler RepHtml

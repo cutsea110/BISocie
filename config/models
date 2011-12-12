@@ -1,46 +1,46 @@
 User
     ident Text
-    password Text Maybe Update
-    role Role Update Eq
-    familyName Text Update
-    givenName Text Update
-    email Text Update
-    avatar FileHeaderId Maybe Update
-    active Bool Update Eq default=true
+    password Text Maybe
+    role Role
+    familyName Text
+    givenName Text
+    email Text
+    avatar FileHeaderId Maybe
+    active Bool default=true
     UniqueUser ident
     
 Profile
-    user UserId In
-    birth Day Update
+    user UserId
+    birth Day
     
-    entryYear Int Update
-    graduateYear Int Maybe Update
-    branch Text Update
+    entryYear Int
+    graduateYear Int Maybe
+    branch Text
     
-    zip Text Update
-    address Text Update
-    longitude Double Maybe Ne Update
-    latitude Double Maybe Ne Update
-    tel Text Update
-    station Text Update
+    zip Text
+    address Text
+    longitude Double Maybe
+    latitude Double Maybe
+    tel Text
+    station Text
     
-    homeZip Text Update
-    homeAddress Text Update
-    homeLongitude Double Maybe Ne Update
-    homeLatitude Double Maybe Ne Update
-    homeTel Text Update
+    homeZip Text
+    homeAddress Text
+    homeLongitude Double Maybe
+    homeLatitude Double Maybe
+    homeTel Text
     
-    desiredCourse Text Maybe Update
-    desiredWorkLocation Text Maybe Update
-    employment Text Maybe Update
+    desiredCourse Text Maybe
+    desiredWorkLocation Text Maybe
+    employment Text Maybe
     
     UniqueProfile user
 
 Laboratory
-    headResearcher UserId Eq
-    roomNumber Text Maybe Update
-    extensionNumber Text Maybe Update
-    courses Text Maybe Update
+    headResearcher UserId
+    roomNumber Text Maybe
+    extensionNumber Text Maybe
+    courses Text Maybe
     UniqueLaboratory headResearcher
 
 Email
@@ -50,51 +50,51 @@ Email
     UniqueEmail email
 
 Project
-    name Text Update Asc Desc
-    description Text Update
-    statuses Text Update
-    issuecounter IssueNo Update Add default=0
-    cuser UserId
-    cdate UTCTime Asc Desc default=now()
-    udate UTCTime Update Asc Desc default=now()
-
-Issue
-    project ProjectId Eq In
-    number IssueNo Eq Desc Asc
-    subject Text
-    assign UserId Maybe Update In
-    status Text Update In
-    limitdate Day Maybe Update Ge Lt Eq
+    name Text
+    description Text
+    statuses Text
+    issuecounter IssueNo default=0
     cuser UserId
     cdate UTCTime default=now()
-    uuser UserId Update
-    udate UTCTime Update Desc Ge Lt default=now()
+    udate UTCTime default=now()
+
+Issue
+    project ProjectId
+    number IssueNo
+    subject Text
+    assign UserId Maybe
+    status Text
+    limitdate Day Maybe
+    cuser UserId
+    cdate UTCTime default=now()
+    uuser UserId
+    udate UTCTime default=now()
     UniqueIssue project number
 
 Comment
-    project ProjectId Eq In
-    issue IssueId Eq
+    project ProjectId
+    issue IssueId
     content Text
     assign UserId Maybe
-    status Text Eq In
+    status Text
     limitdate Day Maybe
     attached FileHeaderId Maybe
     cuser UserId
-    cdate UTCTime Desc default=now()
+    cdate UTCTime default=now()
 
 Participants
-    project ProjectId Eq In
-    user UserId Eq Asc
-    receivemail Bool Eq  Update default=true
-    cdate UTCTime Asc default=now()
+    project ProjectId
+    user UserId
+    receivemail Bool default=true
+    cdate UTCTime default=now()
     UniqueParticipants project user
 
 FileHeader
-    fullname Text Eq
+    fullname Text
     efname Text
-    name Text Eq
-    extension Text Eq
+    name Text
+    extension Text
     contentType Text
     fileSize Int64
-    creator UserId Eq
-    created UTCTime Desc default=now()
+    creator UserId
+    created UTCTime default=now()

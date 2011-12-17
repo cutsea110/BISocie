@@ -103,8 +103,8 @@ instance Yesod BISocie where
       (title, parents) <- breadcrumbs
       current <- getCurrentRoute
       tm <- getRouteToMaster
-      let header = $(hamletFile "hamlet/header.hamlet")
-          footer = $(hamletFile "hamlet/footer.hamlet")
+      let header = $(hamletFile "templates/header.hamlet")
+          footer = $(hamletFile "templates/footer.hamlet")
       pc <- widgetToPageContent $ do
         widget
         addScriptEither $ urlJqueryJs y
@@ -117,9 +117,9 @@ instance Yesod BISocie where
         addScriptEither $ Left $ StaticR plugins_watermark_jquery_watermark_js
         addScriptEither $ Left $ StaticR plugins_ajaxzip2_ajaxzip2_js
         addScriptEither $ Left $ StaticR plugins_selection_jquery_selection_js
-        addCassius $(cassiusFile "cassius/default-layout.cassius")
-        addJulius $(juliusFile "julius/default-layout.julius")
-      hamletToRepHtml $(hamletFile "hamlet/default-layout.hamlet")
+        addCassius $(cassiusFile "templates/default-layout.cassius")
+        addJulius $(juliusFile "templates/default-layout.julius")
+      hamletToRepHtml $(hamletFile "templates/default-layout.hamlet")
 
     -- This is done to provide an optimization for serving static files from
     -- a separate domain. Please see the staticroot setting in Settings.hs
@@ -282,8 +282,8 @@ instance YesodAuth BISocie where
     loginHandler = do
       defaultLayout $ do
         setTitle "ログイン"
-        addCassius $(cassiusFile "cassius/login.cassius")
-        addHamlet $(hamletFile "hamlet/login.hamlet")
+        addCassius $(cassiusFile "templates/login.cassius")
+        addHamlet $(hamletFile "templates/login.hamlet")
                   
 instance YesodAuthHashDB BISocie where
     type AuthHashDBId BISocie = UserId

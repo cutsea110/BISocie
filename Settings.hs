@@ -33,6 +33,7 @@ import Yesod.Default.Config
 import qualified Yesod.Default.Util
 import Data.Text (Text)
 import Data.ByteString (ByteString)
+import Network.Mail.Mime (Address(..))
 
 -- | Which Persistent backend this site is using.
 type PersistConfig = PostgresConf
@@ -84,8 +85,8 @@ mailXHeader :: ByteString
 mailXHeader = "X-BISocie-Soubun"
 mailMessageIdDomain :: Text
 mailMessageIdDomain = "bisocie.seitoku.ac.jp"
-fromEmailAddress :: Text
-fromEmailAddress = "bisocie@seitoku.ac.jp"
+fromEmailAddress :: Address
+fromEmailAddress = Address (Just "BISocie") "bisocie@seitoku.ac.jp"
 
 projectListLimit :: Int
 projectListLimit = 50

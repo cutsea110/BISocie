@@ -287,12 +287,7 @@ canEditTel :: User -> User -> Bool
 canEditTel = canViewTel
 
 canCreateProject :: User -> Bool
-canCreateProject u =
-  case userRole u of
-    Admin -> True
-    Teacher -> True
-    Staff -> True
-    Student -> False
+canCreateProject _ = True
 
 canViewHumannetwork :: User -> Bool
 canViewHumannetwork u =
@@ -303,12 +298,7 @@ canViewHumannetwork u =
     Student -> False
 
 canEditProjectSetting :: User -> Bool
-canEditProjectSetting u =
-  case userRole u of
-    Admin -> True
-    Teacher -> True
-    Staff -> True
-    Student -> False
+canEditProjectSetting _ = True
 
 canViewUserLocations :: User -> Bool
 canViewUserLocations u =
@@ -319,12 +309,7 @@ canViewUserLocations u =
     Student -> False
 
 canSearchUser :: User -> Bool
-canSearchUser u =
-  case userRole u of
-    Admin -> True
-    Teacher -> True
-    Staff -> True
-    Student -> False
+canSearchUser _ = True
 
 textToOrder :: Text -> SelectOpt (ProjectGeneric backend)
 textToOrder "DescProjectUdate" = Desc ProjectUdate

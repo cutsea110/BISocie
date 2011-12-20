@@ -177,7 +177,7 @@ function mkUser(u, ps){
             .addClass(u.role+' user-logo'),
       c = $('<input/>').attr({type:'checkbox'}),
       avatar = $("<img class='avatar'/>").attr({src: u.avatar}),
-      s =$('<a/>').attr({href: u.uri}).text(u.name),
+      s =$('<a/>').attr({href: u.uri}).html(u.name+'<br/>('+u.ident+')'),
       mail = $('<img/>').addClass('mail');
 
   if (ps[u.id]){

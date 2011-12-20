@@ -131,6 +131,11 @@ instance Yesod BISocie where
     -- The page to be redirected to when authentication is required.
     authRoute _ = Just $ AuthR LoginR
 
+    -- Maximum allowed length of the request body, in bytes.
+    maximumContentLength _ (Just (AvatarR _))      =   2 * 1024 * 1024 --  2 megabytes for default
+    maximumContentLength _ (Just (AvatarImageR _)) =   2 * 1024 * 1024 --  2 megabytes for default
+    maximumContentLength _ _                       =  20 * 1024 * 1024 -- 20 megabytes for default
+    
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
     -- expiration dates to be set far in the future without worry of

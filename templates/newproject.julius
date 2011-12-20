@@ -77,6 +77,6 @@ function mkUser(u){
             .attr({uid: u.id, ident: u.ident, fullname: u.name, eyear: u.entryYear})
             .addClass(u.role+' user-logo'),
       avatar = $("<img class='avatar'/>").attr({src: u.avatar}),
-      s =$('<a/>').attr({href: u.uri}).text(u.name);
+      s =$('<a/>').attr({href: u.uri}).html(u.name+'<br/>('+u.ident+')');
   return div.append(s).append(avatar);
 }

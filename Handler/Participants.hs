@@ -71,8 +71,9 @@ postParticipantsR pid = do
         p <- getBy $ UniqueParticipants pid selfid
         unless (p /= Nothing && canEditProjectSetting self) $ 
           lift $ permissionDenied "あなたはこのプロジェクトの参加者を編集できません."
-        when (selfid==uid) $ 
-          lift $ permissionDenied "自分自身を削除することはできません."
+        c <- count [ParticipantsProject ==. pid, ParticipantsUser !=. uid]
+        when (selfid==uid && c==0) $ 
+          lift $ permissionDenied "他に参加者が居ないため削除することはできません."
         deleteBy $ UniqueParticipants pid uid
       cacheSeconds 10 -- FIXME
       jsonToRepJson $ jsonMap [("participants",

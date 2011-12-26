@@ -229,6 +229,10 @@ function modifyParticipant(c){
           break;
         case 'deleted':
           mail.attr({src: '@{StaticR img_mail_checked_png}', receivemail: 'none'});
+          if (json.participants.user == '#{show selfid}') {
+            alert('このプロジェクトの参加者ではなくなったためホームに戻ります.');
+            location.href='@{HomeR selfid}';
+          }
           break;
       }
     },

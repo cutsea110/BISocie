@@ -56,6 +56,18 @@ $(document).ready(function(){
     $('#delete-confirm').dialog('open');
   });
 
+  $('#release-self-participate').hide().attr('title', '強制移動前確認').dialog({
+    autoOpen: false,
+    width:400,
+    modal: true,
+    buttons: {
+      '閉じる': function(){
+        $(this).dialog('close');
+        location.href='@{HomeR selfid}';
+      }
+    }
+  });
+
   $('#search-users').hide().attr('title', 'ユーザ検索').dialog({
     autoOpen: false,
     width: 500,
@@ -230,8 +242,7 @@ function modifyParticipant(c){
         case 'deleted':
           mail.attr({src: '@{StaticR img_mail_checked_png}', receivemail: 'none'});
           if (json.participants.user == '#{show selfid}') {
-            alert('このプロジェクトの参加者ではなくなったためホームに戻ります.');
-            location.href='@{HomeR selfid}';
+            $('#release-self-participate').dialog('open');
           }
           break;
       }

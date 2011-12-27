@@ -11,9 +11,8 @@
     <table .nostyle>
       <tr>
         <th>内容: 
-          <span .alert>(必須)
         <td>
-          <textarea id="content" placeholder="内容..." name="content" .watermark .required>
+          <textarea id="content" placeholder="内容..." name="content" .watermark>
       <tr>
         <th>アサイン:
         <td>

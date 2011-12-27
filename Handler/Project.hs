@@ -23,7 +23,7 @@ getNewProjectR = do
   unless (canCreateProject self) $ 
     permissionDenied "あなたはプロジェクトを作成することはできません."
   now <- liftIO getCurrentTime
-  let inintstatuses = "!未開始#赤\n着手#緑\n完了#灰\n=却下#灰\n保留\n議論\n報告" :: String
+  let inintstatuses = "!未着手#赤\n着手#緑\n完了#灰\n=却下#灰\n保留\n議論\n報告" :: String
       (y,_,_) = toGregorian $ utctDay now
       eyears = [Settings.entryStartYear..y+5]
       help = $(widgetFile "help")

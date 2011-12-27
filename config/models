@@ -75,7 +75,7 @@ Issue
 Comment
     project ProjectId
     issue IssueId
-    content Text
+    content Text Maybe
     assign UserId Maybe
     status Text
     limitdate Day Maybe

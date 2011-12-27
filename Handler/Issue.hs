@@ -16,7 +16,7 @@ import Data.Time
 import Data.Time.Calendar.WeekDate
 import Data.Time.Calendar.OrdinalDate
 import Data.Tuple.HT
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, fromJust, isJust)
 import Network.Mail.Mime
 import qualified Data.Text.Lazy
 import qualified Data.Text.Lazy.Encoding
@@ -285,7 +285,7 @@ postNewIssueR pid = do
       (selfid, _) <- requireAuth
       (sbj, cntnt, ldate, asgn, sts) <- runInputPost $ (,,,,)
                                         <$> ireq textField "subject"
-                                        <*> ireq textField "content"
+                                        <*> iopt textField "content"
                                         <*> iopt dayField "limitdate"
                                         <*> iopt textField "assign"
                                         <*> ireq textField "status"
@@ -324,7 +324,7 @@ postNewIssueR pid = do
                                 }
         emails <- selectMailAddresses pid
         let msgid = toMessageId iid cid now mailMessageIdDomain
-        when (not $ null emails) $
+        when (isJust cntnt && not (null emails)) $
           liftIO $ renderSendMail Mail
             { mailFrom = fromEmailAddress
             , mailTo = []
@@ -348,7 +348,7 @@ postNewIssueR pid = do
                                        , "ステータス: " +++ sts
                                        , ""
                                        ]
-                                     ++ T.lines cntnt 
+                                     ++ T.lines (fromJust cntnt)
                                      ++ [ ""
                                         , "イシュー: " +++ r (IssueR pid ino)]
                                      ++ case mfhid of
@@ -409,7 +409,7 @@ postCommentR pid ino = do
       (selfid, _) <- requireAuth
       (cntnt, limit, asgn, sts) <- 
         runInputPost $ (,,,)
-        <$> ireq textField "content"
+        <$> iopt textField "content"
         <*> iopt dayField "limitdate"
         <*> iopt textField "assign"
         <*> ireq textField "status"
@@ -445,7 +445,7 @@ postCommentR pid ino = do
         emails <- selectMailAddresses pid
         let msgid = toMessageId iid cid now mailMessageIdDomain
             refid = toMessageId iid lastCid (commentCdate lastC) mailMessageIdDomain
-        when (not $ null emails) $
+        when (isJust cntnt && not (null emails)) $
           liftIO $ renderSendMail Mail
             { mailFrom = fromEmailAddress
             , mailBcc = emails
@@ -471,7 +471,7 @@ postCommentR pid ino = do
                                        , "ステータス: " +++ sts
                                        , ""
                                        ]
-                                     ++ T.lines cntnt 
+                                     ++ T.lines (fromJust cntnt)
                                      ++ [ ""
                                         , "イシュー: " +++ r (IssueR pid ino)]
                                      ++ case mfhid of

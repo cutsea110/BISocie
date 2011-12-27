@@ -46,7 +46,7 @@
            \#{userFullName (snd (commentBisCuser (snd c)))}
         \  #{showDate (commentBisCdate (snd c))} #{commentBisStatus (snd c)}
       <div .post-body>
-        \#{showMultilineText (commentBisContent (snd c))}
+        \#{showMultilineText (showmaybe (commentBisContent (snd c)))}
         $maybe f <- commentBisAttached (snd c)
           <div .attached>
             \添付ファイル: 

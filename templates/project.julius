@@ -68,6 +68,21 @@ $(document).ready(function(){
     }
   });
 
+  $('#terminated-live, #terminated-dead').click(function(){
+    $.ajax({
+      async: true,
+      type: 'POST',
+      url: '@{ProjectR pid}',
+      dataType: 'json',
+      data: {_method: 'modify', terminated: $(this).val()},
+      success: function(json) {
+      },
+      error: function(res, status) {
+        // FIXME
+      }
+    });
+  });
+
   $('#search-users').hide().attr('title', 'ユーザ検索').dialog({
     autoOpen: false,
     width: 500,

@@ -54,6 +54,7 @@ postNewProjectR = do
                                 , projectIssuecounter=0
                                 , projectDescription=desc
                                 , projectStatuses=sts
+                                , projectTerminated=False
                                 , projectCuser=selfid
                                 , projectCdate=now
                                 , projectUdate=now
@@ -95,6 +96,7 @@ putProjectR pid = do
   (selfid, self) <- requireAuth
   nm' <- lookupPostParam "name"
   ds' <- lookupPostParam "description"
+  tm' <- lookupPostParam "terminated"
   st' <- lookupPostParam "statuses"
   now <- liftIO getCurrentTime
 
@@ -111,18 +113,24 @@ putProjectR pid = do
         Nothing -> return $ Just $ projectDescription prj
         Just "" -> lift $ invalidArgs ["概要は入力必須項目です."]
         Just ds'' -> return $ Just ds''
+    Just tm <- case tm' of
+        Nothing -> return $ Just $ projectTerminated prj
+        Just "live" -> return $ Just False
+        Just "dead" -> return $ Just True
     Just st <- case st' of
         Nothing -> return $ Just $ projectStatuses prj
         Just "" -> lift $ invalidArgs ["ステータスは入力必須項目です."]
         Just st'' -> return $ Just st''
     update pid [ ProjectName =. nm
                , ProjectDescription =. ds
+               , ProjectTerminated =. tm
                , ProjectStatuses =. st
                , ProjectUdate =. now]
     get404 pid
   cacheSeconds 10 -- FIXME
   jsonToRepJson $ jsonMap [ ("name", jsonScalar $ T.unpack $ projectName prj)
                           , ("description", jsonScalar $ T.unpack $ projectDescription prj)
+                          , ("terminated", jsonScalar $ T.unpack $ showTerminated prj)
                           , ("statuses", jsonScalar $ T.unpack $ projectStatuses prj)
                           ]
 

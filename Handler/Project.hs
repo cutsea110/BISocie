@@ -54,6 +54,7 @@ postNewProjectR = do
                                 , projectIssuecounter=0
                                 , projectDescription=desc
                                 , projectStatuses=sts
+                                , projectTerminated=False
                                 , projectCuser=selfid
                                 , projectCdate=now
                                 , projectUdate=now

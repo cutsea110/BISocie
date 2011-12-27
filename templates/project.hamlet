@@ -30,6 +30,17 @@
           <textarea id="description" type="text" name="description" placeholder="(プロジェクト概要)" uri="@{ProjectR pid}" .inplaceedit>#{projectDescription prj}
         $else
           \#{showMultilineText (projectDescription prj)}
+      <dt>プロジェクト状態
+        $if (canEditProjectSetting self)
+          <span .alert>(必須)
+      <dd>
+        $if (canEditProjectSetting self)
+          <input id="terminated-live" type="radio" name="terminated" value="live" :live prj:checked>
+          <label for="terminated-live">活動中
+          <input id="terminated-dead" type="radio" name="terminated" value="dead" :dead prj:checked>
+          <label for="terminated-dead">終了
+        $else
+          #{showTerminated prj}
       <dt>ステータス 
         $if (canEditProjectSetting self)
           <span .alert>(必須) 

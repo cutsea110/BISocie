@@ -76,6 +76,7 @@ Comment
     project ProjectId
     issue IssueId
     content Text Maybe
+    automemo Text
     assign UserId Maybe
     status Text
     limitdate Day Maybe

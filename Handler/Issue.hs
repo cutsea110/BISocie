@@ -300,7 +300,7 @@ postNewIssueR pid = do
         prj <- get404 pid
         let ino = projectIssuecounter prj
             asgn' = fromMaybe Nothing (fmap (Just . readText) asgn)
-        mfhid <- storeAttachedFile selfid fi
+        mfh <- storeAttachedFile selfid fi
         iid <- insert $ Issue { issueProject=pid
                               , issueNumber=ino
                               , issueSubject=sbj
@@ -315,10 +315,11 @@ postNewIssueR pid = do
         cid <- insert $ Comment { commentProject=pid
                                 , commentIssue=iid
                                 , commentContent=cntnt
+                                , commentAutomemo="init."
                                 , commentAssign=asgn'
                                 , commentStatus=sts
                                 , commentLimitdate=ldate
-                                , commentAttached=mfhid
+                                , commentAttached=fmap fst mfh
                                 , commentCuser=selfid
                                 , commentCdate=now
                                 }
@@ -351,9 +352,9 @@ postNewIssueR pid = do
                                      ++ T.lines (fromJust cntnt)
                                      ++ [ ""
                                         , "イシュー: " +++ r (IssueR pid ino)]
-                                     ++ case mfhid of
+                                     ++ case mfh of
                                        Nothing -> []
-                                       Just fid -> ["添付ファイル: " +++ (r $ AttachedFileR cid fid)]
+                                       Just (fid,_) -> ["添付ファイル: " +++ (r $ AttachedFileR cid fid)]
                      }
                   ]]
           }
@@ -422,25 +423,28 @@ postCommentR pid ino = do
           lift $ permissionDenied "あなたはこのプロジェクトに投稿することはできません."
         (iid, issue) <- getBy404 $ UniqueIssue pid ino
         [(lastCid, lastC)] <- selectList [CommentIssue ==. iid] [Desc CommentCdate, LimitTo 1]
+        mfh <- storeAttachedFile selfid fi
         let ldate = limit `mplus` issueLimitdate issue
             asgn' = fromMaybe Nothing (fmap (Just . readText) asgn)
-        mfhid <- storeAttachedFile selfid fi
+            newComment = Comment { commentProject=pid
+                                 , commentIssue=iid
+                                 , commentContent=cntnt
+                                 , commentAutomemo="now writing..."
+                                 , commentAssign=asgn'
+                                 , commentStatus=sts
+                                 , commentLimitdate=ldate
+                                 , commentAttached=fmap fst mfh
+                                 , commentCuser=selfid
+                                 , commentCdate=now
+                                 }
         update iid [ IssueUuser =. selfid
                    , IssueUdate =. now
                    , IssueLimitdate =. ldate
                    , IssueAssign =. asgn'
                    , IssueStatus =. sts
                    ]
-        cid <- insert $ Comment { commentProject=pid
-                                , commentIssue=iid
-                                , commentContent=cntnt
-                                , commentAssign=asgn'
-                                , commentStatus=sts
-                                , commentLimitdate=ldate
-                                , commentAttached=mfhid
-                                , commentCuser=selfid
-                                , commentCdate=now
-                                }
+        amemo <- generateAutomemo newComment issue mfh
+        cid <- insert $ newComment {commentAutomemo=amemo}
         prj <- get404 pid
         emails <- selectMailAddresses pid
         let msgid = toMessageId iid cid now mailMessageIdDomain
@@ -474,9 +478,9 @@ postCommentR pid ino = do
                                      ++ T.lines (fromJust cntnt)
                                      ++ [ ""
                                         , "イシュー: " +++ r (IssueR pid ino)]
-                                     ++ case mfhid of
+                                     ++ case mfh of
                                        Nothing -> []
-                                       Just fid -> ["添付ファイル: " +++ (r $ AttachedFileR cid fid)]
+                                       Just (fid,_) -> ["添付ファイル: " +++ (r $ AttachedFileR cid fid)]
                      }
                   ]]
           }
@@ -512,9 +516,40 @@ selectMailAddresses pid = do
       u <- get404 $ participantsUser p
       return $ Address (Just $ userFamilyName u `T.append` userGivenName u) (userEmail u)
 
-storeAttachedFile :: PersistBackend b m => Key backend User -> FileInfo -> b m (Maybe (Key b (FileHeaderGeneric backend)))
-storeAttachedFile uid fi = do
-  mf <- upload uid fi
-  case mf of
-    Nothing -> return Nothing
-    Just (fid, _, _, _, _) -> return $ Just fid
+storeAttachedFile :: (PersistBackend b m, Functor (b m)) => Key backend User -> FileInfo -> b m (Maybe ((Key b (FileHeaderGeneric backend)), T.Text))
+storeAttachedFile uid fi = fmap (fmap fst5'snd5) $ upload uid fi
+  where
+    fst5'snd5 (x,y,_,_,_) = (x,y)
+
+generateAutomemo :: (Failure ErrorResponse m, MonadTrans t, PersistBackend t m) 
+                    => CommentGeneric t -> IssueGeneric t -> (Maybe ((Key b (FileHeaderGeneric backend)), T.Text)) -> t m T.Text
+generateAutomemo c i f = do
+  let st = if commentStatus c == issueStatus i
+           then []
+           else ["ステータスを " +++ issueStatus i +++ " から " 
+                 +++ commentStatus c +++ " に変更."]
+      lm = case (commentLimitdate c, issueLimitdate i) of
+        (Nothing, Nothing) -> []
+        (Just x , Nothing) -> ["期限 " +++ showText x +++ " を期限なしに変更."]
+        (Nothing, Just y ) -> ["期限を " +++ showText y +++ " に設定."]
+        (Just x , Just y ) -> if x == y
+                              then []
+                              else ["期限を " +++ showText x +++ " から " 
+                                    +++  showText y +++ " に変更."]
+      af = case f of
+        Nothing -> []
+        Just (_, fname) -> ["ファイル " +++ fname +++ " を添付."]
+  as <- case (commentAssign c, issueAssign i) of
+    (Nothing, Nothing) -> return []
+    (Just x , Nothing) -> do
+      x' <- get404 x
+      return ["担当者を " +++ userFullName x' +++ " に設定."]
+    (Nothing, Just y ) -> do
+      y' <- get404 y
+      return ["担当者 " +++ userFullName y' +++ " を担当者なしに変更."]
+    (Just x , Just y ) -> do
+      x' <- get404 x
+      y' <- get404 y
+      return ["担当者を " +++ userFullName y' +++ " から " +++ 
+                userFullName x' +++ " に変更."]
+  return $ T.intercalate "\n" (st ++ as ++ lm ++ af)

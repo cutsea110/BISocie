@@ -16,7 +16,7 @@ import Data.Time
 import Data.Time.Calendar.WeekDate
 import Data.Time.Calendar.OrdinalDate
 import Data.Tuple.HT
-import Data.Maybe (fromMaybe, fromJust, isJust)
+import Data.Maybe (fromMaybe, fromJust, isJust, isNothing)
 import Network.Mail.Mime
 import qualified Data.Text.Lazy
 import qualified Data.Text.Lazy.Encoding
@@ -445,6 +445,8 @@ postCommentR pid ino = do
                    , IssueStatus =. sts
                    ]
         amemo <- generateAutomemo newComment issue mfh
+        when (isNothing cntnt && T.null amemo) $ do
+          lift $ invalidArgs ["内容を入力するかイシューの状態を変更してください."]
         cid <- insert $ newComment {commentAutomemo=amemo}
         prj <- get404 pid
         emails <- selectMailAddresses pid

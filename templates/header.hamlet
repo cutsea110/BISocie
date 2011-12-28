@@ -1,12 +1,11 @@
-<div id="bisocie-title">
-  <a href="@{RootR}">
-    <img src="@{StaticR img_bisocie_logo_png}">
-<div id="userbox">
+<div #bisocie-title
+  <a href=@{RootR}
+    <img src=@{StaticR img_bisocie_logo_png}
+<div #userbox
   $maybe u <- mu
-    \ログイン中 
-    <a title="プロフィール" href="@{ProfileR (fst u)}">#{userFullName (snd u)}
-    \.
-    <form method="get" action="@{AuthR LogoutR}" .inline>
-      <button type="submit" .link>ログアウト
-    <form method="get" action="@{AuthR setpassR}" .inline>
-      <button type="submit" .link>パスワード変更
+    ログイン中 
+    <a title=プロフィール href=@{ProfileR (fst u)}>#{userFullName (snd u)}.
+    <form method=get action=@{AuthR LogoutR} .inline>
+      <button type=submit .link>ログアウト
+    <form method=get action=@{AuthR setpassR} .inline>
+      <button type=submit .link>パスワード変更

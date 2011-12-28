@@ -1,18 +1,15 @@
-<ul .tabs>
-  <li>
-    <a href="@{HomeR selfid}">ホーム
-  $if (canCreateProject self)
-    <li>
-      <a href="@{NewProjectR}">プロジェクト新規作成
-  <li>
-    <a href="@{CrossSearchR}">クロスサーチ
-  <li .selected>
-    <a href="@{HumanNetworkR}">ヒューマンネットワーク
-  <li>
-    <a href="@{CurrentScheduleR}">スケジュール
-\
-<div id="main-content">
-  \
+<ul .tabs
+  <li
+    <a href=@{HomeR selfid}>ホーム
+  $if canCreateProject self
+    <li
+      <a href=@{NewProjectR}>プロジェクト新規作成
+  <li
+    <a href=@{CrossSearchR}>クロスサーチ
+  <li .selected
+    <a href=@{HumanNetworkR}>ヒューマンネットワーク
+  <li
+    <a href=@{CurrentScheduleR}>スケジュール
+<div #main-content
   <h3>ヒューマンネットワーク
-  \
-  <div id="global_map_canvas">
+  <div #global_map_canvas

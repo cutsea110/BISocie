@@ -1,50 +1,40 @@
-<ul .tabs>
-  <li .selected>
-    <a href="@{HomeR selfid}">ホーム
+<ul .tabs
+  <li .selected
+    <a href=@{HomeR selfid}>ホーム
   $if canCreateProject self
-    <li>
-      <a href="@{NewProjectR}">プロジェクト新規作成
-  <li>
-    <a href="@{CrossSearchR}">クロスサーチ
+    <li
+      <a href=@{NewProjectR}>プロジェクト新規作成
+  <li
+    <a href=@{CrossSearchR}>クロスサーチ
   $if canViewHumannetwork self
-    <li>
-      <a href="@{HumanNetworkR}">ヒューマンネットワーク
-  <li>
-    <a href="@{CurrentScheduleR}">スケジュール
-\
-<div id="main-content">
-  <table .list>
+    <li
+      <a href=@{HumanNetworkR}>ヒューマンネットワーク
+  <li
+    <a href=@{CurrentScheduleR}>スケジュール
+<div #main-content
+  <table .list
     <caption>参加プロジェクト一覧
-    <thead>
+    <thead
       ^{paging}
-      <tr>
+      <tr
         <th .name .sortable-header>プロジェクト名
-          \
-          <a href="@?{nameDesc}" .sorter>△
-          \
-          <a href="@?{nameAsc}" .sorter>▽
-          \
+          <a href=@?{nameDesc} .sorter>△
+          <a href=@?{nameAsc} .sorter>▽
         <th .desc>概要
         <th .date .sortable-header>作成日
-          \
-          <a href="@?{cdateDesc}" .sorter> △
-          \
-          <a href="@?{cdateAsc}" .sorter> ▽
-          \
+          <a href=@?{cdateDesc} .sorter> △
+          <a href=@?{cdateAsc} .sorter> ▽
         <th .date .sortable-header>更新日
-          \
-          <a href="@?{udateDesc}" .sorter> △
-          \
-          <a href="@?{udateAsc}" .sorter> ▽
-          \
+          <a href=@?{udateDesc} .sorter> △
+          <a href=@?{udateAsc} .sorter> ▽
     <tbody>
       $forall p <- prjs
-        <tr class="#{fst p}">
-          <td>
-            <a href="@{IssueListR (fst (snd p))}">#{projectName (snd (snd p))}
-          <td>
-            <a href="@{ProjectR (fst (snd p))}">#{showShortenText (projectDescription (snd (snd p)))}
-          <td>#{showDate (projectCdate (snd (snd p)))}
-          <td>#{showDate (projectUdate (snd (snd p)))}
-    <tfoot>
+        <tr .#{fst p}
+          <td
+            <a href=@{IssueListR $ fst $ snd p}>#{projectName $ snd $ snd p}
+          <td
+            <a href=@{ProjectR $ fst $ snd p}>#{showShortenText $ projectDescription $ snd $ snd p}
+          <td>#{showDate $ projectCdate $ snd $ snd p}
+          <td>#{showDate $ projectUdate $ snd $ snd p}
+    <tfoot
       ^{paging}

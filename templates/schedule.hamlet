@@ -6,8 +6,9 @@
       <a href=@{NewProjectR}>プロジェクト新規作成
   <li
     <a href=@{CrossSearchR}>クロスサーチ
-  <li
-    <a href=@{HumanNetworkR}>ヒューマンネットワーク
+  $if canViewHumannetwork self
+    <li
+      <a href=@{HumanNetworkR}>ヒューマンネットワーク
   <li .selected
     <a href=@{CurrentScheduleR}>スケジュール
 <div #main-content

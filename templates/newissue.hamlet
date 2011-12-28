@@ -1,47 +1,45 @@
-<ul .tabs>
-  <li>
-    <a href="@{IssueListR pid}">#{projectName prj} 案件一覧
-  <li .selected>
-    <a href="@{NewIssueR pid}">案件追加
-  <li>
-    <a href="@{ProjectR pid}">プロジェクト設定
-\
-<div id="main-content">
+<ul .tabs
+  <li
+    <a href=@{IssueListR pid}>#{projectName prj} 案件一覧
+  <li .selected
+    <a href=@{NewIssueR pid}>案件追加
+  <li
+    <a href=@{ProjectR pid}>プロジェクト設定
+<div #main-content>
   <h3>#{projectName prj} への新規案件追加
-    <form method="get" action="@{IssueListR pid}" .inline>
-      <button type="submit" .link>キャンセル
-  \
-  <form method="post" enctype="multipart/form-data" action="@{NewIssueR pid}" .validate>
-    <table .nostyle>
-      <tr>
+    <form method=get action=@{IssueListR pid} .inline
+      <button type=submit .link>キャンセル
+  <form method=post enctype=multipart/form-data action=@{NewIssueR pid} .validate
+    <table .nostyle
+      <tr
         <th>件名: 
           <span .alert>(必須)
-        <td>
-          <input id="subject" type="text" name="subject" placeholder="案件名..." .watermark .required>
-      <tr>
+        <td
+          <input #subject type=text name=subject placeholder=案件名... .watermark .required
+      <tr
         <th>内容: 
-        <td>
-          <textarea id="content" name="content" placeholder="内容を書く..." .watermark>
-      <tr>
+        <td
+          <textarea #content name=content placeholder=内容を書く... .watermark
+      <tr
         <th>アサイン:
-        <td>
-          <select name="assign">
-            <option selected="">
+        <td
+          <select name=assign
+            <option selected
             $forall p <- ptcpts
-              <option value="#{show (fst p)}">#{userFullName (snd p)}
-      <tr>
+              <option value=#{show $ fst p}>#{userFullName $ snd p}
+      <tr
         <th>ステータス
-        <td>
-          <select name="status">
+        <td
+          <select name=status
             $forall s <- stss
               <option>#{fst3 s}
-      <tr>
+      <tr
         <th>期限:
-        <td>
-          <input type="date" name="limitdate" placeholder="yyyy-mm-dd" .watermark .date>
-      <tr>
+        <td
+          <input type=date name=limitdate placeholder=yyyy-mm-dd .watermark .date
+      <tr
         <th>添付ファイル
-        <td>
-          <input type="file" name="attached">
+        <td
+          <input type=file name=attached
     \
-    <button type="submit" name="_method" value="add">案件作成
+    <button type=submit name=_method value=add>案件作成

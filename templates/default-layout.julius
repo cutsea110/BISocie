@@ -70,6 +70,14 @@ $(document).ready(function(){
   });
   $(".date").datepicker();
 
+  $(".time").clockpick({
+    starthour: 0,
+    endhour: 23,
+    showminutes: true,
+    minutedivisions: 4,
+    military: true,
+  });
+
   $(".inplaceedit").each(function(){
     $(this).exInPlaceEditor({
       nulltext: $(this).attr('placeholder') || '未設定',

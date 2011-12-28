@@ -553,6 +553,8 @@ generateAutomemo c i f = do
     (Just x , Just y ) -> do
       x' <- get404 x
       y' <- get404 y
-      return ["担当者を " +++ userFullName y' +++ " から " +++ 
-                userFullName x' +++ " に変更."]
+      if x' == y'
+        then return []
+        else return ["担当者を " +++ userFullName y' +++ " から " +++ 
+                     userFullName x' +++ " に変更."]
   return $ T.intercalate "\n" (st ++ as ++ lm ++ af)

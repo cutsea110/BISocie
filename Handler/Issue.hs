@@ -533,12 +533,12 @@ generateAutomemo c i f = do
                  +++ commentStatus c +++ " に変更."]
       lm = case (commentLimitdate c, issueLimitdate i) of
         (Nothing, Nothing) -> []
-        (Just x , Nothing) -> ["期限 " +++ showText x +++ " を期限なしに変更."]
-        (Nothing, Just y ) -> ["期限を " +++ showText y +++ " に設定."]
+        (Just x , Nothing) -> ["期限を " +++ showText x +++ " に設定."]
+        (Nothing, Just y ) -> ["期限 " +++ showText y +++ " を期限なしに変更."]
         (Just x , Just y ) -> if x == y
                               then []
-                              else ["期限を " +++ showText x +++ " から " 
-                                    +++  showText y +++ " に変更."]
+                              else ["期限を " +++ showText y +++ " から " 
+                                    +++  showText x +++ " に変更."]
       af = case f of
         Nothing -> []
         Just (_, fname) -> ["ファイル " +++ fname +++ " を添付."]

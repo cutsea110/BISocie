@@ -1,134 +1,131 @@
-<ul .tabs>
-  <li>
-    <a href="@{HomeR selfid}">ホーム
-  <li .selected>
-    <a href="@?{viewprof}">プロフィール
-\
-<div id="main-content">
+<ul .tabs
+  <li
+    <a href=@{HomeR selfid}>ホーム
+  <li .selected
+    <a href=@?{viewprof}>プロフィール
+<div #main-content
   <h3>#{userIdent user}のプロフィール
-    <form method="get" action="@{ProfileR uid}" .inline>
-      <input type="hidden" name="mode" value="v">
-      <button type="submit" .link>編集を終了する
-  \
-  <form method="post" action="@{ProfileR uid}" .validate>
-    <table .profile>
-      <tr>
+    <form method=get action=@{ProfileR uid} .inline
+      <input type=hidden name=mode value=v
+      <button type=submit .link>編集を終了する
+  <form method=post action=@{ProfileR uid} .validate
+    <table .profile
+      <tr
         <th>アバター
-        <td colspan="3">
-          <div id="avatar">
-            <img id="myavatar" src="@{AvatarImageR uid}">
-      <tr>
-        <th>
+        <td colspan=3
+          <div #avatar
+            <img #myavatar src=@{AvatarImageR uid}
+      <tr
+        <th
           $if isStudent user
-            \学籍番号
+            学籍番号
           $else
-            \アカウントID
-        <td colspan="3">#{userIdent user}
-      <tr>
+            アカウントID
+        <td colspan=3>#{userIdent user}
+      <tr
         <th>メールアドレス 
           <span .alert>(必須)
-        <td colspan="3">
-          <input placeholder="your@mail.address.ac.jp" type="email" name="email" value="#{userEmail user}" .watermark .required>
-      <tr>
+        <td colspan=3
+          <input placeholder=your@mail.address.ac.jp type=email name=email value=#{userEmail user} .watermark .required
+      <tr
         <th>姓 
           <span .alert>(必須)
-        <td>
-          <input placeholder="聖徳" type="text" name="familyName" value="#{userFamilyName user}" .watermark .required>
-        <th>名 
+        <td
+          <input placeholder=聖徳 type=text name=familyName value=#{userFamilyName user} .watermark .required
+        <th>名
           <span .alert>(必須)
-        <td>
-          <input placeholder="花子" type="text" name="givenName" value="#{userGivenName user}" .watermark .required>
+        <td
+          <input placeholder=花子 type=text name=givenName value=#{userGivenName user} .watermark .required
       $maybe lab <- mlab
-        <tr>
+        <tr
           <th>研究室番号
-          <td colspan="3">
-            <input placeholder="1234" type="text" name="roomnumber" value="#{showmaybe (laboratoryRoomNumber lab)}" .watermark>
-        <tr>
+          <td colspan=3
+            <input placeholder=1234 type=text name=roomnumber value=#{showmaybe $ laboratoryRoomNumber lab} .watermark
+        <tr
           <th>内線番号
-          <td colspan="3">
-            <input placeholder="1234" type="text" name="extensionnumber" value="#{showmaybe (laboratoryExtensionNumber lab)}" .watermark>
-        <tr>
+          <td colspan=3
+            <input placeholder=1234 type=text name=extensionnumber value=#{showmaybe $ laboratoryExtensionNumber lab} .watermark
+        <tr
           <th>担当科目
-          <td colspan="3">
-            <textarea placeholder="関数プログラミング概論" name="courses" .watermark>#{showmaybe (laboratoryCourses lab)}
+          <td colspan=3
+            <textarea placeholder=関数プログラミング概論 name=courses .watermark>#{showmaybe $ laboratoryCourses lab}
       $maybe prof <- mprof
-        <tr>
+        <tr
           <th>生年月日 
             <span .alert>(必須)
-          <td colspan="3">
-            <input placeholder="yyyy/mm/dd" type="date" name="birth" value="#{show (profileBirth prof)}" .date .watermark .required>
-        <tr>
+          <td colspan=3
+            <input placeholder=yyyy/mm/dd type=date name=birth value=#{show $ profileBirth prof} .date .watermark .required
+        <tr
           <th>入学年度 
             <span .alert>(必須)
-          <td>
-            <select name="entryYear">
+          <td
+            <select name=entryYear
               $forall ey <- eyears
-                <option :fst ey:selected="" .required>#{show (snd ey)}
+                <option :fst ey:selected .required>#{show $ snd ey}
           <th>卒業年度
             <div .help>#{y}年3月卒業の場合は#{(-) y 1}年度卒業です.
           <td>
             <select #graduateYear name="graduateYear">
-              <option selected="">
+              <option selected
               $forall gy <- gyears
-                <option :fst gy:selected="">#{show (snd gy)}
-        <tr>
+                <option :fst gy:selected>#{show $ snd gy}
+        <tr
           <th>所属ブランチ 
             <span .alert>(必須)
-          <td colspan="3">
-            <input placeholder="ブランチ" type="text" name="branch" value="#{profileBranch prof}" .watermark .required>
-        <tr>
+          <td colspan=3
+            <input placeholder=ブランチ type=text name=branch value=#{profileBranch prof} .watermark .required
+        <tr
           <th>現住所 
             <span .alert>(必須)
-          <td colspan="3">
-            <input id="clon" type="hidden" name="longitude" value="#{showMaybeDouble (profileLongitude prof)}">
-            <input id="clat" type="hidden" name="latitude" value="#{showMaybeDouble (profileLatitude prof)}">
-            \〒
-              <input id="czip" placeholder="271-8555" maxlength="8" type="zip" name="zip" value="#{profileZip prof}" .watermark .required>
-            <br>
-            <input id="cloc" placeholder="千葉県松戸市岩瀬550" locprefix="c" type="address" name="address" value="#{profileAddress prof}" .watermark .required>
-        $if (canEditTel self user)
-          <tr>
+          <td colspan=3
+            <input #clon type=hidden name=longitude value=#{showMaybeDouble $ profileLongitude prof}
+            <input #clat type=hidden name=latitude value=#{showMaybeDouble $ profileLatitude prof}
+            〒
+            <input #czip placeholder=271-8555 maxlength=8 type=zip name=zip value=#{profileZip prof} .watermark .required
+            <br
+            <input #cloc placeholder=千葉県松戸市岩瀬550 locprefix=c type=address name=address value=#{profileAddress prof} .watermark .required
+        $if canEditTel self user
+          <tr
             <th>電話番号 
               <span .alert>(必須)
-            <td colspan="3">
-              <input placeholder="090-1234-5678" type="tel" name="tel" value="#{profileTel prof}" .watermark .required>
+            <td colspan=3
+              <input placeholder=090-1234-5678 type=tel name=tel value=#{profileTel prof} .watermark .required
         $else
-          <input type=hidden name="tel" value="#{profileTel prof}">
-        <tr>
+          <input type=hidden name=tel value=#{profileTel prof}
+        <tr
           <th>最寄駅 
             <span .alert>(必須)
-          <td colspan="3">
-            <input placeholder="松戸" type="text" name="station" value="#{profileStation prof}" .watermark .required>
-        <tr>
+          <td colspan=3
+            <input placeholder=松戸 type=text name=station value=#{profileStation prof} .watermark .required
+        <tr
           <th>実家住所 
             <span .alert>(必須)
-          <td colspan="3">
-            <input id="hlon" type="hidden" name="homeLongitude" value="#{showMaybeDouble (profileHomeLongitude prof)}">
-            <input id="hlat" type="hidden" name="homeLatitude" value="#{showMaybeDouble (profileHomeLatitude prof)}">
-            \〒
-              <input id="hzip" placeholder="271-8555" type="zip" maxlength="8" name="homeZip" value="#{profileHomeZip prof}" .watermark .required>
-            <br>
-            <input id="hloc" placeholder="千葉県松戸市岩瀬550" locprefix="h" type="address" name="homeAddress" value="#{profileHomeAddress prof}" .watermark .required>
-        <tr>
+          <td colspan=3
+            <input #hlon type=hidden name=homeLongitude value=#{showMaybeDouble $ profileHomeLongitude prof}
+            <input #hlat type=hidden name=homeLatitude value=#{showMaybeDouble $ profileHomeLatitude prof}>
+            〒
+            <input #hzip placeholder=271-8555 type=zip maxlength=8 name=homeZip value=#{profileHomeZip prof} .watermark .required
+            <br
+            <input #hloc placeholder=千葉県松戸市岩瀬550 locprefix=h type=address name=homeAddress value=#{profileHomeAddress prof} .watermark .required
+        <tr
           <th>実家電話番号 
             <span .alert>(必須)
-          <td colspan="3">
-            <input placeholder="098-7654-3210" type="tel" name="homeTel" value="#{profileHomeTel prof}" .watermark .required>
-        <tr>
+          <td colspan=3
+            <input placeholder=098-7654-3210 type=tel name=homeTel value=#{profileHomeTel prof} .watermark .required
+        <tr
           <th>希望進路
-          <td colspan="3">
-            <input #desiredCourse placeholder="一般職" type="text" name="desiredCourse" value="#{showmaybe (profileDesiredCourse prof)}" .watermark .required>
-        <tr>
+          <td colspan=3
+            <input #desiredCourse placeholder=一般職 type=text name=desiredCourse value=#{showmaybe $ profileDesiredCourse prof} .watermark .required
+        <tr
           <th>希望勤務地
-          <td colspan="3">
-            <input #desiredWorkLocation placeholder="都内" type="text" name="desiredWorkLocation" value="#{showmaybe (profileDesiredWorkLocation prof)}" .watermark .required>
-        <tr>
+          <td colspan=3
+            <input #desiredWorkLocation placeholder=都内 type=text name=desiredWorkLocation value=#{showmaybe $ profileDesiredWorkLocation prof} .watermark .required
+        <tr
           <th>勤務(予定)先
-          <td colspan="3">
-            <input #employment placeholder="未定" type="text" name="employment" value="#{showmaybe (profileEmployment prof)}" .watermark .required>
-    <button type="submit" name="_method" value="update">更新する
-  \
-  <form id="upload_form" method="post" enctype="multipart/form-data" action="@{UploadR}">
-    <div id="fields" .inline>
-      <input id="upload_file" type="file" name="upfile">
-      <input id="go_upload" type="button" name="upload" value="アバターのアップロード">
+          <td colspan=3
+            <input #employment placeholder=未定 type=text name=employment value=#{showmaybe $ profileEmployment prof} .watermark .required
+    <button type=submit name=_method value=update>更新する
+  <form #upload_form method=post enctype=multipart/form-data action=@{UploadR}
+    <div #fields .inline
+      <input #upload_file type=file name=upfile
+      <input #go_upload type=button name=upload value=アバターのアップロード

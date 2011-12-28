@@ -1,17 +1,16 @@
-<ul .tabs>
-  <li .selected>
-    <a href="@{IssueListR pid}">#{projectBisName prj} 案件一覧
-  <li>
-    <a href="@{NewIssueR pid}">案件追加
-  <li>
-    <a href="@{ProjectR pid}">プロジェクト設定
-\
-<div id="main-content">
-  <table .list>
+<ul .tabs
+  <li .selected
+    <a href=@{IssueListR pid}>#{projectBisName prj} 案件一覧
+  <li
+    <a href=@{NewIssueR pid}>案件追加
+  <li
+    <a href=@{ProjectR pid}>プロジェクト設定
+<div #main-content
+  <table .list
     <caption>#{projectBisName prj} 案件一覧
-    <thead>
+    <thead
       ^{paging}
-      <tr>
+      <tr
         <th>No
         <th>件名
         <th>ステータス
@@ -20,18 +19,19 @@
         <th>作成者
         <th>更新者
         <th>更新日
-    <tbody>
+    <tbody
       $forall issue <- issues
-        <tr bgcolor="#{colorOf (issueStatus (issueBisIssue (snd issue)))}" class="#{effectOf (issueStatus (issueBisIssue (snd issue)))}">
-          <td .number>#{show (issueNumber (issueBisIssue (snd issue)))}
-          <td>
-            <a href="@{IssueR pid (issueNumber (issueBisIssue (snd issue)))}">
-              \#{issueSubject (issueBisIssue (snd issue))}
-          <td>#{issueStatus (issueBisIssue (snd issue))}
-          <td>#{showmaybe (fmap userFullName (issueBisAssign (snd issue)))}
-          <td>#{showLimitdate (issueBisIssue (snd issue))}
-          <td>#{userFullName (issueBisCreator (snd issue))}
-          <td>#{userFullName (issueBisUpdator (snd issue))}
-          <td>#{showDate (issueUdate (issueBisIssue (snd issue)))}
-    <tfoot>
+        $with i <- snd issue, i' <- issueBisIssue i
+          <tr bgcolor=#{colorOf $ issueStatus i'} .#{effectOf $ issueStatus i'}
+            <td .number>#{show $ issueNumber i'}
+            <td
+              <a href=@{IssueR pid $ issueNumber i'}
+                #{issueSubject i'}
+            <td>#{issueStatus i'}
+            <td>#{showmaybe $ fmap userFullName $ issueBisAssign i}
+            <td>#{showLimitdate i'}
+            <td>#{userFullName $ issueBisCreator i}
+            <td>#{userFullName $ issueBisUpdator i}
+            <td>#{showDate $ issueUdate i'}
+    <tfoot
       ^{paging}

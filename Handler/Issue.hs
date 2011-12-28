@@ -382,6 +382,7 @@ getIssueR pid ino = do
         return $ (cid, CommentBis { commentBisId=cid
                                   , commentBisContent=commentContent c
                                   , commentBisStatus=commentStatus c
+                                  , commentBisAutomemo=commentAutomemo c
                                   , commentBisAttached=mf
                                   , commentBisCuser=(uid, u)
                                   , commentBisCdate=commentCdate c

@@ -147,6 +147,7 @@ data IssueBis = IssueBis { issueBisId :: IssueId
 data CommentBis = CommentBis { commentBisId :: CommentId
                              , commentBisContent :: Maybe Text
                              , commentBisStatus :: Text
+                             , commentBisAutomemo :: Text
                              , commentBisAttached :: Maybe (FileHeaderId, FileHeader)
                              , commentBisCuser :: (UserId, User)
                              , commentBisCdate :: UTCTime

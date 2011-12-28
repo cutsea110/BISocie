@@ -409,7 +409,7 @@ postCommentR pid ino = do
   where
     addCommentR = do
       (selfid, _) <- requireAuth
-      (cntnt, limit, asgn, sts) <- 
+      (cntnt, ldate, asgn, sts) <- 
         runInputPost $ (,,,)
         <$> iopt textField "content"
         <*> iopt dayField "limitdate"
@@ -425,8 +425,7 @@ postCommentR pid ino = do
         (iid, issue) <- getBy404 $ UniqueIssue pid ino
         [(lastCid, lastC)] <- selectList [CommentIssue ==. iid] [Desc CommentCdate, LimitTo 1]
         mfh <- storeAttachedFile selfid fi
-        let ldate = limit `mplus` issueLimitdate issue
-            asgn' = fromMaybe Nothing (fmap (Just . readText) asgn)
+        let asgn' = fromMaybe Nothing (fmap (Just . readText) asgn)
             newComment = Comment { commentProject=pid
                                  , commentIssue=iid
                                  , commentContent=cntnt

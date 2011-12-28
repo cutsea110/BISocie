@@ -1,3 +1,2 @@
-<div id="footer" .center>
-  \powered by 
-  <a href="http://docs.yesodweb.com">yesod.
+<div #footer .center>powered by 
+  <a href=http://docs.yesodweb.com>yesod.

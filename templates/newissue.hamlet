@@ -20,9 +20,8 @@
           <input id="subject" type="text" name="subject" placeholder="案件名..." .watermark .required>
       <tr>
         <th>内容: 
-          <span .alert>(必須)
         <td>
-          <textarea id="content" name="content" placeholder="内容を書く..." .watermark .required>
+          <textarea id="content" name="content" placeholder="内容を書く..." .watermark>
       <tr>
         <th>アサイン:
         <td>

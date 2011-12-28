@@ -11,9 +11,8 @@
     <table .nostyle>
       <tr>
         <th>内容: 
-          <span .alert>(必須)
         <td>
-          <textarea id="content" placeholder="内容..." name="content" .watermark .required>
+          <textarea id="content" placeholder="内容..." name="content" .watermark>
       <tr>
         <th>アサイン:
         <td>
@@ -46,7 +45,10 @@
            \#{userFullName (snd (commentBisCuser (snd c)))}
         \  #{showDate (commentBisCdate (snd c))} #{commentBisStatus (snd c)}
       <div .post-body>
-        \#{showMultilineText (commentBisContent (snd c))}
+        $maybe cmt <- commentBisContent (snd c)
+          #{showMultilineText cmt}
+        $nothing
+          <span .automemo>#{showMultilineText $ commentBisAutomemo $ snd c}
         $maybe f <- commentBisAttached (snd c)
           <div .attached>
             \添付ファイル: 

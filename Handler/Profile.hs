@@ -141,7 +141,7 @@ putProfileR uid = do
       runDB $ do
         -- update user
         update uid [UserEmail =. em, UserFamilyName =. fn, UserGivenName =. gn]
-      redirectParams RedirectTemporary (ProfileR uid) [("mode", "e")]
+      redirectParams RedirectSeeOther (ProfileR uid) [("mode", "e")]
       
     putTeacherProf = do
       (em, fn, gn) <- 
@@ -171,7 +171,7 @@ putProfileR uid = do
                        , LaboratoryCourses =. cs
                        ]
             return lid
-      redirectParams RedirectTemporary (ProfileR uid) [("mode", "e")]
+      redirectParams RedirectSeeOther (ProfileR uid) [("mode", "e")]
     
     putStudentProf = do
       (em, fn, gn) <- 
@@ -250,7 +250,7 @@ putProfileR uid = do
                        , ProfileEmployment =. emp
                        ]
             return pid
-      redirectParams RedirectTemporary (ProfileR uid) [("mode", "e")]
+      redirectParams RedirectSeeOther (ProfileR uid) [("mode", "e")]
     
 getAvatarImageR :: UserId -> Handler RepHtml
 getAvatarImageR uid = do
@@ -258,7 +258,7 @@ getAvatarImageR uid = do
   (fid, f) <- runDB $ do
     u <- get404 uid
     case userAvatar u of
-      Nothing -> lift $ redirect RedirectTemporary $ StaticR img_no_image_png
+      Nothing -> lift $ redirect RedirectSeeOther $ StaticR img_no_image_png
       Just fid -> do
         f <- get404 fid
         return (fid, f)

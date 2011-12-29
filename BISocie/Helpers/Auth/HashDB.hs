@@ -90,10 +90,10 @@ postLoginR = do
         Just _aid -> do
             setCreds False $ Creds "account" account [] -- FIXME aid?
             y <- getYesod
-            redirectUltDest RedirectTemporary $ loginDest y
+            redirectUltDest RedirectSeeOther $ loginDest y
         Nothing -> do
             toMaster <- getRouteToMaster
-            redirect RedirectTemporary $ toMaster LoginR
+            redirect RedirectSeeOther $ toMaster LoginR
 
 getPasswordR :: YesodAuthHashDB master => GHandler Auth master RepHtml
 getPasswordR = do
@@ -103,7 +103,7 @@ getPasswordR = do
         Just _ -> return ()
         Nothing -> do
             setMessage "パスワードを変更するにはログインしてください."
-            redirect RedirectTemporary $ toMaster loginR
+            redirect RedirectSeeOther $ toMaster loginR
     defaultLayout $ do
         setTitle "パスワード変更"
         addHamlet
@@ -132,18 +132,18 @@ postPasswordR = do
     toMaster <- getRouteToMaster
     unless (new == confirm) $ do
         setMessage "パスワードが合致していません.再度入力しなおしてください."
-        redirect RedirectTemporary $ toMaster setpassR
+        redirect RedirectSeeOther $ toMaster setpassR
     maid <- maybeAuthId
     aid <- case maid of
             Nothing -> do
                 setMessage "パスワードを変更するにはログインしてください."
-                redirect RedirectTemporary $ toMaster loginR
+                redirect RedirectSeeOther $ toMaster loginR
             Just aid -> return aid
     let sha1pass = encrypt new
     setPassword aid sha1pass
     setMessage "パスワードを更新しました."
     y <- getYesod
-    redirect RedirectTemporary $ loginDest y
+    redirect RedirectSeeOther $ loginDest y
 
 encrypt :: Text -> Text
 encrypt = T.pack . showDigest . sha1 . pack . T.unpack

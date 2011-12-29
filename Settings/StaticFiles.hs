@@ -1,6 +1,19 @@
 {-# LANGUAGE QuasiQuotes, TemplateHaskell, TypeFamilies #-}
+{-# LANGUAGE CPP #-}
 module Settings.StaticFiles where
 
-import Yesod.Static
+import Prelude (IO)
+import Yesod.Static (staticFiles, StaticRoute (StaticRoute))
+import qualified Yesod.Static as Static
+import Settings (staticDir)
 
-$(staticFiles "static")
+-- | use this to create your static file serving site
+staticSite :: IO Static.Static
+staticSite =
+#if DEVELOPMENT
+  Static.staticDevel staticDir
+#else
+  Static.static staticDir
+#endif
+
+$(staticFiles Settings.staticDir)

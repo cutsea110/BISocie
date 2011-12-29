@@ -65,7 +65,7 @@ postNewProjectR = do
                                    , participantsCdate=now
                                    }
         return pid
-      redirect RedirectTemporary $ ProjectR pid
+      redirect RedirectSeeOther $ ProjectR pid
 
 getProjectR :: ProjectId -> Handler RepHtml
 getProjectR pid = do

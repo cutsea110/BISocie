@@ -8,7 +8,7 @@ module Handler.Issue where
 
 import Foundation
 import Control.Applicative ((<$>),(<*>))
-import Control.Monad (when, unless, forM, mplus, liftM2)
+import Control.Monad (when, unless, forM, liftM2)
 import Control.Failure
 import Control.Monad.Trans.Class
 import Data.List (intercalate, intersperse, nub, groupBy)
@@ -33,7 +33,7 @@ getCurrentScheduleR :: Handler RepHtml
 getCurrentScheduleR = do
   now <- liftIO getCurrentTime
   let (y, m, _) = toGregorian $ utctDay now
-  redirect RedirectTemporary $ ScheduleR y m
+  redirect RedirectSeeOther $ ScheduleR y m
   
 data WeekDay = Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sunday
              deriving (Show, Eq, Ord, Enum)
@@ -359,7 +359,7 @@ postNewIssueR pid = do
                   ]]
           }
         return ino
-      redirect RedirectTemporary $ IssueR pid ino
+      redirect RedirectSeeOther $ IssueR pid ino
 
 getIssueR :: ProjectId -> IssueNo -> Handler RepHtml
 getIssueR pid ino = do
@@ -486,7 +486,7 @@ postCommentR pid ino = do
                      }
                   ]]
           }
-      redirect RedirectTemporary $ IssueR pid ino
+      redirect RedirectSeeOther $ IssueR pid ino
         
 getAttachedFileR :: CommentId -> FileHeaderId -> Handler RepHtml
 getAttachedFileR cid fid = do

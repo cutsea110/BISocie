@@ -28,7 +28,7 @@ import Settings
 getRootR :: Handler RepHtml
 getRootR = do
     (uid, _) <- requireAuth
-    redirect RedirectTemporary $ HomeR uid
+    redirect RedirectSeeOther $ HomeR uid
 
 getHomeR :: UserId -> Handler RepHtml
 getHomeR uid = do
@@ -140,7 +140,7 @@ postSystemBatchR = do
                      ]
           return id'
   setMessage "学生を登録しました。"
-  redirect RedirectTemporary SystemBatchR
+  redirect RedirectSeeOther SystemBatchR
   where
     userExist :: Text -> [(UserId, User)] -> Maybe (UserId, User)
     userExist _   [] = Nothing

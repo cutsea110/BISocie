@@ -25,32 +25,37 @@ module Foundation
 --    , userCrud -- FIXME Crud
     ) where
 
-import Yesod
-import Yesod.Static
+import Prelude
+import Yesod hiding (Form, AppConfig (..), withYamlEnvironment)
+import Yesod.Static (Static, base64md5, StaticRoute(..))
 import Yesod.Auth
 import BISocie.Helpers.Auth.HashDB
 import Yesod.Auth.OpenId
 -- import Yesod.Helpers.Crud -- FIXME
 import Yesod.Default.Config
 import Yesod.Default.Util (addStaticContentExternal)
-import Yesod.Logger (Logger, logLazyText)
-import Yesod.Form.Jquery
+import Yesod.Logger (Logger, logMsg, formatLogText)
+#ifdef DEVELOPMENT
+import Yesod.Logger (logLazyText)
+#endif
+import qualified Settings
 import qualified Data.ByteString.Lazy as L
-import Database.Persist.GenericSql
 import qualified Database.Persist.Base
-import Settings (PersistConfig, widgetFile)
+import Database.Persist.GenericSql
+import Settings (widgetFile)
+import Model
 import Text.Jasmine (minifym)
 import Web.ClientSession (getKey)
 import Text.Hamlet (hamletFile)
 import Text.Cassius (cassiusFile)
 import Text.Julius (juliusFile)
-#if PRODUCTION
-import Network.Mail.Mime (sendmail)
-#else
+import Yesod.Form.Jquery
+#if DEVELOPMENT
 import qualified Data.Text.Lazy.Encoding
+#else
+import Network.Mail.Mime (sendmail)
 #endif
 
-import Model
 import Settings.StaticFiles
 import qualified Settings
 import BISocie.Helpers.Util
@@ -60,11 +65,14 @@ import BISocie.Helpers.Util
 -- starts running, such as database connections. Every handler will have
 -- access to the data present here.
 data BISocie = BISocie
-    { settings :: AppConfig DefaultEnv
+    { settings :: AppConfig DefaultEnv ()
     , getLogger :: Logger
     , getStatic :: Static -- ^ Settings for static file serving.
     , connPool :: Database.Persist.Base.PersistConfigPool Settings.PersistConfig -- ^ Database connection pool.
     }
+
+-- Set up i18n messages. See the message folder.
+mkMessage "BISocie" "messages" "en"
 
 -- This is where we define all of the routes in our application. For a full
 -- explanation of the syntax, please see:
@@ -86,6 +94,8 @@ data BISocie = BISocie
 -- usually require access to the BISocieRoute datatype. Therefore, we
 -- split these actions into two functions and place them in separate files.
 mkYesodData "BISocie" $(parseRoutesFile "config/routes")
+
+type Form x = Html -> MForm BISocie BISocie (FormResult x, Widget)
 
 -- S3はアクセス制限する
 -- S3は基本公開ベースなので制限をするURIを提供してそこからgetFileRを呼ぶ
@@ -125,7 +135,7 @@ instance Yesod BISocie where
     -- This is done to provide an optimization for serving static files from
     -- a separate domain. Please see the staticroot setting in Settings.hs
     urlRenderOverride y (StaticR s) =
-        Just $ uncurry (joinPath y (Settings.staticroot $ settings y)) $ renderRoute s
+        Just $ uncurry (joinPath y (Settings.staticRoot $ settings y)) $ renderRoute s
     urlRenderOverride _ _ = Nothing
 
     -- The page to be redirected to when authentication is required.
@@ -140,7 +150,7 @@ instance Yesod BISocie where
     -- and names them based on a hash of their content. This allows
     -- expiration dates to be set far in the future without worry of
     -- users receiving stale content.
-    addStaticContent = addStaticContentExternal minifym base64md5 Settings.staticdir (StaticR . flip StaticRoute [])
+    addStaticContent = addStaticContentExternal minifym base64md5 Settings.staticDir (StaticR . flip StaticRoute [])
     
     -- Enable Javascript async loading
 --    yepnopeJs _ = Just $ Right $ StaticR js_modernizr_js
@@ -255,8 +265,6 @@ userCrud = const Crud
            }
 --}
 
-mkMessage "BISocie" "messages" "en"
-
 instance RenderMessage BISocie FormMessage where
     renderMessage _ _ = defaultFormMessage
 
@@ -312,8 +320,8 @@ instance YesodAuthHashDB BISocie where
 
 -- Sends off your mail. Requires sendmail in production!
 deliver :: BISocie -> L.ByteString -> IO ()
-#ifdef PRODUCTION
-deliver _ = sendmail
-#else
+#ifdef DEVELOPMENT
 deliver y = logLazyText (getLogger y) . Data.Text.Lazy.Encoding.decodeUtf8
+#else
+deliver _ = sendmail
 #endif

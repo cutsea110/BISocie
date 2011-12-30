@@ -32,6 +32,13 @@
         <th>添付ファイル
         <td
           <input type=file name=attached
+      <tr
+        <th>読者確認:
+        <td
+          <input #checkreader-no type=radio name=checkreader value=no checked>
+          <label for=checkreader-no>しない
+          <input #checkreader-yes type=radio name=checkreader value=yes>
+          <label for=checkreader-yes>する
     <button type=submit name=_method value=add>投稿
   <ul #issue-thread
     $forall c <- comments

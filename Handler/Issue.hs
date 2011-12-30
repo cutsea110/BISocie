@@ -283,12 +283,14 @@ postNewIssueR pid = do
   where
     addIssueR = do
       (selfid, _) <- requireAuth
-      (sbj, cntnt, ldate, asgn, sts) <- runInputPost $ (,,,,)
-                                        <$> ireq textField "subject"
-                                        <*> iopt textField "content"
-                                        <*> iopt dayField "limitdate"
-                                        <*> iopt textField "assign"
-                                        <*> ireq textField "status"
+      (sbj, cntnt, ldate, asgn, sts, rdr) <- 
+        runInputPost $ (,,,,,)
+        <$> ireq textField "subject"
+        <*> iopt textField "content"
+        <*> iopt dayField "limitdate"
+        <*> iopt textField "assign"
+        <*> ireq textField "status"
+        <*> ireq boolField "checkreader"
       Just fi <- lookupFile "attached"
       ino <- runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
@@ -320,6 +322,7 @@ postNewIssueR pid = do
                                 , commentStatus=sts
                                 , commentLimitdate=ldate
                                 , commentAttached=fmap fst mfh
+                                , commentCheckReader=rdr
                                 , commentCuser=selfid
                                 , commentCdate=now
                                 }
@@ -409,12 +412,13 @@ postCommentR pid ino = do
   where
     addCommentR = do
       (selfid, _) <- requireAuth
-      (cntnt, ldate, asgn, sts) <- 
-        runInputPost $ (,,,)
+      (cntnt, ldate, asgn, sts, rdr) <- 
+        runInputPost $ (,,,,)
         <$> iopt textField "content"
         <*> iopt dayField "limitdate"
         <*> iopt textField "assign"
         <*> ireq textField "status"
+        <*> ireq boolField "checkreader"
       r <- getUrlRender
       now <- liftIO getCurrentTime
       Just fi <- lookupFile "attached"
@@ -434,6 +438,7 @@ postCommentR pid ino = do
                                  , commentStatus=sts
                                  , commentLimitdate=ldate
                                  , commentAttached=fmap fst mfh
+                                 , commentCheckReader=rdr
                                  , commentCuser=selfid
                                  , commentCdate=now
                                  }

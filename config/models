@@ -81,8 +81,14 @@ Comment
     status Text
     limitdate Day Maybe
     attached FileHeaderId Maybe
+    checkReader Bool default=false
     cuser UserId
     cdate UTCTime default=now()
+
+Reader
+    comment CommentId
+    reader UserId
+    checkdate UTCTime default=now()
 
 Participants
     project ProjectId

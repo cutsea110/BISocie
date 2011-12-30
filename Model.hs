@@ -246,6 +246,16 @@ dead = projectTerminated
 live :: Project -> Bool
 live = not . projectTerminated
 
+showCheckReader :: Comment -> Text
+showCheckReader c = case commentCheckReader c of
+  True -> "読者確認する"
+  False -> "読者確認しない"
+
+care :: Comment -> Bool
+care = commentCheckReader
+nocare :: Comment -> Bool
+nocare = not . commentCheckReader
+
 showmaybe :: Maybe Text -> Text
 showmaybe Nothing  = ""
 showmaybe (Just x) = x

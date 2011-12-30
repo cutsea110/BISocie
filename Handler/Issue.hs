@@ -531,21 +531,19 @@ storeAttachedFile uid fi = fmap (fmap fst5'snd5) $ upload uid fi
   where
     fst5'snd5 (x,y,_,_,_) = (x,y)
 
-generateAutomemo :: (Failure ErrorResponse m, MonadTrans t, PersistBackend t m) 
-                    => CommentGeneric t -> IssueGeneric t -> (Maybe ((Key b (FileHeaderGeneric backend)), T.Text)) -> t m T.Text
 generateAutomemo c i f = do
   let st = if issueStatus i == commentStatus c
            then []
            else ["ステータスを " +++ issueStatus i +++ " から " 
                  +++ commentStatus c +++ " に変更."]
-      lm = case (issueLimitdate i, commentLimitdate c) of
+      lm = case (issueLimitDatetime i, commentLimitDatetime c) of
         (Nothing, Nothing) -> []
-        (Just x , Nothing) -> ["期限 " +++ showText x +++ " を期限なしに変更."]
-        (Nothing, Just y ) -> ["期限を " +++ showText y +++ " に設定."]
+        (Just x , Nothing) -> ["期限 " +++ showDate x +++ " を期限なしに変更."]
+        (Nothing, Just y ) -> ["期限を " +++ showDate y +++ " に設定."]
         (Just x , Just y ) -> if x == y
                               then []
-                              else ["期限を " +++ showText x +++ " から " 
-                                    +++  showText y +++ " に変更."]
+                              else ["期限を " +++ showDate x +++ " から "
+                                    +++  showDate y +++ " に変更."]
       af = case f of
         Nothing -> []
         Just (_, fname) -> ["ファイル " +++ fname +++ " を添付."]

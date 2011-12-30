@@ -199,6 +199,7 @@ postCrossSearchR = do
               , ("status", jsonScalar $ T.unpack $ issueStatus $ issueBisIssue i)
               , ("assign", jsonScalar $ T.unpack $ showmaybe $ fmap userFullName $ issueBisAssign i)
               , ("limitdate", jsonScalar $ T.unpack $ showLimitdate $ issueBisIssue i)
+              , ("limittime", jsonScalar $ T.unpack $ showLimittime $ issueBisIssue i)
               , ("creator", jsonScalar $ T.unpack $ userFullName $ issueBisCreator i)
               , ("updator", jsonScalar $ T.unpack $ userFullName $ issueBisUpdator i)
               , ("updated", jsonScalar $ T.unpack $ showDate $ issueUdate $ issueBisIssue i)

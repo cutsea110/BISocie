@@ -283,12 +283,14 @@ postNewIssueR pid = do
   where
     addIssueR = do
       (selfid, _) <- requireAuth
-      (sbj, cntnt, ldate, asgn, sts) <- runInputPost $ (,,,,)
-                                        <$> ireq textField "subject"
-                                        <*> iopt textField "content"
-                                        <*> iopt dayField "limitdate"
-                                        <*> iopt textField "assign"
-                                        <*> ireq textField "status"
+      (sbj, cntnt, ldate, ltime, asgn, sts) <- 
+        runInputPost $ (,,,,,)
+        <$> ireq textField "subject"
+        <*> iopt textField "content"
+        <*> iopt dayField "limitdate"
+        <*> iopt timeField "limittime"
+        <*> iopt textField "assign"
+        <*> ireq textField "status"
       Just fi <- lookupFile "attached"
       ino <- runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
@@ -307,6 +309,7 @@ postNewIssueR pid = do
                               , issueAssign=asgn'
                               , issueStatus=sts
                               , issueLimitdate=ldate
+                              , issueLimittime=ltime
                               , issueCuser=selfid
                               , issueCdate=now
                               , issueUuser=selfid
@@ -319,6 +322,7 @@ postNewIssueR pid = do
                                 , commentAssign=asgn'
                                 , commentStatus=sts
                                 , commentLimitdate=ldate
+                                , commentLimittime=ltime
                                 , commentAttached=fmap fst mfh
                                 , commentCuser=selfid
                                 , commentCdate=now
@@ -409,10 +413,11 @@ postCommentR pid ino = do
   where
     addCommentR = do
       (selfid, _) <- requireAuth
-      (cntnt, ldate, asgn, sts) <- 
-        runInputPost $ (,,,)
+      (cntnt, ldate, ltime, asgn, sts) <-         
+        runInputPost $ (,,,,)
         <$> iopt textField "content"
         <*> iopt dayField "limitdate"
+        <*> iopt timeField "limittime"
         <*> iopt textField "assign"
         <*> ireq textField "status"
       r <- getUrlRender
@@ -433,6 +438,7 @@ postCommentR pid ino = do
                                  , commentAssign=asgn'
                                  , commentStatus=sts
                                  , commentLimitdate=ldate
+                                 , commentLimittime=ltime
                                  , commentAttached=fmap fst mfh
                                  , commentCuser=selfid
                                  , commentCdate=now
@@ -440,6 +446,7 @@ postCommentR pid ino = do
         update iid [ IssueUuser =. selfid
                    , IssueUdate =. now
                    , IssueLimitdate =. ldate
+                   , IssueLimittime =. ltime
                    , IssueAssign =. asgn'
                    , IssueStatus =. sts
                    ]

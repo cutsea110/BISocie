@@ -200,6 +200,11 @@ isAdmin u = userRole u == Admin
 showLimitdate :: Issue -> Text
 showLimitdate i = fromMaybe "" (fmap showText (issueLimitdate i))
 
+showLimittime :: Issue -> Text
+showLimittime i = fromMaybe "" (fmap showHHMM (issueLimittime i))
+  where
+    showHHMM = T.pack . formatTime defaultTimeLocale "%H:%M"
+
 showMaybeDouble :: Maybe Double -> Text
 showMaybeDouble md = case md of
   Nothing -> ""

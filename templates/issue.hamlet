@@ -27,7 +27,8 @@
       <tr>
         <th>期限:
         <td>
-          <input placeholder=yyyy-mm-dd type=date name=limitdate value=#{showLimitdate issue} .watermark .date
+          <input type=date name=limitdate placeholder=yyyy-mm-dd value=#{showLimitdate issue} .watermark .date
+          <input type=time name=limittime placeholder=HH:MM value=#{showLimittime issue} .watermark .time
       <tr
         <th>添付ファイル
         <td

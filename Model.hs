@@ -241,11 +241,6 @@ showTerminated p = case projectTerminated p of
   True -> "終了"
   False -> "活動中"
 
-dead :: Project -> Bool
-dead = projectTerminated
-live :: Project -> Bool
-live = not . projectTerminated
-
 showmaybe :: Maybe Text -> Text
 showmaybe Nothing  = ""
 showmaybe (Just x) = x

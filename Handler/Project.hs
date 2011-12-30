@@ -115,8 +115,8 @@ putProjectR pid = do
         Just ds'' -> return $ Just ds''
     Just tm <- case tm' of
         Nothing -> return $ Just $ projectTerminated prj
-        Just "live" -> return $ Just False
-        Just "dead" -> return $ Just True
+        Just "no" -> return $ Just False
+        Just "yes" -> return $ Just True
     Just st <- case st' of
         Nothing -> return $ Just $ projectStatuses prj
         Just "" -> lift $ invalidArgs ["ステータスは入力必須項目です."]

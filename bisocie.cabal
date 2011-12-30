@@ -12,22 +12,22 @@ Cabal-version:       >=1.6
 Build-type:          Simple
 Homepage:            https://github.com/cutsea110/BISocie
 
-Flag production
-     Description:    Build the production executable.
-     Default:        False
+Flag dev
+    Description:   Turn on development settings, like auto-reload templates.
+    Default:       False
 
-Flag devel
-     Description:    Build for use with "yesod devel"
-     Default:        False
+Flag library-only
+    Description:   Build for use with "yesod devel"
+    Default:       False
 
-Library
-     if flag(devel)
-         Buildable:  True
-     else
-         Buildable:  False
+library
+    if flag(library-only)
+        Buildable: True
+    else
+        Buildable: False
 
-     exposed-modules: Application
-     other-modules:  Foundation
+    exposed-modules: Application
+    other-modules:   Foundation
                      Model
                      Settings
                      Settings.StaticFiles
@@ -41,52 +41,55 @@ Library
                      BISocie.Helpers.Auth.HashDB
                      BISocie.Helpers.Util
 
-Executable bisocie
-     if flag(devel)
-         Buildable: False
+    ghc-options:   -Wall -threaded -O0
+    cpp-options:   -DDEVELOPMENT
 
-     if flag(production)
-         cpp-options:    -DPRODUCTION
-         ghc-options:    -Wall -threaded -O2
-     else
-         ghc-options:    -Wall -threaded -O0
+executable bisocie
+    if flag(library-only)
+        Buildable: False
 
-     Main-is: main.hs
+    if flag(dev)
+        cpp-options:   -DDEVELOPMENT
+        ghc-options:   -Wall -threaded -O0
+    else
+        ghc-options:   -Wall -threaded
+
+    main-is: main.hs
   
-     Build-depends: base         >= 4       && < 5
-                  , yesod        >= 0.9     && < 1.0
-                  , yesod-auth
-                  , yesod-core
-                  , yesod-default
-                  , yesod-static
-                  , yesod-form
-                  , failure      >= 0.1     && < 0.2
-                  , transformers
-                  , mime-mail
-                  , wai
-                  , wai-extra
-                  , directory
-                  , bytestring
-                  , text
-                  , persistent   >= 0.5.1
-                  , persistent-postgresql >= 0.5.0
-                  , persistent-template
-                  , http-types
-                  , template-haskell
-                  , hamlet
-                  , hjsmin       >= 0.0.12  && < 0.1
-                  , web-encodings >= 0.3 && < 0.4
-                  , utility-ht
-                  , warp
-                  , filepath
-                  , time         >= 1.1     && < 2.0
-                  , old-locale
-                  , parsec       >= 3.1     && < 3.2
-                  , SHA          >= 1.5 && < 1.6
-                  , utf8-string  >= 0.3.6
-                  , shakespeare-text
-                  , shakespeare-js
-                  , shakespeare-css
-                  , blaze-html
-                  , clientsession
+    build-depends: base         >= 4       && < 5
+                 , yesod        >= 0.9     && < 1.0
+                 , yesod-auth
+                 , yesod-core
+                 , yesod-default
+                 , yesod-static
+                 , yesod-form
+                 , failure      >= 0.1     && < 0.2
+                 , transformers
+                 , mime-mail
+                 , wai
+                 , wai-extra
+                 , directory
+                 , bytestring
+                 , text
+                 , persistent   >= 0.5.1
+                 , persistent-postgresql >= 0.5.0
+                 , persistent-template
+                 , http-types
+                 , template-haskell
+                 , hamlet
+                 , hjsmin       >= 0.0.12  && < 0.1
+                 , web-encodings >= 0.3 && < 0.4
+                 , utility-ht
+                 , warp
+                 , filepath
+                 , time         >= 1.1     && < 2.0
+                 , old-locale
+                 , parsec       >= 3.1     && < 3.2
+                 , SHA          >= 1.5 && < 1.6
+                 , utf8-string  >= 0.3.6
+                 , shakespeare-text
+                 , shakespeare-js
+                 , shakespeare-css
+                 , blaze-html
+                 , clientsession
 

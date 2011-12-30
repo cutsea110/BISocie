@@ -533,34 +533,34 @@ storeAttachedFile uid fi = fmap (fmap fst5'snd5) $ upload uid fi
 generateAutomemo :: (Failure ErrorResponse m, MonadTrans t, PersistBackend t m) 
                     => CommentGeneric t -> IssueGeneric t -> (Maybe ((Key b (FileHeaderGeneric backend)), T.Text)) -> t m T.Text
 generateAutomemo c i f = do
-  let st = if commentStatus c == issueStatus i
+  let st = if issueStatus i == commentStatus c
            then []
            else ["ステータスを " +++ issueStatus i +++ " から " 
                  +++ commentStatus c +++ " に変更."]
-      lm = case (commentLimitdate c, issueLimitdate i) of
+      lm = case (issueLimitdate i, commentLimitdate c) of
         (Nothing, Nothing) -> []
-        (Just x , Nothing) -> ["期限を " +++ showText x +++ " に設定."]
-        (Nothing, Just y ) -> ["期限 " +++ showText y +++ " を期限なしに変更."]
+        (Just x , Nothing) -> ["期限 " +++ showText x +++ " を期限なしに変更."]
+        (Nothing, Just y ) -> ["期限を " +++ showText y +++ " に設定."]
         (Just x , Just y ) -> if x == y
                               then []
-                              else ["期限を " +++ showText y +++ " から " 
-                                    +++  showText x +++ " に変更."]
+                              else ["期限を " +++ showText x +++ " から " 
+                                    +++  showText y +++ " に変更."]
       af = case f of
         Nothing -> []
         Just (_, fname) -> ["ファイル " +++ fname +++ " を添付."]
-  as <- case (commentAssign c, issueAssign i) of
+  as <- case (issueAssign i, commentAssign c) of
     (Nothing, Nothing) -> return []
     (Just x , Nothing) -> do
       x' <- get404 x
-      return ["担当者を " +++ userFullName x' +++ " に設定."]
+      return ["担当者 " +++ userFullName x' +++ " を担当者なしに変更."]
     (Nothing, Just y ) -> do
       y' <- get404 y
-      return ["担当者 " +++ userFullName y' +++ " を担当者なしに変更."]
+      return ["担当者を " +++ userFullName y' +++ " に設定."]
     (Just x , Just y ) -> do
       x' <- get404 x
       y' <- get404 y
       if x' == y'
         then return []
-        else return ["担当者を " +++ userFullName y' +++ " から " +++ 
-                     userFullName x' +++ " に変更."]
+        else return ["担当者を " +++ userFullName x' +++ " から " +++ 
+                     userFullName y' +++ " に変更."]
   return $ T.intercalate "\n" (st ++ as ++ lm ++ af)

@@ -52,6 +52,19 @@ $(document).ready(function(){
     });
   });
 
+  $('input[name=readThis]').click(function(){
+    $.ajax({
+      async: true,
+      type: 'POST',
+      dataType: 'json',
+      url: $(this).attr('url'),
+      success: function(json){
+      },
+      error: function(res, status){
+        // FIXME
+      }
+    });
+  });
   $('.post-body').mouseup(function(){
     var t = $.getSelection();
     if (t.length>0){

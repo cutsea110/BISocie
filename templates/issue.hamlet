@@ -42,14 +42,14 @@
     <button type=submit name=_method value=add>投稿
   <ul #issue-thread
     $forall c <- comments
-      $with c' <- snd c, cid' <- toSinglePiece (fst c)
+      $with c' <- snd c, cid <- fst c, cid' <- toSinglePiece cid
         <div .post-head
           <img src=@{AvatarImageR $ fst $ commentBisCuser c'} .avatar
           <a href=@{ProfileR $ fst $ commentBisCuser c'} .profile
             #{userFullName $ snd $ commentBisCuser c'}
           #{showDate $ commentBisCdate $ snd c} #{commentBisStatus c'}
           $if commentBisCheckReader c'
-            <input #readThis-#{cid'} type=checkbox name=readThis value=#{cid'}>
+            <input #readThis-#{cid'} type=checkbox name=readThis url=@{ReadCommentR cid}>
             <label for=readThis-#{cid'}>読んだ
         <div .post-body
           $maybe cmt <- commentBisContent c'

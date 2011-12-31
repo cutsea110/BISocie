@@ -89,6 +89,7 @@ Reader
     comment CommentId
     reader UserId
     checkdate UTCTime default=now()
+    UniqueReader comment reader
 
 Participants
     project ProjectId

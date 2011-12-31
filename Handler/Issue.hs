@@ -504,6 +504,21 @@ getAttachedFileR cid fid = do
       lift $ permissionDenied "あなたはこのファイルをダウンロードできません."
     get404 fid
   getFileR (fileHeaderCreator f) fid
+  
+postReadCommentR :: CommentId -> Handler RepJson
+postReadCommentR cid = do
+  (selfid, _) <- requireAuth
+  runDB $ do
+    mr <- getBy $ UniqueReader cid selfid
+    case mr of
+      Just (rid, _) -> return rid
+      Nothing -> do
+        now <- liftIO getCurrentTime
+        insert $ Reader cid selfid now
+  cacheSeconds 10 -- FIXME
+  jsonToRepJson $ jsonMap [("read", 
+                            jsonMap [ ("comment", jsonScalar $ show cid)
+                                    , ("reader", jsonScalar $ show selfid)])]
 
 selectParticipants :: (Failure ErrorResponse m, MonadTrans t, PersistBackend t m) =>
      Key t (ProjectGeneric t) -> t m [(Key t User, User)]

@@ -387,6 +387,7 @@ getIssueR pid ino = do
                                   , commentBisStatus=commentStatus c
                                   , commentBisAutomemo=commentAutomemo c
                                   , commentBisAttached=mf
+                                  , commentBisCheckReader=commentCheckReader c
                                   , commentBisCuser=(uid, u)
                                   , commentBisCdate=commentCdate c
                                   })

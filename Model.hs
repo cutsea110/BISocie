@@ -149,6 +149,7 @@ data CommentBis = CommentBis { commentBisId :: CommentId
                              , commentBisStatus :: Text
                              , commentBisAutomemo :: Text
                              , commentBisAttached :: Maybe (FileHeaderId, FileHeader)
+                             , commentBisCheckReader :: Bool
                              , commentBisCuser :: (UserId, User)
                              , commentBisCdate :: UTCTime
                              }

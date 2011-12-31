@@ -59,4 +59,7 @@
           $maybe f <- commentBisAttached c'
             <div .attached>添付ファイル: 
               <a href=@{AttachedFileR (fst c) (fst f)}>#{fileHeaderFullname (snd f)}
+        <div .post-foot
+          $if commentBisCheckReader c'
+            <div #readers-#{cid'} .readers url=@{CommentReadersR cid}
 <div #popup-profile

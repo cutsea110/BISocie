@@ -65,6 +65,17 @@ $(document).ready(function(){
       }
     });
   });
+  $('div.readers').each(function(){
+    var readers_list = $(this);
+    $.getJSON($(this).attr('url'), function(json){
+      $.each(json.readers, function(i, u){
+        var div = $("<div class='inline user'>"),
+            avatar = $("<img class='avatar'/>").attr({src: u.avatar}),
+            s = $('<a/>').attr({href: u.uri}).html(u.name);
+        readers_list.append(div.append(s).append(avatar));
+      });
+    });
+  });
   $('.post-body').mouseup(function(){
     var t = $.getSelection();
     if (t.length>0){
@@ -72,5 +83,4 @@ $(document).ready(function(){
       $('#content').insertBeforeSelection('\n' + q);
     }
   });
-
 });

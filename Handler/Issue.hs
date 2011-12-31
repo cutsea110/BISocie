@@ -507,8 +507,13 @@ getAttachedFileR cid fid = do
   
 postReadCommentR :: CommentId -> Handler RepJson
 postReadCommentR cid = do
-  (selfid, _) <- requireAuth
+  (selfid, self) <- requireAuth
   runDB $ do
+    cmt <- get404 cid
+    let pid = commentProject cmt
+    p <- getBy $ UniqueParticipants pid selfid
+    unless (p /= Nothing || isAdmin self) $
+      lift $ permissionDenied "あなたはこのプロジェクトに参加していません."
     mr <- getBy $ UniqueReader cid selfid
     case mr of
       Just (rid, _) -> return rid
@@ -519,6 +524,32 @@ postReadCommentR cid = do
   jsonToRepJson $ jsonMap [("read", 
                             jsonMap [ ("comment", jsonScalar $ show cid)
                                     , ("reader", jsonScalar $ show selfid)])]
+
+getCommentReadersR :: CommentId -> Handler RepJson
+getCommentReadersR cid = do
+  (selfid, self) <- requireAuth
+  r <- getUrlRender
+  readers <- runDB $ do
+    cmt <- get404 cid
+    let pid = commentProject cmt
+    p <- getBy $ UniqueParticipants pid selfid
+    unless (p /= Nothing || isAdmin self) $
+      lift $ permissionDenied "あなたはこのプロジェクトに参加していません."
+    rds' <- selectList [ReaderComment ==. cid] [Asc ReaderCheckdate]
+    forM rds' $ \(_, rd') -> do
+      let uid' = readerReader rd'
+          ra = AvatarImageR uid'
+      Just u <- get uid'
+      return (uid', u, ra)
+  cacheSeconds 10 -- FIXME
+  jsonToRepJson $ jsonMap [("readers", jsonList $ map (go r) readers)]
+  where
+    go r (uid, u, ra) = jsonMap [ ("id", jsonScalar $ show uid)
+                                , ("ident", jsonScalar $ T.unpack $ userIdent u)
+                                , ("name", jsonScalar $ T.unpack $ userFullName u)
+                                , ("uri", jsonScalar $ T.unpack $ r $ ProfileR uid)
+                                , ("avatar", jsonScalar $ T.unpack $ r ra)
+                                ]
 
 selectParticipants :: (Failure ErrorResponse m, MonadTrans t, PersistBackend t m) =>
      Key t (ProjectGeneric t) -> t m [(Key t User, User)]

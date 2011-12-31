@@ -382,15 +382,18 @@ getIssueR pid ino = do
           Just fid -> do
             f <- get404 fid
             return $ Just (fid, f)
-        return $ (cid, CommentBis { commentBisId=cid
-                                  , commentBisContent=commentContent c
-                                  , commentBisStatus=commentStatus c
-                                  , commentBisAutomemo=commentAutomemo c
-                                  , commentBisAttached=mf
-                                  , commentBisCheckReader=commentCheckReader c
-                                  , commentBisCuser=(uid, u)
-                                  , commentBisCdate=commentCdate c
-                                  })
+        mreadP <- getBy $ UniqueReader cid selfid
+        return $ (cid, 
+                  CommentBis { commentBisId=cid
+                             , commentBisContent=commentContent c
+                             , commentBisStatus=commentStatus c
+                             , commentBisAutomemo=commentAutomemo c
+                             , commentBisAttached=mf
+                             , commentBisCheckReader=commentCheckReader c
+                             , commentBisCuser=(uid, u)
+                             , commentBisCdate=commentCdate c
+                             }
+                 ,isJust mreadP)
       prj <- get404 pid
       ptcpts <- selectParticipants pid
       return (prj, ptcpts, issue, comments)

@@ -32,15 +32,25 @@
         <th>添付ファイル
         <td
           <input type=file name=attached
+      <tr
+        <th>読者確認:
+        <td
+          <input #checkreader-no type=radio name=checkreader value=no checked>
+          <label for=checkreader-no>しない
+          <input #checkreader-yes type=radio name=checkreader value=yes>
+          <label for=checkreader-yes>する
     <button type=submit name=_method value=add>投稿
   <ul #issue-thread
     $forall c <- comments
-      $with c' <- snd c
+      $with c' <- snd3 c, cid <- fst3 c, cid' <- toSinglePiece cid
         <div .post-head
           <img src=@{AvatarImageR $ fst $ commentBisCuser c'} .avatar
           <a href=@{ProfileR $ fst $ commentBisCuser c'} .profile
             #{userFullName $ snd $ commentBisCuser c'}
-          #{showDate $ commentBisCdate $ snd c} #{commentBisStatus c'}
+          #{showDate $ commentBisCdate c'} #{commentBisStatus c'}
+          $if commentBisCheckReader c'
+            <input #readThis-#{cid'} type=checkbox name=readThis url=@{ReadCommentR cid} target=#readers-#{cid'} :thd3 c:checked>
+            <label for=readThis-#{cid'}>読んだ
         <div .post-body
           $maybe cmt <- commentBisContent c'
             #{showMultilineText cmt}
@@ -48,5 +58,8 @@
             <span .automemo>#{showMultilineText $ commentBisAutomemo c'}
           $maybe f <- commentBisAttached c'
             <div .attached>添付ファイル: 
-              <a href=@{AttachedFileR (fst c) (fst f)}>#{fileHeaderFullname (snd f)}
+              <a href=@{AttachedFileR cid (fst f)}>#{fileHeaderFullname (snd f)}
+        <div .post-foot
+          $if commentBisCheckReader c'
+            <div #readers-#{cid'} .readers url=@{CommentReadersR cid}
 <div #popup-profile

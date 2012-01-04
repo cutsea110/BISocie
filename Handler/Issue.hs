@@ -283,12 +283,14 @@ postNewIssueR pid = do
   where
     addIssueR = do
       (selfid, _) <- requireAuth
-      (sbj, cntnt, ldate, asgn, sts) <- runInputPost $ (,,,,)
-                                        <$> ireq textField "subject"
-                                        <*> iopt textField "content"
-                                        <*> iopt dayField "limitdate"
-                                        <*> iopt textField "assign"
-                                        <*> ireq textField "status"
+      (sbj, cntnt, ldate, asgn, sts, rdr) <- 
+        runInputPost $ (,,,,,)
+        <$> ireq textField "subject"
+        <*> iopt textField "content"
+        <*> iopt dayField "limitdate"
+        <*> iopt textField "assign"
+        <*> ireq textField "status"
+        <*> ireq boolField "checkreader"
       Just fi <- lookupFile "attached"
       ino <- runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
@@ -320,6 +322,7 @@ postNewIssueR pid = do
                                 , commentStatus=sts
                                 , commentLimitdate=ldate
                                 , commentAttached=fmap fst mfh
+                                , commentCheckReader=rdr
                                 , commentCuser=selfid
                                 , commentCdate=now
                                 }
@@ -379,14 +382,18 @@ getIssueR pid ino = do
           Just fid -> do
             f <- get404 fid
             return $ Just (fid, f)
-        return $ (cid, CommentBis { commentBisId=cid
-                                  , commentBisContent=commentContent c
-                                  , commentBisStatus=commentStatus c
-                                  , commentBisAutomemo=commentAutomemo c
-                                  , commentBisAttached=mf
-                                  , commentBisCuser=(uid, u)
-                                  , commentBisCdate=commentCdate c
-                                  })
+        mreadP <- getBy $ UniqueReader cid selfid
+        return $ (cid, 
+                  CommentBis { commentBisId=cid
+                             , commentBisContent=commentContent c
+                             , commentBisStatus=commentStatus c
+                             , commentBisAutomemo=commentAutomemo c
+                             , commentBisAttached=mf
+                             , commentBisCheckReader=commentCheckReader c
+                             , commentBisCuser=(uid, u)
+                             , commentBisCdate=commentCdate c
+                             }
+                 ,isJust mreadP)
       prj <- get404 pid
       ptcpts <- selectParticipants pid
       return (prj, ptcpts, issue, comments)
@@ -409,12 +416,13 @@ postCommentR pid ino = do
   where
     addCommentR = do
       (selfid, _) <- requireAuth
-      (cntnt, ldate, asgn, sts) <- 
-        runInputPost $ (,,,)
+      (cntnt, ldate, asgn, sts, rdr) <- 
+        runInputPost $ (,,,,)
         <$> iopt textField "content"
         <*> iopt dayField "limitdate"
         <*> iopt textField "assign"
         <*> ireq textField "status"
+        <*> ireq boolField "checkreader"
       r <- getUrlRender
       now <- liftIO getCurrentTime
       Just fi <- lookupFile "attached"
@@ -434,6 +442,7 @@ postCommentR pid ino = do
                                  , commentStatus=sts
                                  , commentLimitdate=ldate
                                  , commentAttached=fmap fst mfh
+                                 , commentCheckReader=rdr
                                  , commentCuser=selfid
                                  , commentCdate=now
                                  }
@@ -498,6 +507,70 @@ getAttachedFileR cid fid = do
       lift $ permissionDenied "あなたはこのファイルをダウンロードできません."
     get404 fid
   getFileR (fileHeaderCreator f) fid
+  
+postReadCommentR :: CommentId -> Handler RepJson
+postReadCommentR cid = do
+  (selfid, self) <- requireAuth
+  r <- getUrlRender
+  _method <- lookupPostParam "_method"
+  ret <- runDB $ do
+    cmt <- get404 cid
+    let pid = commentProject cmt
+    p <- getBy $ UniqueParticipants pid selfid
+    unless (p /= Nothing || isAdmin self) $
+      lift $ permissionDenied "あなたはこのプロジェクトに参加していません."
+    case _method of
+      Just "add" -> do    
+        mr <- getBy $ UniqueReader cid selfid
+        case mr of
+          Just _ -> return "added"
+          Nothing -> do
+            now <- liftIO getCurrentTime
+            insert $ Reader cid selfid now
+            return "added"
+      Just "delete" -> do 
+        deleteBy $ UniqueReader cid selfid
+        return "deleted"
+      Nothing -> lift $ invalidArgs ["The possible values of '_method' is add or delete"]
+  cacheSeconds 10 -- FIXME
+  jsonToRepJson $ jsonMap [ ("status", jsonScalar ret)
+                          , ("read", 
+                            jsonMap [ ("comment", jsonScalar $ show cid)
+                                    , ("reader",
+                                       jsonMap [ ("id", jsonScalar $ show selfid)
+                                               , ("ident", jsonScalar $ T.unpack $ userIdent self)
+                                               , ("name", jsonScalar $ T.unpack $ userFullName self)
+                                               , ("uri", jsonScalar $ T.unpack $ r $ ProfileR selfid)
+                                               , ("avatar", jsonScalar $ T.unpack $ r $ AvatarImageR selfid)
+                                               ])
+                                    ])
+                          ]
+
+getCommentReadersR :: CommentId -> Handler RepJson
+getCommentReadersR cid = do
+  (selfid, self) <- requireAuth
+  r <- getUrlRender
+  readers <- runDB $ do
+    cmt <- get404 cid
+    let pid = commentProject cmt
+    p <- getBy $ UniqueParticipants pid selfid
+    unless (p /= Nothing || isAdmin self) $
+      lift $ permissionDenied "あなたはこのプロジェクトに参加していません."
+    rds' <- selectList [ReaderComment ==. cid] [Asc ReaderCheckdate]
+    forM rds' $ \(_, rd') -> do
+      let uid' = readerReader rd'
+          ra = AvatarImageR uid'
+      Just u <- get uid'
+      return (uid', u, ra)
+  cacheSeconds 10 -- FIXME
+  jsonToRepJson $ jsonMap [("readers", jsonList $ map (go r) readers)]
+  where
+    go r (uid, u, ra) = jsonMap [ ("id", jsonScalar $ show uid)
+                                , ("ident", jsonScalar $ T.unpack $ userIdent u)
+                                , ("name", jsonScalar $ T.unpack $ userFullName u)
+                                , ("uri", jsonScalar $ T.unpack $ r $ ProfileR uid)
+                                , ("avatar", jsonScalar $ T.unpack $ r ra)
+                                ]
 
 selectParticipants :: (Failure ErrorResponse m, MonadTrans t, PersistBackend t m) =>
      Key t (ProjectGeneric t) -> t m [(Key t User, User)]

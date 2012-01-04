@@ -149,6 +149,7 @@ data CommentBis = CommentBis { commentBisId :: CommentId
                              , commentBisStatus :: Text
                              , commentBisAutomemo :: Text
                              , commentBisAttached :: Maybe (FileHeaderId, FileHeader)
+                             , commentBisCheckReader :: Bool
                              , commentBisCuser :: (UserId, User)
                              , commentBisCdate :: UTCTime
                              }
@@ -240,6 +241,16 @@ showTerminated :: Project -> Text
 showTerminated p = case projectTerminated p of
   True -> "終了"
   False -> "活動中"
+
+showCheckReader :: Comment -> Text
+showCheckReader c = case commentCheckReader c of
+  True -> "読者確認する"
+  False -> "読者確認しない"
+
+care :: Comment -> Bool
+care = commentCheckReader
+nocare :: Comment -> Bool
+nocare = not . commentCheckReader
 
 showmaybe :: Maybe Text -> Text
 showmaybe Nothing  = ""

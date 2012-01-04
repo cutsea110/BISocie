@@ -21,6 +21,8 @@
 /issue/#ProjectId/#IssueNo IssueR GET
 /comment/#ProjectId/#IssueNo CommentR POST
 /attached/#CommentId/#FileHeaderId AttachedFileR GET
+/read/#CommentId ReadCommentR POST
+/readers/#CommentId CommentReadersR GET
 
 /profile/#UserId ProfileR GET POST PUT
 /avatar/#UserId AvatarR POST

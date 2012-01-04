@@ -214,6 +214,9 @@ commentLimitDatetime = liftM2 day'timeToUTC <$> commentLimitdate <*> commentLimi
 issueLimitDatetime :: Issue -> Maybe UTCTime
 issueLimitDatetime = liftM2 day'timeToUTC <$> issueLimitdate <*> issueLimittime
 
+showReminderdate :: Issue -> Text
+showReminderdate i = fromMaybe "" (fmap showText (issueReminderdate i))
+
 showMaybeDouble :: Maybe Double -> Text
 showMaybeDouble md = case md of
   Nothing -> ""

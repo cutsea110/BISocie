@@ -284,12 +284,13 @@ postNewIssueR pid = do
   where
     addIssueR = do
       (selfid, _) <- requireAuth
-      (sbj, cntnt, ldate, ltime, asgn, sts, rdr) <- 
-        runInputPost $ (,,,,,,)
+      (sbj, cntnt, ldate, ltime, rdate, asgn, sts, rdr) <- 
+        runInputPost $ (,,,,,,,)
         <$> ireq textField "subject"
         <*> iopt textField "content"
         <*> iopt dayField "limitdate"
         <*> iopt timeField "limittime"
+        <*> iopt dayField "reminderdate"
         <*> iopt textField "assign"
         <*> ireq textField "status"
         <*> ireq boolField "checkreader"
@@ -312,6 +313,7 @@ postNewIssueR pid = do
                               , issueStatus=sts
                               , issueLimitdate=ldate
                               , issueLimittime=ltime
+                              , issueReminderdate=rdate
                               , issueCuser=selfid
                               , issueCdate=now
                               , issueUuser=selfid
@@ -325,6 +327,7 @@ postNewIssueR pid = do
                                 , commentStatus=sts
                                 , commentLimitdate=ldate
                                 , commentLimittime=ltime
+                                , commentReminderdate=rdate
                                 , commentAttached=fmap fst mfh
                                 , commentCheckReader=rdr
                                 , commentCuser=selfid
@@ -421,11 +424,12 @@ postCommentR pid ino = do
   where
     addCommentR = do
       (selfid, _) <- requireAuth
-      (cntnt, ldate, ltime, asgn, sts, rdr) <-
-        runInputPost $ (,,,,,)
+      (cntnt, ldate, ltime, rdate, asgn, sts, rdr) <-
+        runInputPost $ (,,,,,,)
         <$> iopt textField "content"
         <*> iopt dayField "limitdate"
         <*> iopt timeField "limittime"
+        <*> iopt dayField "reminderdate"
         <*> iopt textField "assign"
         <*> ireq textField "status"
         <*> ireq boolField "checkreader"
@@ -448,6 +452,7 @@ postCommentR pid ino = do
                                  , commentStatus=sts
                                  , commentLimitdate=ldate
                                  , commentLimittime=ltime
+                                 , commentReminderdate=rdate
                                  , commentAttached=fmap fst mfh
                                  , commentCheckReader=rdr
                                  , commentCuser=selfid
@@ -457,6 +462,7 @@ postCommentR pid ino = do
                    , IssueUdate =. now
                    , IssueLimitdate =. ldate
                    , IssueLimittime =. ltime
+                   , IssueReminderdate =. rdate
                    , IssueAssign =. asgn'
                    , IssueStatus =. sts
                    ]
@@ -618,6 +624,15 @@ generateAutomemo c i f = do
                               then []
                               else ["期限を " +++ showDate x +++ " から "
                                     +++  showDate y +++ " に変更."]
+      rm = case (issueReminderdate i, commentReminderdate c) of
+        (Nothing, Nothing) -> []
+        (Just x , Nothing) -> ["リマインダメール通知日 " +++ showText x +++ " を通知なしに変更"]
+        (Nothing, Just y ) -> ["リマインダメール通知日を " +++ showText y +++ " に設定."]
+        (Just x , Just y ) -> if x == y
+                              then []
+                              else ["リマインダ通知日を " +++ showText x +++ " から "
+                                    +++ showText y +++ " に変更."]
+
       af = case f of
         Nothing -> []
         Just (_, fname) -> ["ファイル " +++ fname +++ " を添付."]
@@ -636,4 +651,4 @@ generateAutomemo c i f = do
         then return []
         else return ["担当者を " +++ userFullName x' +++ " から " +++ 
                      userFullName y' +++ " に変更."]
-  return $ T.intercalate "\n" (st ++ as ++ lm ++ af)
+  return $ T.intercalate "\n" (st ++ as ++ lm ++ rm ++ af)

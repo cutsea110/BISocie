@@ -67,6 +67,7 @@ Issue
     status Text
     limitdate Day Maybe
     limittime TimeOfDay Maybe
+    reminderdate Day Maybe
     cuser UserId
     cdate UTCTime default=now()
     uuser UserId
@@ -82,6 +83,7 @@ Comment
     status Text
     limitdate Day Maybe
     limittime TimeOfDay Maybe
+    reminderdate Day Maybe
     attached FileHeaderId Maybe
     checkReader Bool default=false
     cuser UserId

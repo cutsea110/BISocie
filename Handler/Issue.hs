@@ -284,12 +284,13 @@ postNewIssueR pid = do
   where
     addIssueR = do
       (selfid, _) <- requireAuth
-      (sbj, cntnt, ldate, ltime, asgn, sts, rdr) <- 
-        runInputPost $ (,,,,,,)
+      (sbj, cntnt, ldate, ltime, rdate, asgn, sts, rdr) <- 
+        runInputPost $ (,,,,,,,)
         <$> ireq textField "subject"
         <*> iopt textField "content"
         <*> iopt dayField "limitdate"
         <*> iopt timeField "limittime"
+        <*> iopt dayField "reminderdate"
         <*> iopt textField "assign"
         <*> ireq textField "status"
         <*> ireq boolField "checkreader"
@@ -312,6 +313,7 @@ postNewIssueR pid = do
                               , issueStatus=sts
                               , issueLimitdate=ldate
                               , issueLimittime=ltime
+                              , issueReminderdate=rdate
                               , issueCuser=selfid
                               , issueCdate=now
                               , issueUuser=selfid
@@ -325,6 +327,7 @@ postNewIssueR pid = do
                                 , commentStatus=sts
                                 , commentLimitdate=ldate
                                 , commentLimittime=ltime
+                                , commentReminderdate=rdate
                                 , commentAttached=fmap fst mfh
                                 , commentCheckReader=rdr
                                 , commentCuser=selfid
@@ -421,11 +424,12 @@ postCommentR pid ino = do
   where
     addCommentR = do
       (selfid, _) <- requireAuth
-      (cntnt, ldate, ltime, asgn, sts, rdr) <-
-        runInputPost $ (,,,,,)
+      (cntnt, ldate, ltime, rdate, asgn, sts, rdr) <-
+        runInputPost $ (,,,,,,)
         <$> iopt textField "content"
         <*> iopt dayField "limitdate"
         <*> iopt timeField "limittime"
+        <*> iopt dayField "reminderdate"
         <*> iopt textField "assign"
         <*> ireq textField "status"
         <*> ireq boolField "checkreader"
@@ -448,6 +452,7 @@ postCommentR pid ino = do
                                  , commentStatus=sts
                                  , commentLimitdate=ldate
                                  , commentLimittime=ltime
+                                 , commentReminderdate=rdate
                                  , commentAttached=fmap fst mfh
                                  , commentCheckReader=rdr
                                  , commentCuser=selfid
@@ -457,6 +462,7 @@ postCommentR pid ino = do
                    , IssueUdate =. now
                    , IssueLimitdate =. ldate
                    , IssueLimittime =. ltime
+                   , IssueReminderdate =. rdate
                    , IssueAssign =. asgn'
                    , IssueStatus =. sts
                    ]

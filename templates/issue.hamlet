@@ -49,7 +49,7 @@
             #{userFullName $ snd $ commentBisCuser c'}
           #{showDate $ commentBisCdate c'} #{commentBisStatus c'}
           $if commentBisCheckReader c'
-            <input #readThis-#{cid'} type=checkbox name=readThis url=@{ReadCommentR cid} :thd3 c:checked>
+            <input #readThis-#{cid'} type=checkbox name=readThis url=@{ReadCommentR cid} target=#readers-#{cid'} :thd3 c:checked>
             <label for=readThis-#{cid'}>読んだ
         <div .post-body
           $maybe cmt <- commentBisContent c'

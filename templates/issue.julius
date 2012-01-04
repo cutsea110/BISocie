@@ -53,26 +53,39 @@ $(document).ready(function(){
   });
 
   $('input[name=readThis]').click(function(){
+    var thisChkBox = $(this),
+        method = thisChkBox.attr('checked') ? "add" : "delete",
+        target_id = thisChkBox.attr('target');
     $.ajax({
       async: true,
       type: 'POST',
       dataType: 'json',
-      url: $(this).attr('url'),
+      data: {_method: method},
+      url: thisChkBox.attr('url'),
       success: function(json){
+          var u = json.read.reader;
+          switch (json.status) {
+            case 'added':
+              $( target_id ).append(mkUser(u));
+              thisChkBox.attr('checked',true);
+              break;
+            case 'deleted':
+              $( target_id + ' div.user[uid=' + u.id + ']').remove();
+              thisChkBox.attr('checked',false);
+              break;
+          }
       },
       error: function(res, status){
         // FIXME
       }
     });
+    return false;
   });
   $('div.readers').each(function(){
     var readers_list = $(this);
     $.getJSON($(this).attr('url'), function(json){
       $.each(json.readers, function(i, u){
-        var div = $("<div class='inline user'>"),
-            avatar = $("<img class='avatar'/>").attr({src: u.avatar}),
-            s = $('<a/>').attr({href: u.uri}).html(u.name);
-        readers_list.append(div.append(s).append(avatar));
+        readers_list.append(mkUser(u));
       });
     });
   });
@@ -84,3 +97,10 @@ $(document).ready(function(){
     }
   });
 });
+
+function mkUser(u) {
+  var div = $("<div class='inline user'>").attr({uid: u.id, ident: u.ident}),
+      avatar = $("<img class='avatar'/>").attr({src: u.avatar}),
+      s = $('<a/>').attr({href: u.uri}).html(u.name);
+  return div.append(s).append(avatar);
+}

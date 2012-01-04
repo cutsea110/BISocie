@@ -511,22 +511,40 @@ getAttachedFileR cid fid = do
 postReadCommentR :: CommentId -> Handler RepJson
 postReadCommentR cid = do
   (selfid, self) <- requireAuth
-  runDB $ do
+  r <- getUrlRender
+  _method <- lookupPostParam "_method"
+  ret <- runDB $ do
     cmt <- get404 cid
     let pid = commentProject cmt
     p <- getBy $ UniqueParticipants pid selfid
     unless (p /= Nothing || isAdmin self) $
       lift $ permissionDenied "あなたはこのプロジェクトに参加していません."
-    mr <- getBy $ UniqueReader cid selfid
-    case mr of
-      Just (rid, _) -> return rid
-      Nothing -> do
-        now <- liftIO getCurrentTime
-        insert $ Reader cid selfid now
+    case _method of
+      Just "add" -> do    
+        mr <- getBy $ UniqueReader cid selfid
+        case mr of
+          Just _ -> return "added"
+          Nothing -> do
+            now <- liftIO getCurrentTime
+            insert $ Reader cid selfid now
+            return "added"
+      Just "delete" -> do 
+        deleteBy $ UniqueReader cid selfid
+        return "deleted"
+      Nothing -> lift $ invalidArgs ["The possible values of '_method' is add or delete"]
   cacheSeconds 10 -- FIXME
-  jsonToRepJson $ jsonMap [("read", 
+  jsonToRepJson $ jsonMap [ ("status", jsonScalar ret)
+                          , ("read", 
                             jsonMap [ ("comment", jsonScalar $ show cid)
-                                    , ("reader", jsonScalar $ show selfid)])]
+                                    , ("reader",
+                                       jsonMap [ ("id", jsonScalar $ show selfid)
+                                               , ("ident", jsonScalar $ T.unpack $ userIdent self)
+                                               , ("name", jsonScalar $ T.unpack $ userFullName self)
+                                               , ("uri", jsonScalar $ T.unpack $ r $ ProfileR selfid)
+                                               , ("avatar", jsonScalar $ T.unpack $ r $ AvatarImageR selfid)
+                                               ])
+                                    ])
+                          ]
 
 getCommentReadersR :: CommentId -> Handler RepJson
 getCommentReadersR cid = do

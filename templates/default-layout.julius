@@ -26,6 +26,18 @@ $(document).ready(function(){
         valid = false;
       }
     });
+    $('input.cond-required, textarea.cond-required').each(function(){
+      var condname = $(this).attr('cond'),
+          cond = $("[name='" + condname + "']"),
+          conddisp = cond.attr('displayname')
+          condval  = cond.val();
+      $(this).removeClass('invalid');
+      if ( $.trim(condval) != "" && $.trim($(this).val()) == "") {
+        $(this).addClass('invalid');
+        $(this).after("<span class='invalid'> " + conddisp + " に入力した場合には必須入力項目です.</span>");
+        valid = false;
+      }
+    });
     return valid;
   });
 
@@ -69,6 +81,14 @@ $(document).ready(function(){
     changeMonth: true
   });
   $(".date").datepicker();
+
+  $(".time").clockpick({
+    starthour: 0,
+    endhour: 23,
+    showminutes: true,
+    minutedivisions: 4,
+    military: true,
+  });
 
   $(".inplaceedit").each(function(){
     $(this).exInPlaceEditor({

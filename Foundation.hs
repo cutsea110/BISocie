@@ -126,6 +126,8 @@ instance Yesod BISocie where
         addScriptEither $ Left $ StaticR plugins_exinplaceeditor_jquery_exinplaceeditor_0_1_3_js
         addStylesheetEither $ Left $ StaticR plugins_exinplaceeditor_exinplaceeditor_css
         addScriptEither $ Left $ StaticR plugins_watermark_jquery_watermark_js
+        addScriptEither $ Left $ StaticR plugins_clockpick_jquery_clockpick_1_2_9_js
+        addStylesheetEither $ Left $ StaticR plugins_clockpick_jquery_clockpick_1_2_9_css
         addScriptEither $ Left $ StaticR plugins_ajaxzip2_ajaxzip2_js
         addScriptEither $ Left $ StaticR plugins_selection_jquery_selection_js
         addCassius $(cassiusFile "templates/default-layout.cassius")

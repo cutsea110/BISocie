@@ -12,6 +12,8 @@ import Yesod
 -- import Yesod.Crud -- FIXME
 import Database.Persist.Base
 import System.Locale
+import Control.Monad (liftM2)
+import Control.Applicative ((<$>),(<*>))
 import Data.Char (isHexDigit)
 import Data.Int
 import Data.Time
@@ -201,6 +203,17 @@ isAdmin u = userRole u == Admin
 showLimitdate :: Issue -> Text
 showLimitdate i = fromMaybe "" (fmap showText (issueLimitdate i))
 
+showLimittime :: Issue -> Text
+showLimittime i = fromMaybe "" (fmap showHHMM (issueLimittime i))
+  where
+    showHHMM = T.pack . formatTime defaultTimeLocale "%H:%M"
+
+commentLimitDatetime :: Comment -> Maybe UTCTime
+commentLimitDatetime = liftM2 day'timeToUTC <$> commentLimitdate <*> commentLimittime
+
+issueLimitDatetime :: Issue -> Maybe UTCTime
+issueLimitDatetime = liftM2 day'timeToUTC <$> issueLimitdate <*> issueLimittime
+
 showMaybeDouble :: Maybe Double -> Text
 showMaybeDouble md = case md of
   Nothing -> ""
@@ -213,6 +226,9 @@ showDate = T.pack . formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S" . utc2local
 
 localDayToUTC :: Day -> UTCTime
 localDayToUTC = localTimeToUTC (hoursToTimeZone Settings.tz) . flip LocalTime (TimeOfDay 0 0 0)
+
+day'timeToUTC :: Day -> TimeOfDay -> UTCTime
+day'timeToUTC = (localTimeToUTC (hoursToTimeZone Settings.tz) .) . LocalTime
 
 toMessageId :: IssueId -> CommentId -> UTCTime -> Text -> Text
 toMessageId iid cid time domain = "<" 

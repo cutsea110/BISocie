@@ -29,7 +29,7 @@
                 #{issueSubject i'}
             <td>#{issueStatus i'}
             <td>#{showmaybe $ fmap userFullName $ issueBisAssign i}
-            <td>#{showLimitdate i'}
+            <td>#{showLimitdate i'} #{showLimittime i'}
             <td>#{userFullName $ issueBisCreator i}
             <td>#{userFullName $ issueBisUpdator i}
             <td>#{showDate $ issueUdate i'}

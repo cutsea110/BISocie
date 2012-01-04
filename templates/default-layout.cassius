@@ -166,3 +166,8 @@ ul.tabs li a
     width: auto
 .ui-datepicker select.ui-datepicker-month
     margin-left: 1em
+
+input.date
+    width: 8em
+input.time
+    width: 6em

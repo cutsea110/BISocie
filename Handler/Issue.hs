@@ -354,7 +354,8 @@ postNewIssueR pid = do
                                        ]
                                      ++ T.lines (fromJust cntnt)
                                      ++ [ ""
-                                        , "イシュー: " +++ r (IssueR pid ino)]
+                                        , "*このメールに直接返信せずにこちらのページから投稿してください。"
+                                        , "イシューURL: " +++ r (IssueR pid ino)]
                                      ++ case mfh of
                                        Nothing -> []
                                        Just (fid,_) -> ["添付ファイル: " +++ (r $ AttachedFileR cid fid)]
@@ -488,7 +489,8 @@ postCommentR pid ino = do
                                        ]
                                      ++ T.lines (fromJust cntnt)
                                      ++ [ ""
-                                        , "イシュー: " +++ r (IssueR pid ino)]
+                                        , "*このメールに直接返信せずにこちらのページから投稿してください。"
+                                        , "イシューURL: " +++ r (IssueR pid ino)]
                                      ++ case mfh of
                                        Nothing -> []
                                        Just (fid,_) -> ["添付ファイル: " +++ (r $ AttachedFileR cid fid)]

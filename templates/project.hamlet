@@ -33,10 +33,10 @@
           <span .alert>(必須)
       <dd
         $if canEditProjectSetting self
-          <input #terminated-live type=radio name=terminated value=live :live prj:checked>
-          <label for=terminated-live>活動中
-          <input #terminated-dead type=radio name=terminated value=dead :dead prj:checked
-          <label for=terminated-dead>終了
+          <input #terminated-no type=radio name=terminated value=no :not (projectTerminated prj):checked>
+          <label for=terminated-no>活動中
+          <input #terminated-yes type=radio name=terminated value=yes :projectTerminated prj:checked>
+          <label for=terminated-yes>終了
         $else
           #{showTerminated prj}
       <dt>ステータス 

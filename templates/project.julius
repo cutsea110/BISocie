@@ -68,7 +68,7 @@ $(document).ready(function(){
     }
   });
 
-  $('#terminated-live, #terminated-dead').click(function(){
+  $('#terminated-no, #terminated-yes').click(function(){
     $.ajax({
       async: true,
       type: 'POST',

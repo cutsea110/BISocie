@@ -48,7 +48,7 @@
   <ul #issue-thread
     $forall c <- comments
       $with c' <- snd3 c, cid <- fst3 c, cid' <- toSinglePiece cid
-        <div .post-head
+        <div ##{cid'} .post-head
           <img src=@{AvatarImageR $ fst $ commentBisCuser c'} .avatar
           <a href=@{ProfileR $ fst $ commentBisCuser c'} .profile
             #{userFullName $ snd $ commentBisCuser c'}

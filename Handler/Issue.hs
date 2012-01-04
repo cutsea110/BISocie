@@ -335,6 +335,7 @@ postNewIssueR pid = do
                                 }
         emails <- selectMailAddresses pid
         let msgid = toMessageId iid cid now mailMessageIdDomain
+            fragment = "#" +++ toSinglePiece cid
         when (isJust cntnt && not (null emails)) $
           liftIO $ renderSendMail Mail
             { mailFrom = fromEmailAddress
@@ -362,7 +363,7 @@ postNewIssueR pid = do
                                      ++ T.lines (fromJust cntnt)
                                      ++ [ ""
                                         , "*このメールに直接返信せずにこちらのページから投稿してください。"
-                                        , "イシューURL: " +++ r (IssueR pid ino)]
+                                        , "イシューURL: " +++ r (IssueR pid ino) +++ fragment]
                                      ++ case mfh of
                                        Nothing -> []
                                        Just (fid,_) -> ["添付ファイル: " +++ (r $ AttachedFileR cid fid)]
@@ -474,6 +475,7 @@ postCommentR pid ino = do
         emails <- selectMailAddresses pid
         let msgid = toMessageId iid cid now mailMessageIdDomain
             refid = toMessageId iid lastCid (commentCdate lastC) mailMessageIdDomain
+            fragment = "#" +++ toSinglePiece cid
         when (isJust cntnt && not (null emails)) $
           liftIO $ renderSendMail Mail
             { mailFrom = fromEmailAddress
@@ -503,7 +505,7 @@ postCommentR pid ino = do
                                      ++ T.lines (fromJust cntnt)
                                      ++ [ ""
                                         , "*このメールに直接返信せずにこちらのページから投稿してください。"
-                                        , "イシューURL: " +++ r (IssueR pid ino)]
+                                        , "イシューURL: " +++ r (IssueR pid ino) +++ fragment]
                                      ++ case mfh of
                                        Nothing -> []
                                        Just (fid,_) -> ["添付ファイル: " +++ (r $ AttachedFileR cid fid)]

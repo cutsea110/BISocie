@@ -83,13 +83,13 @@ getTaskR y m d = do
   issues <- runDB $ do
     ptcpts <- selectList [ParticipantsUser ==. selfid] []
     let pids = map (participantsProject.snd) ptcpts
-    selectList [IssueLimitdate ==. Just day, IssueProject <-. pids ] []
-  cacheSeconds 10 --FIXME
+    selectList [IssueLimitdate ==. Just day, IssueProject <-. pids ] [Asc IssueLimittime]
   jsonToRepJson $ jsonMap [("tasks", jsonList $ map (go r) issues)]
   where
     go r (iid, issue) = jsonMap [ ("id", jsonScalar $ show iid)
                                 , ("subject", jsonScalar $ T.unpack $ issueSubject issue)
                                 , ("uri", jsonScalar $ T.unpack $ r $ IssueR (issueProject issue) (issueNumber issue))
+                                , ("limittime", jsonScalar $ T.unpack $ showLimittime issue)
                                 ]
 
 getAssignListR :: Handler RepJson

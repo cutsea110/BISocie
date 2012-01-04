@@ -624,6 +624,15 @@ generateAutomemo c i f = do
                               then []
                               else ["期限を " +++ showDate x +++ " から "
                                     +++  showDate y +++ " に変更."]
+      rm = case (issueReminderdate i, commentReminderdate c) of
+        (Nothing, Nothing) -> []
+        (Just x , Nothing) -> ["リマインダメール通知日 " +++ showText x +++ " を通知なしに変更"]
+        (Nothing, Just y ) -> ["リマインダメール通知日を " +++ showText y +++ " に設定."]
+        (Just x , Just y ) -> if x == y
+                              then []
+                              else ["リマインダ通知日を " +++ showText x +++ " から "
+                                    +++ showText y +++ " に変更."]
+
       af = case f of
         Nothing -> []
         Just (_, fname) -> ["ファイル " +++ fname +++ " を添付."]
@@ -642,4 +651,4 @@ generateAutomemo c i f = do
         then return []
         else return ["担当者を " +++ userFullName x' +++ " から " +++ 
                      userFullName y' +++ " に変更."]
-  return $ T.intercalate "\n" (st ++ as ++ lm ++ af)
+  return $ T.intercalate "\n" (st ++ as ++ lm ++ rm ++ af)

@@ -246,15 +246,13 @@ showIdCounter (Key (PersistInt64 n)) = showText n
 showIdCounter x = showText $ unKey x
 
 showBirthDay :: Profile -> Text
-showBirthDay = showText . profileBirth
+showBirthDay = fromMaybe "" . fmap showText . profileBirth
 
 showEntryYear :: Profile -> Text
-showEntryYear = showText . profileEntryYear
+showEntryYear = fromMaybe "" . fmap showText . profileEntryYear
 
 showGraduateYear :: Profile -> Text
-showGraduateYear u =  case profileGraduateYear u of
-  Nothing -> ""
-  Just y -> showText y
+showGraduateYear = fromMaybe "" . fmap showText . profileGraduateYear
 
 showTerminated :: Project -> Text
 showTerminated p = case projectTerminated p of

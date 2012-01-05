@@ -52,16 +52,14 @@
       $maybe prof <- mprof
         <tr
           <th>生年月日 
-            <span .alert>(必須)
           <td colspan=3
-            <input placeholder=yyyy/mm/dd type=date name=birth value=#{showBirthDay prof} .date .watermark .required
+            <input placeholder=yyyy/mm/dd type=date name=birth value=#{showBirthDay prof} .date .watermark
         <tr
           <th>入学年度 
-            <span .alert>(必須)
           <td
             <select name=entryYear
               $forall ey <- eyears
-                <option :fst ey:selected .required>#{show $ snd ey}
+                <option :fst ey:selected>#{show $ snd ey}
           <th>卒業年度
             <div .help>#{y}年3月卒業の場合は#{(-) y 1}年度卒業です.
           <td>
@@ -71,59 +69,53 @@
                 <option :fst gy:selected>#{show $ snd gy}
         <tr
           <th>所属ブランチ 
-            <span .alert>(必須)
           <td colspan=3
-            <input placeholder=ブランチ type=text name=branch value=#{showmaybe $ profileBranch prof} .watermark .required
+            <input placeholder=ブランチ type=text name=branch value=#{showmaybe $ profileBranch prof} .watermark
         <tr
           <th>現住所 
-            <span .alert>(必須)
           <td colspan=3
             <input #clon type=hidden name=longitude value=#{showMaybeDouble $ profileLongitude prof}
             <input #clat type=hidden name=latitude value=#{showMaybeDouble $ profileLatitude prof}
             〒
-            <input #czip placeholder=271-8555 maxlength=8 type=zip name=zip value=#{showmaybe $ profileZip prof} .watermark .required
+            <input #czip placeholder=271-8555 maxlength=8 type=zip name=zip value=#{showmaybe $ profileZip prof} .watermark
             <br
-            <input #cloc placeholder=千葉県松戸市岩瀬550 locprefix=c type=address name=address value=#{showmaybe $ profileAddress prof} .watermark .required
+            <input #cloc placeholder=千葉県松戸市岩瀬550 locprefix=c type=address name=address value=#{showmaybe $ profileAddress prof} .watermark
         $if canEditTel self user
           <tr
             <th>電話番号 
-              <span .alert>(必須)
             <td colspan=3
-              <input placeholder=090-1234-5678 type=tel name=tel value=#{showmaybe $ profileTel prof} .watermark .required
+              <input placeholder=090-1234-5678 type=tel name=tel value=#{showmaybe $ profileTel prof} .watermark
         $else
           <input type=hidden name=tel value=#{showmaybe $ profileTel prof}
         <tr
           <th>最寄駅 
-            <span .alert>(必須)
           <td colspan=3
-            <input placeholder=松戸 type=text name=station value=#{showmaybe $ profileStation prof} .watermark .required
+            <input placeholder=松戸 type=text name=station value=#{showmaybe $ profileStation prof} .watermark
         <tr
           <th>実家住所 
-            <span .alert>(必須)
           <td colspan=3
             <input #hlon type=hidden name=homeLongitude value=#{showMaybeDouble $ profileHomeLongitude prof}
             <input #hlat type=hidden name=homeLatitude value=#{showMaybeDouble $ profileHomeLatitude prof}>
             〒
-            <input #hzip placeholder=271-8555 type=zip maxlength=8 name=homeZip value=#{showmaybe $ profileHomeZip prof} .watermark .required
+            <input #hzip placeholder=271-8555 type=zip maxlength=8 name=homeZip value=#{showmaybe $ profileHomeZip prof} .watermark
             <br
-            <input #hloc placeholder=千葉県松戸市岩瀬550 locprefix=h type=address name=homeAddress value=#{showmaybe $ profileHomeAddress prof} .watermark .required
+            <input #hloc placeholder=千葉県松戸市岩瀬550 locprefix=h type=address name=homeAddress value=#{showmaybe $ profileHomeAddress prof} .watermark
         <tr
           <th>実家電話番号 
-            <span .alert>(必須)
           <td colspan=3
-            <input placeholder=098-7654-3210 type=tel name=homeTel value=#{showmaybe $ profileHomeTel prof} .watermark .required
+            <input placeholder=098-7654-3210 type=tel name=homeTel value=#{showmaybe $ profileHomeTel prof} .watermark
         <tr
           <th>希望進路
           <td colspan=3
-            <input #desiredCourse placeholder=一般職 type=text name=desiredCourse value=#{showmaybe $ profileDesiredCourse prof} .watermark .required
+            <input #desiredCourse placeholder=一般職 type=text name=desiredCourse value=#{showmaybe $ profileDesiredCourse prof} .watermark
         <tr
           <th>希望勤務地
           <td colspan=3
-            <input #desiredWorkLocation placeholder=都内 type=text name=desiredWorkLocation value=#{showmaybe $ profileDesiredWorkLocation prof} .watermark .required
+            <input #desiredWorkLocation placeholder=都内 type=text name=desiredWorkLocation value=#{showmaybe $ profileDesiredWorkLocation prof} .watermark
         <tr
           <th>勤務(予定)先
           <td colspan=3
-            <input #employment placeholder=未定 type=text name=employment value=#{showmaybe $ profileEmployment prof} .watermark .required
+            <input #employment placeholder=未定 type=text name=employment value=#{showmaybe $ profileEmployment prof} .watermark
     <button type=submit name=_method value=update>更新する
   <form #upload_form method=post enctype=multipart/form-data action=@{UploadR}
     <div #fields .inline

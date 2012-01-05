@@ -50,21 +50,21 @@ getProfileR uid = do
             now <- liftIO getCurrentTime
             let (y, _, _) = toGregorian $ utctDay now
             return $ Just $ Profile { profileUser=uid
-                                    , profileBirth=fromGregorian (y-18) 1 1
-                                    , profileEntryYear=fromInteger y
+                                    , profileBirth=Just $ fromGregorian (y-18) 1 1
+                                    , profileEntryYear=Just $ fromInteger y
                                     , profileGraduateYear=Nothing
-                                    , profileBranch=""
-                                    , profileZip=""
-                                    , profileAddress=""
+                                    , profileBranch=Nothing
+                                    , profileZip=Nothing
+                                    , profileAddress=Nothing
                                     , profileLongitude=Nothing
                                     , profileLatitude=Nothing
-                                    , profileTel=""
-                                    , profileStation=""
-                                    , profileHomeZip=""
-                                    , profileHomeAddress=""
+                                    , profileTel=Nothing
+                                    , profileStation=Nothing
+                                    , profileHomeZip=Nothing
+                                    , profileHomeAddress=Nothing
                                     , profileHomeLongitude=Nothing
                                     , profileHomeLatitude=Nothing
-                                    , profileHomeTel=""
+                                    , profileHomeTel=Nothing
                                     , profileDesiredCourse=Nothing
                                     , profileDesiredWorkLocation=Nothing
                                     , profileEmployment=Nothing
@@ -104,7 +104,7 @@ getProfileR uid = do
           mprof <- getProf user
           mlab <- getLab user
           let eyears = zipWith (\y1 y2 -> (y1==y2, y1)) [Settings.entryStartYear..y+5] $ 
-                       repeat (fromMaybe y (fmap (toInteger.profileEntryYear) mprof))
+                       repeat (fromMaybe y (join (fmap (fmap toInteger.profileEntryYear) mprof)))
               gyears = zipWith (\y1 y2 -> (Just y1==y2, y1)) [Settings.graduateStartYear..y+5] $
                        repeat (fromMaybe Nothing (fmap (fmap toInteger.profileGraduateYear) mprof))
           return (user, mprof, mlab, eyears, gyears)
@@ -181,21 +181,21 @@ putProfileR uid = do
         <*> ireq textField "givenName"
       (bir, ey, gy, br, zip, adr, lon, lat, tel, st, hzip, hadr, hlon, hlat, htel, dc, dwl, emp) <- 
         runInputPost $ (,,,,,,,,,,,,,,,,,)
-        <$> ireq dayField "birth"
-        <*> ireq intField "entryYear"
+        <$> iopt dayField "birth"
+        <*> iopt intField "entryYear"
         <*> iopt intField "graduateYear"
-        <*> ireq textField "branch"
-        <*> ireq textField "zip"
-        <*> ireq textField "address"
+        <*> iopt textField "branch"
+        <*> iopt textField "zip"
+        <*> iopt textField "address"
         <*> iopt textField "longitude"
         <*> iopt textField "latitude"
-        <*> ireq textField "tel"
-        <*> ireq textField "station"
-        <*> ireq textField "homeZip"
-        <*> ireq textField "homeAddress"
+        <*> iopt textField "tel"
+        <*> iopt textField "station"
+        <*> iopt textField "homeZip"
+        <*> iopt textField "homeAddress"
         <*> iopt textField "homeLongitude"
         <*> iopt textField "homeLatitude"
-        <*> ireq textField "homeTel"
+        <*> iopt textField "homeTel"
         <*> iopt textField "desiredCourse"
         <*> iopt textField "desiredWorkLocation"
         <*> iopt textField "employment"

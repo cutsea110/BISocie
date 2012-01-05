@@ -11,24 +11,24 @@ User
     
 Profile
     user UserId
-    birth Day
+    birth Day Maybe
     
-    entryYear Int
+    entryYear Int Maybe
     graduateYear Int Maybe
-    branch Text
+    branch Text Maybe
     
-    zip Text
-    address Text
+    zip Text Maybe
+    address Text Maybe
     longitude Double Maybe
     latitude Double Maybe
-    tel Text
-    station Text
+    tel Text Maybe
+    station Text Maybe
     
-    homeZip Text
-    homeAddress Text
+    homeZip Text Maybe
+    homeAddress Text Maybe
     homeLongitude Double Maybe
     homeLatitude Double Maybe
-    homeTel Text
+    homeTel Text Maybe
     
     desiredCourse Text Maybe
     desiredWorkLocation Text Maybe

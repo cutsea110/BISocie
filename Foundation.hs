@@ -148,6 +148,9 @@ instance Yesod BISocie where
     maximumContentLength _ (Just (AvatarImageR _)) =   2 * 1024 * 1024 --  2 megabytes for default
     maximumContentLength _ _                       =  20 * 1024 * 1024 -- 20 megabytes for default
     
+    messageLogger y loc level msg =
+      formatLogText (getLogger y) loc level msg >>= logMsg (getLogger y)
+
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
     -- expiration dates to be set far in the future without worry of

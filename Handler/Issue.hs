@@ -291,7 +291,7 @@ postNewIssueR pid = do
         <*> iopt dayField "limitdate"
         <*> iopt timeField "limittime"
         <*> iopt dayField "reminderdate"
-        <*> iopt textField "assign"
+        <*> fmap (fmap readText) (iopt textField "assign")
         <*> ireq textField "status"
         <*> ireq boolField "checkreader"
       Just fi <- lookupFile "attached"
@@ -304,12 +304,11 @@ postNewIssueR pid = do
         update pid [ProjectIssuecounter +=. 1, ProjectUdate =. now]
         prj <- get404 pid
         let ino = projectIssuecounter prj
-            asgn' = fromMaybe Nothing (fmap (Just . readText) asgn)
         mfh <- storeAttachedFile selfid fi
         iid <- insert $ Issue { issueProject=pid
                               , issueNumber=ino
                               , issueSubject=sbj
-                              , issueAssign=asgn'
+                              , issueAssign=asgn
                               , issueStatus=sts
                               , issueLimitdate=ldate
                               , issueLimittime=ltime
@@ -323,7 +322,7 @@ postNewIssueR pid = do
                                 , commentIssue=iid
                                 , commentContent=cntnt
                                 , commentAutomemo="init."
-                                , commentAssign=asgn'
+                                , commentAssign=asgn
                                 , commentStatus=sts
                                 , commentLimitdate=ldate
                                 , commentLimittime=ltime
@@ -431,7 +430,7 @@ postCommentR pid ino = do
         <*> iopt dayField "limitdate"
         <*> iopt timeField "limittime"
         <*> iopt dayField "reminderdate"
-        <*> iopt textField "assign"
+        <*> fmap (fmap readText) (iopt textField "assign")
         <*> ireq textField "status"
         <*> ireq boolField "checkreader"
       r <- getUrlRender
@@ -444,12 +443,11 @@ postCommentR pid ino = do
         (iid, issue) <- getBy404 $ UniqueIssue pid ino
         [(lastCid, lastC)] <- selectList [CommentIssue ==. iid] [Desc CommentCdate, LimitTo 1]
         mfh <- storeAttachedFile selfid fi
-        let asgn' = fromMaybe Nothing (fmap (Just . readText) asgn)
-            newComment = Comment { commentProject=pid
+        let newComment = Comment { commentProject=pid
                                  , commentIssue=iid
                                  , commentContent=cntnt
                                  , commentAutomemo="now writing..."
-                                 , commentAssign=asgn'
+                                 , commentAssign=asgn
                                  , commentStatus=sts
                                  , commentLimitdate=ldate
                                  , commentLimittime=ltime
@@ -464,7 +462,7 @@ postCommentR pid ino = do
                    , IssueLimitdate =. ldate
                    , IssueLimittime =. ltime
                    , IssueReminderdate =. rdate
-                   , IssueAssign =. asgn'
+                   , IssueAssign =. asgn
                    , IssueStatus =. sts
                    ]
         amemo <- generateAutomemo newComment issue mfh

@@ -7,6 +7,7 @@ User
     email Text
     avatar FileHeaderId Maybe
     active Bool default=true
+
     UniqueUser ident
     
 Profile
@@ -41,12 +42,14 @@ Laboratory
     roomNumber Text Maybe
     extensionNumber Text Maybe
     courses Text Maybe
+
     UniqueLaboratory headResearcher
 
 Email
     email Text
     user UserId Maybe Update
     verkey Text Maybe Update
+
     UniqueEmail email
 
 Project
@@ -62,37 +65,41 @@ Project
 Issue
     project ProjectId
     number IssueNo
+    cuser UserId
+    cdate UTCTime default=now()
+    uuser UserId
+    udate UTCTime default=now()
+
     subject Text
     assign UserId Maybe
     status Text
     limitdate Day Maybe
     limittime TimeOfDay Maybe
     reminderdate Day Maybe
-    cuser UserId
-    cdate UTCTime default=now()
-    uuser UserId
-    udate UTCTime default=now()
+
     UniqueIssue project number
 
 Comment
     project ProjectId
     issue IssueId
-    content Text Maybe
     automemo Text
+    attached FileHeaderId Maybe
+    cuser UserId
+    cdate UTCTime default=now()
+
+    content Text Maybe
     assign UserId Maybe
     status Text
     limitdate Day Maybe
     limittime TimeOfDay Maybe
     reminderdate Day Maybe
-    attached FileHeaderId Maybe
     checkReader Bool default=false
-    cuser UserId
-    cdate UTCTime default=now()
 
 Reader
     comment CommentId
     reader UserId
     checkdate UTCTime default=now()
+
     UniqueReader comment reader
 
 Participants
@@ -100,6 +107,7 @@ Participants
     user UserId
     receivemail Bool default=true
     cdate UTCTime default=now()
+
     UniqueParticipants project user
 
 FileHeader

@@ -57,7 +57,6 @@ import Network.Mail.Mime (sendmail)
 #endif
 
 import Settings.StaticFiles
-import qualified Settings
 import BISocie.Helpers.Util
 
 -- | The site argument for your application. This can be a good place to

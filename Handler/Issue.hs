@@ -4,6 +4,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 module Handler.Issue where
 
 import Foundation
@@ -509,12 +510,12 @@ postReadCommentR cid = do
           Just _ -> return "added"
           Nothing -> do
             now <- liftIO getCurrentTime
-            insert $ Reader cid selfid now
+            _ <- insert $ Reader cid selfid now
             return "added"
       Just "delete" -> do 
         deleteBy $ UniqueReader cid selfid
         return "deleted"
-      Nothing -> lift $ invalidArgs ["The possible values of '_method' is add or delete"]
+      _ -> lift $ invalidArgs ["The possible values of '_method' is add or delete"]
   cacheSeconds 10 -- FIXME
   jsonToRepJson $ jsonMap [ ("status", jsonScalar ret)
                           , ("read", 

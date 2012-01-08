@@ -149,7 +149,7 @@ postCrossSearchR = do
   ss <- lookupPostParams "status"
   as <- fmap (fmap (Just . readText)) $ lookupPostParams "assign"
   (lf, lt) <- uncurry (liftM2 (,))
-              (fmap (fmap readText) $ lookupPostParam "limitdatefrom",
+              (fmap (fmap (Just . readText)) $ lookupPostParam "limitdatefrom",
                fmap (fmap (Just . addDays 1 . readText)) $ lookupPostParam "limitdateto")
   (uf, ut) <- uncurry (liftM2 (,))
               (fmap (fmap (localDayToUTC . readText)) $ lookupPostParam "updatedfrom",

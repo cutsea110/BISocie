@@ -17,7 +17,8 @@ import Control.Applicative ((<$>),(<*>))
 import Data.Char (isHexDigit)
 import Data.Int
 import Data.Time
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, maybeToList)
+import Data.List (find)
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec as P (string)
 import Data.Text (Text)
@@ -70,16 +71,10 @@ toProjectBis (pid, prj) =
               }
 
 lookupStatus :: (Eq a) => a -> [(a, b, c)] -> Maybe (a, b, c)
-lookupStatus _ [] = Nothing
-lookupStatus x (z@(y,_,_):zs) = if x == y
-                                then Just z
-                                else lookupStatus x zs
+lookupStatus = find . (\x y -> x == fst3 y)
 
 lookupProjectBis :: ProjectId -> [ProjectBis] -> Maybe ProjectBis
-lookupProjectBis _   [] = Nothing
-lookupProjectBis pid (p:ps) = if pid == (projectBisId p)
-                              then Just p
-                              else lookupProjectBis pid ps
+lookupProjectBis = find . (\x y -> x == projectBisId y)
 
 parseStatuses :: Text -> Either ParseError [(Text, Maybe Color, Maybe Effect)]
 parseStatuses t = 
@@ -167,13 +162,12 @@ initUser uid = User { userIdent=uid
                     , userActive=True
                     }
 
-toInFilter :: ([a] -> Filter b) -> [a] -> [Filter b]
+toInFilter :: ([a] -> b) -> [a] -> [b]
 toInFilter _ [] = []
 toInFilter f xs = [f xs]
 
-maybeToFilter :: (a -> Filter b) -> Maybe a -> [Filter b]
-maybeToFilter _ Nothing  = []
-maybeToFilter f (Just x) = [f x]
+maybeToFilter :: (a -> b) -> Maybe a -> [b]
+maybeToFilter f = fmap f . maybeToList
 
 userInfoOneline :: User -> Text
 userInfoOneline u = 
@@ -218,9 +212,7 @@ showReminderdate :: Issue -> Text
 showReminderdate i = fromMaybe "" (fmap showText (issueReminderdate i))
 
 showMaybeDouble :: Maybe Double -> Text
-showMaybeDouble md = case md of
-  Nothing -> ""
-  Just d -> showText d
+showMaybeDouble md = fromMaybe "" (fmap showText md)
 
 showDate :: UTCTime -> Text
 showDate = T.pack . formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S" . utc2local
@@ -236,14 +228,10 @@ day'timeToUTC = (localTimeToUTC (hoursToTimeZone Settings.tz) .) . LocalTime
 toMessageId :: IssueId -> CommentId -> UTCTime -> Text -> Text
 toMessageId iid cid time domain = "<" 
                     +++ T.pack (formatTime defaultTimeLocale "%Y%m%d%H%M%S%q" time)
-                    +++ "i" +++ showIdCounter iid
-                    +++ "c" +++ showIdCounter cid
+                    +++ "i" +++ toSinglePiece iid
+                    +++ "c" +++ toSinglePiece cid
                     +++ "@" +++ domain
                     +++ ">"
-
-showIdCounter :: Key b e -> Text
-showIdCounter (Key (PersistInt64 n)) = showText n
-showIdCounter x = showText $ unKey x
 
 showBirthDay :: Profile -> Text
 showBirthDay = fromMaybe "" . fmap showText . profileBirth
@@ -255,14 +243,10 @@ showGraduateYear :: Profile -> Text
 showGraduateYear = fromMaybe "" . fmap showText . profileGraduateYear
 
 showTerminated :: Project -> Text
-showTerminated p = case projectTerminated p of
-  True -> "終了"
-  False -> "活動中"
+showTerminated p = if projectTerminated p then "終了" else "活動中"
 
 showCheckReader :: Comment -> Text
-showCheckReader c = case commentCheckReader c of
-  True -> "読者確認する"
-  False -> "読者確認しない"
+showCheckReader c = if commentCheckReader c then "読者確認する" else "読者確認しない"
 
 care :: Comment -> Bool
 care = commentCheckReader
@@ -270,8 +254,7 @@ nocare :: Comment -> Bool
 nocare = not . commentCheckReader
 
 showmaybe :: Maybe Text -> Text
-showmaybe Nothing  = ""
-showmaybe (Just x) = x
+showmaybe = fromMaybe "" . fmap id
 
 showMultilineText :: Text -> Html
 showMultilineText = preEscapedText . T.intercalate "<br/>" . T.splitOn "\n"

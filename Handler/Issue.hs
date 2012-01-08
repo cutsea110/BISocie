@@ -325,7 +325,7 @@ postNewIssueR pid = do
             , mailHeaders =
                  [ ("Subject", issueSubject issue)
                  , ("Message-ID", msgid)
-                 , (mailXHeader, showIdCounter pid)
+                 , (mailXHeader, toSinglePiece pid)
                  ]
             , mailParts = 
                    [[ Part
@@ -453,7 +453,7 @@ postCommentR pid ino = do
                  , ("Message-ID", msgid)
                  , ("References", refid)
                  , ("In-Reply-To", refid)
-                 , (mailXHeader, showIdCounter pid)
+                 , (mailXHeader, toSinglePiece pid)
                  ]
             , mailParts = 
                    [[ Part

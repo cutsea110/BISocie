@@ -19,8 +19,8 @@ import Data.Time.Calendar.OrdinalDate
 import Data.Tuple.HT
 import Data.Maybe (fromMaybe, fromJust, isJust, isNothing)
 import Network.Mail.Mime
-import qualified Data.Text.Lazy
-import qualified Data.Text.Lazy.Encoding
+import qualified Data.Text.Lazy as L
+import qualified Data.Text.Lazy.Encoding as LE
 import qualified Data.Text as T
 import Text.Blaze (preEscapedText)
 import Text.Cassius (cassiusFile)
@@ -333,8 +333,7 @@ postNewIssueR pid = do
                      , partEncoding = None
                      , partFilename = Nothing
                      , partHeaders = []
-                     , partContent = Data.Text.Lazy.Encoding.encodeUtf8
-                                     $ Data.Text.Lazy.pack $ T.unpack $ T.unlines
+                     , partContent = LE.encodeUtf8 $ L.pack $ T.unpack $ T.unlines
                                      $ [ "プロジェクト: " +++ projectName prj
                                        , "案件: " +++ issueSubject issue
                                        , "ステータス: " +++ issueStatus issue
@@ -462,8 +461,7 @@ postCommentR pid ino = do
                      , partEncoding = None
                      , partFilename = Nothing
                      , partHeaders = []
-                     , partContent = Data.Text.Lazy.Encoding.encodeUtf8
-                                     $ Data.Text.Lazy.pack $ T.unpack $ T.unlines
+                     , partContent = LE.encodeUtf8 $ L.pack $ T.unpack $ T.unlines
                                      $ [ "プロジェクト: " +++ projectName prj
                                        , "案件: " +++ issueSubject issue
                                        , "ステータス: " +++ issueStatus issue

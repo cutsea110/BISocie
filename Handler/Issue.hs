@@ -4,6 +4,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 module Handler.Issue where
 
 import Foundation
@@ -18,8 +19,8 @@ import Data.Time.Calendar.OrdinalDate
 import Data.Tuple.HT
 import Data.Maybe (fromMaybe, fromJust, isJust, isNothing)
 import Network.Mail.Mime
-import qualified Data.Text.Lazy
-import qualified Data.Text.Lazy.Encoding
+import qualified Data.Text.Lazy as L
+import qualified Data.Text.Lazy.Encoding as LE
 import qualified Data.Text as T
 import Text.Blaze (preEscapedText)
 import Text.Cassius (cassiusFile)
@@ -284,15 +285,21 @@ postNewIssueR pid = do
   where
     addIssueR = do
       (selfid, _) <- requireAuth
-      (sbj, cntnt, ldate, ltime, rdate, asgn, sts, rdr) <- 
-        runInputPost $ (,,,,,,,)
+      now <- liftIO getCurrentTime
+      issue <- runInputPost $ Issue pid undefined selfid now selfid now
         <$> ireq textField "subject"
-        <*> iopt textField "content"
+        <*> fmap (fmap readText) (iopt textField "assign")
+        <*> ireq textField "status"
         <*> iopt dayField "limitdate"
         <*> iopt timeField "limittime"
         <*> iopt dayField "reminderdate"
-        <*> iopt textField "assign"
+      comment <- runInputPost $ Comment pid undefined "init." undefined selfid now
+        <$> iopt textField "content"
+        <*> fmap (fmap readText) (iopt textField "assign")
         <*> ireq textField "status"
+        <*> iopt dayField "limitdate"
+        <*> iopt timeField "limittime"
+        <*> iopt dayField "reminderdate"
         <*> ireq boolField "checkreader"
       Just fi <- lookupFile "attached"
       ino <- runDB $ do
@@ -300,52 +307,25 @@ postNewIssueR pid = do
         unless (p /= Nothing) $ 
           lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
         r <- lift getUrlRender
-        now <- liftIO getCurrentTime
         update pid [ProjectIssuecounter +=. 1, ProjectUdate =. now]
         prj <- get404 pid
         let ino = projectIssuecounter prj
-            asgn' = fromMaybe Nothing (fmap (Just . readText) asgn)
         mfh <- storeAttachedFile selfid fi
-        iid <- insert $ Issue { issueProject=pid
-                              , issueNumber=ino
-                              , issueSubject=sbj
-                              , issueAssign=asgn'
-                              , issueStatus=sts
-                              , issueLimitdate=ldate
-                              , issueLimittime=ltime
-                              , issueReminderdate=rdate
-                              , issueCuser=selfid
-                              , issueCdate=now
-                              , issueUuser=selfid
-                              , issueUdate=now
-                              }
-        cid <- insert $ Comment { commentProject=pid
-                                , commentIssue=iid
-                                , commentContent=cntnt
-                                , commentAutomemo="init."
-                                , commentAssign=asgn'
-                                , commentStatus=sts
-                                , commentLimitdate=ldate
-                                , commentLimittime=ltime
-                                , commentReminderdate=rdate
-                                , commentAttached=fmap fst mfh
-                                , commentCheckReader=rdr
-                                , commentCuser=selfid
-                                , commentCdate=now
-                                }
+        iid <- insert $ issue {issueNumber=ino}
+        cid <- insert $ comment {commentIssue=iid, commentAttached=fmap fst mfh}
         emails <- selectMailAddresses pid
         let msgid = toMessageId iid cid now mailMessageIdDomain
             fragment = "#" +++ toSinglePiece cid
-        when (isJust cntnt && not (null emails)) $
+        when (isJust (commentContent comment) && not (null emails)) $
           liftIO $ renderSendMail Mail
             { mailFrom = fromEmailAddress
             , mailTo = []
             , mailCc = []
             , mailBcc = emails
             , mailHeaders =
-                 [ ("Subject", sbj)
+                 [ ("Subject", issueSubject issue)
                  , ("Message-ID", msgid)
-                 , (mailXHeader, showIdCounter pid)
+                 , (mailXHeader, toSinglePiece pid)
                  ]
             , mailParts = 
                    [[ Part
@@ -353,14 +333,13 @@ postNewIssueR pid = do
                      , partEncoding = None
                      , partFilename = Nothing
                      , partHeaders = []
-                     , partContent = Data.Text.Lazy.Encoding.encodeUtf8
-                                     $ Data.Text.Lazy.pack $ T.unpack $ T.unlines
+                     , partContent = LE.encodeUtf8 $ L.pack $ T.unpack $ T.unlines
                                      $ [ "プロジェクト: " +++ projectName prj
-                                       , "案件: " +++ sbj
-                                       , "ステータス: " +++ sts
+                                       , "案件: " +++ issueSubject issue
+                                       , "ステータス: " +++ issueStatus issue
                                        , ""
                                        ]
-                                     ++ T.lines (fromJust cntnt)
+                                     ++ T.lines (fromJust (commentContent comment))
                                      ++ [ ""
                                         , "*このメールに直接返信せずにこちらのページから投稿してください。"
                                         , "イシューURL: " +++ r (IssueR pid ino) +++ fragment]
@@ -425,58 +404,45 @@ postCommentR pid ino = do
   where
     addCommentR = do
       (selfid, _) <- requireAuth
-      (cntnt, ldate, ltime, rdate, asgn, sts, rdr) <-
-        runInputPost $ (,,,,,,)
+      now <- liftIO getCurrentTime
+      comment <- runInputPost $ Comment pid undefined "now writing..." undefined selfid now
         <$> iopt textField "content"
+        <*> fmap (fmap readText) (iopt textField "assign")
+        <*> ireq textField "status"
         <*> iopt dayField "limitdate"
         <*> iopt timeField "limittime"
         <*> iopt dayField "reminderdate"
-        <*> iopt textField "assign"
-        <*> ireq textField "status"
         <*> ireq boolField "checkreader"
-      r <- getUrlRender
-      now <- liftIO getCurrentTime
       Just fi <- lookupFile "attached"
       runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
         unless (p /= Nothing) $ 
           lift $ permissionDenied "あなたはこのプロジェクトに投稿することはできません."
+        r <- lift getUrlRender
         (iid, issue) <- getBy404 $ UniqueIssue pid ino
-        [(lastCid, lastC)] <- selectList [CommentIssue ==. iid] [Desc CommentCdate, LimitTo 1]
+        Just (lastCid, lastC) <- selectFirst [CommentIssue ==. iid] [Desc CommentCdate]
         mfh <- storeAttachedFile selfid fi
-        let asgn' = fromMaybe Nothing (fmap (Just . readText) asgn)
-            newComment = Comment { commentProject=pid
-                                 , commentIssue=iid
-                                 , commentContent=cntnt
-                                 , commentAutomemo="now writing..."
-                                 , commentAssign=asgn'
-                                 , commentStatus=sts
-                                 , commentLimitdate=ldate
-                                 , commentLimittime=ltime
-                                 , commentReminderdate=rdate
-                                 , commentAttached=fmap fst mfh
-                                 , commentCheckReader=rdr
-                                 , commentCuser=selfid
-                                 , commentCdate=now
-                                 }
-        update iid [ IssueUuser =. selfid
-                   , IssueUdate =. now
-                   , IssueLimitdate =. ldate
-                   , IssueLimittime =. ltime
-                   , IssueReminderdate =. rdate
-                   , IssueAssign =. asgn'
-                   , IssueStatus =. sts
-                   ]
-        amemo <- generateAutomemo newComment issue mfh
-        when (isNothing cntnt && T.null amemo) $ do
+        amemo <- generateAutomemo comment issue mfh
+        replace iid issue { issueUuser = selfid
+                          , issueUdate = now
+                          , issueLimitdate = commentLimitdate comment
+                          , issueLimittime = commentLimittime comment
+                          , issueReminderdate = commentReminderdate comment 
+                          , issueAssign = commentAssign comment
+                          , issueStatus = commentStatus comment
+                          }
+        when (isNothing (commentContent comment) && T.null amemo) $ do
           lift $ invalidArgs ["内容を入力するかイシューの状態を変更してください."]
-        cid <- insert $ newComment {commentAutomemo=amemo}
+        cid <- insert $ comment { commentIssue=iid
+                                , commentAttached=fmap fst mfh
+                                , commentAutomemo=amemo
+                                }
         prj <- get404 pid
         emails <- selectMailAddresses pid
         let msgid = toMessageId iid cid now mailMessageIdDomain
             refid = toMessageId iid lastCid (commentCdate lastC) mailMessageIdDomain
             fragment = "#" +++ toSinglePiece cid
-        when (isJust cntnt && not (null emails)) $
+        when (isJust (commentContent comment) && not (null emails)) $
           liftIO $ renderSendMail Mail
             { mailFrom = fromEmailAddress
             , mailBcc = emails
@@ -487,7 +453,7 @@ postCommentR pid ino = do
                  , ("Message-ID", msgid)
                  , ("References", refid)
                  , ("In-Reply-To", refid)
-                 , (mailXHeader, showIdCounter pid)
+                 , (mailXHeader, toSinglePiece pid)
                  ]
             , mailParts = 
                    [[ Part
@@ -495,14 +461,13 @@ postCommentR pid ino = do
                      , partEncoding = None
                      , partFilename = Nothing
                      , partHeaders = []
-                     , partContent = Data.Text.Lazy.Encoding.encodeUtf8
-                                     $ Data.Text.Lazy.pack $ T.unpack $ T.unlines
+                     , partContent = LE.encodeUtf8 $ L.pack $ T.unpack $ T.unlines
                                      $ [ "プロジェクト: " +++ projectName prj
                                        , "案件: " +++ issueSubject issue
-                                       , "ステータス: " +++ sts
+                                       , "ステータス: " +++ issueStatus issue
                                        , ""
                                        ]
-                                     ++ T.lines (fromJust cntnt)
+                                     ++ T.lines (fromJust (commentContent comment))
                                      ++ [ ""
                                         , "*このメールに直接返信せずにこちらのページから投稿してください。"
                                         , "イシューURL: " +++ r (IssueR pid ino) +++ fragment]
@@ -543,12 +508,12 @@ postReadCommentR cid = do
           Just _ -> return "added"
           Nothing -> do
             now <- liftIO getCurrentTime
-            insert $ Reader cid selfid now
+            _ <- insert $ Reader cid selfid now
             return "added"
       Just "delete" -> do 
         deleteBy $ UniqueReader cid selfid
         return "deleted"
-      Nothing -> lift $ invalidArgs ["The possible values of '_method' is add or delete"]
+      _ -> lift $ invalidArgs ["The possible values of '_method' is add or delete"]
   cacheSeconds 10 -- FIXME
   jsonToRepJson $ jsonMap [ ("status", jsonScalar ret)
                           , ("read", 

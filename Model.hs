@@ -335,3 +335,25 @@ textToOrder "DescProjectCdate" = Desc ProjectCdate
 textToOrder "AscProjectCdate" = Asc ProjectCdate
 textToOrder "AscProjectName" = Asc ProjectName
 textToOrder "DescProjectName" = Desc ProjectName
+
+defaultProfile :: Profile
+defaultProfile = Profile { profileUser=undefined
+                         , profileBirth=Nothing
+                         , profileEntryYear=Nothing
+                         , profileGraduateYear=Nothing
+                         , profileBranch=Nothing
+                         , profileZip=Nothing
+                         , profileAddress=Nothing
+                         , profileLongitude=Nothing
+                         , profileLatitude=Nothing
+                         , profileTel=Nothing
+                         , profileStation=Nothing
+                         , profileHomeZip=Nothing
+                         , profileHomeAddress=Nothing
+                         , profileHomeLongitude=Nothing
+                         , profileHomeLatitude=Nothing
+                         , profileHomeTel=Nothing
+                         , profileDesiredCourse=Nothing
+                         , profileDesiredWorkLocation=Nothing
+                         , profileEmployment=Nothing
+                         }

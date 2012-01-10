@@ -5,7 +5,7 @@
 module Handler.Root where
 
 import Control.Monad (unless, forM)
-import Data.List (intersperse)
+import Data.List (intersperse, find)
 import Data.Maybe (fromMaybe)
 import qualified Data.ByteString.Lazy.Char8 as L
 import Codec.Binary.UTF8.String (decodeString)
@@ -117,11 +117,13 @@ postSystemBatchR = do
   let recs = filter (not . T.null) $ T.lines $ T.pack $ decodeString $ L.unpack $ fileContent fi
   runDB $ do
     users <- selectList [] []
+    profs <- selectList [] []
     forM recs $ \rec -> do
-      let (uid:rawpass:email:fname:gname:_) = T.splitOn "," rec
-      case userExist uid users of
+      let (ident:rawpass:email:fname:gname:eyear:gyear:_) = T.splitOn "," rec
+          (eyear', gyear') = (Just (readText eyear), Just (readText gyear))
+      uid' <- case userExist ident users of
         Nothing ->
-          insert $ User { userIdent=uid
+          insert $ User { userIdent=ident
                         , userPassword=Just (encrypt rawpass)
                         , userRole=Student
                         , userFamilyName=fname
@@ -139,10 +141,16 @@ postSystemBatchR = do
                      , UserActive =. True
                      ]
           return id'
+      case profExist uid' profs of
+        Nothing -> insert $ defaultProfile { profileUser=uid'
+                                           , profileEntryYear=eyear'
+                                           , profileGraduateYear=gyear'
+                                           }
+        Just (pid, _) -> return pid
   setMessage "学生を登録しました。"
   redirect RedirectSeeOther SystemBatchR
   where
     userExist :: Text -> [(UserId, User)] -> Maybe (UserId, User)
-    userExist _   [] = Nothing
-    userExist uid (u@(_, u'):us) = 
-      if uid == userIdent u' then Just u else userExist uid us
+    userExist = find . (\x y -> x == userIdent (snd y))
+    profExist :: UserId -> [(ProfileId, Profile)] -> Maybe (ProfileId, Profile)
+    profExist = find . (\x y -> x == profileUser (snd y))

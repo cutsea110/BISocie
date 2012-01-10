@@ -160,7 +160,6 @@ getSendReminderMailR y m d = do
   req <- fmap reqWaiRequest getRequest
   let rhost = remoteHost req
   (Just rhostname, _) <- liftIO $ getNameInfo [] True True rhost
-  liftIO $ print rhostname
   unless (rhostname == "localhost") $
     permissionDenied "あなたはこの機能を利用することはできません."
   runDB $ do

@@ -66,6 +66,7 @@ executable bisocie
                  , failure      >= 0.1     && < 0.2
                  , transformers
                  , mime-mail
+                 , network      >= 2.3     && < 2.4
                  , wai
                  , wai-extra
                  , directory
@@ -92,4 +93,3 @@ executable bisocie
                  , shakespeare-css
                  , blaze-html
                  , clientsession
-

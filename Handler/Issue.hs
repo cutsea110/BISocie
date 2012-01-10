@@ -564,15 +564,6 @@ selectParticipants pid = do
       u <- get404 uid
       return (uid, u)
 
-selectMailAddresses :: (Failure ErrorResponse m, MonadTrans t, PersistBackend t m) =>
-     Key t (ProjectGeneric t) -> t m [Address]
-selectMailAddresses pid = do
-  mapM (p2u.snd) =<< selectList [ParticipantsProject ==. pid, ParticipantsReceivemail ==. True] []
-  where
-    p2u p = do
-      u <- get404 $ participantsUser p
-      return $ Address (Just $ userFamilyName u `T.append` userGivenName u) (userEmail u)
-
 storeAttachedFile :: (PersistBackend b m, Functor (b m)) => Key backend User -> FileInfo -> b m (Maybe ((Key b (FileHeaderGeneric backend)), T.Text))
 storeAttachedFile uid fi = fmap (fmap fst5'snd5) $ upload uid fi
   where

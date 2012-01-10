@@ -35,6 +35,7 @@
 /robots.txt RobotsR GET
 
 /system-batch SystemBatchR GET POST
+/send-reminder-mail/#Year/#Month/#Date SendReminderMailR GET
 
 /s3/upload UploadR POST PUT
 /s3/user/#UserId/file/#FileHeaderId FileR POST DELETE

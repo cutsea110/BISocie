@@ -12,6 +12,12 @@ import Codec.Binary.UTF8.String (decodeString)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Text.Blaze (preEscapedText)
+import Data.Time (fromGregorian)
+import Network.Mail.Mime
+import qualified Data.Text.Lazy as TL
+import qualified Data.Text.Lazy.Encoding as LE
+import Network.Wai (Request(..))
+import Network.Socket (getNameInfo)
 
 import Foundation
 import BISocie.Helpers.Util
@@ -154,3 +160,50 @@ postSystemBatchR = do
     userExist = find . (\x y -> x == userIdent (snd y))
     profExist :: UserId -> [(ProfileId, Profile)] -> Maybe (ProfileId, Profile)
     profExist = find . (\x y -> x == profileUser (snd y))
+
+getSendReminderMailR :: Year -> Month -> Date -> Handler RepHtml
+getSendReminderMailR y m d = do
+  let rday = fromGregorian y m d
+  r <- getUrlRender
+  req <- fmap reqWaiRequest getRequest
+  let rhost = remoteHost req
+  (Just rhostname, _) <- liftIO $ getNameInfo [] True True rhost
+  liftIO $ print rhostname
+  unless (rhostname == "localhost") $
+    permissionDenied "あなたはこの機能を利用することはできません."
+  runDB $ do
+    issues <- selectList [IssueReminderdate ==. Just rday] []
+    forM issues $ \(_, issue) -> do
+      let pid = issueProject issue
+          ino = issueNumber issue
+      prj <- get404 pid
+      emails <- selectMailAddresses $ issueProject issue
+      liftIO $ renderSendMail Mail
+        { mailFrom = fromEmailAddress
+        , mailTo = []
+        , mailCc = []
+        , mailBcc = emails
+        , mailHeaders =
+          [ ("Subject", "【リマインダメール送信】" +++ issueSubject issue)
+          , (mailXHeader, toSinglePiece $ issueProject issue)
+          ]
+        , mailParts =
+            [[ Part
+               { partType = "text/plain; charset=utf-8"
+               , partEncoding = None
+               , partFilename = Nothing
+               , partHeaders = []
+               , partContent = LE.encodeUtf8 $ TL.pack $ T.unpack $ T.unlines
+                               $ [ "プロジェクト: " +++ projectName prj
+                                 , "案件: " +++ issueSubject issue
+                                 , "期限: " +++ showLimitdatetime issue
+                                 , ""
+                                 , "この案件の期限が近づいてきました。"
+                                 , ""
+                                 , "*このメールに直接返信せずにこちらのページから投稿してください。"
+                                 , "イシューURL: " +++ r (IssueR pid ino)
+                                 ]
+               }
+             ]]
+        }
+  defaultLayout [whamlet|Sending reminder mails|]

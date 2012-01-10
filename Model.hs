@@ -14,6 +14,8 @@ import Database.Persist.Base
 import System.Locale
 import Control.Monad (liftM2)
 import Control.Applicative ((<$>),(<*>))
+import Control.Failure (Failure)
+import Control.Monad.Trans.Class
 import Data.Char (isHexDigit)
 import Data.Int
 import Data.Time
@@ -23,6 +25,7 @@ import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec as P (string)
 import Data.Text (Text)
 import qualified Data.Text as T
+import Network.Mail.Mime
 import Text.Blaze (preEscapedText)
 
 import qualified Settings (tz)
@@ -201,6 +204,9 @@ showLimittime :: Issue -> Text
 showLimittime i = fromMaybe "" (fmap showHHMM (issueLimittime i))
   where
     showHHMM = T.pack . formatTime defaultTimeLocale "%H:%M"
+    
+showLimitdatetime :: Issue -> Text
+showLimitdatetime i = showLimitdate i +++ " " +++ showLimittime i
 
 commentLimitDatetime :: Comment -> Maybe UTCTime
 commentLimitDatetime = liftM2 day'timeToUTC <$> commentLimitdate <*> commentLimittime
@@ -357,3 +363,12 @@ defaultProfile = Profile { profileUser=undefined
                          , profileDesiredWorkLocation=Nothing
                          , profileEmployment=Nothing
                          }
+
+selectMailAddresses :: (Failure ErrorResponse m, MonadTrans t, PersistBackend t m) =>
+     Key t (ProjectGeneric t) -> t m [Address]
+selectMailAddresses pid = do
+  mapM (p2u.snd) =<< selectList [ParticipantsProject ==. pid, ParticipantsReceivemail ==. True] []
+  where
+    p2u p = do
+      u <- get404 $ participantsUser p
+      return $ Address (Just $ userFamilyName u `T.append` userGivenName u) (userEmail u)

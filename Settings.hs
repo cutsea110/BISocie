@@ -12,7 +12,6 @@ module Settings
     , staticRoot
     , staticDir
     , s3dir
-    , s3root
       --
     , entryStartYear
     , graduateStartYear
@@ -73,8 +72,6 @@ widgetFile = Yesod.Default.Util.widgetFileNoReload
 
 s3dir :: FilePath
 s3dir = "s3"
-s3root :: AppConfig DefaultEnv -> Text
-s3root conf = [st|#{appRoot conf}/s3|]
 
 -- BISocie server settings
 entryStartYear :: Integer

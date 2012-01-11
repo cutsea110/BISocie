@@ -10,6 +10,7 @@
 /userlist.json UserListR GET
 
 /cross-search CrossSearchR GET POST
+/project-list ProjectListR GET
 /status-list StatusListR GET
 /assign-list AssignListR GET
 /current-schedule CurrentScheduleR GET

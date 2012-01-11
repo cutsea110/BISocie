@@ -56,6 +56,33 @@ $(document).ready(function(){
     $('#delete-confirm').dialog('open');
   });
 
+  $('#release-self-participate').hide().attr('title', '強制移動前確認').dialog({
+    autoOpen: false,
+    width:400,
+    modal: true,
+    buttons: {
+      '閉じる': function(){
+        $(this).dialog('close');
+        location.href='@{HomeR selfid}';
+      }
+    }
+  });
+
+  $('#terminated-no, #terminated-yes').click(function(){
+    $.ajax({
+      async: true,
+      type: 'POST',
+      url: '@{ProjectR pid}',
+      dataType: 'json',
+      data: {_method: 'modify', terminated: $(this).val()},
+      success: function(json) {
+      },
+      error: function(res, status) {
+        // FIXME
+      }
+    });
+  });
+
   $('#search-users').hide().attr('title', 'ユーザ検索').dialog({
     autoOpen: false,
     width: 500,
@@ -177,7 +204,7 @@ function mkUser(u, ps){
             .addClass(u.role+' user-logo'),
       c = $('<input/>').attr({type:'checkbox'}),
       avatar = $("<img class='avatar'/>").attr({src: u.avatar}),
-      s =$('<a/>').attr({href: u.uri}).text(u.name),
+      s =$('<a/>').attr({href: u.uri}).html(u.name+'<br/>('+u.ident+')'),
       mail = $('<img/>').addClass('mail');
 
   if (ps[u.id]){
@@ -229,6 +256,9 @@ function modifyParticipant(c){
           break;
         case 'deleted':
           mail.attr({src: '@{StaticR img_mail_checked_png}', receivemail: 'none'});
+          if (json.participants.user == '#{show selfid}') {
+            $('#release-self-participate').dialog('open');
+          }
           break;
       }
     },

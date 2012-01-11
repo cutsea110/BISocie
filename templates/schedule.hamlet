@@ -1,40 +1,39 @@
-<ul .tabs>
-  <li>
-    <a href="@{HomeR selfid}">ホーム
-  $if (canCreateProject self)
-    <li>
-      <a href="@{NewProjectR}">プロジェクト新規作成
-  <li>
-    <a href="@{CrossSearchR}">クロスサーチ
-  <li>
-    <a href="@{HumanNetworkR}">ヒューマンネットワーク
-  <li .selected>
-    <a href="@{CurrentScheduleR}">スケジュール
-\
-<div id="main-content">
-  \
-  <table .calendar>
-   <thead>
-     <tr>
-       <th class="move">
-         <a href="@{prevYear fday}">«前年
-       <th class="move">
-         <a href="@{prevMonth fday}"><前月
-       <th colspan="3">#{y}年#{m}月のスケジュール
-       <th class="move">
-         <a href="@{nextMonth fday}">翌月>
-       <th class="move">
-         <a href="@{nextYear fday}">翌年»
-     <tr>
-       <th class="week-header">月
-       <th class="week-header">火
-       <th class="week-header">水
-       <th class="week-header">木
-       <th class="week-header">金
-       <th class="week-header Saturday">土
-       <th class="week-header Sunday">日
-   <tbody>
+<ul .tabs
+  <li
+    <a href=@{HomeR selfid}>ホーム
+  $if canCreateProject self
+    <li
+      <a href=@{NewProjectR}>プロジェクト新規作成
+  <li
+    <a href=@{CrossSearchR}>クロスサーチ
+  $if canViewHumannetwork self
+    <li
+      <a href=@{HumanNetworkR}>ヒューマンネットワーク
+  <li .selected
+    <a href=@{CurrentScheduleR}>スケジュール
+<div #main-content
+  <table .calendar
+   <thead
+     <tr
+       <th .move
+         <a href=@{prevYear fday}>«前年
+       <th .move
+         <a href=@{prevMonth fday}><前月
+       <th colspan=3>#{y}年#{m}月のスケジュール
+       <th .move
+         <a href=@{nextMonth fday}>翌月>
+       <th .move
+         <a href=@{nextYear fday}>翌年»
+     <tr
+       <th .week-header>月
+       <th .week-header>火
+       <th .week-header>水
+       <th .week-header>木
+       <th .week-header>金
+       <th .week-header .Saturday>土
+       <th .week-header .Sunday>日
+   <tbody
      $forall ds <- days
-       <tr>
+       <tr
          $forall d <- ds
-           <td class="#{snd d}" uri="@{taskUri (fst d)}">#{showDay (fst d)}
+           <td .#{snd d} uri=@{taskUri $ fst d}>#{showDay $ fst d}

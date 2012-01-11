@@ -12,14 +12,20 @@ import Yesod
 -- import Yesod.Crud -- FIXME
 import Database.Persist.Base
 import System.Locale
+import Control.Monad (liftM2)
+import Control.Applicative ((<$>),(<*>))
+import Control.Failure (Failure)
+import Control.Monad.Trans.Class
 import Data.Char (isHexDigit)
 import Data.Int
 import Data.Time
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, maybeToList)
+import Data.List (find)
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec as P (string)
 import Data.Text (Text)
 import qualified Data.Text as T
+import Network.Mail.Mime
 import Text.Blaze (preEscapedText)
 
 import qualified Settings (tz)
@@ -68,16 +74,10 @@ toProjectBis (pid, prj) =
               }
 
 lookupStatus :: (Eq a) => a -> [(a, b, c)] -> Maybe (a, b, c)
-lookupStatus _ [] = Nothing
-lookupStatus x (z@(y,_,_):zs) = if x == y
-                                then Just z
-                                else lookupStatus x zs
+lookupStatus = find . (\x y -> x == fst3 y)
 
 lookupProjectBis :: ProjectId -> [ProjectBis] -> Maybe ProjectBis
-lookupProjectBis _   [] = Nothing
-lookupProjectBis pid (p:ps) = if pid == (projectBisId p)
-                              then Just p
-                              else lookupProjectBis pid ps
+lookupProjectBis = find . (\x y -> x == projectBisId y)
 
 parseStatuses :: Text -> Either ParseError [(Text, Maybe Color, Maybe Effect)]
 parseStatuses t = 
@@ -145,9 +145,11 @@ data IssueBis = IssueBis { issueBisId :: IssueId
                          , issueBisAssign :: Maybe User
                          }
 data CommentBis = CommentBis { commentBisId :: CommentId
-                             , commentBisContent :: Text
+                             , commentBisContent :: Maybe Text
                              , commentBisStatus :: Text
+                             , commentBisAutomemo :: Text
                              , commentBisAttached :: Maybe (FileHeaderId, FileHeader)
+                             , commentBisCheckReader :: Bool
                              , commentBisCuser :: (UserId, User)
                              , commentBisCdate :: UTCTime
                              }
@@ -163,13 +165,12 @@ initUser uid = User { userIdent=uid
                     , userActive=True
                     }
 
-toInFilter :: ([a] -> Filter b) -> [a] -> [Filter b]
+toInFilter :: ([a] -> b) -> [a] -> [b]
 toInFilter _ [] = []
 toInFilter f xs = [f xs]
 
-maybeToFilter :: (a -> Filter b) -> Maybe a -> [Filter b]
-maybeToFilter _ Nothing  = []
-maybeToFilter f (Just x) = [f x]
+maybeToFilter :: (a -> b) -> Maybe a -> [b]
+maybeToFilter f = fmap f . maybeToList
 
 userInfoOneline :: User -> Text
 userInfoOneline u = 
@@ -199,10 +200,25 @@ isAdmin u = userRole u == Admin
 showLimitdate :: Issue -> Text
 showLimitdate i = fromMaybe "" (fmap showText (issueLimitdate i))
 
+showLimittime :: Issue -> Text
+showLimittime i = fromMaybe "" (fmap showHHMM (issueLimittime i))
+  where
+    showHHMM = T.pack . formatTime defaultTimeLocale "%H:%M"
+    
+showLimitdatetime :: Issue -> Text
+showLimitdatetime i = showLimitdate i +++ " " +++ showLimittime i
+
+commentLimitDatetime :: Comment -> Maybe UTCTime
+commentLimitDatetime = liftM2 day'timeToUTC <$> commentLimitdate <*> commentLimittime
+
+issueLimitDatetime :: Issue -> Maybe UTCTime
+issueLimitDatetime = liftM2 day'timeToUTC <$> issueLimitdate <*> issueLimittime
+
+showReminderdate :: Issue -> Text
+showReminderdate i = fromMaybe "" (fmap showText (issueReminderdate i))
+
 showMaybeDouble :: Maybe Double -> Text
-showMaybeDouble md = case md of
-  Nothing -> ""
-  Just d -> showText d
+showMaybeDouble md = fromMaybe "" (fmap showText md)
 
 showDate :: UTCTime -> Text
 showDate = T.pack . formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S" . utc2local
@@ -212,32 +228,39 @@ showDate = T.pack . formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S" . utc2local
 localDayToUTC :: Day -> UTCTime
 localDayToUTC = localTimeToUTC (hoursToTimeZone Settings.tz) . flip LocalTime (TimeOfDay 0 0 0)
 
+day'timeToUTC :: Day -> TimeOfDay -> UTCTime
+day'timeToUTC = (localTimeToUTC (hoursToTimeZone Settings.tz) .) . LocalTime
+
 toMessageId :: IssueId -> CommentId -> UTCTime -> Text -> Text
 toMessageId iid cid time domain = "<" 
                     +++ T.pack (formatTime defaultTimeLocale "%Y%m%d%H%M%S%q" time)
-                    +++ "i" +++ showIdCounter iid
-                    +++ "c" +++ showIdCounter cid
+                    +++ "i" +++ toSinglePiece iid
+                    +++ "c" +++ toSinglePiece cid
                     +++ "@" +++ domain
                     +++ ">"
 
-showIdCounter :: Key b e -> Text
-showIdCounter (Key (PersistInt64 n)) = showText n
-showIdCounter x = showText $ unKey x
-
 showBirthDay :: Profile -> Text
-showBirthDay = showText . profileBirth
+showBirthDay = fromMaybe "" . fmap showText . profileBirth
 
 showEntryYear :: Profile -> Text
-showEntryYear = showText . profileEntryYear
+showEntryYear = fromMaybe "" . fmap showText . profileEntryYear
 
 showGraduateYear :: Profile -> Text
-showGraduateYear u =  case profileGraduateYear u of
-  Nothing -> ""
-  Just y -> showText y
+showGraduateYear = fromMaybe "" . fmap showText . profileGraduateYear
+
+showTerminated :: Project -> Text
+showTerminated p = if projectTerminated p then "終了" else "活動中"
+
+showCheckReader :: Comment -> Text
+showCheckReader c = if commentCheckReader c then "読者確認する" else "読者確認しない"
+
+care :: Comment -> Bool
+care = commentCheckReader
+nocare :: Comment -> Bool
+nocare = not . commentCheckReader
 
 showmaybe :: Maybe Text -> Text
-showmaybe Nothing  = ""
-showmaybe (Just x) = x
+showmaybe = fromMaybe "" . fmap id
 
 showMultilineText :: Text -> Html
 showMultilineText = preEscapedText . T.intercalate "<br/>" . T.splitOn "\n"
@@ -287,12 +310,7 @@ canEditTel :: User -> User -> Bool
 canEditTel = canViewTel
 
 canCreateProject :: User -> Bool
-canCreateProject u =
-  case userRole u of
-    Admin -> True
-    Teacher -> True
-    Staff -> True
-    Student -> False
+canCreateProject _ = True
 
 canViewHumannetwork :: User -> Bool
 canViewHumannetwork u =
@@ -303,12 +321,7 @@ canViewHumannetwork u =
     Student -> False
 
 canEditProjectSetting :: User -> Bool
-canEditProjectSetting u =
-  case userRole u of
-    Admin -> True
-    Teacher -> True
-    Staff -> True
-    Student -> False
+canEditProjectSetting _ = True
 
 canViewUserLocations :: User -> Bool
 canViewUserLocations u =
@@ -319,12 +332,7 @@ canViewUserLocations u =
     Student -> False
 
 canSearchUser :: User -> Bool
-canSearchUser u =
-  case userRole u of
-    Admin -> True
-    Teacher -> True
-    Staff -> True
-    Student -> False
+canSearchUser _ = True
 
 textToOrder :: Text -> SelectOpt (ProjectGeneric backend)
 textToOrder "DescProjectUdate" = Desc ProjectUdate
@@ -333,3 +341,34 @@ textToOrder "DescProjectCdate" = Desc ProjectCdate
 textToOrder "AscProjectCdate" = Asc ProjectCdate
 textToOrder "AscProjectName" = Asc ProjectName
 textToOrder "DescProjectName" = Desc ProjectName
+
+defaultProfile :: Profile
+defaultProfile = Profile { profileUser=undefined
+                         , profileBirth=Nothing
+                         , profileEntryYear=Nothing
+                         , profileGraduateYear=Nothing
+                         , profileBranch=Nothing
+                         , profileZip=Nothing
+                         , profileAddress=Nothing
+                         , profileLongitude=Nothing
+                         , profileLatitude=Nothing
+                         , profileTel=Nothing
+                         , profileStation=Nothing
+                         , profileHomeZip=Nothing
+                         , profileHomeAddress=Nothing
+                         , profileHomeLongitude=Nothing
+                         , profileHomeLatitude=Nothing
+                         , profileHomeTel=Nothing
+                         , profileDesiredCourse=Nothing
+                         , profileDesiredWorkLocation=Nothing
+                         , profileEmployment=Nothing
+                         }
+
+selectMailAddresses :: (Failure ErrorResponse m, MonadTrans t, PersistBackend t m) =>
+     Key t (ProjectGeneric t) -> t m [Address]
+selectMailAddresses pid = do
+  mapM (p2u.snd) =<< selectList [ParticipantsProject ==. pid, ParticipantsReceivemail ==. True] []
+  where
+    p2u p = do
+      u <- get404 $ participantsUser p
+      return $ Address (Just $ userFamilyName u `T.append` userGivenName u) (userEmail u)

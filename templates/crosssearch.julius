@@ -1,4 +1,11 @@
 $(document).ready(function(){
+  $('#includeterminated').change(function(){
+    reload_projects();
+    reload_statuses();
+    reload_assigns();
+    reload_search_result();
+  });
+
   $('#projectid').change(function(){
     reload_statuses();
     reload_assigns();
@@ -114,6 +121,38 @@ function create_twitter_like_more(next) {
     });
   });
   return more;
+}
+
+function reload_projects() {
+  // save selected
+  var selected = {};
+  $('#projectid option:selected').each(function(){
+    selected[$(this).val()] = $(this).val();
+  });
+  // clear
+  $('#projectid option').remove();
+
+  // get projectids
+  var keys = '';
+  if ($('#includeterminated').attr('checked')) {
+    keys += $('#includeterminated').attr('name') + '=' + $('#includeterminated').attr('checked');
+  }
+  $.ajax({
+    async: false,
+    type: 'GET',
+    url: '@{ProjectListR}',
+    dataType: 'json',
+    data: keys,
+    success: function(json) {
+      $.each(json.projects, function(i, p) {
+        var opt = $('<option/>').val(p.pid).text(p.name);
+        if (selected[p.pid]) opt.attr('selected','selected');
+        $('#projectid').append(opt);
+      });
+    },
+    error: function(res, status) {
+    }
+  });
 }
 
 function reload_statuses() {

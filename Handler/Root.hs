@@ -5,13 +5,19 @@
 module Handler.Root where
 
 import Control.Monad (unless, forM)
-import Data.List (intersperse)
+import Data.List (intersperse, find)
 import Data.Maybe (fromMaybe)
 import qualified Data.ByteString.Lazy.Char8 as L
 import Codec.Binary.UTF8.String (decodeString)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Text.Blaze (preEscapedText)
+import Data.Time (fromGregorian)
+import Network.Mail.Mime
+import qualified Data.Text.Lazy as TL
+import qualified Data.Text.Lazy.Encoding as LE
+import Network.Wai (Request(..))
+import Network.Socket (getNameInfo)
 
 import Foundation
 import BISocie.Helpers.Util
@@ -28,7 +34,7 @@ import Settings
 getRootR :: Handler RepHtml
 getRootR = do
     (uid, _) <- requireAuth
-    redirect RedirectTemporary $ HomeR uid
+    redirect RedirectSeeOther $ HomeR uid
 
 getHomeR :: UserId -> Handler RepHtml
 getHomeR uid = do
@@ -117,11 +123,13 @@ postSystemBatchR = do
   let recs = filter (not . T.null) $ T.lines $ T.pack $ decodeString $ L.unpack $ fileContent fi
   runDB $ do
     users <- selectList [] []
+    profs <- selectList [] []
     forM recs $ \rec -> do
-      let (uid:rawpass:email:fname:gname:_) = T.splitOn "," rec
-      case userExist uid users of
+      let (ident:rawpass:email:fname:gname:eyear:gyear:_) = T.splitOn "," rec
+          (eyear', gyear') = (Just (readText eyear), Just (readText gyear))
+      uid' <- case userExist ident users of
         Nothing ->
-          insert $ User { userIdent=uid
+          insert $ User { userIdent=ident
                         , userPassword=Just (encrypt rawpass)
                         , userRole=Student
                         , userFamilyName=fname
@@ -139,10 +147,62 @@ postSystemBatchR = do
                      , UserActive =. True
                      ]
           return id'
+      case profExist uid' profs of
+        Nothing -> insert $ defaultProfile { profileUser=uid'
+                                           , profileEntryYear=eyear'
+                                           , profileGraduateYear=gyear'
+                                           }
+        Just (pid, _) -> return pid
   setMessage "学生を登録しました。"
-  redirect RedirectTemporary SystemBatchR
+  redirect RedirectSeeOther SystemBatchR
   where
     userExist :: Text -> [(UserId, User)] -> Maybe (UserId, User)
-    userExist _   [] = Nothing
-    userExist uid (u@(_, u'):us) = 
-      if uid == userIdent u' then Just u else userExist uid us
+    userExist = find . (\x y -> x == userIdent (snd y))
+    profExist :: UserId -> [(ProfileId, Profile)] -> Maybe (ProfileId, Profile)
+    profExist = find . (\x y -> x == profileUser (snd y))
+
+getSendReminderMailR :: Year -> Month -> Date -> Handler RepHtml
+getSendReminderMailR y m d = do
+  let rday = fromGregorian y m d
+  r <- getUrlRender
+  req <- fmap reqWaiRequest getRequest
+  let rhost = remoteHost req
+  (Just rhostname, _) <- liftIO $ getNameInfo [] True True rhost
+  unless (rhostname == "localhost") $
+    permissionDenied "あなたはこの機能を利用することはできません."
+  runDB $ do
+    issues <- selectList [IssueReminderdate ==. Just rday] []
+    forM issues $ \(_, issue) -> do
+      let pid = issueProject issue
+          ino = issueNumber issue
+      prj <- get404 pid
+      emails <- selectMailAddresses $ issueProject issue
+      liftIO $ renderSendMail Mail
+        { mailFrom = fromEmailAddress
+        , mailTo = []
+        , mailCc = []
+        , mailBcc = emails
+        , mailHeaders =
+          [ ("Subject", "【リマインダメール送信】" +++ issueSubject issue)
+          , (mailXHeader, toSinglePiece $ issueProject issue)
+          ]
+        , mailParts =
+            [[ Part
+               { partType = "text/plain; charset=utf-8"
+               , partEncoding = None
+               , partFilename = Nothing
+               , partHeaders = []
+               , partContent = LE.encodeUtf8 $ TL.pack $ T.unpack $ T.unlines
+                               $ [ "プロジェクト: " +++ projectName prj
+                                 , "案件: " +++ issueSubject issue
+                                 , "期限: " +++ showLimitdatetime issue
+                                 , ""
+                                 , "この案件の期限が近づいてきました。"
+                                 , ""
+                                 , "*このメールに直接返信せずにこちらのページから投稿してください。"
+                                 , "イシューURL: " +++ r (IssueR pid ino)
+                                 ]
+               }
+             ]]
+        }
+  defaultLayout [whamlet|Sending reminder mails|]

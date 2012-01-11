@@ -7,7 +7,7 @@ $(document).ready(function(){
         var t = $('<a/>')
                 .attr({href: item.uri})
                 .addClass('task-link')
-                .text(item.subject);
+                .text(item.limittime+' '+item.subject);
         tday.append(t);
       });
     });

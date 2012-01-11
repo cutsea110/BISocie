@@ -1,55 +1,70 @@
-<ul .tabs>
-  <li .selected>
-    <a href="@{IssueR pid ino}">#{show ino} : #{issueSubject issue}
-  <li>
-    <a href="@{NewIssueR pid}">案件追加
-\
-<div id="main-content">
+<ul .tabs
+  <li .selected
+    <a href=@{IssueR pid ino}>#{show ino} : #{issueSubject issue}
+  <li
+    <a href=@{NewIssueR pid}>案件追加
+<div #main-content
   <h3>#{show ino} : #{issueSubject issue}
-  \
-  <form method="post" enctype="multipart/form-data" action="@{CommentR pid ino}" .validate>
-    <table .nostyle>
-      <tr>
+  <form method=post enctype=multipart/form-data action=@{CommentR pid ino} .validate
+    <table .nostyle
+      <tr
         <th>内容: 
-          <span .alert>(必須)
-        <td>
-          <textarea id="content" placeholder="内容..." name="content" .watermark .required>
-      <tr>
+        <td
+          <textarea #content placeholder=内容... name=content .watermark
+      <tr
         <th>アサイン:
-        <td>
-          <select name="assign">
-            <option selected="">
+        <td
+          <select name=assign
+            <option selected
             $forall p <- ptcpts
-              <option :isAssign (fst p):selected="" value="#{show (fst p)}">#{userFullName (snd p)}
+              <option :isAssign (fst p):selected value=#{show (fst p)}>#{userFullName (snd p)}
       <tr>
         <th>ステータス
         <td>
-          <select name="status">
+          <select name=status>
             $forall s <- stss
-              <option :isStatus (fst3 s):selected="">#{fst3 s}
+              <option :isStatus (fst3 s):selected>#{fst3 s}
       <tr>
         <th>期限:
         <td>
-          <input placeholder="yyyy-mm-dd" type="date" name="limitdate" value="#{showLimitdate issue}" .watermark .date>
-      <tr>
+          <input type=date name=limitdate displayname=期限日 placeholder=yyyy-mm-dd value=#{showLimitdate issue} .watermark .date cond="limittime,reminderdate" .cond-required
+          <input type=time name=limittime displayname=期限時刻 placeholder=HH:MM value=#{showLimittime issue} .watermark .time cond="limitdate,reminderdate" .cond-required
+      <tr
+        <th>リマインダメール通知日
+        <td
+          <input type=date name=reminderdate displayname=リマインダメール通知日 placeholder=yyyy-mm-dd value=#{showReminderdate issue} .watermark .date
+      <tr
         <th>添付ファイル
-        <td>
-          <input type="file" name="attached">
-    \
-    <button type="submit" name="_method" value="add">投稿
-  \
-  <ul id="issue-thread">
+        <td
+          <input type=file name=attached
+      <tr
+        <th>読者確認:
+        <td
+          <input #checkreader-no type=radio name=checkreader value=no checked>
+          <label for=checkreader-no>しない
+          <input #checkreader-yes type=radio name=checkreader value=yes>
+          <label for=checkreader-yes>する
+    <button type=submit name=_method value=add>投稿
+  <ul #issue-thread
     $forall c <- comments
-      <div .post-head>
-        <img src="@{AvatarImageR (fst (commentBisCuser (snd c)))}" .avatar>
-        <a href="@{ProfileR (fst (commentBisCuser (snd c)))}" .profile>
-           \#{userFullName (snd (commentBisCuser (snd c)))}
-        \  #{showDate (commentBisCdate (snd c))} #{commentBisStatus (snd c)}
-      <div .post-body>
-        \#{showMultilineText (commentBisContent (snd c))}
-        $maybe f <- commentBisAttached (snd c)
-          <div .attached>
-            \添付ファイル: 
-            <a href="@{AttachedFileR (fst c) (fst f)}">#{fileHeaderFullname (snd f)}
-\
-<div id="popup-profile">
+      $with c' <- snd3 c, cid <- fst3 c, cid' <- toSinglePiece cid
+        <div ##{cid'} .post-head
+          <img src=@{AvatarImageR $ fst $ commentBisCuser c'} .avatar
+          <a href=@{ProfileR $ fst $ commentBisCuser c'} .profile
+            #{userFullName $ snd $ commentBisCuser c'}
+          #{showDate $ commentBisCdate c'} #{commentBisStatus c'}
+          $if commentBisCheckReader c'
+            <input #readThis-#{cid'} type=checkbox name=readThis url=@{ReadCommentR cid} target=#readers-#{cid'} :thd3 c:checked>
+            <label for=readThis-#{cid'}>読んだ
+        <div .post-body
+          $maybe cmt <- commentBisContent c'
+            #{showMultilineText cmt}
+          $nothing
+            <span .automemo>#{showMultilineText $ commentBisAutomemo c'}
+          $maybe f <- commentBisAttached c'
+            <div .attached>添付ファイル: 
+              <a href=@{AttachedFileR cid (fst f)}>#{fileHeaderFullname (snd f)}
+        <div .post-foot
+          $if commentBisCheckReader c'
+            <div #readers-#{cid'} .readers url=@{CommentReadersR cid}
+<div #popup-profile

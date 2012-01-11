@@ -23,7 +23,7 @@ getNewProjectR = do
   unless (canCreateProject self) $ 
     permissionDenied "あなたはプロジェクトを作成することはできません."
   now <- liftIO getCurrentTime
-  let inintstatuses = "!未開始#赤\n着手#緑\n完了#灰\n=却下#灰\n保留\n議論\n報告" :: String
+  let inintstatuses = "!未着手#赤\n着手#緑\n完了#灰\n=却下#灰\n保留\n議論\n報告" :: String
       (y,_,_) = toGregorian $ utctDay now
       eyears = [Settings.entryStartYear..y+5]
       help = $(widgetFile "help")
@@ -54,6 +54,7 @@ postNewProjectR = do
                                 , projectIssuecounter=0
                                 , projectDescription=desc
                                 , projectStatuses=sts
+                                , projectTerminated=False
                                 , projectCuser=selfid
                                 , projectCdate=now
                                 , projectUdate=now
@@ -64,7 +65,7 @@ postNewProjectR = do
                                    , participantsCdate=now
                                    }
         return pid
-      redirect RedirectTemporary $ ProjectR pid
+      redirect RedirectSeeOther $ ProjectR pid
 
 getProjectR :: ProjectId -> Handler RepHtml
 getProjectR pid = do
@@ -95,6 +96,7 @@ putProjectR pid = do
   (selfid, self) <- requireAuth
   nm' <- lookupPostParam "name"
   ds' <- lookupPostParam "description"
+  tm' <- lookupPostParam "terminated"
   st' <- lookupPostParam "statuses"
   now <- liftIO getCurrentTime
 
@@ -111,18 +113,24 @@ putProjectR pid = do
         Nothing -> return $ Just $ projectDescription prj
         Just "" -> lift $ invalidArgs ["概要は入力必須項目です."]
         Just ds'' -> return $ Just ds''
+    Just tm <- case tm' of
+        Nothing -> return $ Just $ projectTerminated prj
+        Just "no" -> return $ Just False
+        Just "yes" -> return $ Just True
     Just st <- case st' of
         Nothing -> return $ Just $ projectStatuses prj
         Just "" -> lift $ invalidArgs ["ステータスは入力必須項目です."]
         Just st'' -> return $ Just st''
     update pid [ ProjectName =. nm
                , ProjectDescription =. ds
+               , ProjectTerminated =. tm
                , ProjectStatuses =. st
                , ProjectUdate =. now]
     get404 pid
   cacheSeconds 10 -- FIXME
   jsonToRepJson $ jsonMap [ ("name", jsonScalar $ T.unpack $ projectName prj)
                           , ("description", jsonScalar $ T.unpack $ projectDescription prj)
+                          , ("terminated", jsonScalar $ T.unpack $ showTerminated prj)
                           , ("statuses", jsonScalar $ T.unpack $ projectStatuses prj)
                           ]
 

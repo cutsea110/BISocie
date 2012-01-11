@@ -26,6 +26,23 @@ $(document).ready(function(){
         valid = false;
       }
     });
+    $('input.cond-required, textarea.cond-required').each(function(){
+      var thisBox = $(this),
+          condnames = thisBox.attr('cond').split(',');
+      thisBox.removeClass('invalid');
+      if ($.trim(thisBox.val())=="") {
+        $.each(condnames, function(i,condname) {
+          var cond = $("[name='" + $.trim(condname) + "']"),
+              conddisp = cond.attr('displayname'),
+              condval = $.trim(cond.val());
+          if (condval!="") {
+            thisBox.addClass('invalid');
+            thisBox.after("<span class='invalid'> " + conddisp + " に入力した場合には必須入力項目です.</span>");
+            valid = false
+          }
+        });
+      }
+    });
     return valid;
   });
 
@@ -69,6 +86,14 @@ $(document).ready(function(){
     changeMonth: true
   });
   $(".date").datepicker();
+
+  $(".time").clockpick({
+    starthour: 0,
+    endhour: 23,
+    showminutes: true,
+    minutedivisions: 4,
+    military: true,
+  });
 
   $(".inplaceedit").each(function(){
     $(this).exInPlaceEditor({

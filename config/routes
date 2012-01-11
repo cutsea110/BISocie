@@ -10,6 +10,7 @@
 /userlist.json UserListR GET
 
 /cross-search CrossSearchR GET POST
+/project-list ProjectListR GET
 /status-list StatusListR GET
 /assign-list AssignListR GET
 /current-schedule CurrentScheduleR GET
@@ -21,6 +22,8 @@
 /issue/#ProjectId/#IssueNo IssueR GET
 /comment/#ProjectId/#IssueNo CommentR POST
 /attached/#CommentId/#FileHeaderId AttachedFileR GET
+/read/#CommentId ReadCommentR POST
+/readers/#CommentId CommentReadersR GET
 
 /profile/#UserId ProfileR GET POST PUT
 /avatar/#UserId AvatarR POST
@@ -33,6 +36,7 @@
 /robots.txt RobotsR GET
 
 /system-batch SystemBatchR GET POST
+/send-reminder-mail/#Year/#Month/#Date SendReminderMailR GET
 
 /s3/upload UploadR POST PUT
 /s3/user/#UserId/file/#FileHeaderId FileR POST DELETE

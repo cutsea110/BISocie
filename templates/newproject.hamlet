@@ -1,56 +1,49 @@
-<ul .tabs>
-  <li>
-    <a href="@{HomeR selfid}">ホーム
-  <li .selected>
-    <a href="@{NewProjectR}">プロジェクト新規作成
-  <li>
-    <a href="@{CrossSearchR}">クロスサーチ
-  $if (canViewHumannetwork self)
-    <li>
-      <a href="@{HumanNetworkR}">ヒューマンネットワーク
-  <li>
-    <a href="@{CurrentScheduleR}">スケジュール
-\
-<div id="main-content">
+<ul .tabs
+  <li
+    <a href=@{HomeR selfid}>ホーム
+  <li .selected
+    <a href=@{NewProjectR}>プロジェクト新規作成
+  <li
+    <a href=@{CrossSearchR}>クロスサーチ
+  $if canViewHumannetwork self
+    <li
+      <a href=@{HumanNetworkR}>ヒューマンネットワーク
+  <li
+    <a href=@{CurrentScheduleR}>スケジュール
+<div #main-content
   <h3>プロジェクト設定
-     <button id="button-search-users" .link>ユーザー検索
-  \
-  <form method="post" action="@{NewProjectR}" .validate>
-    <dl>
+     <button #button-search-users .link>ユーザー検索
+  <form method=post action=@{NewProjectR} .validate
+    <dl
       <dt>プロジェクト名 
         <span .alert>(必須)
-      <dd>
-        <input id="name" type="text" name="name" placeholder="(プロジェクト名)" .watermark .required>
+      <dd
+        <input #name type=text name=name placeholder=(プロジェクト名) .watermark .required
       <dt>概要 
         <span .alert>(必須)
-      <dd>
-        <textarea id="description" type="text" name="description" placeholder="(プロジェクト概要)" .watermark .required>
+      <dd
+        <textarea #description type=text name=description placeholder=(プロジェクト概要) .watermark .required
       <dt>ステータス 
         <span .alert>(必須) 
-        <button id="button-status-syntax-help" type="submit" .link>ヘルプ
-      <dd>
-        <textarea id="statuses" name="statuses" placeholder="(ステータス設定)" .watermark .required>#{inintstatuses}
-    \
-    <button type="submit" name="_method" value="create">プロジェクトを作成する
-\
-<div id="search-users">
-  <label for="search-bay-name">名前:
-  <input id="search-by-name" type="text" name="username">
-  \
-  <input id="select-teacher" type="checkbox" value="Teacher">
-  <label for="select-teacher">教員
-  <input id="select-staff" type="checkbox" value="Staff">
-  <label for="select-staff">職員
-  <input id="select-student" type="checkbox" value="Student">
-  <label for="select-student">在校生/卒業生
-  <input id="select-admin" type="checkbox" value="Admin">
-  <label for="select-admin">管理者
-  <label for="select-entry-year">入学年度:
-  <select id="select-entry-year">
-    <option>
+        <button #button-status-syntax-help type=submit .link>ヘルプ
+      <dd
+        <textarea #statuses name=statuses placeholder=(ステータス設定) .watermark .required>#{inintstatuses}
+    <button type=submit name=_method value=create>プロジェクトを作成する
+<div #search-users
+  <label for=search-bay-name>名前:
+  <input #search-by-name type=text name=username
+  <input #select-teacher type=checkbox value=Teacher
+  <label for=select-teacher>教員
+  <input #select-staff type=checkbox value=Staff
+  <label for=select-staff>職員
+  <input #select-student type=checkbox value=Student
+  <label for=select-student>在校生/卒業生
+  <input #select-admin type=checkbox value=Admin
+  <label for=select-admin>管理者
+  <label for=select-entry-year>入学年度:
+  <select #select-entry-year
+    <option
     $forall ey <- eyears
-      <option value="#{show ey}">#{show ey}
-  \
-  <div id="search-result" .scroll>
-\
-\^{help}
+      <option value=#{show ey}>#{show ey}
+  <div #search-result .scroll
+^{help}

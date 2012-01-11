@@ -50,21 +50,21 @@ getProfileR uid = do
             now <- liftIO getCurrentTime
             let (y, _, _) = toGregorian $ utctDay now
             return $ Just $ Profile { profileUser=uid
-                                    , profileBirth=fromGregorian (y-18) 1 1
-                                    , profileEntryYear=fromInteger y
+                                    , profileBirth=Just $ fromGregorian (y-18) 1 1
+                                    , profileEntryYear=Just $ fromInteger y
                                     , profileGraduateYear=Nothing
-                                    , profileBranch=""
-                                    , profileZip=""
-                                    , profileAddress=""
+                                    , profileBranch=Nothing
+                                    , profileZip=Nothing
+                                    , profileAddress=Nothing
                                     , profileLongitude=Nothing
                                     , profileLatitude=Nothing
-                                    , profileTel=""
-                                    , profileStation=""
-                                    , profileHomeZip=""
-                                    , profileHomeAddress=""
+                                    , profileTel=Nothing
+                                    , profileStation=Nothing
+                                    , profileHomeZip=Nothing
+                                    , profileHomeAddress=Nothing
                                     , profileHomeLongitude=Nothing
                                     , profileHomeLatitude=Nothing
-                                    , profileHomeTel=""
+                                    , profileHomeTel=Nothing
                                     , profileDesiredCourse=Nothing
                                     , profileDesiredWorkLocation=Nothing
                                     , profileEmployment=Nothing
@@ -104,7 +104,7 @@ getProfileR uid = do
           mprof <- getProf user
           mlab <- getLab user
           let eyears = zipWith (\y1 y2 -> (y1==y2, y1)) [Settings.entryStartYear..y+5] $ 
-                       repeat (fromMaybe y (fmap (toInteger.profileEntryYear) mprof))
+                       repeat (fromMaybe y (join (fmap (fmap toInteger.profileEntryYear) mprof)))
               gyears = zipWith (\y1 y2 -> (Just y1==y2, y1)) [Settings.graduateStartYear..y+5] $
                        repeat (fromMaybe Nothing (fmap (fmap toInteger.profileGraduateYear) mprof))
           return (user, mprof, mlab, eyears, gyears)
@@ -141,7 +141,7 @@ putProfileR uid = do
       runDB $ do
         -- update user
         update uid [UserEmail =. em, UserFamilyName =. fn, UserGivenName =. gn]
-      redirectParams RedirectTemporary (ProfileR uid) [("mode", "e")]
+      redirectParams RedirectSeeOther (ProfileR uid) [("mode", "e")]
       
     putTeacherProf = do
       (em, fn, gn) <- 
@@ -149,8 +149,7 @@ putProfileR uid = do
         <$> ireq textField "email"
         <*> ireq textField "familyName"
         <*> ireq textField "givenName"
-      (rn, en, cs) <- 
-        runInputPost $ (,,)
+      lab <- runInputPost $ Laboratory uid
         <$> iopt textField "roomnumber"
         <*> iopt textField "extensionnumber"
         <*> iopt textField "courses"
@@ -159,19 +158,9 @@ putProfileR uid = do
         update uid [UserEmail =. em, UserFamilyName =. fn, UserGivenName =. gn]
         mlab <- getBy $ UniqueLaboratory uid
         case mlab of
-          Nothing -> do
-            insert $ Laboratory { laboratoryHeadResearcher=uid 
-                                , laboratoryRoomNumber=rn
-                                , laboratoryExtensionNumber=en
-                                , laboratoryCourses=cs
-                                }
-          Just (lid, _) -> do
-            update lid [ LaboratoryRoomNumber =. rn
-                       , LaboratoryExtensionNumber =. en
-                       , LaboratoryCourses =. cs
-                       ]
-            return lid
-      redirectParams RedirectTemporary (ProfileR uid) [("mode", "e")]
+          Nothing -> insert lab
+          Just (lid, _) -> replace lid lab >> return lid
+      redirectParams RedirectSeeOther (ProfileR uid) [("mode", "e")]
     
     putStudentProf = do
       (em, fn, gn) <- 
@@ -179,78 +168,33 @@ putProfileR uid = do
         <$> ireq textField "email"
         <*> ireq textField "familyName"
         <*> ireq textField "givenName"
-      (bir, ey, gy, br, zip, adr, lon, lat, tel, st, hzip, hadr, hlon, hlat, htel, dc, dwl, emp) <- 
-        runInputPost $ (,,,,,,,,,,,,,,,,,)
-        <$> ireq dayField "birth"
-        <*> ireq intField "entryYear"
+      prof <- runInputPost $ Profile uid
+        <$> iopt dayField "birth"
+        <*> iopt intField "entryYear"
         <*> iopt intField "graduateYear"
-        <*> ireq textField "branch"
-        <*> ireq textField "zip"
-        <*> ireq textField "address"
-        <*> iopt textField "longitude"
-        <*> iopt textField "latitude"
-        <*> ireq textField "tel"
-        <*> ireq textField "station"
-        <*> ireq textField "homeZip"
-        <*> ireq textField "homeAddress"
-        <*> iopt textField "homeLongitude"
-        <*> iopt textField "homeLatitude"
-        <*> ireq textField "homeTel"
+        <*> iopt textField "branch"
+        <*> iopt textField "zip"
+        <*> iopt textField "address"
+        <*> iopt doubleField "longitude"
+        <*> iopt doubleField "latitude"
+        <*> iopt textField "tel"
+        <*> iopt textField "station"
+        <*> iopt textField "homeZip"
+        <*> iopt textField "homeAddress"
+        <*> iopt doubleField "homeLongitude"
+        <*> iopt doubleField "homeLatitude"
+        <*> iopt textField "homeTel"
         <*> iopt textField "desiredCourse"
         <*> iopt textField "desiredWorkLocation"
         <*> iopt textField "employment"
-      let lon' = fromMaybe Nothing (fmap (Just . readText) lon)
-          lat' = fromMaybe Nothing (fmap (Just . readText) lat)
-          hlon' = fromMaybe Nothing (fmap (Just . readText) hlon)
-          hlat' = fromMaybe Nothing (fmap (Just . readText) hlat)
       runDB $ do
         -- update user
         update uid [UserEmail =. em, UserFamilyName =. fn, UserGivenName =. gn]
         mprof <- getBy $ UniqueProfile uid
         case mprof of
-          Nothing -> do
-            insert $ Profile { profileUser=uid
-                             , profileBirth=bir
-                             , profileEntryYear=ey
-                             , profileGraduateYear=gy
-                             , profileBranch=br
-                             , profileZip=zip
-                             , profileAddress=adr
-                             , profileLongitude=lon'
-                             , profileLatitude=lat'
-                             , profileTel=tel
-                             , profileStation=st
-                             , profileHomeZip=hzip
-                             , profileHomeAddress=hadr
-                             , profileHomeLongitude=hlon'
-                             , profileHomeLatitude=hlat'
-                             , profileHomeTel=htel
-                             , profileDesiredCourse=dc
-                             , profileDesiredWorkLocation=dwl
-                             , profileEmployment=emp
-                             }
-          Just (pid, _) -> do
-            update pid [ ProfileBirth =. bir
-                       , ProfileEntryYear =. ey
-                       , ProfileGraduateYear =. gy
-                       , ProfileBranch =. br
-                       , ProfileZip =. zip
-                       , ProfileAddress =. adr
-                       , ProfileLongitude =. lon'
-                       , ProfileLatitude =. lat'
-                       , ProfileTel =. tel
-                       , ProfileStation =. st
-                       , ProfileHomeZip =. hzip
-                       , ProfileHomeAddress =. hadr
-                       , ProfileHomeLongitude =. hlon'
-                       , ProfileHomeLatitude =. hlat'
-                       , ProfileHomeTel =. htel
-                       , ProfileDesiredCourse =. dc
-                       , ProfileDesiredWorkLocation =. dwl
-                       , ProfileEmployment =. emp
-                       ]
-            return pid
-      redirectParams RedirectTemporary (ProfileR uid) [("mode", "e")]
+          Nothing -> insert prof
+          Just (pid, _) -> replace pid prof >> return pid
+      redirectParams RedirectSeeOther (ProfileR uid) [("mode", "e")]
     
 getAvatarImageR :: UserId -> Handler RepHtml
 getAvatarImageR uid = do
@@ -258,7 +202,7 @@ getAvatarImageR uid = do
   (fid, f) <- runDB $ do
     u <- get404 uid
     case userAvatar u of
-      Nothing -> lift $ redirect RedirectTemporary $ StaticR img_no_image_png
+      Nothing -> lift $ redirect RedirectSeeOther $ StaticR img_no_image_png
       Just fid -> do
         f <- get404 fid
         return (fid, f)

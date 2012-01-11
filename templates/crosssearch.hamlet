@@ -40,6 +40,10 @@
           <input #updatedfrom type=date name=updatedfrom .date
           〜
           <input #updatedto type=date name=updatedto .date
+      <tr
+        <th>
+          <input #includeterminated type=checkbox name=includeterminated
+          <label for=includeterminated>終了プロジェクトを含む
   <table .list
     <caption>対象案件一覧
     <thead

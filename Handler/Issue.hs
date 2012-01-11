@@ -93,6 +93,23 @@ getTaskR y m d = do
                                 , ("limittime", jsonScalar $ T.unpack $ showLimittime issue)
                                 ]
 
+getProjectListR :: Handler RepJson
+getProjectListR = do
+  (selfid, self) <- requireAuth
+  includeTerminated <- fmap isJust $ lookupGetParam "includeterminated"
+  let tf = if includeTerminated then [] else [ProjectTerminated ==. False]
+  prjs <- runDB $ do
+    if isAdmin self
+      then selectList tf []
+      else do
+      ps <- selectList [ParticipantsUser ==. selfid] []
+      selectList (tf ++ [ProjectId <-. (map (participantsProject . snd) ps)]) []
+  jsonToRepJson $ jsonMap [("projects", jsonList $ map go prjs)]
+  where
+    go (pid, p) = jsonMap [ ("pid", jsonScalar $ show pid)
+                          , ("name", jsonScalar $ T.unpack $ projectName p)
+                          ]
+
 getAssignListR :: Handler RepJson
 getAssignListR = do
   (selfid, self) <- requireAuth
@@ -131,11 +148,13 @@ getCrossSearchR :: Handler RepHtml
 getCrossSearchR = do
   (selfid, self) <- requireAuth
   prjs <- runDB $ do
+    -- 初回GETなので終了プロジェクトは除外.
     prjs' <- if isAdmin self
-             then selectList [] []
+             then selectList [ProjectTerminated ==. False] []
              else do
                ps <- selectList [ParticipantsUser ==. selfid] []
-               selectList [ProjectId <-. (map (participantsProject . snd) ps)] []
+               selectList [ ProjectTerminated ==. False
+                          , ProjectId <-. (map (participantsProject . snd) ps)] []
     return $ map toProjectBis prjs'
   defaultLayout $ do
     setTitle "クロスサーチ"

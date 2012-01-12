@@ -8,10 +8,6 @@ $(document).ready(function(){
     reload_projects();
     $( $(this).attr('target') ).change();
   });
-  $('#project_name').bind('notext', function() {
-    reload_projects();
-    $( $(this).attr('target') ).change();
-  });
 
   $('#projectid').change(function(){
     reload_statuses();

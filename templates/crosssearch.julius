@@ -1,9 +1,7 @@
 $(document).ready(function(){
   $('#includeterminated').change(function(){
     reload_projects();
-    reload_statuses();
-    reload_assigns();
-    reload_search_result();
+    $( $(this).attr('target') ).change();
   });
 
   $('#projectid').change(function(){

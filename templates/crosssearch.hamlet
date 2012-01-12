@@ -42,7 +42,7 @@
           <input #updatedto type=date name=updatedto .date
       <tr
         <th>
-          <input #includeterminated type=checkbox name=includeterminated
+          <input #includeterminated type=checkbox name=includeterminated target=#projectid
           <label for=includeterminated>終了プロジェクトを含む
   <table .list
     <caption>対象案件一覧

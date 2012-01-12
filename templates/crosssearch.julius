@@ -4,6 +4,15 @@ $(document).ready(function(){
     $( $(this).attr('target') ).change();
   });
 
+  $('#project_name').bind('textchange', function() {
+    reload_projects();
+    $( $(this).attr('target') ).change();
+  });
+  $('#project_name').bind('notext', function() {
+    reload_projects();
+    $( $(this).attr('target') ).change();
+  });
+
   $('#projectid').change(function(){
     reload_statuses();
     reload_assigns();
@@ -131,18 +140,16 @@ function create_twitter_like_more(next) {
 }
 
 function reload_projects() {
-  // save selected
-  var selected = {};
-  $('#projectid option:selected').each(function(){
-    selected[$(this).val()] = $(this).val();
-  });
   // clear
   $('#projectid option').remove();
 
   // get projectids
   var keys = '';
   if ($('#includeterminated').attr('checked')) {
-    keys += $('#includeterminated').attr('name') + '=' + $('#includeterminated').attr('checked');
+    keys += $('#includeterminated').attr('name') + '=' + $('#includeterminated').attr('checked') + '&';
+  }
+  if ($('#project_name').val()) {
+    keys += $('#project_name').attr('name') + '=' + encodeURI($('#project_name').val()) +'&';
   }
   $.ajax({
     async: false,
@@ -152,8 +159,7 @@ function reload_projects() {
     data: keys,
     success: function(json) {
       $.each(json.projects, function(i, p) {
-        var opt = $('<option/>').val(p.pid).text(p.name);
-        if (selected[p.pid]) opt.attr('selected','selected');
+        var opt = $('<option/>').val(p.pid).text(p.name).attr('selected', true);
         $('#projectid').append(opt);
       });
     },

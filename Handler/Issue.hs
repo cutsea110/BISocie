@@ -97,13 +97,18 @@ getProjectListR :: Handler RepJson
 getProjectListR = do
   (selfid, self) <- requireAuth
   includeTerminated <- fmap isJust $ lookupGetParam "includeterminated"
+  project_name <- lookupGetParam "project_name"
+  liftIO $ print $ show project_name
   let tf = if includeTerminated then [] else [ProjectTerminated ==. False]
-  prjs <- runDB $ do
+  prjs' <- runDB $ do
     if isAdmin self
       then selectList tf []
       else do
       ps <- selectList [ParticipantsUser ==. selfid] []
       selectList (tf ++ [ProjectId <-. (map (participantsProject . snd) ps)]) []
+  let prjs = case project_name of
+        Just pn -> filter (T.isInfixOf pn . projectName . snd) prjs'
+        Nothing -> prjs'
   jsonToRepJson $ jsonMap [("projects", jsonList $ map go prjs)]
   where
     go (pid, p) = jsonMap [ ("pid", jsonScalar $ show pid)

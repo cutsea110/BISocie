@@ -17,6 +17,10 @@
       <caption>検索条件
       <tr
         <th>
+          <label for=project_name>プロジェクト名:
+          <input #project_name type=text name=project_name target=#projectid
+      <tr
+        <th>
           <input #includeterminated type=checkbox name=includeterminated
           <label for=includeterminated>終了プロジェクトを含む
       <tr

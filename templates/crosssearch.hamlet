@@ -16,6 +16,10 @@
     <table
       <caption>検索条件
       <tr
+        <th>
+          <input #includeterminated type=checkbox name=includeterminated
+          <label for=includeterminated>終了プロジェクトを含む
+      <tr
         <th>プロジェクト
         <th>ステータス
         <th>アサイン
@@ -41,9 +45,12 @@
           〜
           <input #updatedto type=date name=updatedto .date
       <tr
-        <th>
-          <input #includeterminated type=checkbox name=includeterminated
-          <label for=includeterminated>終了プロジェクトを含む
+        <th
+          <a .complement href=# target=#projectid>選択⇔非選択
+        <th
+          <a .complement href=# target=#status>選択⇔非選択
+        <th
+          <a .complement href=# target=#assign>選択⇔非選択
   <table .list
     <caption>対象案件一覧
     <thead

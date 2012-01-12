@@ -17,6 +17,15 @@ $(document).ready(function(){
     reload_search_result();
   });
 
+  $('.complement').click(function(){
+    var target = $( $(this).attr('target') + ' option' );
+    target.each(function(){
+      $(this).attr('selected', !$(this).attr('selected'));
+    });
+    $( $(this).attr('target') ).change();
+    return false;
+  });
+
   reload_statuses();
   reload_assigns();
   reload_search_result();

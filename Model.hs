@@ -181,9 +181,17 @@ showPrettyActive u = if userActive u then "有効" else "無効"
 
 userFullName :: User -> Text
 userFullName u = userFamilyName u +++ " " +++ userGivenName u
+
+userFullName' :: User -> Text
+userFullName' u = userFamilyName u +++ userGivenName u
     
 userRoleName :: User -> Text
 userRoleName = prettyRoleName . userRole
+
+userIdentOrName :: Text -> User -> Bool
+userIdentOrName q u = T.isInfixOf q (userIdent u) ||
+                      T.isInfixOf q (userFullName u) ||
+                      T.isInfixOf q (userFullName' u)
 
 isStudent :: User -> Bool
 isStudent u = userRole u == Student

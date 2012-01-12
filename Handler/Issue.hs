@@ -98,14 +98,21 @@ getProjectListR = do
   (selfid, self) <- requireAuth
   includeTerminated <- fmap isJust $ lookupGetParam "includeterminated"
   project_name <- lookupGetParam "project_name"
-  liftIO $ print $ show project_name
+  user_ident_or_name <- lookupGetParam "user_ident_or_name"
   let tf = if includeTerminated then [] else [ProjectTerminated ==. False]
   prjs' <- runDB $ do
+    pats <- case user_ident_or_name of
+      Nothing -> selectList [] []
+      Just q -> do
+        users <- selectList [] []
+        let uids = map fst $ filter (userIdentOrName q.snd) users
+        selectList [ParticipantsUser <-. uids] []
+    let pf = [ProjectId <-. map (participantsProject.snd) pats]
     if isAdmin self
-      then selectList tf []
+      then selectList (tf++pf) []
       else do
       ps <- selectList [ParticipantsUser ==. selfid] []
-      selectList (tf ++ [ProjectId <-. (map (participantsProject . snd) ps)]) []
+      selectList (tf ++ pf ++ [ProjectId <-. (map (participantsProject . snd) ps)]) []
   let prjs = case project_name of
         Just pn -> filter (T.isInfixOf pn . projectName . snd) prjs'
         Nothing -> prjs'

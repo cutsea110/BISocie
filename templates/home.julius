@@ -1,5 +1,10 @@
 $(document).ready(function(){
-  $("a.sorter").hide();
+  $("a.sorter")
+  .hide()
+  .click(function(){
+    reload_projects(0, $(this).attr('by'));
+    return false;
+  });
   $("th.sortable-header").hover(
     function(){
       $(this).find("a.sorter").show();
@@ -8,4 +13,54 @@ $(document).ready(function(){
       $(this).find("a.sorter").hide();
     }
   );
+  $("#includeterminated").change(function(){
+    reload_projects(0, 'DescProjectUdate');
+  });
+  $("#project_name, #user_ident_or_name").bind('textchange', function(){
+    reload_projects(0, 'DescProjectUdate');
+  });
+
+  reload_projects(0, 'DescProjectUdate');
 });
+
+function reload_projects(page, order) {
+  // clear
+  $("#container-projects tr").remove();
+  
+  // get projects
+  var keys = 'page='+page+'&order='+order+'&';
+  if ($('#includeterminated').attr('checked')) {
+    keys += $('#includeterminated').attr('name') + '=' + $('#includeterminated').attr('checked') + '&';
+  }
+  if ($('#project_name').val()) {
+    keys += $('#project_name').attr('name') + '=' + encodeURI($('#project_name').val()) +'&';
+  }
+  if ($('#user_ident_or_name').val()) {
+    keys += $('#user_ident_or_name').attr('name') + '=' + encodeURI($('#user_ident_or_name').val()) +'&';
+  }
+  $.ajax({
+    async: false,
+    type: 'GET',
+    url: '@{ProjectListR}',
+    dataType: 'json',
+    data: keys,
+    success: function(json) {
+      $.each(json.projects, function(i, p) {
+        $('#container-projects').append(mkProjectRec(p, i%2==0?"even":"odd"));
+      });
+    },
+    error: function(res, status) {
+    }
+  });
+}
+
+function mkProjectRec(item, klass) {
+  var tr = $('<tr/>').addClass(klass),
+      issuelist_link = $('<a/>').attr({href: item.issuelistUri}).text(item.name),
+      name = $('<td/>').append(issuelist_link),
+      project_link = $('<a/>').attr({href: item.projectUri}).text(item.description),
+      desc = $('<td/>').append(project_link),
+      cdate = $('<td/>').text(item.cdate),
+      udate = $('<td/>').text(item.udate);
+  return tr.append(name).append(desc).append(cdate).append(udate);
+}

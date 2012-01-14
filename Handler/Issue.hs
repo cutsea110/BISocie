@@ -120,6 +120,9 @@ getProjectListR = do
   where
     go (pid, p) = jsonMap [ ("pid", jsonScalar $ show pid)
                           , ("name", jsonScalar $ T.unpack $ projectName p)
+                          , ("description", jsonScalar $ T.unpack $ projectDescription p)
+                          , ("cdate", jsonScalar $ T.unpack $ showDate $ projectCdate p)
+                          , ("udate", jsonScalar $ T.unpack $ showDate $ projectUdate p)
                           ]
 
 getAssignListR :: Handler RepJson

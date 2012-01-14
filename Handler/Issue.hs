@@ -26,7 +26,7 @@ import Text.Blaze (preEscapedText)
 import Text.Cassius (cassiusFile)
 
 import BISocie.Helpers.Util
-import Settings (mailXHeader, mailMessageIdDomain, fromEmailAddress, issueListLimit, fillGapWidth, pagenateWidth)
+import Settings (mailXHeader, mailMessageIdDomain, fromEmailAddress, issueListLimit, fillGapWidth, pagenateWidth, projectListLimit)
 import Settings.StaticFiles
 import Handler.S3
 
@@ -96,10 +96,17 @@ getTaskR y m d = do
 getProjectListR :: Handler RepJson
 getProjectListR = do
   (selfid, self) <- requireAuth
+  r <- getUrlRender
   includeTerminated <- fmap isJust $ lookupGetParam "includeterminated"
   project_name <- lookupGetParam "project_name"
   user_ident_or_name <- lookupGetParam "user_ident_or_name"
   let tf = if includeTerminated then [] else [ProjectTerminated ==. False]
+  mpage <- fmap (fmap readText) $ lookupGetParam "page"
+  let pagef = case mpage of
+        Nothing -> []
+        Just p -> [LimitTo projectListLimit, OffsetBy (p*projectListLimit)]
+  ordName <- fmap (fromMaybe "DescProjectUdate") $ lookupGetParam "order"
+  let order = [textToOrder ordName]
   prjs' <- runDB $ do
     pats <- case user_ident_or_name of
       Nothing -> selectList [] []
@@ -109,21 +116,23 @@ getProjectListR = do
         selectList [ParticipantsUser <-. uids] []
     let pf = [ProjectId <-. map (participantsProject.snd) pats]
     if isAdmin self
-      then selectList (tf++pf) []
+      then selectList (tf++pf) (order++pagef)
       else do
       ps <- selectList [ParticipantsUser ==. selfid] []
-      selectList (tf ++ pf ++ [ProjectId <-. (map (participantsProject . snd) ps)]) []
+      selectList (tf ++ pf ++ [ProjectId <-. (map (participantsProject . snd) ps)]) (order++pagef)
   let prjs = case project_name of
         Just pn -> filter (T.isInfixOf pn . projectName . snd) prjs'
         Nothing -> prjs'
-  jsonToRepJson $ jsonMap [("projects", jsonList $ map go prjs)]
+  jsonToRepJson $ jsonMap [("projects", jsonList $ map (go r) prjs)]
   where
-    go (pid, p) = jsonMap [ ("pid", jsonScalar $ show pid)
-                          , ("name", jsonScalar $ T.unpack $ projectName p)
-                          , ("description", jsonScalar $ T.unpack $ projectDescription p)
-                          , ("cdate", jsonScalar $ T.unpack $ showDate $ projectCdate p)
-                          , ("udate", jsonScalar $ T.unpack $ showDate $ projectUdate p)
-                          ]
+    go r (pid, p) = jsonMap [ ("pid", jsonScalar $ show pid)
+                            , ("name", jsonScalar $ T.unpack $ projectName p)
+                            , ("description", jsonScalar $ T.unpack $ projectDescription p)
+                            , ("cdate", jsonScalar $ T.unpack $ showDate $ projectCdate p)
+                            , ("udate", jsonScalar $ T.unpack $ showDate $ projectUdate p)
+                            , ("issuelistUri", jsonScalar $ T.unpack $ r $ IssueListR pid)
+                            , ("projectUri", jsonScalar $ T.unpack $ r $ ProjectR pid)
+                            ]
 
 getAssignListR :: Handler RepJson
 getAssignListR = do

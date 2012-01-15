@@ -107,7 +107,7 @@ getProjectListR = do
         Just p -> [LimitTo projectListLimit, OffsetBy (p*projectListLimit)]
   ordName <- fmap (fromMaybe "DescProjectUdate") $ lookupGetParam "order"
   let order = [textToOrder ordName]
-  prjs' <- runDB $ do
+  (c', prjs') <- runDB $ do
     pats <- case user_ident_or_name of
       Nothing -> selectList [] []
       Just q -> do
@@ -116,14 +116,24 @@ getProjectListR = do
         selectList [ParticipantsUser <-. uids] []
     let pf = [ProjectId <-. map (participantsProject.snd) pats]
     if isAdmin self
-      then selectList (tf++pf) (order++pagef)
+      then do
+      prjs'' <- selectList (tf++pf) (order++pagef)
+      c'' <- count (tf++pf)
+      return (c'', prjs'')
       else do
       ps <- selectList [ParticipantsUser ==. selfid] []
-      selectList (tf ++ pf ++ [ProjectId <-. (map (participantsProject . snd) ps)]) (order++pagef)
+      prjs'' <- selectList (tf ++ pf ++ [ProjectId <-. (map (participantsProject . snd) ps)]) (order++pagef)
+      c'' <- count (tf ++ pf ++ [ProjectId <-. (map (participantsProject . snd) ps)])
+      return (c'', prjs'')
   let prjs = case project_name of
         Just pn -> filter (T.isInfixOf pn . projectName . snd) prjs'
         Nothing -> prjs'
-  jsonToRepJson $ jsonMap [("projects", jsonList $ map (go r) prjs)]
+      pageLength = ceiling (fromIntegral c' / fromIntegral projectListLimit)
+  jsonToRepJson $ jsonMap [ ("projects", jsonList $ map (go r) prjs)
+                          , ("page", jsonScalar $ fromMaybe "0" $ fmap show mpage)
+                          , ("order", jsonScalar $ T.unpack ordName)
+                          , ("pageLength", jsonScalar $ show pageLength)
+                          ]
   where
     go r (pid, p) = jsonMap [ ("pid", jsonScalar $ show pid)
                             , ("name", jsonScalar $ T.unpack $ projectName p)

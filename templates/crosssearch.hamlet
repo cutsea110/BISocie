@@ -24,7 +24,7 @@
           <input #user_ident_or_name type=text name=user_ident_or_name target=#projectid
       <tr
         <th
-          <input #includeterminated type=checkbox name=includeterminated
+          <input #includeterminated type=checkbox name=includeterminated target=#projectid
           <label for=includeterminated>終了プロジェクトを含む
     <hr
     <table

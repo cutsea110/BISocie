@@ -4,7 +4,7 @@ $(document).ready(function(){
     $( $(this).attr('target') ).change();
   });
 
-  $('#project_name').bind('textchange', function() {
+  $('#project_name, #user_ident_or_name').bind('textchange', function() {
     reload_projects();
     $( $(this).attr('target') ).change();
   });
@@ -146,6 +146,9 @@ function reload_projects() {
   }
   if ($('#project_name').val()) {
     keys += $('#project_name').attr('name') + '=' + encodeURI($('#project_name').val()) +'&';
+  }
+  if ($('#user_ident_or_name').val()) {
+    keys += $('#user_ident_or_name').attr('name') + '=' + encodeURI($('#user_ident_or_name').val()) +'&';
   }
   $.ajax({
     async: false,

@@ -12,29 +12,35 @@
   <li
     <a href=@{CurrentScheduleR}>スケジュール
 <div #main-content
+  <div .searchbox
+    <table
+      <caption>検索条件
+      <tr
+        <th
+          <label for=project_name>プロジェクト名:
+          <input #project_name type=text name=project_name
+        <th
+          <label for=user_ident_or_name>参加者ID or 氏名
+          <input #user_ident_or_name type=text name=user_ident_or_name
+      <tr
+        <th
+          <input #includeterminated type=checkbox name=includeterminated
+          <label for=includeterminated>終了プロジェクトを含む
   <table .list
     <caption>参加プロジェクト一覧
     <thead
-      ^{paging}
+      <tr #pagenate-top
       <tr
         <th .name .sortable-header>プロジェクト名
-          <a href=@?{nameDesc} .sorter>△
-          <a href=@?{nameAsc} .sorter>▽
+          <a href=# .sorter by=DescProjectName>△
+          <a href=# .sorter by=AscProjectName>▽
         <th .desc>概要
         <th .date .sortable-header>作成日
-          <a href=@?{cdateDesc} .sorter> △
-          <a href=@?{cdateAsc} .sorter> ▽
+          <a href=# .sorter by=DescProjectCdate> △
+          <a href=# .sorter by=AscProjectCdate> ▽
         <th .date .sortable-header>更新日
-          <a href=@?{udateDesc} .sorter> △
-          <a href=@?{udateAsc} .sorter> ▽
-    <tbody>
-      $forall p <- prjs
-        <tr .#{fst p}
-          <td
-            <a href=@{IssueListR $ fst $ snd p}>#{projectName $ snd $ snd p}
-          <td
-            <a href=@{ProjectR $ fst $ snd p}>#{showShortenText $ projectDescription $ snd $ snd p}
-          <td>#{showDate $ projectCdate $ snd $ snd p}
-          <td>#{showDate $ projectUdate $ snd $ snd p}
+          <a href=# .sorter by=DescProjectUdate> △
+          <a href=# .sorter by=AscProjectUdate> ▽
+    <tbody #container-projects
     <tfoot
-      ^{paging}
+      <tr #pagenate-bottom

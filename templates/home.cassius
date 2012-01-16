@@ -10,3 +10,11 @@ table.list .date
 table.list .sort-header
    text-decoration: none
    color: #4040ff
+.searchbox
+    padding: 10px
+    margin-bottom: 5px
+    border: solid 1px #CCC
+    background-color: ivory
+.paging-link
+    margin-left: 0.2em;
+    margin-right: 0.2em;

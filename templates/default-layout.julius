@@ -120,3 +120,59 @@ $(document).ready(function(){
     });
   });
 });
+
+function mkList(from,to) {
+  var ret = [];
+  ret.length = to-(from-1);
+  for(var i=0; i<ret.length; i++){
+    ret[i]=from+i;
+  }
+  return ret;
+}
+
+// currentは0ベースのページ番号.
+// 返り値は{page:# of page(0base), disp: display text}なオブジェクトのリストのリスト.
+function mkPagenate(fillGap, width, current, maxPage) {
+  var cc = current+1,
+      ll = 1,
+      lr = ll+width,
+      cl = cc-width,
+      cr = cc+width,
+      rl = maxPage-width,
+      rr = maxPage,
+      leftConnected = cl-lr<=fillGap,
+      rightConnected = rl-cr<=fillGap,
+      ret = [];
+  if (leftConnected && rightConnected) {
+    ret.length=1;
+    ret[0] = $.map(mkList(ll, rr), function(n){return {page:n-1,disp:n+''};});
+  } else if (leftConnected) {
+    ret.length=2;
+    ret[0] = $.map(mkList(ll, cr), function(n){return {page:n-1,disp:n+''};});
+    ret[1] = $.map(mkList(rl, rr), function(n){return {page:n-1,disp:n+''};});
+  } else if (rightConnected) {
+    ret.length=2;
+    ret[0] = $.map(mkList(ll, lr), function(n){return {page:n-1,disp:n+''};});
+    ret[1] = $.map(mkList(cl, rr), function(n){return {page:n-1,disp:n+''};});
+  } else {
+    ret.length=3;
+    ret[0] = $.map(mkList(ll, lr), function(n){return {page:n-1,disp:n+''};});
+    ret[1] = $.map(mkList(cl, cr), function(n){return {page:n-1,disp:n+''};});
+    ret[2] = $.map(mkList(rl, rr), function(n){return {page:n-1,disp:n+''};});
+  }
+  return ret;
+}
+
+function intersperse(sep, list){
+  var ret = [];
+  ret.length = list.length*2-1;
+  for(var i=0;i<ret.length;i++){
+    ret[i] = i%2==0 ? list[i/2] : sep
+  }
+  return ret;
+}
+
+function isNull(obj) {
+  for(var x in obj)return false;
+  return true;
+}

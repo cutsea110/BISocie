@@ -1,5 +1,14 @@
 $(document).ready(function(){
-  $("a.sorter").hide();
+  $("a.sorter")
+  .hide()
+  .click(function(){
+    reload_projects(0, $(this).attr('by'));
+    return false;
+  });
+  $("a.paging-link").live('click', function(){
+    reload_projects($(this).attr('page'), $(this).attr('by'));
+    return false;
+  });
   $("th.sortable-header").hover(
     function(){
       $(this).find("a.sorter").show();
@@ -8,4 +17,94 @@ $(document).ready(function(){
       $(this).find("a.sorter").hide();
     }
   );
+  $("#includeterminated").change(function(){
+    reload_projects(0, 'DescProjectUdate');
+  });
+  $("#project_name, #user_ident_or_name").bind('textchange', function(){
+    reload_projects(0, 'DescProjectUdate');
+  });
+
+  reload_projects(0, 'DescProjectUdate');
 });
+
+function reload_projects(page, order) {
+  // clear
+  $('#container-projects tr').remove();
+  $('#pagenate-top td, #pagenate-bottom td').remove();
+  
+  // get projects
+  var keys = 'page='+page+'&order='+order+'&';
+  if ($('#includeterminated').attr('checked')) {
+    keys += $('#includeterminated').attr('name') + '=' + $('#includeterminated').attr('checked') + '&';
+  }
+  if ($('#project_name').val()) {
+    keys += $('#project_name').attr('name') + '=' + encodeURI($('#project_name').val()) +'&';
+  }
+  if ($('#user_ident_or_name').val()) {
+    keys += $('#user_ident_or_name').attr('name') + '=' + encodeURI($('#user_ident_or_name').val()) +'&';
+  }
+  $.ajax({
+    async: false,
+    type: 'GET',
+    url: '@{ProjectListR}',
+    dataType: 'json',
+    data: keys,
+    success: function(json) {
+      $.each(json.projects, function(i, p) {
+        $('#container-projects').append(mkProjectRec(p, i%2==0?"even":"odd"));
+      });
+      var pagelen = parseInt(json.pageLength),
+          current = parseInt(json.page);
+      if(pagelen>1) {
+        var td = mkPagingTD(pagelen, current, json.order);
+        $('#pagenate-top').append(td);
+        $('#pagenate-bottom').append(td.clone(true));
+      }
+    },
+    error: function(res, status) {
+    }
+  });
+}
+
+function mkProjectRec(item, klass) {
+  var tr = $('<tr/>').addClass(klass),
+      issuelist_link = $('<a/>').attr({href: item.issuelistUri}).text(item.name),
+      name = $('<td/>').append(issuelist_link),
+      project_link = $('<a/>').attr({href: item.projectUri}).text(item.description),
+      desc = $('<td/>').append(project_link),
+      cdate = $('<td/>').text(item.cdate),
+      udate = $('<td/>').text(item.udate);
+  return tr.append(name).append(desc).append(cdate).append(udate);
+}
+
+// currentは0ベースのページ番号
+function mkPagingTD(pagelen, c, ord) {
+  var ps = mkPagenate(#{show fillGapWidth},#{show pagenateWidth},c,pagelen),
+      paging = intersperse([], ps),
+      td = $('<td/>').attr({colspan: 4, align: 'left'});
+  var prev = mkPageLink(c, pagelen, {page: c-1, disp: '<<Prev'}, ord),
+      next = mkPageLink(c, pagelen, {page: c+1, disp: 'Next>>'}, ord);
+  td.append(prev);
+  for(var i in paging) {
+    var blk = paging[i];
+    if (isNull(paging[i])) {
+      td.append($('<span/>').text('...'));
+    } else {
+      for(var j in blk) {
+        var p = mkPageLink(c, pagelen, blk[j], ord);
+        td.append(p);
+      }
+    }
+  }
+  td.append(next);
+  return td;
+}
+
+function mkPageLink(c, pagelen, p, ord) {
+  var ret = c!=p.page && 0<=p.page && p.page<=pagelen-1
+            ? $('<a/>').attr({href: '#', page: p.page, by: ord})
+                       .addClass('paging-link')
+                       .text(p.disp)
+            : $('<span/>').addClass('paging-link').text(p.disp);
+  return ret;
+}

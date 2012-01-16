@@ -16,13 +16,18 @@
     <table
       <caption>検索条件
       <tr
-        <th>
+        <th
           <label for=project_name>プロジェクト名:
           <input #project_name type=text name=project_name target=#projectid
+        <th
+          <label for=user_ident_or_name>参加者ID or 氏名
+          <input #user_ident_or_name type=text name=user_ident_or_name target=#projectid
       <tr
-        <th>
+        <th
           <input #includeterminated type=checkbox name=includeterminated
           <label for=includeterminated>終了プロジェクトを含む
+    <hr
+    <table
       <tr
         <th>プロジェクト
         <th>ステータス

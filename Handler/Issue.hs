@@ -102,12 +102,9 @@ getProjectListR = do
   user_ident_or_name <- lookupGetParam "user_ident_or_name"
   let tf = if includeTerminated then [] else [ProjectTerminated ==. False]
   mpage <- fmap (fmap readText) $ lookupGetParam "page"
-  let pagef = case mpage of
-        Nothing -> []
-        Just p -> [LimitTo projectListLimit, OffsetBy (p*projectListLimit)]
   ordName <- fmap (fromMaybe "DescProjectUdate") $ lookupGetParam "order"
   let order = [textToOrder ordName]
-  (c', prjs') <- runDB $ do
+  prjs' <- runDB $ do
     pats <- case user_ident_or_name of
       Nothing -> selectList [] []
       Just q -> do
@@ -116,19 +113,17 @@ getProjectListR = do
         selectList [ParticipantsUser <-. uids] []
     let pf = [ProjectId <-. map (participantsProject.snd) pats]
     if isAdmin self
-      then do
-      prjs'' <- selectList (tf++pf) (order++pagef)
-      c'' <- count (tf++pf)
-      return (c'', prjs'')
+      then selectList (tf++pf) order
       else do
       ps <- selectList [ParticipantsUser ==. selfid] []
-      prjs'' <- selectList (tf ++ pf ++ [ProjectId <-. (map (participantsProject . snd) ps)]) (order++pagef)
-      c'' <- count (tf ++ pf ++ [ProjectId <-. (map (participantsProject . snd) ps)])
-      return (c'', prjs'')
-  let prjs = case project_name of
+      selectList (tf ++ pf ++ [ProjectId <-. (map (participantsProject . snd) ps)]) order
+  let allprjs = case project_name of
         Just pn -> filter (T.isInfixOf pn . projectName . snd) prjs'
         Nothing -> prjs'
-      pageLength = ceiling (fromIntegral c' / fromIntegral projectListLimit)
+      pageLength = ceiling (fromIntegral (length allprjs) / fromIntegral projectListLimit)
+      prjs = case mpage of
+        Nothing -> take projectListLimit allprjs
+        Just n  -> drop (n*projectListLimit) $ take ((n+1)*projectListLimit) allprjs
   jsonToRepJson $ jsonMap [ ("projects", jsonList $ map (go r) prjs)
                           , ("page", jsonScalar $ fromMaybe "0" $ fmap show mpage)
                           , ("order", jsonScalar $ T.unpack ordName)

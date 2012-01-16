@@ -5,8 +5,7 @@
 module Handler.Root where
 
 import Control.Monad (unless, forM)
-import Data.List (intersperse, find)
-import Data.Maybe (fromMaybe)
+import Data.List (find)
 import qualified Data.ByteString.Lazy.Char8 as L
 import Codec.Binary.UTF8.String (decodeString)
 import Data.Text (Text)
@@ -40,36 +39,6 @@ getHomeR :: UserId -> Handler RepHtml
 getHomeR uid = do
   (selfid, self) <- requireAuth
   unless (selfid==uid) $ permissionDenied "他人のホームを見ることはできません."
-  page <- fmap (max 0 . fromMaybe 0 . fmap (read . T.unpack)) $ lookupGetParam "page"
-  ordName <- fmap (fromMaybe "DescProjectUdate") $ lookupGetParam "order"
-  let order = textToOrder ordName
-  (allprjs, prjs) <- runDB $ do
-    prjs' <- if isAdmin self
-             then selectList [] [order]
-             else do
-               ps <- selectList [ParticipantsUser ==. selfid] []
-               selectList [ProjectId <-. (map (participantsProject . snd) ps)] [order]
-    return $ (prjs',
-              zip (concat $ repeat ["odd", "even"]::[String]) 
-              $ take projectListLimit $ drop (page*projectListLimit) prjs')
-  let maxpage = ceiling (fromIntegral (length allprjs) / fromIntegral projectListLimit) - 1
-      prevExist = page > 0
-      nextExist = page < maxpage
-      prevPage = (HomeR uid, [("page", showText $ max 0 (page-1)), ("order", ordName)])
-      nextPage = (HomeR uid, [("page", showText $ max 0 (page+1)), ("order", ordName)])
-      pagenate = intersperse [] $  map (map pageN) $ mkPagenate fillGapWidth pagenateWidth page maxpage
-      pageN = \n -> (n, (HomeR uid, [("page", showText n), ("order", ordName)]))
-      isCurrent = (==page)
-      needPaging = maxpage > 0
-      inc = (+1)
-      udateAsc  = (HomeR selfid, [("page", showText page), ("order", "AscProjectUdate")])
-      udateDesc = (HomeR selfid, [("page", showText page), ("order", "DescProjectUdate")])
-      cdateAsc  = (HomeR selfid, [("page", showText page), ("order", "AscProjectCdate")])
-      cdateDesc = (HomeR selfid, [("page", showText page), ("order", "DescProjectCdate")])
-      nameAsc   = (HomeR selfid, [("page", showText page), ("order", "AscProjectName")])
-      nameDesc  = (HomeR selfid, [("page", showText page), ("order", "DescProjectName")])
-      colspan = 4
-      paging = $(widgetFile "paging")
   defaultLayout $ do
     setTitle $ preEscapedText $ userFullName self +++ " ホーム"
     addWidget $(widgetFile "home")

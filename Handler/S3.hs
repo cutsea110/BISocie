@@ -1,5 +1,6 @@
 {-# LANGUAGE TemplateHaskell, OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes, CPP #-}
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 module Handler.S3 
        ( getUploadR
        , postUploadR
@@ -13,14 +14,12 @@ module Handler.S3
 
 import Foundation
 import Data.Time
-import Data.Int
 import qualified Data.ByteString.Lazy as L
 import Data.ByteString.Char8 (pack)
 import System.Directory
 import System.FilePath
 import Web.Encodings (encodeUrl)
 import Text.Cassius (cassiusFile)
-import Data.Text (Text)
 import qualified Data.Text as T
 
 import qualified Settings (s3dir)
@@ -33,8 +32,6 @@ getUploadR = do
     addCassius $(cassiusFile "templates/s3/s3.cassius")
     addWidget $(widgetFile "s3/upload")
 
-upload :: PersistBackend b m =>
-          Key backend User -> FileInfo -> b m (Maybe (Key b (FileHeaderGeneric backend), Text, Text, Int64, UTCTime))
 upload uid fi = do
   if fileName fi /= "" && L.length (fileContent fi) > 0
     then do
@@ -52,8 +49,8 @@ upload uid fi = do
                         , fileHeaderCreator=uid
                         , fileHeaderCreated=now
                         }
-    let s3dir = Settings.s3dir </> show uid
-        s3fp = s3dir </> show fid
+    let s3dir = Settings.s3dir </> T.unpack (toSinglePiece uid)
+        s3fp = s3dir </> T.unpack (toSinglePiece fid)
     liftIO $ do
       createDirectoryIfMissing True s3dir
       L.writeFile s3fp (fileContent fi)
@@ -77,7 +74,7 @@ postUploadR = do
           fmap RepXml $ hamletToContent
                       [xhamlet|\
 <file>
-  <fhid>#{show fid}
+  <fhid>#{T.unpack $ toSinglePiece fid}
   <name>#{name}
   <ext>#{ext}
   <size>#{show fsize}
@@ -101,8 +98,8 @@ putUploadR = do
 getFileR :: UserId -> FileHeaderId -> Handler RepHtml
 getFileR uid fid = do
   h <- runDB $ get404 fid
-  let s3dir = Settings.s3dir </> show uid
-      s3fp = s3dir </> show fid
+  let s3dir = Settings.s3dir </> T.unpack (toSinglePiece uid)
+      s3fp = s3dir </> T.unpack (toSinglePiece fid)
   setHeader "Content-Type" $ pack $ T.unpack $ fileHeaderContentType h
   setHeader "Content-Disposition" $ pack $ T.unpack $ "attachment; filename=" +++ fileHeaderEfname h
   return $ RepHtml $ ContentFile s3fp Nothing
@@ -124,8 +121,8 @@ deleteFileR uid fid = do
     else do
     r <- getUrlRender
     runDB $ delete fid
-    let s3dir = Settings.s3dir </> show uid
-        s3fp = s3dir </> show fid
+    let s3dir = Settings.s3dir </> T.unpack (toSinglePiece uid)
+        s3fp = s3dir </> T.unpack (toSinglePiece fid)
         rf = r $ FileR uid fid
     liftIO $ removeFile s3fp
     fmap RepXml $ hamletToContent

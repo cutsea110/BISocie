@@ -15,7 +15,7 @@ import BISocie.Helpers.Util
 import Control.Monad
 import Control.Applicative
 import Data.Time
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, fromJust)
 import qualified Data.Text as T
 
 getProfileR :: UserId -> Handler RepHtml
@@ -213,7 +213,7 @@ postAvatarR uid = do
   (_, self) <- requireAuth
   r <- getUrlRender
   mfhid <- lookupPostParam "avatar"
-  let avatar = fmap readText mfhid
+  let avatar = fmap (fromJust . fromSinglePiece) mfhid
   runDB $ do
     user <- get404 uid
     unless (self `canEdit` user) $

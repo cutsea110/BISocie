@@ -612,7 +612,6 @@ selectParticipants pid = do
       u <- get404 uid
       return (uid, u)
 
-storeAttachedFile :: (PersistBackend b m, Functor (b m)) => Key backend User -> FileInfo -> b m (Maybe ((Key b (FileHeaderGeneric backend)), T.Text))
 storeAttachedFile uid fi = fmap (fmap fst5'snd5) $ upload uid fi
   where
     fst5'snd5 (x,y,_,_,_) = (x,y)

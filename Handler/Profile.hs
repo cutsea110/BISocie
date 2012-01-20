@@ -10,7 +10,6 @@ import Foundation
 import Settings (entryStartYear, graduateStartYear)
 import Settings.StaticFiles
 import Handler.S3
-import BISocie.Helpers.Util
 
 import Control.Monad
 import Control.Applicative

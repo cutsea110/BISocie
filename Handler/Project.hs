@@ -153,8 +153,8 @@ deleteProjectR pid = do
       forM_ fids $ \(Just fid) -> do 
         f <- get404 fid
         let uid = fileHeaderCreator f
-            s3dir = Settings.s3dir </> show uid
-            s3fp = s3dir </> show fid
+            s3dir = Settings.s3dir </> T.unpack (toSinglePiece uid)
+            s3fp = s3dir </> T.unpack (toSinglePiece fid)
         delete fid
         liftIO $ removeFile s3fp
       -- delete issues

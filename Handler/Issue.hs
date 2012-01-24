@@ -122,7 +122,7 @@ getProjectListR = do
         Nothing -> prjs'
       pageLength = ceiling (fromIntegral (length allprjs) / fromIntegral projectListLimit)
       prjs = case mpage of
-        Nothing -> take projectListLimit allprjs
+        Nothing -> allprjs
         Just n  -> drop (n*projectListLimit) $ take ((n+1)*projectListLimit) allprjs
   jsonToRepJson $ jsonMap [ ("projects", jsonList $ map (go r) prjs)
                           , ("page", jsonScalar $ fromMaybe "0" $ fmap show mpage)
@@ -547,7 +547,7 @@ postReadCommentR cid = do
     cmt <- get404 cid
     let pid = commentProject cmt
     p <- getBy $ UniqueParticipants pid selfid
-    unless (p /= Nothing || isAdmin self) $
+    unless (p /= Nothing) $
       lift $ permissionDenied "あなたはこのプロジェクトに参加していません."
     case _method of
       Just "add" -> do    

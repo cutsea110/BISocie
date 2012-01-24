@@ -79,6 +79,7 @@ $(document).ready(function(){
       },
       error: function(res, status) {
         // FIXME
+        alert(status + ': 終了状態の変更に失敗しました.');
       }
     });
   });

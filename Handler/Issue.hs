@@ -547,7 +547,7 @@ postReadCommentR cid = do
     cmt <- get404 cid
     let pid = commentProject cmt
     p <- getBy $ UniqueParticipants pid selfid
-    unless (p /= Nothing || isAdmin self) $
+    unless (p /= Nothing) $
       lift $ permissionDenied "あなたはこのプロジェクトに参加していません."
     case _method of
       Just "add" -> do    

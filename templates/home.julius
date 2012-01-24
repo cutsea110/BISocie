@@ -43,6 +43,7 @@ function reload_projects(page, order) {
   if ($('#user_ident_or_name').val()) {
     keys += $('#user_ident_or_name').attr('name') + '=' + encodeURI($('#user_ident_or_name').val()) +'&';
   }
+  keys += 'uncache=' + (new Date).getTime();
   $.ajax({
     async: false,
     type: 'GET',

@@ -33,14 +33,14 @@ getUploadR = do
     addWidget $(widgetFile "s3/upload")
 
 upload uid fi = do
-  if fileName fi /= "" && L.length (fileContent fi) > 0
+  if fileName' fi /= "" && L.length (fileContent fi) > 0
     then do
     now <- liftIO getCurrentTime
-    let (name, ext) = splitExtension $ T.unpack $ fileName fi
-        efname = encodeUrl $ fileName fi
+    let (name, ext) = splitExtension $ T.unpack $ fileName' fi
+        efname = encodeUrl $ fileName' fi
         fsize = L.length $ fileContent fi
     fid <-
-      insert FileHeader { fileHeaderFullname=fileName fi
+      insert FileHeader { fileHeaderFullname=fileName' fi
                         , fileHeaderEfname=efname
                         , fileHeaderContentType=fileContentType fi
                         , fileHeaderFileSize=fsize
@@ -54,8 +54,11 @@ upload uid fi = do
     liftIO $ do
       createDirectoryIfMissing True s3dir
       L.writeFile s3fp (fileContent fi)
-    return $ Just (fid, fileName fi, T.pack ext, fsize, now)
+    return $ Just (fid, fileName' fi, T.pack ext, fsize, now)
     else return Nothing
+  where
+    fileName' :: FileInfo -> T.Text
+    fileName' = last . T.split (\c -> c=='/' || c=='\\') . fileName
   
 postUploadR :: Handler RepXml
 postUploadR = do

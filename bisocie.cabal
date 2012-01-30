@@ -38,6 +38,7 @@ library
                      Handler.Participants
                      Handler.User
                      Handler.S3
+                     Handler.Admin
                      BISocie.Helpers.Auth.HashDB
                      BISocie.Helpers.Util
 

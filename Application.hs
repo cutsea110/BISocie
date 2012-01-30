@@ -34,6 +34,7 @@ import Handler.Issue
 import Handler.Participants
 import Handler.User
 import Handler.S3
+import Handler.Admin
 
 -- This line actually creates our YesodSite instance. It is the second half
 -- of the call to mkYesodData which occurs in BISocie.hs. Please see

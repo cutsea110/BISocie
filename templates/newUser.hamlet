@@ -1,0 +1,38 @@
+<a href=@{UsersR}>Return to list
+<h1>Add new
+<form method=post action=@{NewUserR}
+  <table
+    <tr
+      <th>ident
+      <td
+        <input type=text name=ident
+    <tr
+      <th>password
+      <td
+        <input type=password name=password
+    <tr
+      <th>role
+      <td
+        <select name=role
+          $forall role <- roles
+            <option value=#{show $ toInt $ snd role}>#{fst role}
+    <tr
+      <th>familyName
+      <td
+        <input type=text name=familyName
+    <tr
+      <th>givenName
+      <td
+        <input type=text name=givenName
+    <tr
+      <th>email
+      <td
+        <input type=text name=email
+    <tr
+      <th>active or inactive
+      <td
+        <input #active type=radio name=active value=yes checked
+        <label for=active>active
+        <input #inactive type=radio name=active value=no
+        <label for=active>inactive
+  <input type=submit

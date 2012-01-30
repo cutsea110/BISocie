@@ -93,7 +93,7 @@ $(document).ready(function(){
     endhour: 23,
     showminutes: true,
     minutedivisions: 4,
-    military: true,
+    military: true
   });
 
   $(".inplaceedit").each(function(){

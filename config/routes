@@ -38,6 +38,10 @@
 /system-batch SystemBatchR GET POST
 /send-reminder-mail/#Year/#Month/#Date SendReminderMailR GET
 
+/admin UsersR GET
+/admin/edit/#UserId UserR GET POST
+/admin/add NewUserR GET POST
+/admin/delete/#UserId DeleteUserR GET POST
+
 /s3/upload UploadR POST PUT
 /s3/user/#UserId/file/#FileHeaderId FileR POST DELETE
--- /admin AdminR UserCrud userCrud

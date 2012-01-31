@@ -20,9 +20,6 @@ module Foundation
     , module Model
     , StaticRoute (..)
     , AuthRoute (..)
-      --
---    , UserCrud -- FIXME Crud
---    , userCrud -- FIXME Crud
     ) where
 
 import Prelude
@@ -30,7 +27,6 @@ import Yesod hiding (Form, AppConfig (..), withYamlEnvironment)
 import Yesod.Static (Static, base64md5, StaticRoute(..))
 import Yesod.Auth
 import BISocie.Helpers.Auth.HashDB
--- import Yesod.Helpers.Crud -- FIXME
 import Yesod.Default.Config
 import Yesod.Default.Util (addStaticContentExternal)
 import Yesod.Logger (Logger, logMsg, formatLogText)
@@ -211,63 +207,6 @@ instance YesodJquery BISocie where
   urlJqueryJs _ = Left $ StaticR js_jquery_1_4_4_min_js
   urlJqueryUiJs _ = Left $ StaticR js_jquery_ui_1_8_9_custom_min_js
   urlJqueryUiCss _ = Left $ StaticR css_jquery_ui_1_8_9_custom_css
-
-{--
-type UserCrud = Crud BISocie User
-
-instance ToForm User BISocie where
-  toForm mu = fieldsToTable $ User
-              <$> stringField "ident" (fmap userIdent mu)
-              <*> maybePasswordField "password" Nothing
-              <*> selectField roleopts "role" (fmap userRole mu)
-              <*> stringField "familyName" (fmap userFamilyName mu)
-              <*> stringField "givenName" (fmap userGivenName mu)
-              <*> stringField "email" (fmap userEmail mu)
-              <*> pure (fromMaybe Nothing (fmap userAvatar mu))
-              <*> boolField "active" (fmap userActive mu)
-    where
-      roleopts = map (id &&& showText) [minBound..maxBound]
-
-userCrud :: BISocie -> Crud BISocie User
-userCrud = const Crud
-           { crudSelect = do
-                (_, u) <- requireAuth
-                unless (isAdmin u) $
-                  permissionDenied "You couldn't access user crud."
-                runDB $ selectList [] [] 0 0
-           , crudReplace = \k a -> do
-                (_, u) <- requireAuth
-                unless (isAdmin u) $
-                  permissionDenied "You couldn't access user crud."
-                runDB $ do
-                  case userPassword a of
-                    Nothing -> do
-                      Just a' <- get k
-                      replace k $ a {userPassword=userPassword a', userActive=userActive a}
-                    Just rp -> do
-                      replace k $ a {userPassword=Just $ encrypt rp, userActive=userActive a}
-           , crudInsert = \a -> do
-                (_, u) <- requireAuth
-                unless (isAdmin u) $
-                  permissionDenied "You couldn't access user crud."
-                runDB $ do
-                  insert $ a { userPassword=(fmap encrypt $ userPassword a)}
-           , crudGet = \k -> do
-                (_, u) <- requireAuth
-                unless (isAdmin u) $
-                  permissionDenied "You couldn't access user crud."
-                runDB $ get k
-           , crudDelete = \k -> do
-                (_, u) <- requireAuth
-                unless (isAdmin u) $
-                  permissionDenied "You couldn't access user crud."
-                runDB $ do
-                  deleteWhere [FileHeaderCreatorEq k]
-                  deleteBy $ UniqueProfile k
-                  deleteBy $ UniqueLaboratory k
-                  delete k
-           }
---}
 
 instance RenderMessage BISocie FormMessage where
     renderMessage _ _ = defaultFormMessage

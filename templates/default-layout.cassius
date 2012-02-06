@@ -109,7 +109,7 @@ td.number
     width: 200
     margin-top: 2px
 ul.tabs
-    margin: 0 0 1px
+    margin: 0
     padding: 0
 ul.tabs li.selected
     border-bottom: 3px solid white

@@ -18,12 +18,11 @@ import qualified Data.ByteString.Lazy as L
 import Data.ByteString.Char8 (pack)
 import System.Directory
 import System.FilePath
-import Web.Encodings (encodeUrl)
 import Text.Cassius (cassiusFile)
 import qualified Data.Text as T
 
 import qualified Settings (s3dir)
-import BISocie.Helpers.Util ((+++))
+import BISocie.Helpers.Util ((+++), encodeUrl)
 
 getUploadR :: Handler RepHtml
 getUploadR = do

@@ -3,11 +3,15 @@ module BISocie.Helpers.Util
        , (+++)
        , showText
        , readText
+       , encodeUrl
+       , decodeUrl
        ) where
 
 import Data.Text (Text)
 import qualified Data.Text as T
-
+import Codec.Binary.UTF8.String (encodeString, decodeString)
+import qualified Data.Text as T (Text, pack, unpack)
+import Network.HTTP.Base(urlEncode, urlDecode)
 
 (+++) :: Text -> Text -> Text
 (+++) = T.append
@@ -34,3 +38,9 @@ mkPagenate fillGap width current maxpage =
     cr = current+width
     rl = maxpage-width
     rr = maxpage
+
+encodeUrl :: T.Text -> T.Text
+encodeUrl = T.pack . urlEncode . encodeString . T.unpack
+
+decodeUrl :: T.Text -> T.Text
+decodeUrl = T.pack . decodeString . urlDecode . T.unpack

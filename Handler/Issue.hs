@@ -8,10 +8,11 @@
 module Handler.Issue where
 
 import Foundation
+
+import Yesod
 import Control.Applicative ((<$>),(<*>))
 import Control.Monad (when, unless, forM, liftM2)
 import Control.Failure
-import Control.Monad.Trans.Class
 import Data.List (intercalate, intersperse, nub, groupBy)
 import Data.Time
 import Data.Time.Calendar.WeekDate
@@ -22,6 +23,7 @@ import Network.Mail.Mime
 import qualified Data.Text.Lazy as L
 import qualified Data.Text.Lazy.Encoding as LE
 import qualified Data.Text as T
+import Data.Text (Text)
 import Text.Blaze (preEscapedText)
 import Text.Cassius (cassiusFile)
 
@@ -34,14 +36,14 @@ getCurrentScheduleR :: Handler RepHtml
 getCurrentScheduleR = do
   now <- liftIO getCurrentTime
   let (y, m, _) = toGregorian $ utctDay now
-  redirect RedirectSeeOther $ ScheduleR y m
+  redirect $ ScheduleR y m
   
 data WeekDay = Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sunday
              deriving (Show, Eq, Ord, Enum)
 
 getScheduleR :: Year -> Month -> Handler RepHtml
 getScheduleR y m = do
-  (selfid, self) <- requireAuth
+  (Entity selfid self) <- requireAuth
   now <- liftIO getCurrentTime
   let today = utctDay now
       fday = fromGregorian y m 1
@@ -59,7 +61,7 @@ getScheduleR y m = do
                           $ ["schedule-day-cell", toWeekName d] 
                            ++ (if today == day then ["today"] else [])
                            ++ (if currentMonth day then ["currentMonth"] else ["otherMonth"])
-    taskUri :: Day -> BISocieRoute
+    taskUri :: Day -> Route BISocie
     taskUri d = let (y', m', d') = toGregorian d in TaskR y' m' d'
     showDay :: Day -> String
     showDay = show . thd3 . toGregorian
@@ -78,24 +80,25 @@ getScheduleR y m = do
     
 getTaskR :: Year -> Month -> Date -> Handler RepJson
 getTaskR y m d = do
-  (selfid, _) <- requireAuth
+  (Entity selfid _) <- requireAuth
   r <- getUrlRender
   let day = fromGregorian y m d
   issues <- runDB $ do
     ptcpts <- selectList [ParticipantsUser ==. selfid] []
-    let pids = map (participantsProject.snd) ptcpts
+    let pids = map (participantsProject.entityVal) ptcpts
     selectList [IssueLimitdate ==. Just day, IssueProject <-. pids ] [Asc IssueLimittime]
-  jsonToRepJson $ jsonMap [("tasks", jsonList $ map (go r) issues)]
+  jsonToRepJson $ object ["tasks" .= array (map (go r) issues)]
   where
-    go r (iid, issue) = jsonMap [ ("id", jsonScalar $ show iid)
-                                , ("subject", jsonScalar $ T.unpack $ issueSubject issue)
-                                , ("uri", jsonScalar $ T.unpack $ r $ IssueR (issueProject issue) (issueNumber issue))
-                                , ("limittime", jsonScalar $ T.unpack $ showLimittime issue)
-                                ]
+    go r (Entity iid issue) = 
+      object [ "id" .= show iid
+             , "subject" .= issueSubject issue
+             , "uri" .= r (IssueR (issueProject issue) (issueNumber issue))
+             , "limittime" .= showLimittime issue
+             ]
 
 getProjectListR :: Handler RepJson
 getProjectListR = do
-  (selfid, self) <- requireAuth
+  (Entity selfid self) <- requireAuth
   r <- getUrlRender
   includeTerminated <- fmap isJust $ lookupGetParam "includeterminated"
   project_name <- lookupGetParam "project_name"
@@ -109,73 +112,73 @@ getProjectListR = do
       Nothing -> selectList [] []
       Just q -> do
         users <- selectList [] []
-        let uids = map fst $ filter (userIdentOrName q.snd) users
+        let uids = map entityKey $ filter (userIdentOrName q.entityVal) users
         selectList [ParticipantsUser <-. uids] []
-    let pf = [ProjectId <-. map (participantsProject.snd) pats]
+    let pf = [ProjectId <-. map (participantsProject.entityVal) pats]
     if isAdmin self
       then selectList (tf++pf) order
       else do
       ps <- selectList [ParticipantsUser ==. selfid] []
-      selectList (tf ++ pf ++ [ProjectId <-. (map (participantsProject . snd) ps)]) order
+      selectList (tf ++ pf ++ [ProjectId <-. (map (participantsProject.entityVal) ps)]) order
   let allprjs = case project_name of
-        Just pn -> filter (T.isInfixOf pn . projectName . snd) prjs'
+        Just pn -> filter (T.isInfixOf pn . projectName . entityVal) prjs'
         Nothing -> prjs'
       pageLength = ceiling (fromIntegral (length allprjs) / fromIntegral projectListLimit)
       prjs = case mpage of
         Nothing -> allprjs
         Just n  -> drop (n*projectListLimit) $ take ((n+1)*projectListLimit) allprjs
-  jsonToRepJson $ jsonMap [ ("projects", jsonList $ map (go r) prjs)
-                          , ("page", jsonScalar $ fromMaybe "0" $ fmap show mpage)
-                          , ("order", jsonScalar $ T.unpack ordName)
-                          , ("pageLength", jsonScalar $ show pageLength)
-                          ]
+  jsonToRepJson $ object [ "projects" .= array (map (go r) prjs)
+                         , "page" .= maybe 0 id mpage
+                         , "order" .= ordName
+                         , "pageLength" .= (pageLength :: Int)
+                         ]
   where
-    go r (pid, p) = jsonMap [ ("pid", jsonScalar $ show pid)
-                            , ("name", jsonScalar $ T.unpack $ projectName p)
-                            , ("description", jsonScalar $ T.unpack $ projectDescription p)
-                            , ("cdate", jsonScalar $ T.unpack $ showDate $ projectCdate p)
-                            , ("udate", jsonScalar $ T.unpack $ showDate $ projectUdate p)
-                            , ("issuelistUri", jsonScalar $ T.unpack $ r $ IssueListR pid)
-                            , ("projectUri", jsonScalar $ T.unpack $ r $ ProjectR pid)
-                            ]
+    go r (Entity pid p) = object [ "pid" .= show pid
+                                 , "name" .= projectName p
+                                 , "description" .= projectDescription p
+                                 , "cdate" .= projectCdate p
+                                 , "udate" .= projectUdate p
+                                 , "issuelistUri" .= r (IssueListR pid)
+                                 , "projectUri" .= r (ProjectR pid)
+                                 ]
 
 getAssignListR :: Handler RepJson
 getAssignListR = do
-  (selfid, self) <- requireAuth
+  (Entity selfid self) <- requireAuth
   pids <- fmap (fmap readText) $ lookupGetParams "projectid"
   users <- runDB $ do
     ps <- if isAdmin self
           then selectList [ParticipantsProject <-. pids] []
           else do
             ps' <- selectList [ParticipantsUser ==. selfid, ParticipantsProject <-. pids] []
-            selectList [ParticipantsProject <-. (map (participantsProject.snd) ps')] []
-    selectList [UserId <-. (map (participantsUser.snd) ps)] []
+            selectList [ParticipantsProject <-. (map (participantsProject.entityVal) ps')] []
+    selectList [UserId <-. (map (participantsUser.entityVal) ps)] []
   cacheSeconds 10 -- FIXME
-  jsonToRepJson $ jsonMap [("assigns", jsonList $ map go users)]
+  jsonToRepJson $ object ["assigns" .= array (map go users)]
   where
-    go (uid, u) = jsonMap [ ("uid", jsonScalar $ show uid)
-                          , ("name", jsonScalar $ T.unpack $ userFullName u)
-                          ]
+    go (Entity uid u) = object [ "uid" .= show uid
+                               , "name" .= userFullName u
+                               ]
 
 getStatusListR :: Handler RepJson
 getStatusListR = do
-  (selfid, self) <- requireAuth
+  (Entity selfid self) <- requireAuth
   pids <- fmap (fmap readText) $ lookupGetParams "projectid"
   stss <- runDB $ do
     prjs <- if isAdmin self
             then selectList [ProjectId <-. pids] []
             else do
               ps <- selectList [ParticipantsUser ==. selfid, ParticipantsProject <-. pids] []
-              selectList [ProjectId <-. (map (participantsProject.snd) ps)] []
-    return $ nub $ concatMap (\(_,prj) -> 
+              selectList [ProjectId <-. (map (participantsProject.entityVal) ps)] []
+    return $ nub $ concatMap (\(Entity _ prj) -> 
                                let (Right es) = parseStatuses $ projectStatuses prj 
                                in map fst3 es) prjs
   cacheSeconds 10 -- FIXME
-  jsonToRepJson $ jsonMap [("statuses", jsonList $ map (jsonScalar . T.unpack) stss)]
+  jsonToRepJson $ object ["statuses" .= array stss]
 
 getCrossSearchR :: Handler RepHtml
 getCrossSearchR = do
-  (selfid, self) <- requireAuth
+  (Entity selfid self) <- requireAuth
   prjs <- runDB $ do
     -- 初回GETなので終了プロジェクトは除外.
     prjs' <- if isAdmin self
@@ -183,7 +186,7 @@ getCrossSearchR = do
              else do
                ps <- selectList [ParticipantsUser ==. selfid] []
                selectList [ ProjectTerminated ==. False
-                          , ProjectId <-. (map (participantsProject . snd) ps)] []
+                          , ProjectId <-. (map (participantsProject.entityVal) ps)] []
     return $ map toProjectBis prjs'
   defaultLayout $ do
     setTitle "クロスサーチ"
@@ -192,7 +195,7 @@ getCrossSearchR = do
 
 postCrossSearchR :: Handler RepJson
 postCrossSearchR = do
-  (selfid, self) <- requireAuth
+  (Entity selfid self) <- requireAuth
   r <- getUrlRender
   ps <- fmap (fmap readText) $ lookupPostParams "projectid"
   ss <- lookupPostParams "status"
@@ -209,8 +212,8 @@ postCrossSearchR = do
             then selectList [ProjectId <-. ps] []
             else do
               ps' <- selectList [ParticipantsUser ==. selfid, ParticipantsProject <-. ps] []
-              selectList [ProjectId <-. (map (participantsProject.snd) ps')] []
-    let (pS, sS, aS) = (toInFilter (IssueProject <-.) $ map fst prjs,
+              selectList [ProjectId <-. (map (participantsProject.entityVal) ps')] []
+    let (pS, sS, aS) = (toInFilter (IssueProject <-.) $ map entityKey prjs,
                         toInFilter (IssueStatus <-.) ss, 
                         toInFilter (IssueAssign <-.) as)
         (lF, lT, uF, uT) = (maybeToFilter (IssueLimitdate >=.) lf,
@@ -218,7 +221,7 @@ postCrossSearchR = do
                             maybeToFilter (IssueUdate >=.) uf,
                             maybeToFilter (IssueUdate <.) ut)
     issues' <- selectList (pS ++ sS ++ aS ++ lF ++ lT ++ uF ++ uT) [Desc IssueUdate, LimitTo issueListLimit, OffsetBy (page*issueListLimit)]
-    forM issues' $ \(id', i) -> do
+    forM issues' $ \(Entity id' i) -> do
       cu <- get404 $ issueCuser i
       uu <- get404 $ issueUuser i
       mau <- case issueAssign i of
@@ -227,7 +230,7 @@ postCrossSearchR = do
       let (Just prj) = lookupProjectBis (issueProject i) $ map toProjectBis prjs
       return $ (prj, IssueBis id' i cu uu mau)
   cacheSeconds 10 -- FIXME
-  jsonToRepJson $ jsonMap [("issues", jsonList $ map (go r) issues)]
+  jsonToRepJson $ object ["issues" .= array (map (go r) issues)]
   where
     colorAndEffect s es = case lookupStatus s es of
       Nothing -> ("", "")
@@ -237,26 +240,26 @@ postCrossSearchR = do
           projectRoute = IssueListR $ projectBisId p
           issueRoute = IssueR (projectBisId p) (issueNumber $ issueBisIssue i)
       in
-      jsonMap [ ("id", jsonScalar $ show $ issueBisId i)
-              , ("effect", jsonScalar e)
-              , ("color", jsonScalar $ T.unpack c)
-              , ("project", jsonScalar $ T.unpack $ projectBisName p)
-              , ("projecturi", jsonScalar $ T.unpack $ r $ projectRoute)
-              , ("no", jsonScalar $ show $ issueNumber $ issueBisIssue i)
-              , ("subject", jsonScalar $ T.unpack $ issueSubject $ issueBisIssue i)
-              , ("issueuri", jsonScalar $ T.unpack $ r $ issueRoute)
-              , ("status", jsonScalar $ T.unpack $ issueStatus $ issueBisIssue i)
-              , ("assign", jsonScalar $ T.unpack $ showmaybe $ fmap userFullName $ issueBisAssign i)
-              , ("limitdate", jsonScalar $ T.unpack $ showLimitdate $ issueBisIssue i)
-              , ("limittime", jsonScalar $ T.unpack $ showLimittime $ issueBisIssue i)
-              , ("creator", jsonScalar $ T.unpack $ userFullName $ issueBisCreator i)
-              , ("updator", jsonScalar $ T.unpack $ userFullName $ issueBisUpdator i)
-              , ("updated", jsonScalar $ T.unpack $ showDate $ issueUdate $ issueBisIssue i)
-              ]
+      object [ "id" .= show (issueBisId i)
+             , "effect" .= e
+             , "color" .= c
+             , "project" .= projectBisName p
+             , "projecturi" .= r (projectRoute)
+             , "no" .= issueNumber (issueBisIssue i)
+             , "subject" .= issueSubject (issueBisIssue i)
+             , "issueuri" .= r issueRoute
+             , "status" .= issueStatus (issueBisIssue i)
+             , "assign" .= showmaybe (fmap userFullName (issueBisAssign i))
+             , "limitdate" .= showLimitdate (issueBisIssue i)
+             , "limittime" .= showLimittime (issueBisIssue i)
+             , "creator" .= userFullName (issueBisCreator i)
+             , "updator" .= userFullName (issueBisUpdator i)
+             , "updated" .= issueUdate (issueBisIssue i)
+             ]
                 
 getIssueListR :: ProjectId -> Handler RepHtml
 getIssueListR pid = do
-  (selfid, self) <- requireAuth
+  (Entity selfid self) <- requireAuth
   page' <- lookupGetParam "page"
   let page = max 0 $ fromMaybe 0  $ fmap readText $ page'
   (alliis, issues'', prj, es) <- runDB $ do
@@ -272,7 +275,7 @@ getIssueListR pid = do
                          }
     issues <- selectList [IssueProject ==. pid] [Desc IssueUdate]
     let issues' = take issueListLimit $ drop (page*issueListLimit) issues
-    issues'' <- forM issues' $ \(id', i) -> do
+    issues'' <- forM issues' $ \(Entity id' i) -> do
       cu <- get404 $ issueCuser i
       uu <- get404 $ issueUuser i
       mau <- case issueAssign i of
@@ -309,7 +312,7 @@ getIssueListR pid = do
 
 getNewIssueR :: ProjectId -> Handler RepHtml
 getNewIssueR pid = do
-  (selfid, self) <- requireAuth
+  (Entity selfid self) <- requireAuth
   (ptcpts, stss, prj) <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
     unless (p /= Nothing) $ 
@@ -332,7 +335,7 @@ postNewIssueR pid = do
     
   where
     addIssueR = do
-      (selfid, _) <- requireAuth
+      (Entity selfid _) <- requireAuth
       now <- liftIO getCurrentTime
       issue <- runInputPost $ Issue pid undefined selfid now selfid now
         <$> ireq textField "subject"
@@ -363,7 +366,7 @@ postNewIssueR pid = do
         cid <- insert $ comment {commentIssue=iid, commentAttached=fmap fst mfh}
         emails <- selectMailAddresses pid
         let msgid = toMessageId iid cid now mailMessageIdDomain
-            fragment = "#" +++ toSinglePiece cid
+            fragment = "#" +++ toPathPiece cid
         when (isJust (commentContent comment) && not (null emails)) $
           liftIO $ renderSendMail Mail
             { mailFrom = fromEmailAddress
@@ -373,7 +376,7 @@ postNewIssueR pid = do
             , mailHeaders =
                  [ ("Subject", issueSubject issue)
                  , ("Message-ID", msgid)
-                 , (mailXHeader, toSinglePiece pid)
+                 , (mailXHeader, toPathPiece pid)
                  ]
             , mailParts = 
                    [[ Part
@@ -398,19 +401,19 @@ postNewIssueR pid = do
                   ]]
           }
         return ino
-      redirect RedirectSeeOther $ IssueR pid ino
+      redirect $ IssueR pid ino
 
 getIssueR :: ProjectId -> IssueNo -> Handler RepHtml
 getIssueR pid ino = do
-  (selfid, self) <- requireAuth
+  (Entity selfid self) <- requireAuth
   (prj, ptcpts, issue, comments) <- 
     runDB $ do
       p <- getBy $ UniqueParticipants pid selfid
       unless (p /= Nothing || isAdmin self) $ 
         lift $ permissionDenied "あなたはこの案件を閲覧することはできません."
-      (iid, issue) <- getBy404 $ UniqueIssue pid ino
+      (Entity iid issue) <- getBy404 $ UniqueIssue pid ino
       cs <- selectList [CommentIssue ==. iid] [Desc CommentCdate]
-      comments <- forM cs $ \(cid, c) -> do
+      comments <- forM cs $ \(Entity cid c) -> do
         let uid = commentCuser c
         u <- get404 uid
         mf <- case commentAttached c of
@@ -451,7 +454,7 @@ postCommentR pid ino = do
     
   where
     addCommentR = do
-      (selfid, _) <- requireAuth
+      (Entity selfid _) <- requireAuth
       now <- liftIO getCurrentTime
       comment <- runInputPost $ Comment pid undefined "now writing..." undefined selfid now
         <$> iopt textField "content"
@@ -467,8 +470,8 @@ postCommentR pid ino = do
         unless (p /= Nothing) $ 
           lift $ permissionDenied "あなたはこのプロジェクトに投稿することはできません."
         r <- lift getUrlRender
-        (iid, issue) <- getBy404 $ UniqueIssue pid ino
-        Just (lastCid, lastC) <- selectFirst [CommentIssue ==. iid] [Desc CommentCdate]
+        (Entity iid issue) <- getBy404 $ UniqueIssue pid ino
+        Just (Entity lastCid lastC) <- selectFirst [CommentIssue ==. iid] [Desc CommentCdate]
         mfh <- storeAttachedFile selfid fi
         amemo <- generateAutomemo comment issue mfh
         replace iid issue { issueUuser = selfid
@@ -489,7 +492,7 @@ postCommentR pid ino = do
         emails <- selectMailAddresses pid
         let msgid = toMessageId iid cid now mailMessageIdDomain
             refid = toMessageId iid lastCid (commentCdate lastC) mailMessageIdDomain
-            fragment = "#" +++ toSinglePiece cid
+            fragment = "#" +++ toPathPiece cid
         when (isJust (commentContent comment) && not (null emails)) $
           liftIO $ renderSendMail Mail
             { mailFrom = fromEmailAddress
@@ -501,7 +504,7 @@ postCommentR pid ino = do
                  , ("Message-ID", msgid)
                  , ("References", refid)
                  , ("In-Reply-To", refid)
-                 , (mailXHeader, toSinglePiece pid)
+                 , (mailXHeader, toPathPiece pid)
                  ]
             , mailParts = 
                    [[ Part
@@ -525,11 +528,11 @@ postCommentR pid ino = do
                      }
                   ]]
           }
-      redirect RedirectSeeOther $ IssueR pid ino
+      redirect $ IssueR pid ino
         
 getAttachedFileR :: CommentId -> FileHeaderId -> Handler RepHtml
 getAttachedFileR cid fid = do
-  (selfid, self) <- requireAuth
+  (Entity selfid self) <- requireAuth
   f <- runDB $ do
     c <- get404 cid
     p <- getBy $ UniqueParticipants (commentProject c) selfid
@@ -540,7 +543,7 @@ getAttachedFileR cid fid = do
   
 postReadCommentR :: CommentId -> Handler RepJson
 postReadCommentR cid = do
-  (selfid, self) <- requireAuth
+  (Entity selfid self) <- requireAuth
   r <- getUrlRender
   _method <- lookupPostParam "_method"
   ret <- runDB $ do
@@ -563,22 +566,22 @@ postReadCommentR cid = do
         return "deleted"
       _ -> lift $ invalidArgs ["The possible values of '_method' is add or delete"]
   cacheSeconds 10 -- FIXME
-  jsonToRepJson $ jsonMap [ ("status", jsonScalar ret)
-                          , ("read", 
-                            jsonMap [ ("comment", jsonScalar $ show cid)
-                                    , ("reader",
-                                       jsonMap [ ("id", jsonScalar $ show selfid)
-                                               , ("ident", jsonScalar $ T.unpack $ userIdent self)
-                                               , ("name", jsonScalar $ T.unpack $ userFullName self)
-                                               , ("uri", jsonScalar $ T.unpack $ r $ ProfileR selfid)
-                                               , ("avatar", jsonScalar $ T.unpack $ r $ AvatarImageR selfid)
-                                               ])
-                                    ])
-                          ]
+  jsonToRepJson $ object [ "status" .= (ret :: Text)
+                         , "read" .=
+                           object [ "comment" .= show cid
+                                  , "reader" .=
+                                    object [ "id" .= show selfid
+                                           , "ident" .= userIdent self
+                                           , "name" .= userFullName self
+                                           , "uri" .= r (ProfileR selfid)
+                                           , "avatar" .= r (AvatarImageR selfid)
+                                           ]
+                                  ]
+                         ]
 
 getCommentReadersR :: CommentId -> Handler RepJson
 getCommentReadersR cid = do
-  (selfid, self) <- requireAuth
+  (Entity selfid self) <- requireAuth
   r <- getUrlRender
   readers <- runDB $ do
     cmt <- get404 cid
@@ -587,25 +590,25 @@ getCommentReadersR cid = do
     unless (p /= Nothing || isAdmin self) $
       lift $ permissionDenied "あなたはこのプロジェクトに参加していません."
     rds' <- selectList [ReaderComment ==. cid] [Asc ReaderCheckdate]
-    forM rds' $ \(_, rd') -> do
+    forM rds' $ \(Entity _ rd') -> do
       let uid' = readerReader rd'
           ra = AvatarImageR uid'
       Just u <- get uid'
       return (uid', u, ra)
   cacheSeconds 10 -- FIXME
-  jsonToRepJson $ jsonMap [("readers", jsonList $ map (go r) readers)]
+  jsonToRepJson $ object ["readers" .= array (map (go r) readers)]
   where
-    go r (uid, u, ra) = jsonMap [ ("id", jsonScalar $ show uid)
-                                , ("ident", jsonScalar $ T.unpack $ userIdent u)
-                                , ("name", jsonScalar $ T.unpack $ userFullName u)
-                                , ("uri", jsonScalar $ T.unpack $ r $ ProfileR uid)
-                                , ("avatar", jsonScalar $ T.unpack $ r ra)
-                                ]
+    go r (uid, u, ra) = object [ "id" .= show uid
+                               , "ident" .= userIdent u
+                               , "name" .= userFullName u
+                               , "uri" .= r (ProfileR uid)
+                               , "avatar" .= r ra
+                               ]
 
-selectParticipants :: (Failure ErrorResponse m, MonadTrans t, PersistBackend t m) =>
-     Key t (ProjectGeneric t) -> t m [(Key t User, User)]
+-- selectParticipants :: (Failure ErrorResponse m, MonadTrans t, PersistBackend t m) =>
+--     Key t (ProjectGeneric t) -> t m [(Key t User, User)]
 selectParticipants pid = do
-  mapM (p2u.snd) =<< selectList [ParticipantsProject ==. pid] []
+  mapM (p2u.entityVal) =<< selectList [ParticipantsProject ==. pid] []
   where
     p2u p = do
       let uid = participantsUser p

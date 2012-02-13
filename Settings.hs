@@ -11,6 +11,8 @@ module Settings
     , PersistConfig
     , staticRoot
     , staticDir
+    , Extra (..)
+    , parseExtra
     , s3dir
       --
     , entryStartYear
@@ -25,6 +27,7 @@ module Settings
     , tz
     ) where
 
+import Prelude
 import Text.Shakespeare.Text (st)
 import Language.Haskell.TH.Syntax
 import Database.Persist.Postgresql (PostgresConf)
@@ -32,6 +35,8 @@ import Yesod.Default.Config
 import qualified Yesod.Default.Util
 import Data.Text (Text)
 import Data.ByteString (ByteString)
+import Data.Yaml
+import Control.Applicative
 import Network.Mail.Mime (Address(..))
 
 -- | Which Persistent backend this site is using.
@@ -69,6 +74,17 @@ widgetFile = Yesod.Default.Util.widgetFileReload
 #else
 widgetFile = Yesod.Default.Util.widgetFileNoReload
 #endif
+
+
+data Extra = Extra
+    { extraCopyright :: Text
+    , extraAnalytics :: Maybe Text -- ^ Google Analytics
+    } deriving Show
+
+parseExtra :: DefaultEnv -> Object -> Parser Extra
+parseExtra _ o = Extra
+    <$> o .:  "copyright"
+    <*> o .:? "analytics"
 
 s3dir :: FilePath
 s3dir = "s3"

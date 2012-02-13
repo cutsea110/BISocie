@@ -4,18 +4,20 @@
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 module Handler.Profile where
 
-import Prelude hiding (zip)
-
 import Foundation
+
 import Settings (entryStartYear, graduateStartYear)
 import Settings.StaticFiles
 import Handler.S3
 
+import Prelude hiding (zip)
+import Yesod
 import Control.Monad
 import Control.Applicative
 import Data.Time
 import Data.Maybe (fromMaybe, fromJust)
 import qualified Data.Text as T
+import Data.Text (Text)
 
 getProfileR :: UserId -> Handler RepHtml
 getProfileR uid = do
@@ -32,7 +34,7 @@ getProfileR uid = do
       else do
         ml <- getBy $ UniqueLaboratory uid
         case ml of
-          Just (_, l) -> return $ Just l
+          Just (Entity _ l) -> return $ Just l
           Nothing -> return $ Just $ Laboratory { laboratoryHeadResearcher=uid
                                                 , laboratoryExtensionNumber=Nothing
                                                 , laboratoryRoomNumber=Nothing
@@ -44,7 +46,7 @@ getProfileR uid = do
       else do
         mp <- getBy $ UniqueProfile uid
         case mp of
-          Just (_, p) -> return $ Just p
+          Just (Entity _ p) -> return $ Just p
           Nothing -> do
             now <- liftIO getCurrentTime
             let (y, _, _) = toGregorian $ utctDay now
@@ -72,7 +74,7 @@ getProfileR uid = do
       
     viewProf :: Handler RepHtml
     viewProf = do
-      (selfid, self) <- requireAuth
+      (Entity selfid self) <- requireAuth
       now <- liftIO getCurrentTime
       let viewprof = (ProfileR uid, [("mode", "v")])
           editprof = (ProfileR uid, [("mode", "e")])
@@ -90,7 +92,7 @@ getProfileR uid = do
     
     editProf :: Handler RepHtml
     editProf = do
-      (selfid, self) <- requireAuth
+      (Entity selfid self) <- requireAuth
       now <- liftIO getCurrentTime
       let viewprof = (ProfileR uid, [("mode", "v")])
           editprof = (ProfileR uid, [("mode", "e")])
@@ -122,7 +124,7 @@ postProfileR uid = do
 
 putProfileR :: UserId -> Handler RepHtml
 putProfileR uid = do
-  (_, self) <- requireAuth
+  (Entity _ self) <- requireAuth
   user <- runDB $ get404 uid
   unless (self `canEdit` user) $ 
     permissionDenied "あなたはこのユーザプロファイルを編集することはできません."
@@ -140,7 +142,7 @@ putProfileR uid = do
       runDB $ do
         -- update user
         update uid [UserEmail =. em, UserFamilyName =. fn, UserGivenName =. gn]
-      redirectParams RedirectSeeOther (ProfileR uid) [("mode", "e")]
+      redirect (ProfileR uid, [("mode", "e")] :: [(Text, Text)])
       
     putTeacherProf = do
       (em, fn, gn) <- 
@@ -158,8 +160,8 @@ putProfileR uid = do
         mlab <- getBy $ UniqueLaboratory uid
         case mlab of
           Nothing -> insert lab
-          Just (lid, _) -> replace lid lab >> return lid
-      redirectParams RedirectSeeOther (ProfileR uid) [("mode", "e")]
+          Just (Entity lid _) -> replace lid lab >> return lid
+      redirect (ProfileR uid, [("mode", "e")] :: [(Text, Text)])
     
     putStudentProf = do
       (em, fn, gn) <- 
@@ -192,8 +194,8 @@ putProfileR uid = do
         mprof <- getBy $ UniqueProfile uid
         case mprof of
           Nothing -> insert prof
-          Just (pid, _) -> replace pid prof >> return pid
-      redirectParams RedirectSeeOther (ProfileR uid) [("mode", "e")]
+          Just (Entity pid _) -> replace pid prof >> return pid
+      redirect (ProfileR uid, [("mode", "e")] :: [(Text, Text)])
     
 getAvatarImageR :: UserId -> Handler RepHtml
 getAvatarImageR uid = do
@@ -201,7 +203,7 @@ getAvatarImageR uid = do
   (fid, f) <- runDB $ do
     u <- get404 uid
     case userAvatar u of
-      Nothing -> lift $ redirect RedirectSeeOther $ StaticR img_no_image_png
+      Nothing -> lift $ redirect $ StaticR img_no_image_png
       Just fid -> do
         f <- get404 fid
         return (fid, f)
@@ -209,16 +211,16 @@ getAvatarImageR uid = do
 
 postAvatarR :: UserId -> Handler RepJson
 postAvatarR uid = do
-  (_, self) <- requireAuth
+  (Entity _ self) <- requireAuth
   r <- getUrlRender
   mfhid <- lookupPostParam "avatar"
-  let avatar = fmap (fromJust . fromSinglePiece) mfhid
+  let avatar = fmap (fromJust . fromPathPiece) mfhid
   runDB $ do
     user <- get404 uid
     unless (self `canEdit` user) $
       lift $ permissionDenied "あなたはこのユーザのアバターを変更することはできません."
     update uid [UserAvatar =. avatar]
   cacheSeconds 10 -- FIXME
-  jsonToRepJson $ jsonMap [ ("uri", jsonScalar $ T.unpack $ r $ AvatarImageR uid)
-                          , ("avatar", jsonScalar $ T.unpack $ showmaybe $ mfhid)
-                          ]
+  jsonToRepJson $ object [ "uri" .= r (AvatarImageR uid)
+                         , "avatar" .= showmaybe mfhid
+                         ]

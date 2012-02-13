@@ -13,6 +13,8 @@ module Handler.S3
        ) where
 
 import Foundation
+
+import Yesod
 import Data.Time
 import qualified Data.ByteString.Lazy as L
 import Data.ByteString.Char8 (pack)
@@ -26,7 +28,7 @@ import BISocie.Helpers.Util ((+++), encodeUrl)
 
 getUploadR :: Handler RepHtml
 getUploadR = do
-  (uid,_) <- requireAuth
+  (Entity uid _) <- requireAuth
   defaultLayout $ do
     addCassius $(cassiusFile "templates/s3/s3.cassius")
     addWidget $(widgetFile "s3/upload")
@@ -48,8 +50,8 @@ upload uid fi = do
                         , fileHeaderCreator=uid
                         , fileHeaderCreated=now
                         }
-    let s3dir = Settings.s3dir </> T.unpack (toSinglePiece uid)
-        s3fp = s3dir </> T.unpack (toSinglePiece fid)
+    let s3dir = Settings.s3dir </> T.unpack (toPathPiece uid)
+        s3fp = s3dir </> T.unpack (toPathPiece fid)
     liftIO $ do
       createDirectoryIfMissing True s3dir
       L.writeFile s3fp (fileContent fi)
@@ -61,7 +63,7 @@ upload uid fi = do
   
 postUploadR :: Handler RepXml
 postUploadR = do
-  (uid, _) <- requireAuth
+  (Entity uid _) <- requireAuth
   mfi <- lookupFile "upfile"
   case mfi of
     Nothing -> invalidArgs ["upload file is required."]
@@ -76,7 +78,7 @@ postUploadR = do
           fmap RepXml $ hamletToContent
                       [xhamlet|\
 <file>
-  <fhid>#{T.unpack $ toSinglePiece fid}
+  <fhid>#{T.unpack $ toPathPiece fid}
   <name>#{name}
   <ext>#{ext}
   <size>#{show fsize}
@@ -86,7 +88,7 @@ postUploadR = do
 
 putUploadR :: Handler RepHtml
 putUploadR = do
-  (uid, _) <- requireAuth
+  (Entity uid _) <- requireAuth
   mfi <- lookupFile "upfile"
   case mfi of
     Nothing -> invalidArgs ["upload file is required."]
@@ -100,10 +102,10 @@ putUploadR = do
 getFileR :: UserId -> FileHeaderId -> Handler RepHtml
 getFileR uid fid = do
   h <- runDB $ get404 fid
-  let s3dir = Settings.s3dir </> T.unpack (toSinglePiece uid)
-      s3fp = s3dir </> T.unpack (toSinglePiece fid)
-  setHeader "Content-Type" $ pack $ T.unpack $ fileHeaderContentType h
-  setHeader "Content-Disposition" $ pack $ T.unpack $ "attachment; filename=" +++ fileHeaderEfname h
+  let s3dir = Settings.s3dir </> T.unpack (toPathPiece uid)
+      s3fp = s3dir </> T.unpack (toPathPiece fid)
+  setHeader "Content-Type" $ fileHeaderContentType h
+  setHeader "Content-Disposition" $ "attachment; filename=" +++ fileHeaderEfname h
   return $ RepHtml $ ContentFile s3fp Nothing
 
 postFileR :: UserId -> FileHeaderId -> Handler RepXml
@@ -116,15 +118,15 @@ postFileR uid fid = do
 
 deleteFileR :: UserId -> FileHeaderId -> Handler RepXml
 deleteFileR uid fid = do
-  (uid'', _) <- requireAuth
+  (Entity uid'' _) <- requireAuth
   if uid/=uid''
     then
     invalidArgs ["You couldn't delete this resource."]
     else do
     r <- getUrlRender
     runDB $ delete fid
-    let s3dir = Settings.s3dir </> T.unpack (toSinglePiece uid)
-        s3fp = s3dir </> T.unpack (toSinglePiece fid)
+    let s3dir = Settings.s3dir </> T.unpack (toPathPiece uid)
+        s3fp = s3dir </> T.unpack (toPathPiece fid)
         rf = r $ FileR uid fid
     liftIO $ removeFile s3fp
     fmap RepXml $ hamletToContent
@@ -139,17 +141,17 @@ getFileListR uid = do
   render <- getUrlRender
   files <- runDB $ selectList [FileHeaderCreator ==. uid] [Desc FileHeaderCreated]
   cacheSeconds 10 -- FIXME
-  jsonToRepJson $ jsonMap [("files", jsonList $ map (go render) files)]
+  jsonToRepJson $ object ["files" .= array (map (go render) files)]
   where
-    go r (fid, FileHeader
+    go r (Entity fid FileHeader
                { fileHeaderFullname = name
                , fileHeaderExtension = ext
                , fileHeaderFileSize = size
                , fileHeaderCreated = cdate
                }) = 
-      jsonMap [ ("name", jsonScalar $ T.unpack name)
-              , ("ext" , jsonScalar $ T.unpack ext)
-              , ("size", jsonScalar $ show size)
-              , ("cdate", jsonScalar $ show cdate)
-              , ("uri", jsonScalar $ T.unpack $ r $ FileR uid fid)
-              ]
+      array [ "name" .= name
+            , "ext" .= ext
+            , "size" .= size
+            , "cdate" .= cdate
+            , "uri" .= r (FileR uid fid)
+            ]

@@ -4,6 +4,7 @@
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 module Handler.Root where
 
+import Yesod
 import Control.Monad (unless, forM)
 import Data.List (find)
 import qualified Data.ByteString.Lazy.Char8 as L
@@ -32,12 +33,12 @@ import Settings
 -- inclined, or create a single monolithic file.
 getRootR :: Handler RepHtml
 getRootR = do
-    (uid, _) <- requireAuth
-    redirect RedirectSeeOther $ HomeR uid
+    (Entity uid _) <- requireAuth
+    redirect $ HomeR uid
 
 getHomeR :: UserId -> Handler RepHtml
 getHomeR uid = do
-  (selfid, self) <- requireAuth
+  (Entity selfid self) <- requireAuth
   unless (selfid==uid) $ permissionDenied "他人のホームを見ることはできません."
   defaultLayout $ do
     setTitle $ preEscapedText $ userFullName self +++ " ホーム"
@@ -45,7 +46,7 @@ getHomeR uid = do
     
 getHumanNetworkR :: Handler RepHtml
 getHumanNetworkR = do
-  (selfid, self) <- requireAuth
+  (Entity selfid self) <- requireAuth
   unless (canViewHumannetwork self) $ 
     permissionDenied "あなたはヒューマンエットワークを閲覧することはできません."
   defaultLayout $ do
@@ -55,28 +56,28 @@ getHumanNetworkR = do
 
 getUserLocationsR :: Handler RepJson
 getUserLocationsR = do
-  (_, self) <- requireAuth
+  (Entity _ self) <- requireAuth
   r <- getUrlRender
   unless (canViewUserLocations self) $ 
     permissionDenied "あなたはこの情報を取得することはできません."
   profs <- runDB $ do
     us <- selectList [UserRole ==. Student] []
-    profs' <- selectList [ProfileUser <-. (map fst us)] []
-    forM profs' $ \(_, p) -> do
-      let (Just u) = lookup (profileUser p) us
+    profs' <- selectList [ProfileUser <-. (map entityKey us)] []
+    forM profs' $ \(Entity _ p) -> do
+      let (Just (Entity _ u)) = find (\eu -> profileUser p == entityKey eu) us
       return (u, p)
-  jsonToRepJson $ jsonMap [("locations", jsonList $ map (go r) profs)]
+  jsonToRepJson $ object ["locations" .= array (map (go r) profs)]
   where
     go r (u, p) = 
-      jsonMap [ ("uri", jsonScalar $ T.unpack $ r $ ProfileR $ profileUser p)
-              , ("name", jsonScalar $ T.unpack $ userFullName u)
-              , ("lat", jsonScalar $ T.unpack $ showMaybeDouble $ profileLatitude p)
-              , ("lng", jsonScalar $ T.unpack $ showMaybeDouble $ profileLongitude p)
-              ]
+      object [ "uri" .= r (ProfileR $ profileUser p)
+             , "name" .= userFullName u
+             , "lat" .= showMaybeDouble (profileLatitude p)
+             , "lng" .= showMaybeDouble (profileLongitude p)
+             ]
 
 getSystemBatchR :: Handler RepHtml
 getSystemBatchR = do
-  (_, self) <- requireAuth
+  (Entity _ self) <- requireAuth
   unless (isAdmin self) $
     permissionDenied "あなたはこの機能を利用することはできません."
   defaultLayout $ do
@@ -85,7 +86,7 @@ getSystemBatchR = do
 
 postSystemBatchR :: Handler ()
 postSystemBatchR = do
-  (_, self) <- requireAuth
+  (Entity _ self) <- requireAuth
   unless (isAdmin self) $
     permissionDenied "あなたはこの機能を利用することはできません."
   Just fi <- lookupFile "studentscsv"
@@ -107,7 +108,7 @@ postSystemBatchR = do
                         , userAvatar=Nothing
                         , userActive=True
                         }
-        Just (id', _) -> do
+        Just (Entity id' _) -> do
           update id' [ UserPassword  =. Just (encrypt rawpass)
                      , UserRole =. Student
                      , UserFamilyName =. fname
@@ -121,14 +122,14 @@ postSystemBatchR = do
                                            , profileEntryYear=eyear'
                                            , profileGraduateYear=gyear'
                                            }
-        Just (pid, _) -> return pid
+        Just (Entity pid _) -> return pid
   setMessage "学生を登録しました。"
-  redirect RedirectSeeOther SystemBatchR
+  redirect SystemBatchR
   where
-    userExist :: Text -> [(UserId, User)] -> Maybe (UserId, User)
-    userExist = find . (\x y -> x == userIdent (snd y))
-    profExist :: UserId -> [(ProfileId, Profile)] -> Maybe (ProfileId, Profile)
-    profExist = find . (\x y -> x == profileUser (snd y))
+    userExist :: Text -> [Entity User] -> Maybe (Entity User)
+    userExist = find . (\x y -> x == userIdent (entityVal y))
+    profExist :: UserId -> [Entity Profile] -> Maybe (Entity Profile)
+    profExist = find . (\x y -> x == profileUser (entityVal y))
 
 getSendReminderMailR :: Year -> Month -> Date -> Handler RepHtml
 getSendReminderMailR y m d = do
@@ -141,7 +142,7 @@ getSendReminderMailR y m d = do
     permissionDenied "あなたはこの機能を利用することはできません."
   runDB $ do
     issues <- selectList [IssueReminderdate ==. Just rday] []
-    forM issues $ \(_, issue) -> do
+    forM issues $ \(Entity _ issue) -> do
       let pid = issueProject issue
           ino = issueNumber issue
       prj <- get404 pid
@@ -153,7 +154,7 @@ getSendReminderMailR y m d = do
         , mailBcc = emails
         , mailHeaders =
           [ ("Subject", "【リマインダメール送信】" +++ issueSubject issue)
-          , (mailXHeader, toSinglePiece $ issueProject issue)
+          , (mailXHeader, toPathPiece $ issueProject issue)
           ]
         , mailParts =
             [[ Part

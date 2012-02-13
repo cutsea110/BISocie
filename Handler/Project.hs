@@ -5,6 +5,8 @@
 module Handler.Project where
 
 import Foundation
+
+import Yesod
 import Control.Monad (unless, forM_)
 import Control.Applicative ((<$>),(<*>))
 import Data.Time
@@ -19,7 +21,7 @@ import Settings.StaticFiles
 
 getNewProjectR :: Handler RepHtml
 getNewProjectR = do
-  (selfid, self) <- requireAuth
+  (Entity selfid self) <- requireAuth
   unless (canCreateProject self) $ 
     permissionDenied "あなたはプロジェクトを作成することはできません."
   now <- liftIO getCurrentTime
@@ -41,7 +43,7 @@ postNewProjectR = do
   where
     createProject :: Handler RepHtml
     createProject = do
-      (selfid, self) <- requireAuth
+      (Entity selfid self) <- requireAuth
       unless (canCreateProject self) $ 
         permissionDenied "あなたはプロジェクトを作成することはできません."
       (name, desc, sts) <- runInputPost $ (,,)
@@ -65,11 +67,11 @@ postNewProjectR = do
                                    , participantsCdate=now
                                    }
         return pid
-      redirect RedirectSeeOther $ ProjectR pid
+      redirect $ ProjectR pid
 
 getProjectR :: ProjectId -> Handler RepHtml
 getProjectR pid = do
-  (selfid, self) <- requireAuth
+  (Entity selfid self) <- requireAuth
   now <- liftIO getCurrentTime
   let (y,_,_) = toGregorian $ utctDay now
       eyears = [Settings.entryStartYear..y+5]
@@ -93,7 +95,7 @@ postProjectR pid = do
 
 putProjectR :: ProjectId -> Handler RepJson
 putProjectR pid = do
-  (selfid, self) <- requireAuth
+  (Entity selfid self) <- requireAuth
   nm' <- lookupPostParam "name"
   ds' <- lookupPostParam "description"
   tm' <- lookupPostParam "terminated"
@@ -128,15 +130,15 @@ putProjectR pid = do
                , ProjectUdate =. now]
     get404 pid
   cacheSeconds 10 -- FIXME
-  jsonToRepJson $ jsonMap [ ("name", jsonScalar $ T.unpack $ projectName prj)
-                          , ("description", jsonScalar $ T.unpack $ projectDescription prj)
-                          , ("terminated", jsonScalar $ T.unpack $ showTerminated prj)
-                          , ("statuses", jsonScalar $ T.unpack $ projectStatuses prj)
-                          ]
+  jsonToRepJson $ object [ "name" .= projectName prj
+                         , "description" .= projectDescription prj
+                         , "terminated" .= showTerminated prj
+                         , "statuses" .= projectStatuses prj
+                         ]
 
 deleteProjectR :: ProjectId -> Handler RepJson
 deleteProjectR pid = do
-  (selfid, self) <- requireAuth
+  (Entity selfid self) <- requireAuth
   deleted <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
     unless ((p /= Nothing || isAdmin self) && canEditProjectSetting self) $ 
@@ -149,12 +151,12 @@ deleteProjectR pid = do
       comments <- selectList [CommentProject ==. pid] []
       deleteWhere [CommentProject ==. pid]
       -- delete & remove files
-      let fids = filter (/=Nothing) $ map (commentAttached.snd) comments
+      let fids = filter (/=Nothing) $ map (commentAttached.entityVal) comments
       forM_ fids $ \(Just fid) -> do 
         f <- get404 fid
         let uid = fileHeaderCreator f
-            s3dir = Settings.s3dir </> T.unpack (toSinglePiece uid)
-            s3fp = s3dir </> T.unpack (toSinglePiece fid)
+            s3dir = Settings.s3dir </> T.unpack (toPathPiece uid)
+            s3fp = s3dir </> T.unpack (toPathPiece fid)
         delete fid
         liftIO $ removeFile s3fp
       -- delete issues
@@ -172,5 +174,5 @@ deleteProjectR pid = do
         else return False
   cacheSeconds 10 -- FIXME
   if deleted
-    then jsonToRepJson $ jsonMap [("deleted", jsonScalar $ show pid)]
-    else jsonToRepJson $ jsonMap [("error", jsonScalar $ "このプロジェクトは削除できませんでした.")]
+    then jsonToRepJson $ object ["deleted" .= show pid]
+    else jsonToRepJson $ object ["error" .= ("このプロジェクトは削除できませんでした." :: T.Text)]

@@ -6,21 +6,21 @@
 {-# LANGUAGE GADTs #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 {-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 module Model where
 
 import Yesod
 -- import Yesod.Crud -- FIXME
-import Database.Persist.Base
+import Database.Persist.Store
 import System.Locale
 import Control.Monad (liftM2)
 import Control.Applicative ((<$>),(<*>))
-import Control.Failure (Failure)
-import Control.Monad.Trans.Class
 import Data.Char (isHexDigit)
 import Data.Int
 import Data.Time
 import Data.Maybe (fromMaybe, maybeToList)
 import Data.List (find)
+import Data.Tuple.HT (fst3)
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec as P (string)
 import Data.Text (Text)
@@ -63,8 +63,8 @@ data ProjectBis = ProjectBis { projectBisId :: ProjectId
                              , projectBisDescription :: Text
                              , projectBisStatuses :: [(Text, Maybe Color, Maybe Effect)]
                              }
-toProjectBis :: (ProjectId, Project) -> ProjectBis
-toProjectBis (pid, prj) = 
+toProjectBis :: Entity Project -> ProjectBis
+toProjectBis (Entity pid prj) = 
   let Right es = parseStatuses $ projectStatuses prj
   in         
    ProjectBis { projectBisId=pid
@@ -242,8 +242,8 @@ day'timeToUTC = (localTimeToUTC (hoursToTimeZone Settings.tz) .) . LocalTime
 toMessageId :: IssueId -> CommentId -> UTCTime -> Text -> Text
 toMessageId iid cid time domain = "<" 
                     +++ T.pack (formatTime defaultTimeLocale "%Y%m%d%H%M%S%q" time)
-                    +++ "i" +++ toSinglePiece iid
-                    +++ "c" +++ toSinglePiece cid
+                    +++ "i" +++ toPathPiece iid
+                    +++ "c" +++ toPathPiece cid
                     +++ "@" +++ domain
                     +++ ">"
 
@@ -372,10 +372,8 @@ defaultProfile = Profile { profileUser=undefined
                          , profileEmployment=Nothing
                          }
 
-selectMailAddresses :: (Failure ErrorResponse m, MonadTrans t, PersistBackend t m) =>
-     Key t (ProjectGeneric t) -> t m [Address]
 selectMailAddresses pid = do
-  mapM (p2u.snd) =<< selectList [ParticipantsProject ==. pid, ParticipantsReceivemail ==. True] []
+  mapM (p2u.entityVal) =<< selectList [ParticipantsProject ==. pid, ParticipantsReceivemail ==. True] []
   where
     p2u p = do
       u <- get404 $ participantsUser p

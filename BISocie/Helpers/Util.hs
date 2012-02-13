@@ -10,8 +10,7 @@ module BISocie.Helpers.Util
 import Data.Text (Text)
 import qualified Data.Text as T
 import Codec.Binary.UTF8.String (encodeString, decodeString)
-import qualified Data.Text as T (Text, pack, unpack)
-import Network.HTTP.Base(urlEncode, urlDecode)
+import Network.HTTP.Base (urlEncode, urlDecode)
 
 (+++) :: Text -> Text -> Text
 (+++) = T.append

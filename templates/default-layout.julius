@@ -57,7 +57,7 @@ $(document).ready(function(){
     }
   });
 
-  AjaxZip2.JSONDATA = '#{approot y}' + '/static/plugins/ajaxzip2/data';
+  AjaxZip2.JSONDATA = '#{approot' y}' + '/static/plugins/ajaxzip2/data';
 
   $.datepicker.regional['ja'] = {
     autoSize: true,

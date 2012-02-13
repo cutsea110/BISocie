@@ -8,36 +8,34 @@
 {-# LANGUAGE CPP #-}
 module Foundation
     ( BISocie (..)
-    , BISocieRoute (..)
+    , Route (..)
     , BISocieMessage (..)
     , resourcesBISocie
     , Handler
     , Widget
     , maybeAuth
     , requireAuth
-    , module Yesod
     , module Settings
     , module Model
-    , StaticRoute (..)
-    , AuthRoute (..)
     ) where
 
 import Prelude
-import Yesod hiding (Form, AppConfig (..), withYamlEnvironment)
-import Yesod.Static (Static, base64md5, StaticRoute(..))
+import Yesod
+import Yesod.Static
 import Yesod.Auth
 import BISocie.Helpers.Auth.HashDB
 import Yesod.Default.Config
 import Yesod.Default.Util (addStaticContentExternal)
 import Yesod.Logger (Logger, logMsg, formatLogText)
+import Network.HTTP.Conduit (Manager)
 #ifdef DEVELOPMENT
 import Yesod.Logger (logLazyText)
 #endif
 import qualified Settings
 import qualified Data.ByteString.Lazy as L
-import qualified Database.Persist.Base
+import qualified Database.Persist.Store
 import Database.Persist.GenericSql
-import Settings (widgetFile)
+import Settings (widgetFile, Extra (..))
 import Model
 import Text.Jasmine (minifym)
 import Web.ClientSession (getKey)
@@ -59,10 +57,12 @@ import BISocie.Helpers.Util
 -- starts running, such as database connections. Every handler will have
 -- access to the data present here.
 data BISocie = BISocie
-    { settings :: AppConfig DefaultEnv ()
+    { settings :: AppConfig DefaultEnv Extra
     , getLogger :: Logger
     , getStatic :: Static -- ^ Settings for static file serving.
-    , connPool :: Database.Persist.Base.PersistConfigPool Settings.PersistConfig -- ^ Database connection pool.
+    , connPool :: Database.Persist.Store.PersistConfigPool Settings.PersistConfig -- ^ Database connection pool.
+    , httpManager :: Manager
+    , persistConfig :: Settings.PersistConfig
     }
 
 -- Set up i18n messages. See the message folder.
@@ -97,7 +97,7 @@ type Form x = Html -> MForm BISocie BISocie (FormResult x, Widget)
 -- Please see the documentation for the Yesod typeclass. There are a number
 -- of settings which can be configured by overriding methods here.
 instance Yesod BISocie where
-    approot = appRoot . settings
+    approot = ApprootMaster $ appRoot . settings
     
     encryptKey _ = fmap Just $ getKey "config/client_session_key.aes"
     
@@ -105,6 +105,7 @@ instance Yesod BISocie where
       mu <- maybeAuth
       mmsg <- getMessage
       y <- getYesod
+      let (ApprootMaster approot') = approot
       (title, parents) <- breadcrumbs
       current <- getCurrentRoute
       tm <- getRouteToMaster
@@ -159,13 +160,13 @@ instance YesodBreadcrumbs BISocie where
   breadcrumb RootR = return ("", Nothing)
   breadcrumb HomeR{} = return ("ホーム", Nothing)
   breadcrumb HumanNetworkR = do
-    (uid, _) <- requireAuth
+    (Entity uid _) <- requireAuth
     return ("ヒューマンネットワーク", Just $ HomeR uid)
   breadcrumb (ScheduleR y m) = do
-    (uid, _) <- requireAuth
+    (Entity uid _) <- requireAuth
     return (showText y +++ "年" +++ showText m +++ "月のスケジュール", Just $ HomeR uid)
   breadcrumb NewProjectR = do
-    (uid, _) <- requireAuth
+    (Entity uid _) <- requireAuth
     return ("新規プロジェクト作成", Just $ HomeR uid)
   breadcrumb (ProjectR pid) = return ("設定", Just $ IssueListR pid)
     
@@ -174,15 +175,15 @@ instance YesodBreadcrumbs BISocie where
   breadcrumb UserListR = return ("ユーザ一覧", Nothing)
   
   breadcrumb CrossSearchR = do
-    (uid, _) <- requireAuth
+    (Entity uid _) <- requireAuth
     return ("クロスサーチ", Just $ HomeR uid)
   breadcrumb (IssueListR pid) = do 
-    (uid, _) <- requireAuth
+    (Entity uid _) <- requireAuth
     p <- runDB $ get404 pid
     return (projectName p, Just $ HomeR uid)
   breadcrumb (NewIssueR pid) = return ("案件追加", Just $ IssueListR pid)
   breadcrumb (IssueR pid ino) = do
-    (_, issue) <- runDB $ getBy404 $ UniqueIssue pid ino
+    (Entity _ issue) <- runDB $ getBy404 $ UniqueIssue pid ino
     return (showText (issueNumber issue) +++ ": " +++ issueSubject issue, Just $ IssueListR pid)
   breadcrumb CommentR{} = return ("", Nothing)
   
@@ -200,8 +201,12 @@ instance YesodBreadcrumbs BISocie where
 -- How to run database actions.
 instance YesodPersist BISocie where
     type YesodPersistBackend BISocie = SqlPersist
-    runDB f = liftIOHandler 
-              $ fmap connPool getYesod >>= Database.Persist.Base.runPool (undefined::Settings.PersistConfig) f
+    runDB f = do
+        master <- getYesod
+        Database.Persist.Store.runPool
+            (persistConfig master)
+            f
+            (connPool master)
 
 instance YesodJquery BISocie where
   urlJqueryJs _ = Left $ StaticR js_jquery_1_4_4_min_js
@@ -222,7 +227,7 @@ instance YesodAuth BISocie where
     getAuthId creds = runDB $ do
         x <- getBy $ UniqueUser $ credsIdent creds
         case x of
-            Just (uid, u) ->
+            Just (Entity uid u) ->
               if userActive u
               then do
                 lift $ setMessage "You are now logged in."
@@ -234,7 +239,9 @@ instance YesodAuth BISocie where
               lift $ setMessage "You are now logged in."
               fmap Just $ insert $ initUser $ credsIdent creds
 
-    authPlugins = [ authHashDB ]
+    authPlugins _ = [ authHashDB ]
+    
+    authHttpManager = httpManager
     
     loginHandler = do
       defaultLayout $ do
@@ -255,7 +262,7 @@ instance YesodAuthHashDB BISocie where
         ma <- getBy $ UniqueUser account
         case ma of
             Nothing -> return Nothing
-            Just (uid, _) -> return $ Just HashDBCreds
+            Just (Entity uid _) -> return $ Just HashDBCreds
                 { hashdbCredsId = uid
                 , hashdbCredsAuthId = Just uid
                 }

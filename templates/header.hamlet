@@ -4,7 +4,7 @@
 <div #userbox
   $maybe u <- mu
     ログイン中 
-    <a title=プロフィール href=@{ProfileR (fst u)}>#{userFullName (snd u)}.
+    <a title=プロフィール href=@{ProfileR (entityKey u)}>#{userFullName (entityVal u)}.
     <form method=get action=@{AuthR LogoutR} .inline>
       <button type=submit .link>ログアウト
     <form method=get action=@{AuthR setpassR} .inline>

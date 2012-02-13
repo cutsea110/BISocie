@@ -17,7 +17,6 @@ import Foundation
 import Yesod
 import Data.Time
 import qualified Data.ByteString.Lazy as L
-import Data.ByteString.Char8 (pack)
 import System.Directory
 import System.FilePath
 import Text.Cassius (cassiusFile)

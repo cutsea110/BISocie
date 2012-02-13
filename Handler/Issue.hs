@@ -12,7 +12,6 @@ import Foundation
 import Yesod
 import Control.Applicative ((<$>),(<*>))
 import Control.Monad (when, unless, forM, liftM2)
-import Control.Failure
 import Data.List (intercalate, intersperse, nub, groupBy)
 import Data.Time
 import Data.Time.Calendar.WeekDate

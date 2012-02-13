@@ -16,7 +16,6 @@ import Control.Monad
 import Control.Applicative
 import Data.Time
 import Data.Maybe (fromMaybe, fromJust)
-import qualified Data.Text as T
 import Data.Text (Text)
 
 getProfileR :: UserId -> Handler RepHtml

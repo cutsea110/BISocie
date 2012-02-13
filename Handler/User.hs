@@ -3,7 +3,6 @@ module Handler.User where
 
 import Yesod
 import Control.Monad (unless, forM)
-import qualified Data.Text as T
 
 import Foundation
 

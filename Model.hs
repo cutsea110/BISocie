@@ -6,6 +6,7 @@
 {-# LANGUAGE GADTs #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 {-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 module Model where
 
 import Yesod
@@ -14,8 +15,6 @@ import Database.Persist.Store
 import System.Locale
 import Control.Monad (liftM2)
 import Control.Applicative ((<$>),(<*>))
-import Control.Failure (Failure)
-import Control.Monad.Trans.Class
 import Data.Char (isHexDigit)
 import Data.Int
 import Data.Time

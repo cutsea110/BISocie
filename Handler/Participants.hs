@@ -97,7 +97,7 @@ postParticipantsR pid = do
           Just "stop" -> update ptcptid [ParticipantsReceivemail =. False] >> return False
           _           -> lift $ invalidArgs ["The possible values of 'mail' is send,stop."]
       cacheSeconds 10 -- FIXME
-      jsonToRepJson $ object ["participants" .= array 
+      jsonToRepJson $ object ["participants" .= object
                               [ "project" .= show pid
                               , "user" .= show uid
                               , "status" .= ("modified" :: T.Text)

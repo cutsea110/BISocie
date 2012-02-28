@@ -210,10 +210,10 @@ function mkUser(u, ps){
 
   if (ps[u.id]){
     switch (ps[u.id].receivemail){
-      case 'True':
+      case true:
             mail.attr({src: '@{StaticR img_mail_accept_png}', receivemail: 'send'});
             break;
-      case 'False':
+      case false:
             mail.attr({src: '@{StaticR img_mail_error_png}', receivemail: 'stop'});
             break;
     }

@@ -203,17 +203,18 @@ function mkUser(u, ps){
   var div = $("<div class='inline user'/>")
             .attr({uid: u.id, ident: u.ident, fullname: u.name, eyear: u.entryYear})
             .addClass(u.role+' user-logo'),
+      i = $('<div/>').text(u.ident).hide(),
       c = $('<input/>').attr({type:'checkbox'}),
       avatar = $("<img class='avatar'/>").attr({src: u.avatar}),
-      s =$('<a/>').attr({href: u.uri}).html(u.name+'<br/>('+u.ident+')'),
+      s =$('<a/>').attr({href: u.uri}).html(u.name),
       mail = $('<img/>').addClass('mail');
 
   if (ps[u.id]){
     switch (ps[u.id].receivemail){
-      case 'True':
+      case true:
             mail.attr({src: '@{StaticR img_mail_accept_png}', receivemail: 'send'});
             break;
-      case 'False':
+      case false:
             mail.attr({src: '@{StaticR img_mail_error_png}', receivemail: 'stop'});
             break;
     }
@@ -222,7 +223,7 @@ function mkUser(u, ps){
   }
 
   if('#{show (canEditProjectSetting self)}'=='False')
-    return div.append(s).append(mail).append(avatar);
+    return div.append(i).append(s).append(mail).append(avatar);
 
   if (ps[u.id])c.attr('checked', true);
   c.click(function(){
@@ -235,7 +236,7 @@ function mkUser(u, ps){
     .attr({src: mail.attr('src'), receivemail: mail.attr('receivemail')});
   }).addClass('clickable');
 
-  return div.append(c).append(s).append(mail).append(avatar);
+  return div.append(i).append(c).append(s).append(mail).append(avatar);
 }
 
 function modifyParticipant(c){

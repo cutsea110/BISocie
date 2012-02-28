@@ -76,7 +76,8 @@ function mkUser(u){
   var div = $("<div class='inline user'/>")
             .attr({uid: u.id, ident: u.ident, fullname: u.name, eyear: u.entryYear})
             .addClass(u.role+' user-logo'),
+      i = $('<div/>').text(u.ident).hide(),
       avatar = $("<img class='avatar'/>").attr({src: u.avatar}),
-      s =$('<a/>').attr({href: u.uri}).html(u.name+'<br/>('+u.ident+')');
-  return div.append(s).append(avatar);
+      s =$('<a/>').attr({href: u.uri}).html(u.name);
+  return div.append(i).append(s).append(avatar);
 }

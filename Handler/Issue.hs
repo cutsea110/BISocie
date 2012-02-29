@@ -135,8 +135,8 @@ getProjectListR = do
     go r (Entity pid p) = object [ "pid" .= show pid
                                  , "name" .= projectName p
                                  , "description" .= projectDescription p
-                                 , "cdate" .= projectCdate p
-                                 , "udate" .= projectUdate p
+                                 , "cdate" .= showDate (projectCdate p)
+                                 , "udate" .= showDate (projectUdate p)
                                  , "issuelistUri" .= r (IssueListR pid)
                                  , "projectUri" .= r (ProjectR pid)
                                  ]
@@ -253,7 +253,7 @@ postCrossSearchR = do
              , "limittime" .= showLimittime (issueBisIssue i)
              , "creator" .= userFullName (issueBisCreator i)
              , "updator" .= userFullName (issueBisUpdator i)
-             , "updated" .= issueUdate (issueBisIssue i)
+             , "updated" .= showDate (issueUdate (issueBisIssue i))
              ]
                 
 getIssueListR :: ProjectId -> Handler RepHtml

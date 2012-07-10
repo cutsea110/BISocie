@@ -39,7 +39,6 @@ import Database.Persist.GenericSql
 import Settings (widgetFile, Extra (..))
 import Model
 import Text.Jasmine (minifym)
-import Web.ClientSession (getKey)
 import Text.Hamlet (hamletFile)
 import Text.Cassius (cassiusFile)
 import Text.Julius (juliusFile)

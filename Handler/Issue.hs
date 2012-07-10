@@ -13,7 +13,6 @@ import Yesod
 import Control.Applicative ((<$>),(<*>))
 import Control.Monad (when, unless, forM, liftM2)
 import Data.List (intercalate, intersperse, nub, groupBy)
-import Data.Maybe
 import Data.Time
 import Data.Time.Calendar.WeekDate
 import Data.Time.Calendar.OrdinalDate

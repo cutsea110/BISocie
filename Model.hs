@@ -11,7 +11,6 @@ module Model where
 
 import Yesod
 -- import Yesod.Crud -- FIXME
-import Database.Persist.Store
 import System.Locale
 import Control.Monad (liftM2)
 import Control.Applicative ((<$>),(<*>))

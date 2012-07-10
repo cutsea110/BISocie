@@ -1,21 +1,21 @@
-<ul .tabs
-  <li .selected
+<ul .tabs>
+  <li .selected>
     <a href=@{IssueR pid ino}>#{show ino} : #{issueSubject issue}
-  <li
+  <li>
     <a href=@{NewIssueR pid}>案件追加
-<div #main-content
+<div #main-content>
   <h3>#{show ino} : #{issueSubject issue}
-  <form method=post enctype=multipart/form-data action=@{CommentR pid ino} .validate
-    <table .nostyle
-      <tr
+  <form method=post enctype=multipart/form-data action=@{CommentR pid ino} .validate>
+    <table .nostyle>
+      <tr>
         <th>内容: 
-        <td
-          <textarea #content placeholder=内容... name=content .watermark
-      <tr
+        <td>
+          <textarea #content placeholder=内容... name=content .watermark>
+      <tr>
         <th>アサイン:
-        <td
-          <select name=assign
-            <option selected
+        <td>
+          <select name=assign>
+            <option selected>
             $forall p <- ptcpts
               <option :isAssign (fst p):selected value=#{show (fst p)}>#{userFullName (snd p)}
       <tr>
@@ -27,36 +27,36 @@
       <tr>
         <th>期限:
         <td>
-          <input type=date name=limitdate displayname=期限日 placeholder=yyyy-mm-dd value=#{showLimitdate issue} .watermark .date cond="limittime,reminderdate" .cond-required
-          <input type=time name=limittime displayname=期限時刻 placeholder=HH:MM value=#{showLimittime issue} .watermark .time cond="limitdate,reminderdate" .cond-required
-      <tr
+          <input type=date name=limitdate displayname=期限日 placeholder=yyyy-mm-dd value=#{showLimitdate issue} .watermark .date cond="limittime,reminderdate" .cond-required>
+          <input type=time name=limittime displayname=期限時刻 placeholder=HH:MM value=#{showLimittime issue} .watermark .time cond="limitdate,reminderdate" .cond-required>
+      <tr>
         <th>リマインダメール通知日
-        <td
-          <input type=date name=reminderdate displayname=リマインダメール通知日 placeholder=yyyy-mm-dd value=#{showReminderdate issue} .watermark .date
-      <tr
+        <td>
+          <input type=date name=reminderdate displayname=リマインダメール通知日 placeholder=yyyy-mm-dd value=#{showReminderdate issue} .watermark .date>
+      <tr>
         <th>添付ファイル
-        <td
-          <input type=file name=attached
-      <tr
+        <td>
+          <input type=file name=attached>
+      <tr>
         <th>読者確認:
-        <td
+        <td>
           <input #checkreader-no type=radio name=checkreader value=no checked>
           <label for=checkreader-no>しない
           <input #checkreader-yes type=radio name=checkreader value=yes>
           <label for=checkreader-yes>する
     <button type=submit name=_method value=add>投稿
-  <ul #issue-thread
+  <ul #issue-thread>
     $forall c <- comments
       $with c' <- snd3 c, cid <- fst3 c, cid' <- toPathPiece cid
-        <div ##{cid'} .post-head
-          <img src=@{AvatarImageR $ fst $ commentBisCuser c'} .avatar
-          <a href=@{ProfileR $ fst $ commentBisCuser c'} .profile
+        <div ##{cid'} .post-head>
+          <img src=@{AvatarImageR $ fst $ commentBisCuser c'} .avatar>
+          <a href=@{ProfileR $ fst $ commentBisCuser c'} .profile>
             #{userFullName $ snd $ commentBisCuser c'}
           #{showDate $ commentBisCdate c'} #{commentBisStatus c'}
           $if commentBisCheckReader c'
             <input #readThis-#{cid'} type=checkbox name=readThis url=@{ReadCommentR cid} target=#readers-#{cid'} :thd3 c:checked>
             <label for=readThis-#{cid'}>読んだ
-        <div .post-body
+        <div .post-body>
           $maybe cmt <- commentBisContent c'
             #{showMultilineText cmt}
           $nothing
@@ -64,7 +64,7 @@
           $maybe f <- commentBisAttached c'
             <div .attached>添付ファイル: 
               <a href=@{AttachedFileR cid (fst f)}>#{fileHeaderFullname (snd f)}
-        <div .post-foot
+        <div .post-foot>
           $if commentBisCheckReader c'
-            <div #readers-#{cid'} .readers url=@{CommentReadersR cid}
-<div #popup-profile
+            <div #readers-#{cid'} .readers url=@{CommentReadersR cid}>
+<div #popup-profile>

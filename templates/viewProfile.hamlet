@@ -1,86 +1,86 @@
-<ul .tabs
-  <li
+<ul .tabs>
+  <li>
     <a href=@{HomeR selfid}>ホーム
-  <li .selected
+  <li .selected>
     <a href=@?{viewprof}>プロフィール
-<div #main-content
+<div #main-content>
   <h3>#{userIdent user}のプロフィール
     $if canEdit self user
-      <form method=get action=@{ProfileR uid} .inline
-        <input type=hidden name=mode value=e
+      <form method=get action=@{ProfileR uid} .inline>
+        <input type=hidden name=mode value=e>
         <button type=submit .link>編集する
-  <table .profile
-    <tr
+  <table .profile>
+    <tr>
       <th>アバター
-      <td
-        <div #avatar
-          <img #myavatar src=@{AvatarImageR uid} .avatar
+      <td>
+        <div #avatar>
+          <img #myavatar src=@{AvatarImageR uid} .avatar>
     $if canView self user
-      <tr
-        <th
+      <tr>
+        <th>
           $if isStudent user
             学籍番号
           $else
             アカウントID
         <td colspan=3>#{userIdent user}
-      <tr
+      <tr>
         <th>メールアドレス
         <td colspan=3>#{userEmail user}
-    <tr
+    <tr>
       <th>氏名
       <td colspan=3>#{userFullName user}
     $maybe lab <- mlab
-      <tr
+      <tr>
         <th>研究室番号
         <td colspan=3>#{showmaybe $ laboratoryRoomNumber lab}
-      <tr
+      <tr>
         <th>内線番号
         <td colspan=3>#{showmaybe $ laboratoryExtensionNumber lab}
-      <tr
+      <tr>
         <th>担当科目
         <td colspan=3>#{showMultilineText $ showmaybe $ laboratoryCourses lab}
     $if canView self user
       $maybe prof <- mprof
-        <tr
+        <tr>
           <th>生年月日
           <td colspan=3>#{showBirthDay prof}
-        <tr
+        <tr>
           <th>在籍年度
           <td colspan=3>#{showEntryYear prof} 〜 #{showGraduateYear prof}
-        <tr
+        <tr>
           <th>所属ブランチ
           <td colspan=3>#{showmaybe $ profileBranch prof}
-        <tr
+        <tr>
           <th>現住所
           <td colspan=3>〒 #{showmaybe $ profileZip prof} #{showmaybe $ profileAddress prof}
-              <input #clon type=hidden name=longitude value=#{showMaybeDouble $ profileLongitude prof}
-              <input #clat type=hidden name=latitude value=#{showMaybeDouble $ profileLatitude prof}
-              <input #cloc type=hidden name=address value=#{showmaybe $ profileAddress prof}
+              <input #clon type=hidden name=longitude value=#{showMaybeDouble $ profileLongitude prof}>
+              <input #clat type=hidden name=latitude value=#{showMaybeDouble $ profileLatitude prof}>
+              <input #cloc type=hidden name=address value=#{showmaybe $ profileAddress prof}>
         $if canViewTel self user
-          <tr
+          <tr>
             <th>電話番号
             <td colspan=3>#{showmaybe $ profileTel prof}
-        <tr
+        <tr>
           <th>最寄駅
           <td colspan=3>#{showmaybe $ profileStation prof}
-        <tr
+        <tr>
           <th>実家住所
           <td colspan=3>〒 #{showmaybe $ profileHomeZip prof} #{showmaybe $ profileHomeAddress prof}
-              <input #hlon type=hidden name=homeLongitude value=#{showMaybeDouble $ profileHomeLongitude prof}
-              <input #hlat type=hidden name=homeLatitude value=#{showMaybeDouble $ profileHomeLatitude prof}
-              <input #hloc type=hidden name=homeAddress value=#{showmaybe $ profileHomeAddress prof}
-        <tr
+              <input #hlon type=hidden name=homeLongitude value=#{showMaybeDouble $ profileHomeLongitude prof}>
+              <input #hlat type=hidden name=homeLatitude value=#{showMaybeDouble $ profileHomeLatitude prof}>
+              <input #hloc type=hidden name=homeAddress value=#{showmaybe $ profileHomeAddress prof}>
+        <tr>
           <th>実家電話番号
           <td colspan=3>#{showmaybe $ profileHomeTel prof}
-        <tr
+        <tr>
           <th>希望進路
           <td colspan=3>#{showmaybe $ profileDesiredCourse prof}
-        <tr
+        <tr>
           <th>希望勤務地
-          <td #desired-work-location colspan=3
+          <td #desired-work-location colspan=3>
            <a href=# #search-human-network>#{showmaybe $ profileDesiredWorkLocation prof}
-        <tr
+        <tr>
           <th>勤務(予定)先
           <td colspan=3>#{showmaybe $ profileEmployment prof}
-<div #desired-human-network .center
-  <div #area_map
+<div #desired-human-network .center>
+  <div #area_map>

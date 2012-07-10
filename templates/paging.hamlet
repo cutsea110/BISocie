@@ -1,6 +1,6 @@
 $if needPaging
-  <tr
-    <td colspan=#{show colspan}
+  <tr>
+    <td colspan=#{show colspan}>
       $if prevExist
         <a href=@?{prevPage}>«前へ
       $else

@@ -1,36 +1,36 @@
-<ul .tabs
-  <li .selected
+<ul .tabs>
+  <li .selected>
     <a href=@{HomeR selfid}>ホーム
   $if canCreateProject self
-    <li
+    <li>
       <a href=@{NewProjectR}>プロジェクト新規作成
-  <li
+  <li>
     <a href=@{CrossSearchR}>クロスサーチ
   $if canViewHumannetwork self
-    <li
+    <li>
       <a href=@{HumanNetworkR}>ヒューマンネットワーク
-  <li
+  <li>
     <a href=@{CurrentScheduleR}>スケジュール
-<div #main-content
-  <div .searchbox
-    <table
+<div #main-content>
+  <div .searchbox>
+    <table>
       <caption>検索条件
-      <tr
-        <th
+      <tr>
+        <th>
           <label for=project_name>プロジェクト名:
-          <input #project_name type=text name=project_name
-        <th
+          <input #project_name type=text name=project_name>
+        <th>
           <label for=user_ident_or_name>参加者ID or 氏名
-          <input #user_ident_or_name type=text name=user_ident_or_name
-      <tr
-        <th
-          <input #includeterminated type=checkbox name=includeterminated
+          <input #user_ident_or_name type=text name=user_ident_or_name>
+      <tr>
+        <th>
+          <input #includeterminated type=checkbox name=includeterminated>
           <label for=includeterminated>終了プロジェクトを含む
-  <table .list
+  <table .list>
     <caption>参加プロジェクト一覧
-    <thead
-      <tr #pagenate-top
-      <tr
+    <thead>
+      <tr #pagenate-top>
+      <tr>
         <th .name .sortable-header>プロジェクト名
           <a href=# .sorter by=DescProjectName>△
           <a href=# .sorter by=AscProjectName>▽
@@ -41,6 +41,6 @@
         <th .date .sortable-header>更新日
           <a href=# .sorter by=DescProjectUdate> △
           <a href=# .sorter by=AscProjectUdate> ▽
-    <tbody #container-projects
-    <tfoot
-      <tr #pagenate-bottom
+    <tbody #container-projects>
+    <tfoot>
+      <tr #pagenate-bottom>

@@ -9,10 +9,11 @@ import Foundation
 import Yesod
 import Control.Monad (unless, forM_)
 import Control.Applicative ((<$>),(<*>))
+import Data.Maybe
 import Data.Time
 import System.Directory
 import System.FilePath ((</>))
-import Text.Blaze (preEscapedText)
+import Text.Blaze.Internal (preEscapedText)
 import Text.Cassius (cassiusFile)
 import qualified Data.Text as T
 
@@ -31,7 +32,7 @@ getNewProjectR = do
       help = $(widgetFile "help")
   defaultLayout $ do
     setTitle "プロジェクト新規作成"
-    addCassius $(cassiusFile "templates/project.cassius")
+    toWidget $(cassiusFile "templates/project.cassius")
     addWidget $(widgetFile "newproject")
     
 postNewProjectR :: Handler RepHtml
@@ -78,7 +79,7 @@ getProjectR pid = do
       help = $(widgetFile "help")
   prj <- runDB $ do 
     p <- getBy $ UniqueParticipants pid selfid
-    unless (p /= Nothing || isAdmin self) $ 
+    unless (isJust p || isAdmin self) $ 
       lift $ permissionDenied "あなたはこのプロジェクトの参加者ではありません."
     get404 pid
   defaultLayout $ do
@@ -104,7 +105,7 @@ putProjectR pid = do
 
   prj <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
-    unless (p /= Nothing && canEditProjectSetting self) $ 
+    unless (isJust p && canEditProjectSetting self) $ 
       lift $ permissionDenied "あなたはこのプロジェクトの設定を編集できません."
     prj <- get404 pid
     Just nm <- case nm' of
@@ -141,7 +142,7 @@ deleteProjectR pid = do
   (Entity selfid self) <- requireAuth
   deleted <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
-    unless ((p /= Nothing || isAdmin self) && canEditProjectSetting self) $ 
+    unless ((isJust p || isAdmin self) && canEditProjectSetting self) $ 
       lift $ permissionDenied "あなたはこのプロジェクトを削除することはできません."
     if isAdmin self
       then do
@@ -166,7 +167,7 @@ deleteProjectR pid = do
       return True
       else do
       issues <- selectList [IssueProject ==. pid] []
-      if issues == [] 
+      if null issues
         then do
         deleteWhere [ParticipantsProject ==. pid]
         delete pid

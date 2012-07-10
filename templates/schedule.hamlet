@@ -1,30 +1,30 @@
-<ul .tabs
-  <li
+<ul .tabs>
+  <li>
     <a href=@{HomeR selfid}>ホーム
   $if canCreateProject self
-    <li
+    <li>
       <a href=@{NewProjectR}>プロジェクト新規作成
-  <li
+  <li>
     <a href=@{CrossSearchR}>クロスサーチ
   $if canViewHumannetwork self
-    <li
+    <li>
       <a href=@{HumanNetworkR}>ヒューマンネットワーク
-  <li .selected
+  <li .selected>
     <a href=@{CurrentScheduleR}>スケジュール
-<div #main-content
-  <table .calendar
-   <thead
-     <tr
-       <th .move
+<div #main-content>
+  <table .calendar>
+   <thead>
+     <tr>
+       <th .move>
          <a href=@{prevYear fday}>«前年
-       <th .move
+       <th .move>
          <a href=@{prevMonth fday}><前月
        <th colspan=3>#{y}年#{m}月のスケジュール
-       <th .move
+       <th .move>
          <a href=@{nextMonth fday}>翌月>
-       <th .move
+       <th .move>
          <a href=@{nextYear fday}>翌年»
-     <tr
+     <tr>
        <th .week-header>月
        <th .week-header>火
        <th .week-header>水
@@ -32,8 +32,8 @@
        <th .week-header>金
        <th .week-header .Saturday>土
        <th .week-header .Sunday>日
-   <tbody
+   <tbody>
      $forall ds <- days
-       <tr
+       <tr>
          $forall d <- ds
            <td .#{snd d} uri=@{taskUri $ fst d}>#{showDay $ fst d}

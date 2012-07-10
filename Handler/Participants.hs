@@ -4,6 +4,7 @@ module Handler.Participants where
 
 import Yesod
 import Control.Monad (unless, when, forM)
+import Data.Maybe
 import Data.Time
 import qualified Data.Text as T
 
@@ -16,7 +17,7 @@ getParticipantsListR pid = do
   r <- getUrlRender
   us <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
-    unless (p /= Nothing || isAdmin self) $ 
+    unless (isJust p || isAdmin self) $ 
       lift $ permissionDenied "あなたはこのプロジェクトに参加していません."
     ps' <- selectList [ParticipantsProject ==. pid] [Asc ParticipantsCdate]
     forM ps' $ \(Entity _ p') -> do
@@ -54,7 +55,7 @@ postParticipantsR pid = do
       now <- liftIO getCurrentTime
       runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
-        unless (p /= Nothing && canEditProjectSetting self) $ 
+        unless (isJust p && canEditProjectSetting self) $ 
           lift $ permissionDenied "あなたはこのプロジェクトの参加者を編集できません."
         insert $ Participants pid uid True now
       cacheSeconds 10 -- FIXME
@@ -70,7 +71,7 @@ postParticipantsR pid = do
       (Entity selfid self) <- requireAuth
       runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
-        unless (p /= Nothing && canEditProjectSetting self) $ 
+        unless (isJust p && canEditProjectSetting self) $ 
           lift $ permissionDenied "あなたはこのプロジェクトの参加者を編集できません."
         c <- count [ParticipantsProject ==. pid, ParticipantsUser !=. uid]
         when (selfid==uid && c==0) $ 
@@ -89,7 +90,7 @@ postParticipantsR pid = do
       mmail <- lookupPostParam "mail"
       sendMail <- runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
-        unless (p /= Nothing && canEditProjectSetting self) $
+        unless (isJust p && canEditProjectSetting self) $
           lift $ permissionDenied "あなたはこのプロジェクトの参加者を編集できません."
         (Entity ptcptid _) <- getBy404 $ UniqueParticipants pid uid
         case mmail of

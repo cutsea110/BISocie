@@ -1,10 +1,10 @@
-<div #main-content
+<div #main-content>
   <h3>システムバッチ
-  <div .function-block
+  <div .function-block>
     <div .subheader>学生アカウント一括登録
-    <div .form-block
-      <form method=post enctype=multipart/form-data action=@{SystemBatchR} .validate
+    <div .form-block>
+      <form method=post enctype=multipart/form-data action=@{SystemBatchR} .validate>
         <label for=students-list-csv>学生アカウントCSVファイル:
-        <input #students-list-csv type=file name=studentscsv .required
-        <br
+        <input #students-list-csv type=file name=studentscsv .required>
+        <br>
         <button type=submit name=_method value=upload>学生一括登録

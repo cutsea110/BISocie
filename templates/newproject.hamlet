@@ -1,49 +1,49 @@
-<ul .tabs
-  <li
+<ul .tabs>
+  <li>
     <a href=@{HomeR selfid}>ホーム
-  <li .selected
+  <li .selected>
     <a href=@{NewProjectR}>プロジェクト新規作成
-  <li
+  <li>
     <a href=@{CrossSearchR}>クロスサーチ
   $if canViewHumannetwork self
-    <li
+    <li>
       <a href=@{HumanNetworkR}>ヒューマンネットワーク
-  <li
+  <li>
     <a href=@{CurrentScheduleR}>スケジュール
-<div #main-content
+<div #main-content>
   <h3>プロジェクト設定
      <button #button-search-users .link>ユーザー検索
-  <form method=post action=@{NewProjectR} .validate
-    <dl
+  <form method=post action=@{NewProjectR} .validate>
+    <dl>
       <dt>プロジェクト名 
         <span .alert>(必須)
-      <dd
-        <input #name type=text name=name placeholder=(プロジェクト名) .watermark .required
+      <dd>
+        <input #name type=text name=name placeholder=(プロジェクト名) .watermark .required>
       <dt>概要 
         <span .alert>(必須)
-      <dd
-        <textarea #description type=text name=description placeholder=(プロジェクト概要) .watermark .required
+      <dd>
+        <textarea #description type=text name=description placeholder=(プロジェクト概要) .watermark .required>
       <dt>ステータス 
         <span .alert>(必須) 
         <button #button-status-syntax-help type=submit .link>ヘルプ
-      <dd
+      <dd>
         <textarea #statuses name=statuses placeholder=(ステータス設定) .watermark .required>#{inintstatuses}
     <button type=submit name=_method value=create>プロジェクトを作成する
-<div #search-users
+<div #search-users>
   <label for=search-bay-name>名前:
-  <input #search-by-name type=text name=username
-  <input #select-teacher type=checkbox value=Teacher
+  <input #search-by-name type=text name=username>
+  <input #select-teacher type=checkbox value=Teacher>
   <label for=select-teacher>教員
-  <input #select-staff type=checkbox value=Staff
+  <input #select-staff type=checkbox value=Staff>
   <label for=select-staff>職員
-  <input #select-student type=checkbox value=Student
+  <input #select-student type=checkbox value=Student>
   <label for=select-student>在校生/卒業生
-  <input #select-admin type=checkbox value=Admin
+  <input #select-admin type=checkbox value=Admin>
   <label for=select-admin>管理者
   <label for=select-entry-year>入学年度:
-  <select #select-entry-year
-    <option
+  <select #select-entry-year>
+    <option>
     $forall ey <- eyears
       <option value=#{show ey}>#{show ey}
-  <div #search-result .scroll
+  <div #search-result .scroll>
 ^{help}

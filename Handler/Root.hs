@@ -11,7 +11,7 @@ import qualified Data.ByteString.Lazy.Char8 as L
 import Codec.Binary.UTF8.String (decodeString)
 import Data.Text (Text)
 import qualified Data.Text as T
-import Text.Blaze (preEscapedText)
+import Text.Blaze.Internal (preEscapedText)
 import Data.Time (fromGregorian)
 import Network.Mail.Mime
 import qualified Data.Text.Lazy as TL

@@ -1,21 +1,21 @@
 !!!
-<html
-    <head
+<html>
+    <head>
       <title>#{pageTitle pc}
       ^{pageHead pc}
-    <body
-      <div #main
-        <div #ui-header .clearfix
+    <body>
+      <div #main>
+        <div #ui-header .clearfix>
           ^{header}
-        <div #ui-main
+        <div #ui-main>
           $maybe msg <- mmsg
               <div #message>#{msg}
-          <ul #breadcrumbs
+          <ul #breadcrumbs>
             $if not (null parents)
               $forall p <- parents
-                <li
+                <li>
                   <a href=@{fst p}>#{snd p}
             <li>#{title}
           ^{pageBody pc}
-        <div #ui-footer
+        <div #ui-footer>
           ^{footer}

@@ -1,68 +1,68 @@
-<ul .tabs
-  <li
+<ul .tabs>
+  <li>
     <a href=@{HomeR selfid}>ホーム
   $if (canCreateProject self)
-    <li
+    <li>
       <a href=@{NewProjectR}>プロジェクト新規作成
-  <li .selected
+  <li .selected>
     <a href=@{CrossSearchR}>クロスサーチ
   $if (canViewHumannetwork self)
-    <li
+    <li>
       <a href=@{HumanNetworkR}>ヒューマンネットワーク
-  <li
+  <li>
     <a href=@{CurrentScheduleR}>スケジュール
-<div #main-content
-  <div .searchbox
-    <table
+<div #main-content>
+  <div .searchbox>
+    <table>
       <caption>検索条件
-      <tr
-        <th
+      <tr>
+        <th>
           <label for=project_name>プロジェクト名:
-          <input #project_name type=text name=project_name target=#projectid
-        <th
+          <input #project_name type=text name=project_name target=#projectid>
+        <th>
           <label for=user_ident_or_name>参加者ID or 氏名
-          <input #user_ident_or_name type=text name=user_ident_or_name target=#projectid
-      <tr
-        <th
-          <input #includeterminated type=checkbox name=includeterminated target=#projectid
+          <input #user_ident_or_name type=text name=user_ident_or_name target=#projectid>
+      <tr>
+        <th>
+          <input #includeterminated type=checkbox name=includeterminated target=#projectid>
           <label for=includeterminated>終了プロジェクトを含む
-    <hr
-    <table
-      <tr
+    <hr>
+    <table>
+      <tr>
         <th>プロジェクト
         <th>ステータス
         <th>アサイン
         <th>期限
-      <tr
-        <td rowspan=3
-          <select #projectid name=projectid multiple=multiple size=5
+      <tr>
+        <td rowspan=3>
+          <select #projectid name=projectid multiple=multiple size=5>
             $forall p <- prjs
               <option selected=selected value=#{show (projectBisId p)}>#{projectBisName p}
-        <td rowspan=3
-          <select #status name=status multiple=multiple size=5
-        <td rowspan=3
-          <select #assign name=assign multiple=multiple size=5
-        <td
-          <input #limitdatefrom type=date name=limitdatefrom .date
+        <td rowspan=3>
+          <select #status name=status multiple=multiple size=5>
+        <td rowspan=3>
+          <select #assign name=assign multiple=multiple size=5>
+        <td>
+          <input #limitdatefrom type=date name=limitdatefrom .date>
           〜
-          <input #limitdateto type=date name=limitdateto .date
-      <tr
+          <input #limitdateto type=date name=limitdateto .date>
+      <tr>
         <th>更新日
-      <tr
-        <td
-          <input #updatedfrom type=date name=updatedfrom .date
+      <tr>
+        <td>
+          <input #updatedfrom type=date name=updatedfrom .date>
           〜
-          <input #updatedto type=date name=updatedto .date
-      <tr
-        <th
+          <input #updatedto type=date name=updatedto .date>
+      <tr>
+        <th>
           <a .complement href=# target=#projectid>選択⇔非選択
-        <th
+        <th>
           <a .complement href=# target=#status>選択⇔非選択
-        <th
+        <th>
           <a .complement href=# target=#assign>選択⇔非選択
-  <table .list
+  <table .list>
     <caption>対象案件一覧
-    <thead
+    <thead>
       <th .pname>プロジェクト名
       <th .ino>No
       <th .subject>件名
@@ -72,4 +72,4 @@
       <th .uname>作成者
       <th .uname>更新者
       <th .date>更新日
-    <tbody #cross-search-result
+    <tbody #cross-search-result>

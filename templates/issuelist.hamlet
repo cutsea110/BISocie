@@ -1,16 +1,16 @@
-<ul .tabs
-  <li .selected
+<ul .tabs>
+  <li .selected>
     <a href=@{IssueListR pid}>#{projectBisName prj} 案件一覧
-  <li
+  <li>
     <a href=@{NewIssueR pid}>案件追加
-  <li
+  <li>
     <a href=@{ProjectR pid}>プロジェクト設定
-<div #main-content
-  <table .list
+<div #main-content>
+  <table .list>
     <caption>#{projectBisName prj} 案件一覧
-    <thead
+    <thead>
       ^{paging}
-      <tr
+      <tr>
         <th>No
         <th>件名
         <th>ステータス
@@ -19,13 +19,13 @@
         <th>作成者
         <th>更新者
         <th>更新日
-    <tbody
+    <tbody>
       $forall issue <- issues
         $with i <- snd issue, i' <- issueBisIssue i
-          <tr bgcolor=#{colorOf $ issueStatus i'} .#{effectOf $ issueStatus i'}
+          <tr bgcolor=#{colorOf $ issueStatus i'} .#{effectOf $ issueStatus i'}>
             <td .number>#{show $ issueNumber i'}
-            <td
-              <a href=@{IssueR pid $ issueNumber i'}
+            <td>
+              <a href=@{IssueR pid $ issueNumber i'}>
                 #{issueSubject i'}
             <td>#{issueStatus i'}
             <td>#{showmaybe $ fmap userFullName $ issueBisAssign i}
@@ -33,5 +33,5 @@
             <td>#{userFullName $ issueBisCreator i}
             <td>#{userFullName $ issueBisUpdator i}
             <td>#{showDate $ issueUdate i'}
-    <tfoot
+    <tfoot>
       ^{paging}

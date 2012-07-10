@@ -1,7 +1,7 @@
-<div #bisocie-title
-  <a href=@{RootR}
-    <img src=@{StaticR img_bisocie_logo_png}
-<div #userbox
+<div #bisocie-title>
+  <a href=@{RootR}>
+    <img src=@{StaticR img_bisocie_logo_png}>
+<div #userbox>
   $maybe u <- mu
     ログイン中 
     <a title=プロフィール href=@{ProfileR (entityKey u)}>#{userFullName (entityVal u)}.

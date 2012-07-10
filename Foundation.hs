@@ -100,8 +100,6 @@ type Form x = Html -> MForm BISocie BISocie (FormResult x, Widget)
 instance Yesod BISocie where
     approot = ApprootMaster $ appRoot . settings
     
-    encryptKey _ = fmap Just $ getKey "config/client_session_key.aes"
-    
     defaultLayout widget = do
       mu <- maybeAuth
       mmsg <- getMessage
@@ -127,8 +125,8 @@ instance Yesod BISocie where
         addScriptEither $ Left $ StaticR plugins_ajaxzip2_ajaxzip2_js
         addScriptEither $ Left $ StaticR plugins_selection_jquery_selection_min_js
         addScriptEither $ Left $ StaticR plugins_textchange_jquery_textchange_min_js
-        addCassius $(cassiusFile "templates/default-layout.cassius")
-        addJulius $(juliusFile "templates/default-layout.julius")
+        toWidget $(cassiusFile "templates/default-layout.cassius")
+        toWidget $(juliusFile "templates/default-layout.julius")
       hamletToRepHtml $(hamletFile "templates/default-layout.hamlet")
 
     -- This is done to provide an optimization for serving static files from
@@ -247,8 +245,8 @@ instance YesodAuth BISocie where
     loginHandler = do
       defaultLayout $ do
         setTitle "ログイン"
-        addCassius $(cassiusFile "templates/login.cassius")
-        addHamlet $(hamletFile "templates/login.hamlet")
+        toWidget $(cassiusFile "templates/login.cassius")
+        toWidget $(hamletFile "templates/login.hamlet")
                   
 instance YesodAuthHashDB BISocie where
     type AuthHashDBId BISocie = UserId

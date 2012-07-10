@@ -13,6 +13,7 @@ import Yesod
 import Control.Applicative ((<$>),(<*>))
 import Control.Monad (when, unless, forM, liftM2)
 import Data.List (intercalate, intersperse, nub, groupBy)
+import Data.Maybe
 import Data.Time
 import Data.Time.Calendar.WeekDate
 import Data.Time.Calendar.OrdinalDate
@@ -23,7 +24,7 @@ import qualified Data.Text.Lazy as L
 import qualified Data.Text.Lazy.Encoding as LE
 import qualified Data.Text as T
 import Data.Text (Text)
-import Text.Blaze (preEscapedText)
+import Text.Blaze.Internal (preEscapedText)
 import Text.Cassius (cassiusFile)
 
 import BISocie.Helpers.Util
@@ -189,7 +190,7 @@ getCrossSearchR = do
     return $ map toProjectBis prjs'
   defaultLayout $ do
     setTitle "クロスサーチ"
-    addCassius $(cassiusFile "templates/issue.cassius")
+    toWidget $(cassiusFile "templates/issue.cassius")
     addWidget $(widgetFile "crosssearch")
 
 postCrossSearchR :: Handler RepJson
@@ -263,7 +264,7 @@ getIssueListR pid = do
   let page = max 0 $ fromMaybe 0  $ fmap readText $ page'
   (alliis, issues'', prj, es) <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
-    unless (p /= Nothing || isAdmin self) $ 
+    unless (isJust p || isAdmin self) $ 
       lift $ permissionDenied "あなたはこのプロジェクトの参加者ではありません."
     prj' <- get404 pid
     let (Right es) = parseStatuses $ projectStatuses prj'
@@ -306,7 +307,7 @@ getIssueListR pid = do
       paging = $(widgetFile "paging")
   defaultLayout $ do
     setTitle $ preEscapedText $ projectBisName prj +++ "案件一覧"
-    addCassius $(cassiusFile "templates/issue.cassius")
+    toWidget $(cassiusFile "templates/issue.cassius")
     addWidget $(widgetFile "issuelist")
 
 getNewIssueR :: ProjectId -> Handler RepHtml
@@ -314,7 +315,7 @@ getNewIssueR pid = do
   (Entity selfid self) <- requireAuth
   (ptcpts, stss, prj) <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
-    unless (p /= Nothing) $ 
+    unless (isJust p) $ 
       lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
     prj <- get404 pid
     ptcpts <- selectParticipants pid
@@ -322,7 +323,7 @@ getNewIssueR pid = do
     return (ptcpts, stss, prj)
   defaultLayout $ do
     setTitle "新規案件作成"
-    addCassius $(cassiusFile "templates/issue.cassius")
+    toWidget $(cassiusFile "templates/issue.cassius")
     addWidget $(widgetFile "newissue")
       
 postNewIssueR :: ProjectId -> Handler RepHtml
@@ -354,7 +355,7 @@ postNewIssueR pid = do
       Just fi <- lookupFile "attached"
       ino <- runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
-        unless (p /= Nothing) $ 
+        unless (isJust p) $ 
           lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
         r <- lift getUrlRender
         update pid [ProjectIssuecounter +=. 1, ProjectUdate =. now]
@@ -408,7 +409,7 @@ getIssueR pid ino = do
   (prj, ptcpts, issue, comments) <- 
     runDB $ do
       p <- getBy $ UniqueParticipants pid selfid
-      unless (p /= Nothing || isAdmin self) $ 
+      unless (isJust p || isAdmin self) $ 
         lift $ permissionDenied "あなたはこの案件を閲覧することはできません."
       (Entity iid issue) <- getBy404 $ UniqueIssue pid ino
       cs <- selectList [CommentIssue ==. iid] [Desc CommentCdate]
@@ -466,7 +467,7 @@ postCommentR pid ino = do
       Just fi <- lookupFile "attached"
       runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
-        unless (p /= Nothing) $ 
+        unless (isJust p) $ 
           lift $ permissionDenied "あなたはこのプロジェクトに投稿することはできません."
         r <- lift getUrlRender
         (Entity iid issue) <- getBy404 $ UniqueIssue pid ino
@@ -535,7 +536,7 @@ getAttachedFileR cid fid = do
   f <- runDB $ do
     c <- get404 cid
     p <- getBy $ UniqueParticipants (commentProject c) selfid
-    unless (p /= Nothing || isAdmin self) $
+    unless (isJust p || isAdmin self) $
       lift $ permissionDenied "あなたはこのファイルをダウンロードできません."
     get404 fid
   getFileR (fileHeaderCreator f) fid
@@ -549,7 +550,7 @@ postReadCommentR cid = do
     cmt <- get404 cid
     let pid = commentProject cmt
     p <- getBy $ UniqueParticipants pid selfid
-    unless (p /= Nothing) $
+    unless (isJust p) $
       lift $ permissionDenied "あなたはこのプロジェクトに参加していません."
     case _method of
       Just "add" -> do    
@@ -586,7 +587,7 @@ getCommentReadersR cid = do
     cmt <- get404 cid
     let pid = commentProject cmt
     p <- getBy $ UniqueParticipants pid selfid
-    unless (p /= Nothing || isAdmin self) $
+    unless (isJust p || isAdmin self) $
       lift $ permissionDenied "あなたはこのプロジェクトに参加していません."
     rds' <- selectList [ReaderComment ==. cid] [Asc ReaderCheckdate]
     forM rds' $ \(Entity _ rd') -> do

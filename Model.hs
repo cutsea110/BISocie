@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes, TypeFamilies, GeneralizedNewtypeDeriving, TemplateHaskell #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, EmptyDataDecls #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE GADTs #-}
@@ -26,7 +26,7 @@ import qualified Text.ParserCombinators.Parsec as P (string)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Network.Mail.Mime
-import Text.Blaze (preEscapedText)
+import Text.Blaze.Internal (preEscapedText)
 
 import qualified Settings (tz)
 import BISocie.Helpers.Util
@@ -280,6 +280,9 @@ showShortenText = preEscapedText . shorten 26 . safeHead . T.splitOn "\n"
     safeHead [] = T.empty
     safeHead (s:_) = s
     shorten n s = if T.length s > n then T.take n s +++ ".." else s
+
+instance Eq User where
+  u == v = userIdent u == userIdent v
 
 -- | Permission System
 canView :: User -> User -> Bool

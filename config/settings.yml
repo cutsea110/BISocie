@@ -1,7 +1,7 @@
 Default: &defaults
   host: "*4" # any IPv4 host
-  port: 3001
-  approot: "http://localhost:3001"
+  port: 8081
+  approot: "http://localhost:8081"
   copyright: Insert copyright statement here
   #analytics: UA-YOURCODE
 

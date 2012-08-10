@@ -16,8 +16,7 @@ getUsersR = do
   unless (isAdmin self) $
     permissionDenied "あなたはこのページにアクセスできません."
   users <- runDB $ selectList [] [Asc UserIdent]
-  defaultLayout $ do
-    addWidget $(whamletFile "templates/users.hamlet")
+  defaultLayout $(whamletFile "templates/users.hamlet")
 
 getUserR :: UserId -> Handler RepHtml
 getUserR uid = do
@@ -63,8 +62,7 @@ getNewUserR = do
   unless (isAdmin self) $
     permissionDenied "あなたはこのページを参照できません."
   let toInt = (+1) . fromEnum
-  defaultLayout $ do
-    addWidget $(whamletFile "templates/newUser.hamlet")
+  defaultLayout $(whamletFile "templates/newUser.hamlet")
   where
     roles = [(T.pack $ show r, r) | r <- [minBound::Role .. maxBound]]
 
@@ -93,8 +91,7 @@ getDeleteUserR uid = do
   unless (isAdmin self) $
     permissionDenied "あなたはこのページを参照できません."
   user <- runDB $ get404 uid
-  defaultLayout $ do
-    addWidget $(whamletFile "templates/deleteUser.hamlet")
+  defaultLayout $(whamletFile "templates/deleteUser.hamlet")
 
 postDeleteUserR :: UserId -> Handler ()
 postDeleteUserR uid = do

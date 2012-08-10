@@ -33,7 +33,7 @@ getNewProjectR = do
   defaultLayout $ do
     setTitle "プロジェクト新規作成"
     toWidget $(cassiusFile "templates/project.cassius")
-    addWidget $(widgetFile "newproject")
+    $(widgetFile "newproject")
     
 postNewProjectR :: Handler RepHtml
 postNewProjectR = do
@@ -84,7 +84,7 @@ getProjectR pid = do
     get404 pid
   defaultLayout $ do
     setTitle $ preEscapedText $ projectName prj
-    addWidget $(widgetFile "project")
+    $(widgetFile "project")
 
 postProjectR :: ProjectId -> Handler RepJson
 postProjectR pid = do

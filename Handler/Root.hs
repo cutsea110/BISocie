@@ -5,7 +5,10 @@
 module Handler.Root where
 
 import Yesod
+import Control.Applicative ((<$>))
 import Control.Monad (unless, forM)
+import Data.Conduit (($$))
+import Data.Conduit.List (consume)
 import Data.List (find)
 import qualified Data.ByteString.Lazy.Char8 as L
 import Codec.Binary.UTF8.String (decodeString)
@@ -42,7 +45,7 @@ getHomeR uid = do
   unless (selfid==uid) $ permissionDenied "他人のホームを見ることはできません."
   defaultLayout $ do
     setTitle $ preEscapedText $ userFullName self +++ " ホーム"
-    addWidget $(widgetFile "home")
+    $(widgetFile "home")
     
 getHumanNetworkR :: Handler RepHtml
 getHumanNetworkR = do
@@ -52,7 +55,7 @@ getHumanNetworkR = do
   defaultLayout $ do
     setTitle "ヒューマンネットワーク"
     addScriptRemote "http://maps.google.com/maps/api/js?sensor=false"
-    addWidget $(widgetFile "humannetwork")
+    $(widgetFile "humannetwork")
 
 getUserLocationsR :: Handler RepJson
 getUserLocationsR = do
@@ -82,7 +85,7 @@ getSystemBatchR = do
     permissionDenied "あなたはこの機能を利用することはできません."
   defaultLayout $ do
     setTitle "システムバッチ"
-    addWidget $(widgetFile "systembatch")
+    $(widgetFile "systembatch")
 
 postSystemBatchR :: Handler ()
 postSystemBatchR = do
@@ -90,7 +93,8 @@ postSystemBatchR = do
   unless (isAdmin self) $
     permissionDenied "あなたはこの機能を利用することはできません."
   Just fi <- lookupFile "studentscsv"
-  let recs = filter (not . T.null) $ T.lines $ T.pack $ decodeString $ L.unpack $ fileContent fi
+  lbs <- lift $ L.fromChunks <$> (fileSource fi $$ consume)
+  let recs = filter (not . T.null) $ T.lines $ T.pack $ decodeString $ L.unpack lbs
   runDB $ do
     users <- selectList [] []
     profs <- selectList [] []
@@ -175,4 +179,5 @@ getSendReminderMailR y m d = do
                }
              ]]
         }
-  defaultLayout [whamlet|Sending reminder mails|]
+  defaultLayout [whamlet|$newline never
+Sending reminder mails|]

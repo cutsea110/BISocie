@@ -53,7 +53,7 @@ getScheduleR y m = do
              $ groupBy (\d1 d2 -> fst d1 == fst d2) [(w, d)| w <- [fweek..lweek], d <- [1..7]]
   defaultLayout $ do
     setTitle $ preEscapedText $ showText y +++ "年" +++ showText m +++ "月のスケジュール"
-    addWidget $(widgetFile "schedule")
+    $(widgetFile "schedule")
   where
     classOf :: Day -> Int -> Day -> String
     classOf day d today = intercalate " " 
@@ -190,7 +190,7 @@ getCrossSearchR = do
   defaultLayout $ do
     setTitle "クロスサーチ"
     toWidget $(cassiusFile "templates/issue.cassius")
-    addWidget $(widgetFile "crosssearch")
+    $(widgetFile "crosssearch")
 
 postCrossSearchR :: Handler RepJson
 postCrossSearchR = do
@@ -307,7 +307,7 @@ getIssueListR pid = do
   defaultLayout $ do
     setTitle $ preEscapedText $ projectBisName prj +++ "案件一覧"
     toWidget $(cassiusFile "templates/issue.cassius")
-    addWidget $(widgetFile "issuelist")
+    $(widgetFile "issuelist")
 
 getNewIssueR :: ProjectId -> Handler RepHtml
 getNewIssueR pid = do
@@ -323,7 +323,7 @@ getNewIssueR pid = do
   defaultLayout $ do
     setTitle "新規案件作成"
     toWidget $(cassiusFile "templates/issue.cassius")
-    addWidget $(widgetFile "newissue")
+    $(widgetFile "newissue")
       
 postNewIssueR :: ProjectId -> Handler RepHtml
 postNewIssueR pid = do
@@ -442,7 +442,7 @@ getIssueR pid ino = do
       isStatus = (==issueStatus issue)
   defaultLayout $ do
     setTitle $ preEscapedText $ issueSubject issue
-    addWidget $(widgetFile "issue")
+    $(widgetFile "issue")
 
 postCommentR :: ProjectId -> IssueNo -> Handler RepHtml
 postCommentR pid ino = do

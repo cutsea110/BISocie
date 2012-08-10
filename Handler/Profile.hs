@@ -86,8 +86,8 @@ getProfileR uid = do
       defaultLayout $ do
         setTitle "Profile"
         addScriptRemote "http://maps.google.com/maps/api/js?sensor=false"
-        addWidget $(widgetFile "profile")
-        addWidget $(widgetFile "viewProfile")
+        $(widgetFile "profile")
+        $(widgetFile "viewProfile")
     
     editProf :: Handler RepHtml
     editProf = do
@@ -111,8 +111,8 @@ getProfileR uid = do
       defaultLayout $ do
         setTitle "Profile"
         addScriptRemote "http://maps.google.com/maps/api/js?sensor=false"
-        addWidget $(widgetFile "profile")
-        addWidget $(widgetFile "editProfile")
+        $(widgetFile "profile")
+        $(widgetFile "editProfile")
 
 postProfileR :: UserId -> Handler RepHtml
 postProfileR uid = do

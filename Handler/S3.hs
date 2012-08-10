@@ -15,6 +15,9 @@ module Handler.S3
 import Foundation
 
 import Yesod
+import Control.Applicative ((<$>))
+import Data.Conduit (($$))
+import Data.Conduit.List (consume)
 import Data.Time
 import qualified Data.ByteString.Lazy as L
 import System.Directory
@@ -30,15 +33,16 @@ getUploadR = do
   (Entity uid _) <- requireAuth
   defaultLayout $ do
     toWidget $(cassiusFile "templates/s3/s3.cassius")
-    addWidget $(widgetFile "s3/upload")
+    $(widgetFile "s3/upload")
 
 upload uid fi = do
-  if fileName' fi /= "" && L.length (fileContent fi) > 0
+  lbs <- lift $ lift $ fileContent fi
+  let fsize = L.length lbs
+  if fileName' fi /= "" && L.length lbs > 0
     then do
     now <- liftIO getCurrentTime
     let (name, ext) = splitExtension $ T.unpack $ fileName' fi
         efname = encodeUrl $ fileName' fi
-        fsize = L.length $ fileContent fi
     fid <-
       insert FileHeader { fileHeaderFullname=fileName' fi
                         , fileHeaderEfname=efname
@@ -53,12 +57,13 @@ upload uid fi = do
         s3fp = s3dir </> T.unpack (toPathPiece fid)
     liftIO $ do
       createDirectoryIfMissing True s3dir
-      L.writeFile s3fp (fileContent fi)
+      L.writeFile s3fp lbs
     return $ Just (fid, fileName' fi, T.pack ext, fsize, now)
     else return Nothing
   where
     fileName' :: FileInfo -> T.Text
     fileName' = last . T.split (\c -> c=='/' || c=='\\') . fileName
+    fileContent f = L.fromChunks <$> (fileSource f $$ consume)
   
 postUploadR :: Handler RepXml
 postUploadR = do
@@ -75,7 +80,7 @@ postUploadR = do
           cacheSeconds 10 -- FIXME
           let rf = r $ FileR uid fid
           fmap RepXml $ hamletToContent
-                      [xhamlet|\
+                      [xhamlet|$newline never
 <file>
   <fhid>#{T.unpack $ toPathPiece fid}
   <name>#{name}
@@ -129,7 +134,7 @@ deleteFileR uid fid = do
         rf = r $ FileR uid fid
     liftIO $ removeFile s3fp
     fmap RepXml $ hamletToContent
-                  [xhamlet|\
+                  [xhamlet|$newline never
 <deleted>
   <uri>#{rf}
 |]

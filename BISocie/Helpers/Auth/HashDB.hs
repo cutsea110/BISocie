@@ -48,7 +48,7 @@ class YesodAuth m => YesodAuthHashDB m where
 authHashDB :: YesodAuthHashDB m => AuthPlugin m
 authHashDB =
     AuthPlugin "account" dispatch $ \tm -> toWidget
-        [hamlet|\
+        [hamlet|$newline never
 <form method="post" action="@{tm loginR}">
     <table>
         <tr>
@@ -107,7 +107,7 @@ getPasswordR = do
     defaultLayout $ do
         setTitle "パスワード変更"
         toWidget
-            [hamlet|\
+            [hamlet|$newline never
 <h3>パスワード変更
 <form method="post" action="@{toMaster setpassR}">
     <table>

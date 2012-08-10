@@ -1,3 +1,4 @@
+$newline never
 $if needPaging
   <tr>
     <td colspan=#{show colspan}>

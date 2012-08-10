@@ -19,35 +19,25 @@ module Foundation
     , module Model
     ) where
 
-import Prelude
 import Yesod
 import Yesod.Static
 import Yesod.Auth
 import BISocie.Helpers.Auth.HashDB
-import Yesod.Auth.OpenId
+import Yesod.Auth.GoogleEmail
 import Yesod.Default.Config
 import Yesod.Default.Util (addStaticContentExternal)
-import Yesod.Logger (Logger, logMsg, formatLogText)
 import Network.HTTP.Conduit (Manager)
-#ifdef DEVELOPMENT
-import Yesod.Logger (logLazyText)
-#endif
 import qualified Settings
-import qualified Data.ByteString.Lazy as L
 import qualified Database.Persist.Store
 import Database.Persist.GenericSql
 import Settings (widgetFile, Extra (..))
 import Model
 import Text.Jasmine (minifym)
+import Web.ClientSession (getKey)
 import Text.Hamlet (hamletFile)
 import Text.Cassius (cassiusFile)
 import Text.Julius (juliusFile)
 import Yesod.Form.Jquery
-#if DEVELOPMENT
-import qualified Data.Text.Lazy.Encoding
-#else
-import Network.Mail.Mime (sendmail)
-#endif
 
 import Settings.StaticFiles
 import BISocie.Helpers.Util
@@ -58,7 +48,6 @@ import BISocie.Helpers.Util
 -- access to the data present here.
 data BISocie = BISocie
     { settings :: AppConfig DefaultEnv Extra
-    , getLogger :: Logger
     , getStatic :: Static -- ^ Settings for static file serving.
     , connPool :: Database.Persist.Store.PersistConfigPool Settings.PersistConfig -- ^ Database connection pool.
     , httpManager :: Manager
@@ -98,6 +87,12 @@ type Form x = Html -> MForm BISocie BISocie (FormResult x, Widget)
 -- of settings which can be configured by overriding methods here.
 instance Yesod BISocie where
     approot = ApprootMaster $ appRoot . settings
+    
+    -- Store session data on the client in encrypted cookies,
+    -- default session idle timeout is 120 minutes
+    makeSessionBackend _ = do
+        key <- getKey "config/client_session_key.aes"
+        return . Just $ clientSessionBackend key 120
     
     defaultLayout widget = do
       mu <- maybeAuth
@@ -142,9 +137,6 @@ instance Yesod BISocie where
     maximumContentLength _ (Just (AvatarImageR _)) =   2 * 1024 * 1024 --  2 megabytes for default
     maximumContentLength _ _                       =  20 * 1024 * 1024 -- 20 megabytes for default
     
-    messageLogger y loc level msg =
-      formatLogText (getLogger y) loc level msg >>= logMsg (getLogger y)
-
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
     -- expiration dates to be set far in the future without worry of
@@ -237,7 +229,7 @@ instance YesodAuth BISocie where
               lift $ setMessage "You are now logged in."
               fmap Just $ insert $ initUser $ credsIdent creds
 
-    authPlugins _ = [ authHashDB, authOpenId ]
+    authPlugins _ = [ authHashDB, authGoogleEmail ]
     
     authHttpManager = httpManager
     
@@ -265,11 +257,3 @@ instance YesodAuthHashDB BISocie where
                 , hashdbCredsAuthId = Just uid
                 }
     getHashDB = runDB . fmap (fmap userIdent) . get
-
--- Sends off your mail. Requires sendmail in production!
-deliver :: BISocie -> L.ByteString -> IO ()
-#ifdef DEVELOPMENT
-deliver y = logLazyText (getLogger y) . Data.Text.Lazy.Encoding.decodeUtf8
-#else
-deliver _ = sendmail
-#endif

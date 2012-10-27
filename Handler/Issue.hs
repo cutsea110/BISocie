@@ -47,10 +47,11 @@ getScheduleR y m = do
   let today = utctDay now
       fday = fromGregorian y m 1
       lday = fromGregorian y m $ gregorianMonthLength y m
-      (fweek, _) = mondayStartWeek fday
-      (lweek, _) = mondayStartWeek lday
-      days = map (map (\(w,d) -> let day = fromWeekDate y w d in (day, classOf day d today)))
-             $ groupBy (\d1 d2 -> fst d1 == fst d2) [(w, d)| w <- [fweek..lweek], d <- [1..7]]
+      (fy, fm, _) = toWeekDate fday
+      (ly, lm, _) = toWeekDate lday
+      days = map (map (\(y,w,d) -> let day = fromWeekDate y w d in (day, classOf day d today)))
+             $ groupBy (\d1 d2 -> snd3 d1 == snd3 d2)
+             $ map toWeekDate [fromWeekDate fy fm 1 .. fromWeekDate ly lm 7]
   defaultLayout $ do
     setTitle $ preEscapedText $ showText y +++ "年" +++ showText m +++ "月のスケジュール"
     $(widgetFile "schedule")
@@ -351,7 +352,7 @@ postNewIssueR pid = do
         <*> iopt timeField "limittime"
         <*> iopt dayField "reminderdate"
         <*> ireq boolField "checkreader"
-      Just fi <- lookupFile "attached"
+      mfi <- lookupFile "attached"
       ino <- runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
         unless (isJust p) $ 
@@ -360,7 +361,7 @@ postNewIssueR pid = do
         update pid [ProjectIssuecounter +=. 1, ProjectUdate =. now]
         prj <- get404 pid
         let ino = projectIssuecounter prj
-        mfh <- storeAttachedFile selfid fi
+        mfh <- storeAttachedFile selfid mfi
         iid <- insert $ issue {issueNumber=ino}
         cid <- insert $ comment {commentIssue=iid, commentAttached=fmap fst mfh}
         emails <- selectMailAddresses pid
@@ -463,7 +464,7 @@ postCommentR pid ino = do
         <*> iopt timeField "limittime"
         <*> iopt dayField "reminderdate"
         <*> ireq boolField "checkreader"
-      Just fi <- lookupFile "attached"
+      mfi <- lookupFile "attached"
       runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
         unless (isJust p) $ 
@@ -471,7 +472,7 @@ postCommentR pid ino = do
         r <- lift getUrlRender
         (Entity iid issue) <- getBy404 $ UniqueIssue pid ino
         Just (Entity lastCid lastC) <- selectFirst [CommentIssue ==. iid] [Desc CommentCdate]
-        mfh <- storeAttachedFile selfid fi
+        mfh <- storeAttachedFile selfid mfi
         amemo <- generateAutomemo comment issue mfh
         replace iid issue { issueUuser = selfid
                           , issueUdate = now
@@ -614,7 +615,8 @@ selectParticipants pid = do
       u <- get404 uid
       return (uid, u)
 
-storeAttachedFile uid fi = fmap (fmap fst5'snd5) $ upload uid fi
+storeAttachedFile _ Nothing = return Nothing
+storeAttachedFile uid (Just fi) = fmap (fmap fst5'snd5) $ upload uid fi
   where
     fst5'snd5 (x,y,_,_,_) = (x,y)
 

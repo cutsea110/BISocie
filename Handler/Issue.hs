@@ -351,7 +351,7 @@ postNewIssueR pid = do
         <*> iopt timeField "limittime"
         <*> iopt dayField "reminderdate"
         <*> ireq boolField "checkreader"
-      Just fi <- lookupFile "attached"
+      mfi <- lookupFile "attached"
       ino <- runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
         unless (isJust p) $ 
@@ -360,7 +360,7 @@ postNewIssueR pid = do
         update pid [ProjectIssuecounter +=. 1, ProjectUdate =. now]
         prj <- get404 pid
         let ino = projectIssuecounter prj
-        mfh <- storeAttachedFile selfid fi
+        mfh <- storeAttachedFile selfid mfi
         iid <- insert $ issue {issueNumber=ino}
         cid <- insert $ comment {commentIssue=iid, commentAttached=fmap fst mfh}
         emails <- selectMailAddresses pid
@@ -463,7 +463,7 @@ postCommentR pid ino = do
         <*> iopt timeField "limittime"
         <*> iopt dayField "reminderdate"
         <*> ireq boolField "checkreader"
-      Just fi <- lookupFile "attached"
+      mfi <- lookupFile "attached"
       runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
         unless (isJust p) $ 
@@ -471,7 +471,7 @@ postCommentR pid ino = do
         r <- lift getUrlRender
         (Entity iid issue) <- getBy404 $ UniqueIssue pid ino
         Just (Entity lastCid lastC) <- selectFirst [CommentIssue ==. iid] [Desc CommentCdate]
-        mfh <- storeAttachedFile selfid fi
+        mfh <- storeAttachedFile selfid mfi
         amemo <- generateAutomemo comment issue mfh
         replace iid issue { issueUuser = selfid
                           , issueUdate = now
@@ -614,7 +614,8 @@ selectParticipants pid = do
       u <- get404 uid
       return (uid, u)
 
-storeAttachedFile uid fi = fmap (fmap fst5'snd5) $ upload uid fi
+storeAttachedFile _ Nothing = return Nothing
+storeAttachedFile uid (Just fi) = fmap (fmap fst5'snd5) $ upload uid fi
   where
     fst5'snd5 (x,y,_,_,_) = (x,y)
 

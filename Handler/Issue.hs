@@ -47,10 +47,11 @@ getScheduleR y m = do
   let today = utctDay now
       fday = fromGregorian y m 1
       lday = fromGregorian y m $ gregorianMonthLength y m
-      (fweek, _) = mondayStartWeek fday
-      (lweek, _) = mondayStartWeek lday
-      days = map (map (\(w,d) -> let day = fromWeekDate y w d in (day, classOf day d today)))
-             $ groupBy (\d1 d2 -> fst d1 == fst d2) [(w, d)| w <- [fweek..lweek], d <- [1..7]]
+      (fy, fm, _) = toWeekDate fday
+      (ly, lm, _) = toWeekDate lday
+      days = map (map (\(y,w,d) -> let day = fromWeekDate y w d in (day, classOf day d today)))
+             $ groupBy (\d1 d2 -> snd3 d1 == snd3 d2)
+             $ map toWeekDate [fromWeekDate fy fm 1 .. fromWeekDate ly lm 7]
   defaultLayout $ do
     setTitle $ preEscapedText $ showText y +++ "年" +++ showText m +++ "月のスケジュール"
     $(widgetFile "schedule")

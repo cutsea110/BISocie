@@ -20,13 +20,13 @@ $(document).ready(function(){
     reload_search_result();
   });
 
-  $('.complement').click(function(){
+  $('.complement').click(function(e){
     var target = $( $(this).attr('target') + ' option' );
     target.each(function(){
       $(this).attr('selected', !$(this).attr('selected'));
     });
     $( $(this).attr('target') ).change();
-    return false;
+    e.preventDefault();
   });
 
   reload_statuses();

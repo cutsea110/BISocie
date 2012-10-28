@@ -4,8 +4,8 @@ $(document).ready(function(){
     width: 500,
     modal: false
   });
-  $('#button-status-syntax-help').click(function(){
+  $('#button-status-syntax-help').click(function(e){
     $('#status-syntax-help').dialog('open');
-    return false;
+    e.preventDefault();
   });
 });

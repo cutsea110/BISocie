@@ -5,9 +5,9 @@ $(document).ready(function(){
     reload_projects(0, $(this).attr('by'));
     e.preventDefault();
   });
-  $("a.paging-link").live('click', function(){
+  $("a.paging-link").live('click', function(e){
     reload_projects($(this).attr('page'), $(this).attr('by'));
-    return false;
+    e.preventDefault();
   });
   $("th.sortable-header").hover(
     function(){

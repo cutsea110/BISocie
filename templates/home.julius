@@ -1,9 +1,9 @@
 $(document).ready(function(){
   $("a.sorter")
   .hide()
-  .click(function(){
+  .click(function(e){
     reload_projects(0, $(this).attr('by'));
-    return false;
+    e.preventDefault();
   });
   $("a.paging-link").live('click', function(){
     reload_projects($(this).attr('page'), $(this).attr('by'));

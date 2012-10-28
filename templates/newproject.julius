@@ -5,7 +5,7 @@ $(document).ready(function(){
     modal: false
   });
 
-  $('#button-search-users').click(function(){
+  $('#button-search-users').click(function(e){
     $('#search-users').dialog('open');
     $.getJSON('@{UserListR}', function(json){
       var us = json.userlist;
@@ -14,7 +14,7 @@ $(document).ready(function(){
         $('#search-result').append(mkUser(u));
       });
     });
-    return false;
+    e.preventDefault();
   });
 
   $("#select-teacher,#select-staff,#select-student,#select-admin").click(function(){

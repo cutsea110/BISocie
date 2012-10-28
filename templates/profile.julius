@@ -95,7 +95,7 @@ $(document).ready(function(){
 
   $('#go_upload')
   .attr('disabled','disabled')
-  .click(function(){
+  .click(function(e){
     $("#fields")
     .upload($("#upload_form").attr('action'),
          function(res) {
@@ -110,7 +110,7 @@ $(document).ready(function(){
              $('#upload_file').change();
            }, 'json');
          }, 'xml');
-    return false;
+    e.preventDefault();
   });
 
   $('#upload_file').change(function(){

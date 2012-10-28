@@ -52,7 +52,7 @@ $(document).ready(function(){
     });
   });
 
-  $('input[name=readThis]').click(function(){
+  $('input[name=readThis]').click(function(e){
     var thisChkBox = $(this),
         method = thisChkBox.attr('checked') ? "add" : "delete",
         target_id = thisChkBox.attr('target');
@@ -79,7 +79,7 @@ $(document).ready(function(){
         // FIXME
       }
     });
-    return false;
+    e.preventDefault();
   });
   $('div.readers').each(function(){
     var readers_list = $(this);

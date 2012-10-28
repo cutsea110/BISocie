@@ -5,13 +5,13 @@ $(document).ready(function(){
     modal: false
   });
   $('a.profile')
-  .click(function(){
+  .click(function(e){
     $('#popup-profile table').remove();
     $('#popup-profile').dialog({title: $(this).text()+'のプロフィール'}).dialog('open');
     $.get($(this).attr('href'), function(res){
       $('#popup-profile').append($(res).find('table[class=profile]'));
     })
-    return false;
+    e.preventDefault();
   })
   .dblclick(function(){
     location.href = $(this).attr('href');

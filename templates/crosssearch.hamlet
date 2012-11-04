@@ -44,16 +44,16 @@ $newline never
         <td rowspan=3>
           <select #assign name=assign multiple=multiple size=5>
         <td>
-          <input #limitdatefrom type=date name=limitdatefrom .date>
+          <input #limitdatefrom name=limitdatefrom .date>
           〜
-          <input #limitdateto type=date name=limitdateto .date>
+          <input #limitdateto name=limitdateto .date>
       <tr>
         <th>更新日
       <tr>
         <td>
-          <input #updatedfrom type=date name=updatedfrom .date>
+          <input #updatedfrom name=updatedfrom .date>
           〜
-          <input #updatedto type=date name=updatedto .date>
+          <input #updatedto name=updatedto .date>
       <tr>
         <th>
           <a .complement href=# target=#projectid>選択⇔非選択

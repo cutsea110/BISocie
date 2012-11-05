@@ -11,58 +11,25 @@ $(document).ready(function(){
   });
 
   $('#go-search-users').click(function(e){
-    $.getJSON('@{UserListR}', function(json){
-      var us = json.userlist;
-      $('#search-result .user-logo').remove();
-      $.each(us, function(i, u){
-        $('#search-result').append(mkUser(u));
-      });
-    });
+    var q =
+      { name_like: $('#search-by-name').attr('value')
+      , entry_year: $('#select-entry-year').attr('value')
+      , teacher: $('#select-teacher').attr('checked')
+      , student: $('#select-student').attr('checked')
+      , staff: $('#select-staff').attr('checked')
+      , admin: $('#select-admin').attr('checked')
+      };
+    $.getJSON('@{UserListR}', q, function(json){
+        var us = json.userlist;
+        $('#search-result .user-logo').remove();
+        $.each(us, function(i, u){
+          $('#search-result').append(mkUser(u));
+        });
+      }
+    );
     e.preventDefault();
   });
 });
-
-function filter_users() {
-    var selector = "";
-    var user = "#search-result .user-logo";
-    $(user).hide();
-
-    var name = $('#search-by-name').attr('value');
-    var contains_name = "";
-    if (name!=null && name!=""){
-      contains_name = ":contains('" + name + "')";
-    }
-
-    var eyear = $('#select-entry-year').attr('value');
-    var select_eyear="";
-    if (eyear!=null && eyear!=""){
-      select_eyear = "[eyear='"+eyear+"']";
-    }
-
-    var ct = $("#select-teacher").attr('checked'),
-        co = $("#select-staff").attr('checked'),
-        cs = $("#select-student").attr('checked'),
-        ca = $("#select-admin").attr('checked');
-    if (ct||co||cs||ca) {
-      if (ct) {
-        selector = selector + (',' + user + ".Teacher" + select_eyear + contains_name);
-      }
-      if (co) {
-        selector = selector + (',' + user + ".Staff" + select_eyear + contains_name);
-      }
-      if (cs) {
-        selector = selector + (',' + user + ".Student" + select_eyear + contains_name);
-      }
-      if (ca) {
-        selector = selector + (',' + user + ".Admin" + select_eyear + contains_name);
-      }
-    }else{
-      selector = user + select_eyear + contains_name;
-    }
-    // for debug
-    // alert(selector);
-    $(selector).show();
-}
 
 function mkUser(u){
   var div = $("<div class='inline user'/>")

@@ -7,6 +7,10 @@ $(document).ready(function(){
 
   $('#button-search-users').click(function(e){
     $('#search-users').dialog('open');
+    e.preventDefault();
+  });
+
+  $('#go-search-users').click(function(e){
     $.getJSON('@{UserListR}', function(json){
       var us = json.userlist;
       $('#search-result .user-logo').remove();
@@ -15,18 +19,6 @@ $(document).ready(function(){
       });
     });
     e.preventDefault();
-  });
-
-  $("#select-teacher,#select-staff,#select-student,#select-admin").click(function(){
-    filter_users();
-  });
-
-  $('#search-by-name').keyup(function(){
-    filter_users();
-  });
-
-  $('#select-entry-year').change(function(){
-    filter_users();
   });
 });
 

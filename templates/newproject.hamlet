@@ -46,5 +46,6 @@ $newline never
     <option>
     $forall ey <- eyears
       <option value=#{show ey}>#{show ey}
+  <button #go-search-users>検索
   <div #search-result .scroll>
 ^{help}

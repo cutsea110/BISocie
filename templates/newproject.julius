@@ -11,14 +11,18 @@ $(document).ready(function(){
   });
 
   $('#go-search-users').click(function(e){
-    var q =
-      { name_like: $('#search-by-name').attr('value')
-      , entry_year: $('#select-entry-year').attr('value')
-      , teacher: $('#select-teacher').attr('checked')
-      , student: $('#select-student').attr('checked')
-      , staff: $('#select-staff').attr('checked')
-      , admin: $('#select-admin').attr('checked')
-      };
+    var q = {};
+    var xs = [ {id:'search-by-name', attr:'value', qkey:'name_like'}
+             , {id:'select-entry-year', attr:'value', qkey:'entry_year'}
+             , {id:'select-teacher', attr:'checked', qkey:'teacher'}
+             , {id:'select-student', attr:'checked', qkey:'student'}
+             , {id:'select-staff', attr:'checked', qkey:'staff'}
+             , {id:'select-admin', attr:'checked', qkey:'admin'}
+             ];
+    for (var i in xs) {
+      if ($('#'+xs[i].id).attr(xs[i].attr))
+        q[xs[i].qkey] = $('#'+xs[i].id).attr(xs[i].attr);
+    }
     $.getJSON('@{UserListR}', q, function(json){
         var us = json.userlist;
         $('#search-result .user-logo').remove();

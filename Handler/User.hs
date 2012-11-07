@@ -2,9 +2,8 @@
 module Handler.User where
 
 import Yesod
-import Control.Monad (unless, forM)
+import Control.Monad (unless, forM, mplus, join)
 import Control.Applicative ((<$>),(<*>))
-import Control.Monad (join)
 import Data.Text (isInfixOf)
 import Data.Maybe (isNothing)
 
@@ -17,17 +16,13 @@ getUserListR = do
   r <- getUrlRender
   unless (canSearchUser self) $ 
     permissionDenied "あなたは他のユーザを検索することはできません."
-  (mn, mey, mt, mstd, ma) <- runInputGet $ (,,,,)
+  (mn, mey, mt, mstf, ma) <- runInputGet $ (,,,,)
                             <$> iopt textField "name_like"
                             <*> fmap (fmap readText) (iopt textField "entry_year")
                             <*> iopt textField "teacher"
                             <*> iopt textField "staff"
                             <*> iopt textField "admin"
-  let tch = maybe [] (const [Teacher]) mt
-      std = maybe [] (const [Student]) mey
-      stf = maybe [] (const [Staff]) mey
-      adm = maybe [] (const [Admin]) ma
-      roles = tch++std++stf++adm
+  let roles = toRoles ((Teacher, mt), (Student, mey), (Staff, mstf), (Admin, ma))
       roleWhere = if null roles then [] else [UserRole <-. roles]
   us' <- runDB $ do
     us'' <- selectList ([UserActive ==. True]++roleWhere) []
@@ -49,8 +44,15 @@ getUserListR = do
              , "entryYear" .= showmaybe (fmap (showEntryYear.entityVal) mp)
              , "avatar" .= r ra
              ]
+    toRoles (t,ey,s,a) = foldr (mplus.q2r) (q2r ey) [t, s, a]
+      where q2r (r, m) = maybe [] (const [r]) m
     mkCond mn mey ((Entity _ u), mp, _) =
-         (isNothing mn || userFullName u `like` mn || userIdent u `like` mn)
-      && (isNothing mey || not (isStudent u) || join (fmap (profileEntryYear.entityVal) mp) == mey)
+         (isNothing mn || fullNameOrIdentMatch)
+      && (isNothing mey || entryYearMatch)
+         where
+           fullNameOrIdentMatch = 
+             userFullName u `like` mn || userIdent u `like` mn
+           entryYearMatch = 
+             not (isStudent u) || join (fmap (profileEntryYear.entityVal) mp) == mey
     like _ Nothing = False
     like str (Just pat) = pat `isInfixOf` str

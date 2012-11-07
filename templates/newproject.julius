@@ -15,7 +15,6 @@ $(document).ready(function(){
     var xs = [ {id:'search-by-name', attr:'value', qkey:'name_like'}
              , {id:'select-entry-year', attr:'value', qkey:'entry_year'}
              , {id:'select-teacher', attr:'checked', qkey:'teacher'}
-             , {id:'select-student', attr:'checked', qkey:'student'}
              , {id:'select-staff', attr:'checked', qkey:'staff'}
              , {id:'select-admin', attr:'checked', qkey:'admin'}
              ];

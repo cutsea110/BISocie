@@ -17,16 +17,15 @@ getUserListR = do
   r <- getUrlRender
   unless (canSearchUser self) $ 
     permissionDenied "あなたは他のユーザを検索することはできません."
-  (mn, mey, mt, mstf, mstd, ma) <- runInputGet $ (,,,,,)
+  (mn, mey, mt, mstd, ma) <- runInputGet $ (,,,,)
                             <$> iopt textField "name_like"
                             <*> fmap (fmap readText) (iopt textField "entry_year")
                             <*> iopt textField "teacher"
                             <*> iopt textField "staff"
-                            <*> iopt textField "student"
                             <*> iopt textField "admin"
   let tch = maybe [] (const [Teacher]) mt
       std = maybe [] (const [Student]) mey
-      stf = maybe [] (const [Staff]) mstf
+      stf = maybe [] (const [Staff]) mey
       adm = maybe [] (const [Admin]) ma
       roles = tch++std++stf++adm
       roleWhere = if null roles then [] else [UserRole <-. roles]
@@ -35,7 +34,6 @@ getUserListR = do
     forM us'' $ \u@(Entity uid _) -> do
       mp' <- getBy $ UniqueProfile uid
       let ra = AvatarImageR uid
-      liftIO $ putStrLn $ show $ join (fmap (profileEntryYear.entityVal) mp')==mey
       return (u, mp', ra)
   let us = filter (mkCond mn mey) us'
   cacheSeconds 10 -- FIXME

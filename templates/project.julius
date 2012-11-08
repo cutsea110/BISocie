@@ -122,21 +122,6 @@ $(document).ready(function(){
     e.preventDefault();
   });
 
-  $('#all-filtered-set').click(function(){
-    $("#search-result .user-logo:visible input[type='checkbox']:not(:checked)").each(function(){
-      $(this).attr('checked',true);
-      modifyParticipant($(this));
-    });
-    reloading_participants();
-  });
-  $('#all-filtered-reset').click(function(){
-    $("#search-result .user-logo:visible input[type='checkbox']:checked").each(function(){
-      $(this).attr('checked',false);
-      modifyParticipant($(this));
-    });
-    reloading_participants();
-  });
-
 });
 
 function reloading_participants() {

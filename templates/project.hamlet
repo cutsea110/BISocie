@@ -68,8 +68,6 @@ $newline never
   <label for=select-staff>職員
   <input #select-admin type=checkbox value=Admin>
   <label for=select-admin>管理者
-  <input #all-filtered-set type=button value=全選択>
-  <input #all-filtered-reset type=button value=全解除>
   <button #go-search-users>検索
   <div #search-result .scroll>
 ^{help}

@@ -1,4 +1,18 @@
 $(document).ready(function(){
+  $('a.clipboardcopy').zclip({
+    path: '@{StaticR plugins_zClip_ZeroClipboard_swf}',
+    copy: function(){
+            return $(this).attr('href');
+          },
+    beforeCopy: function(){
+      $(this).css('background','yellow');
+      $(this).css('color','orange');
+    },
+    afterCopy: function(){
+      $(this).css('background','transparent');
+      $(this).css('color','#00e');
+    }
+  });
   $('#popup-profile').hide().attr('title','プロフィール').dialog({
     autoOpen: false,
     width: 460,

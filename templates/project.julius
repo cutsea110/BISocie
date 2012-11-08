@@ -94,10 +94,11 @@ $(document).ready(function(){
 
   $('#button-search-users').click(function(e){
     $('#search-users').dialog('open');
+    $('#search-result .user-logo').remove();
     e.preventDefault();
   });
   $('#go-search-users').click(function(e){
-    var q = {};
+    var q = {uncache: (new Date).getTime()};
     var xs = [ {id:'search-by-name', attr:'value', qkey:'name_like'}
              , {id:'select-entry-year', attr:'value', qkey:'entry_year'}
              , {id:'select-teacher', attr:'checked', qkey:'teacher'}

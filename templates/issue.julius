@@ -11,6 +11,12 @@ $(document).ready(function(){
     afterCopy: function(){
       $(this).css('background','transparent');
       $(this).css('color','#00e');
+      $.pnotify({
+        styling: 'jqueryui',
+        title: 'Clipboard copy',
+        text: 'URL:'+$(this).attr('href'),
+        type: 'info_icon'
+      });
     }
   });
   $('#popup-profile').hide().attr('title','プロフィール').dialog({

@@ -119,6 +119,9 @@ instance Yesod BISocie where
         addScriptEither $ Left $ StaticR plugins_ajaxzip2_ajaxzip2_js
         addScriptEither $ Left $ StaticR plugins_selection_jquery_selection_min_js
         addScriptEither $ Left $ StaticR plugins_textchange_jquery_textchange_min_js
+        addScriptEither $ Left $ StaticR plugins_zClip_jquery_zclip_min_js
+        addScriptEither $ Left $ StaticR plugins_pnotify_jquery_pnotify_min_js
+        addStylesheetEither $ Left $ StaticR plugins_pnotify_jquery_pnotify_default_css
         toWidget $(cassiusFile "templates/default-layout.cassius")
         toWidget $(juliusFile "templates/default-layout.julius")
       hamletToRepHtml $(hamletFile "templates/default-layout.hamlet")

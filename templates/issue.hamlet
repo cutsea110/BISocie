@@ -50,6 +50,7 @@ $newline never
     $forall c <- comments
       $with c' <- snd3 c, cid <- fst3 c, cid' <- toPathPiece cid
         <div ##{cid'} .post-head>
+          <a.clipboardcopy href=@{IssueR pid ino}##{cid'}> † #
           <img src=@{AvatarImageR $ fst $ commentBisCuser c'} .avatar>
           <a href=@{ProfileR $ fst $ commentBisCuser c'} .profile>
             #{userFullName $ snd $ commentBisCuser c'}

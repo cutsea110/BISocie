@@ -69,6 +69,7 @@ Issue
     cdate UTCTime default=now()
     uuser UserId
     udate UTCTime default=now()
+    parentIssue IssueId Maybe
 
     subject Text
     assign UserId Maybe

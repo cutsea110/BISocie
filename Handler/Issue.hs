@@ -337,7 +337,7 @@ postNewIssueR pid = do
     addIssueR = do
       (Entity selfid _) <- requireAuth
       now <- liftIO getCurrentTime
-      issue <- runInputPost $ Issue pid undefined selfid now selfid now
+      issue <- runInputPost $ Issue pid undefined selfid now selfid now Nothing
         <$> ireq textField "subject"
         <*> fmap (fmap readText) (iopt textField "assign")
         <*> ireq textField "status"

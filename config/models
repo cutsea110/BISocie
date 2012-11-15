@@ -69,7 +69,6 @@ Issue
     cdate UTCTime default=now()
     uuser UserId
     udate UTCTime default=now()
-    parentIssue IssueId Maybe
 
     subject Text
     assign UserId Maybe
@@ -77,6 +76,8 @@ Issue
     limitdate Day Maybe
     limittime TimeOfDay Maybe
     reminderdate Day Maybe
+
+    parentIssue IssueId Maybe
 
     UniqueIssue project number
 

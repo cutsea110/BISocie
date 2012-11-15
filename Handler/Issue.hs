@@ -313,6 +313,7 @@ getIssueListR pid = do
 getNewIssueR :: ProjectId -> Handler RepHtml
 getNewIssueR pid = do
   (Entity selfid self) <- requireAuth
+  mparent <- lookupGetParam "parent"
   (ptcpts, stss, prj) <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
     unless (isJust p) $ 
@@ -337,13 +338,14 @@ postNewIssueR pid = do
     addIssueR = do
       (Entity selfid _) <- requireAuth
       now <- liftIO getCurrentTime
-      issue <- runInputPost $ Issue pid undefined selfid now selfid now Nothing
+      issue <- runInputPost $ Issue pid undefined selfid now selfid now
         <$> ireq textField "subject"
         <*> fmap (fmap readText) (iopt textField "assign")
         <*> ireq textField "status"
         <*> iopt dayField "limitdate"
         <*> iopt timeField "limittime"
         <*> iopt dayField "reminderdate"
+        <*> iopt hiddenField "parent"
       comment <- runInputPost $ Comment pid undefined "init." undefined selfid now
         <$> iopt textField "content"
         <*> fmap (fmap readText) (iopt textField "assign")

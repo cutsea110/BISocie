@@ -71,4 +71,14 @@ $newline never
         <div .post-foot>
           $if commentBisCheckReader c'
             <div #readers-#{cid'} .readers url=@{CommentReadersR cid}>
+  <div #navi>
+    $maybe parent <- mparent
+      <div #parent-issue>親イシュー: #
+        <a href=@{IssueR pid $ issueNumber parent}>#{issueSubject parent}
+    $if not (null children)
+      <ul #child-issues>子イシュー: #
+        $forall child <- children
+          $with ch <- entityVal child
+            <li>
+              <a href=@{IssueR pid $ issueNumber ch}>#{issueSubject ch}
 <div #popup-profile>

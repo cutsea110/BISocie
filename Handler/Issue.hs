@@ -408,7 +408,7 @@ postNewIssueR pid = do
 getIssueR :: ProjectId -> IssueNo -> Handler RepHtml
 getIssueR pid ino = do
   (Entity selfid self) <- requireAuth
-  (prj, ptcpts, issue, comments) <- 
+  (prj, ptcpts, issue, comments, mparent, children) <- 
     runDB $ do
       p <- getBy $ UniqueParticipants pid selfid
       unless (isJust p || isAdmin self) $ 
@@ -437,7 +437,9 @@ getIssueR pid ino = do
                  ,isJust mreadP)
       prj <- get404 pid
       ptcpts <- selectParticipants pid
-      return (prj, ptcpts, issue, comments)
+      mparent <- getMaybe $ issueParentIssue issue
+      children <- selectList [IssueParentIssue ==. Just iid] []
+      return (prj, ptcpts, issue, comments, mparent, children)
   let (Right stss) = parseStatuses $ projectStatuses prj
       isAssign = case issueAssign issue of
         Nothing -> const False
@@ -446,6 +448,10 @@ getIssueR pid ino = do
   defaultLayout $ do
     setTitle $ preEscapedText $ issueSubject issue
     $(widgetFile "issue")
+
+getMaybe :: (PersistStore backend m, PersistEntity a) => Maybe (Key backend a) -> backend m (Maybe a)
+getMaybe Nothing = return Nothing
+getMaybe (Just k) = get k
 
 postCommentR :: ProjectId -> IssueNo -> Handler RepHtml
 postCommentR pid ino = do

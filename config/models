@@ -77,6 +77,8 @@ Issue
     limittime TimeOfDay Maybe
     reminderdate Day Maybe
 
+    parentIssue IssueId Maybe
+
     UniqueIssue project number
 
 Comment

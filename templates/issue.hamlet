@@ -5,7 +5,7 @@ $newline never
   <li>
     <a href=@{NewIssueR pid}>案件追加
   <li>
-    <a href=@{NewIssueR pid}?parent=#{show ino}>子案件追加
+    <a href=@{NewIssueR pid}?parent=#{show iid}>子案件追加
 <div #main-content>
   <h3>#{show ino} : #{issueSubject issue}
   <form method=post enctype=multipart/form-data action=@{CommentR pid ino} .validate>

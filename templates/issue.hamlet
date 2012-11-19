@@ -7,6 +7,8 @@ $newline never
   <li>
     <a href=@{NewIssueR pid}?parent=#{show iid}>子案件追加
 <div #main-content>
+  $maybe parent <- mparent
+    <a.parent-issue href=@{IssueR pid $ issueNumber parent}>#{show $ issueNumber parent}:#{issueSubject parent}
   <h3>#{show ino} : #{issueSubject issue}
   <form method=post enctype=multipart/form-data action=@{CommentR pid ino} .validate>
     <table .nostyle>
@@ -31,7 +33,7 @@ $newline never
         <th>期限:
         <td>
           <input name=limitdate displayname=期限日 placeholder=yyyy-mm-dd value=#{showLimitdate issue} .watermark .date cond="limittime,reminderdate" .cond-required>
-          <input type=time name=limittime displayname=期限時刻 placeholder=HH:MM value=#{showLimittime issue} .watermark .time cond="limitdate,reminderdate" .cond-required>
+          <input type=time name=limittime dKisplayname=期限時刻 placeholder=HH:MM value=#{showLimittime issue} .watermark .time cond="limitdate,reminderdate" .cond-required>
       <tr>
         <th>リマインダメール通知日
         <td>
@@ -71,12 +73,9 @@ $newline never
         <div .post-foot>
           $if commentBisCheckReader c'
             <div #readers-#{cid'} .readers url=@{CommentReadersR cid}>
-  <div #navi>
-    $maybe parent <- mparent
-      <div #parent-issue>親イシュー: #
-        <a href=@{IssueR pid $ issueNumber parent}>#{issueSubject parent}
-    $if not (null children)
-      <ul #child-issues>子イシュー: #
+  $if not (null children)
+    <div #child-issues>子イシュー
+      <ul>
         $forall child <- children
           $with ch <- entityVal child
             <li>

@@ -167,7 +167,7 @@ function mkUser(u, ps){
     mail.attr({src: '@{StaticR img_mail_checked_png}', receivemail: 'none'});
   }
 
-  if('#{show (canEditProjectSetting self)}'=='False')
+  if('#{rawJS $ show (canEditProjectSetting self)}'=='False')
     return div.append(i).append(s).append(mail).append(avatar);
 
   if (ps[u.id])c.attr('checked', true);
@@ -203,7 +203,7 @@ function modifyParticipant(c){
           break;
         case 'deleted':
           mail.attr({src: '@{StaticR img_mail_checked_png}', receivemail: 'none'});
-          if (json.participants.user == '#{show selfid}') {
+          if (json.participants.user == '#{rawJS $ show selfid}') {
             $('#release-self-participate').dialog('open');
           }
           break;

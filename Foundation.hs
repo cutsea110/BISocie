@@ -17,6 +17,7 @@ module Foundation
     , requireAuth
     , module Settings
     , module Model
+    , RawJS(..)
     ) where
 
 import Yesod
@@ -31,7 +32,9 @@ import qualified Database.Persist.Store
 import Database.Persist.GenericSql
 import Settings (widgetFile, Extra (..))
 import Model
+import Data.Text (Text)
 import Text.Jasmine (minifym)
+import Text.Julius (RawJS(..))
 import Web.ClientSession (getKey)
 import Text.Hamlet (hamletFile)
 import Text.Cassius (cassiusFile)
@@ -118,6 +121,9 @@ instance Yesod BISocie where
         addScriptEither $ Left $ StaticR plugins_ajaxzip2_ajaxzip2_js
         addScriptEither $ Left $ StaticR plugins_selection_jquery_selection_min_js
         addScriptEither $ Left $ StaticR plugins_textchange_jquery_textchange_min_js
+        addScriptEither $ Left $ StaticR plugins_zClip_jquery_zclip_min_js
+        addScriptEither $ Left $ StaticR plugins_pnotify_jquery_pnotify_min_js
+        addStylesheetEither $ Left $ StaticR plugins_pnotify_jquery_pnotify_default_css
         toWidget $(cassiusFile "templates/default-layout.cassius")
         toWidget $(juliusFile "templates/default-layout.julius")
       hamletToRepHtml $(hamletFile "templates/default-layout.hamlet")
@@ -256,3 +262,7 @@ instance YesodAuthHashDB BISocie where
                 , hashdbCredsAuthId = Just uid
                 }
     getHashDB = runDB . fmap (fmap userIdent) . get
+
+instance RawJS Bool where
+  rawJS True = rawJS ("true"::Text)
+  rawJS False = rawJS ("false"::Text)

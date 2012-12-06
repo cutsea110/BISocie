@@ -80,7 +80,7 @@ function mkProjectRec(item, klass) {
 
 // currentは0ベースのページ番号
 function mkPagingTD(pagelen, c, ord) {
-  var ps = mkPagenate(#{show fillGapWidth},#{show pagenateWidth},c,pagelen),
+  var ps = mkPagenate(#{rawJS $ show fillGapWidth},#{rawJS $ show pagenateWidth},c,pagelen),
       paging = intersperse([], ps),
       td = $('<td/>').attr({colspan: 4, align: 'left'});
   var prev = mkPageLink(c, pagelen, {page: c-1, disp: '<<Prev'}, ord),

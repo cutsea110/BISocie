@@ -11,6 +11,8 @@ $newline never
     <form method=get action=@{IssueListR pid} .inline>
       <button type=submit .link>キャンセル
   <form method=post enctype=multipart/form-data action=@{NewIssueR pid} .validate>
+    $maybe parent <- mparent
+      <input type=hidden name=parent value=#{parent}>
     <table .nostyle>
       <tr>
         <th>件名: 

@@ -313,6 +313,7 @@ getIssueListR pid = do
 getNewIssueR :: ProjectId -> Handler RepHtml
 getNewIssueR pid = do
   (Entity selfid self) <- requireAuth
+  mparent <- lookupGetParam "parent"
   (ptcpts, stss, prj) <- runDB $ do
     p <- getBy $ UniqueParticipants pid selfid
     unless (isJust p) $ 
@@ -344,6 +345,7 @@ postNewIssueR pid = do
         <*> iopt dayField "limitdate"
         <*> iopt timeField "limittime"
         <*> iopt dayField "reminderdate"
+        <*> fmap (fmap readText) (iopt hiddenField "parent")
       comment <- runInputPost $ Comment pid undefined "init." undefined selfid now
         <$> iopt textField "content"
         <*> fmap (fmap readText) (iopt textField "assign")
@@ -406,7 +408,7 @@ postNewIssueR pid = do
 getIssueR :: ProjectId -> IssueNo -> Handler RepHtml
 getIssueR pid ino = do
   (Entity selfid self) <- requireAuth
-  (prj, ptcpts, issue, comments) <- 
+  (prj, ptcpts, iid, issue, comments, mparent, children) <- 
     runDB $ do
       p <- getBy $ UniqueParticipants pid selfid
       unless (isJust p || isAdmin self) $ 
@@ -435,7 +437,9 @@ getIssueR pid ino = do
                  ,isJust mreadP)
       prj <- get404 pid
       ptcpts <- selectParticipants pid
-      return (prj, ptcpts, issue, comments)
+      mparent <- getMaybe $ issueParentIssue issue
+      children <- selectList [IssueParentIssue ==. Just iid] []
+      return (prj, ptcpts, iid, issue, comments, mparent, children)
   let (Right stss) = parseStatuses $ projectStatuses prj
       isAssign = case issueAssign issue of
         Nothing -> const False
@@ -444,6 +448,10 @@ getIssueR pid ino = do
   defaultLayout $ do
     setTitle $ preEscapedText $ issueSubject issue
     $(widgetFile "issue")
+
+getMaybe :: (PersistStore backend m, PersistEntity a) => Maybe (Key backend a) -> backend m (Maybe a)
+getMaybe Nothing = return Nothing
+getMaybe (Just k) = get k
 
 postCommentR :: ProjectId -> IssueNo -> Handler RepHtml
 postCommentR pid ino = do

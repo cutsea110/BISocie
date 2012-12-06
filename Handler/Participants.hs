@@ -59,7 +59,7 @@ postParticipantsR pid = do
           lift $ permissionDenied "あなたはこのプロジェクトの参加者を編集できません."
         insert $ Participants pid uid True now
       cacheSeconds 10 -- FIXME
-      jsonToRepJson $ object ["participants" .= array 
+      jsonToRepJson $ object ["participants" .= object
                               [ "project" .= show pid
                               , "user" .= show uid
                               , "status" .= ("added" :: T.Text)
@@ -78,7 +78,7 @@ postParticipantsR pid = do
           lift $ permissionDenied "他に参加者が居ないため削除することはできません."
         deleteBy $ UniqueParticipants pid uid
       cacheSeconds 10 -- FIXME
-      jsonToRepJson $ object ["participants" .= array 
+      jsonToRepJson $ object ["participants" .= object
                               [ "project" .= show pid
                               , "user" .= show uid
                               , "status" .= ("deleted" :: T.Text)

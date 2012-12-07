@@ -9,8 +9,6 @@ $newline never
         <div #ui-header .clearfix>
           ^{header}
         <div #ui-main>
-          $maybe msg <- mmsg
-              <div #message>#{msg}
           <ul #breadcrumbs>
             $if not (null parents)
               $forall p <- parents

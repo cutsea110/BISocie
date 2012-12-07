@@ -17,6 +17,7 @@ module Foundation
     , requireAuth
     , module Settings
     , module Model
+    , module Yesod.Goodies.PNotify
     , RawJS(..)
     ) where
 
@@ -27,6 +28,7 @@ import BISocie.Helpers.Auth.HashDB
 import Yesod.Auth.GoogleEmail
 import Yesod.Default.Config
 import Yesod.Default.Util (addStaticContentExternal)
+import Yesod.Goodies.PNotify
 import Network.HTTP.Conduit (Manager)
 import qualified Settings
 import qualified Database.Persist.Store
@@ -99,7 +101,6 @@ instance Yesod BISocie where
     
     defaultLayout widget = do
       mu <- maybeAuth
-      mmsg <- getMessage
       y <- getYesod
       let (ApprootMaster approot') = approot
       (title, parents) <- breadcrumbs
@@ -109,6 +110,7 @@ instance Yesod BISocie where
           footer = $(hamletFile "templates/footer.hamlet")
       pc <- widgetToPageContent $ do
         widget
+        pnotify y
         addScriptEither $ urlJqueryJs y
         addScriptEither $ urlJqueryUiJs y
         addStylesheetEither $ urlJqueryUiCss y
@@ -209,6 +211,8 @@ instance YesodJquery BISocie where
   urlJqueryUiJs _ = Left $ StaticR js_jquery_ui_1_8_9_custom_min_js
   urlJqueryUiCss _ = Left $ StaticR css_jquery_ui_1_8_9_custom_css
 
+instance YesodJqueryPnotify BISocie where
+
 instance RenderMessage BISocie FormMessage where
     renderMessage _ _ = defaultFormMessage
 
@@ -226,13 +230,13 @@ instance YesodAuth BISocie where
             Just (Entity uid u) ->
               if userActive u
               then do
-                lift $ setMessage "You are now logged in."
+                lift $ setPNotify $ PNotify JqueryUI Success "Login" "You are now logged in."
                 return $ Just uid
               else do
-                lift $ setMessage "Invalid login."
+                lift $ setPNotify $ PNotify JqueryUI Error "fail to Login" "Invalid login."
                 return Nothing
             Nothing -> do
-              lift $ setMessage "You are now logged in."
+              lift $ setPNotify $ PNotify JqueryUI Success "Login" "You are now logged in."
               fmap Just $ insert $ initUser $ credsIdent creds
 
     authPlugins _ = [ authHashDB, authGoogleEmail ]

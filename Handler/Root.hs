@@ -127,7 +127,7 @@ postSystemBatchR = do
                                            , profileGraduateYear=gyear'
                                            }
         Just (Entity pid _) -> return pid
-  setMessage "学生を登録しました。"
+  setPNotify $ PNotify JqueryUI Info "Add Student" "学生を登録しました。"
   redirect SystemBatchR
   where
     userExist :: Text -> [Entity User] -> Maybe (Entity User)

@@ -85,7 +85,7 @@ getProfileR uid = do
           return (user, mprof, mlab)
       defaultLayout $ do
         setTitle "Profile"
-        addScriptRemote "http://maps.google.com/maps/api/js?sensor=false"
+        addScriptRemote "https://maps.google.com/maps/api/js?sensor=false"
         $(widgetFile "profile")
         $(widgetFile "viewProfile")
     
@@ -110,7 +110,7 @@ getProfileR uid = do
           return (user, mprof, mlab, eyears, gyears)
       defaultLayout $ do
         setTitle "Profile"
-        addScriptRemote "http://maps.google.com/maps/api/js?sensor=false"
+        addScriptRemote "https://maps.google.com/maps/api/js?sensor=false"
         $(widgetFile "profile")
         $(widgetFile "editProfile")
 

@@ -54,7 +54,7 @@ getHumanNetworkR = do
     permissionDenied "あなたはヒューマンエットワークを閲覧することはできません."
   defaultLayout $ do
     setTitle "ヒューマンネットワーク"
-    addScriptRemote "http://maps.google.com/maps/api/js?sensor=false"
+    addScriptRemote "https://maps.google.com/maps/api/js?sensor=false"
     $(widgetFile "humannetwork")
 
 getUserLocationsR :: Handler RepJson

@@ -97,7 +97,9 @@ instance Yesod BISocie where
     -- default session idle timeout is 120 minutes
     makeSessionBackend _ = do
         key <- getKey "config/client_session_key.aes"
-        return . Just $ clientSessionBackend key 120
+        let timeout = 120 * 60 -- 120 minutes
+        (getCachedDate, _closeDateCache) <- clientSessionDateCacher timeout
+        return . Just $ clientSessionBackend2 key getCachedDate
     
     defaultLayout widget = do
       mu <- maybeAuth
@@ -267,7 +269,3 @@ instance YesodAuthHashDB BISocie where
                 , hashdbCredsAuthId = Just uid
                 }
     getHashDB = runDB . fmap (fmap userIdent) . get
-
-instance RawJS Bool where
-  rawJS True = rawJS ("true"::Text)
-  rawJS False = rawJS ("false"::Text)

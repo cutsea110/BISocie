@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell, OverloadedStrings #-}
+{-# LANGUAGE GADTs, TypeFamilies #-}
 {-# LANGUAGE QuasiQuotes, CPP #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -449,7 +450,9 @@ getIssueR pid ino = do
     setTitle $ preEscapedText $ issueSubject issue
     $(widgetFile "issue")
 
-getMaybe :: (PersistStore backend m, PersistEntity a) => Maybe (Key backend a) -> backend m (Maybe a)
+getMaybe :: (PersistStore m, PersistEntity a,
+             PersistMonadBackend m ~ PersistEntityBackend a) =>
+            Maybe (Key a) -> m (Maybe a)
 getMaybe Nothing = return Nothing
 getMaybe (Just k) = get k
 

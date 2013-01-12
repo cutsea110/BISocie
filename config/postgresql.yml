@@ -1,12 +1,13 @@
 Default: &defaults
-  user: soubun
-  password: sougoubunnka
+  user: cutsea110
+  password: cutsea110
   host: localhost
   port: 5432
   database: bisocie
   poolsize: 10
 
 Development:
+  database: bisocie_devel
   <<: *defaults
 
 Test:
@@ -19,6 +20,8 @@ Staging:
   <<: *defaults
 
 Production:
+  user: soubun
+  password: sougoubunnka
   database: bisocie
   poolsize: 100
   <<: *defaults

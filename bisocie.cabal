@@ -102,3 +102,6 @@ executable bisocie
                  , utf8-string  >= 0.3.7   && < 0.4
                  , data-default >= 0.5     && < 0.6
                  , conduit      >= 0.5     && < 0.6
+                 , aeson        >= 0.6     && < 0.7
+                 , attoparsec-conduit >= 0.5     && < 0.6
+                 , unordered-containers >= 0.2 && < 0.3

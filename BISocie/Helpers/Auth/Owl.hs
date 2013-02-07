@@ -7,20 +7,16 @@ import Yesod hiding (object)
 import Yesod.Auth
 
 import Control.Applicative ((<$>),(<*>))
-import Control.Monad (mzero, (=<<), (<=<), (>=>))
-import qualified Data.ByteString.Char8 as SB
-import qualified Data.ByteString.UTF8 as SB
-import qualified Data.ByteString.Lazy.Char8 as LB
-import qualified Data.ByteString.Lazy.UTF8 as LB
+import Control.Monad (mzero)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Conduit as C
 import Network.HTTP.Conduit as C -- (http, parseUrl, Request(..), Response(..))
 
 import Data.Aeson
-import Data.Aeson.Parser (json)
 import Data.Conduit.Attoparsec (sinkParser)
-import qualified Data.HashMap.Strict as M (toList, lookup)
+import qualified Data.HashMap.Strict as M (toList)
+import qualified Yesod.Goodies.PNotify as P
 
 -- for Request
 data AuthReq = AuthReq
@@ -75,8 +71,14 @@ authOwl =  AuthPlugin "owl" dispatch login
       case fromJSON v of
         Success (Accepted i e) ->
           setCreds True $ Creds "owl" ident []
-        Success (Rejected i p) ->
-          invalidArgs ["could not login [" `T.append` i `T.append` " , " `T.append` p `T.append` "]"]
+        Success (Rejected i p) -> do
+          P.setPNotify $ P.PNotify P.JqueryUI P.Error "login failed"
+            $ T.intercalate "<br>" [ "could not accept your inputs"
+                                   , "account: " `T.append` i
+                                   , "password: " `T.append` p
+                                   ]
+          toMaster <- getRouteToMaster
+          redirect $ toMaster LoginR
         Error msg -> invalidArgs [T.pack msg]
     dispatch _ _ = notFound
     url = PluginR "owl" []

@@ -32,22 +32,31 @@ instance ToJSON AuthReq where
   toJSON (AuthReq i p) = object ["ident" .= i, "pass" .= p]
 
 -- for Response
-data AuthRes = Rejected { rejected_ident :: Text, rejected_pass :: Text }
-             | Accepted { accepted_ident :: Text, accepted_email :: Maybe Text }
+data AuthRes = Rejected
+               { rejected_ident :: Text
+               , rejected_pass :: Text
+               , rejected_reason :: Text
+               }
+             | Accepted
+               { accepted_ident :: Text
+               , accepted_email :: Maybe Text
+               }
              deriving (Show, Read, Eq)
 
 instance FromJSON AuthRes where
   parseJSON (Object o) = case M.toList o of
-    [("rejected", Object o')] -> Rejected <$> o' .: "ident" <*> o' .: "pass"
-    [("accepted", Object o')] -> Accepted <$> o' .: "ident" <*> o' .:? "email"
-    _ -> error $ show o
+    [("rejected", Object o')] ->
+      Rejected <$> o' .: "ident" <*> o' .: "pass" <*> o' .: "reason"
+    [("accepted", Object o')] ->
+      Accepted <$> o' .: "ident" <*> o' .:? "email"
   parseJSON _ = mzero
 
 instance ToJSON AuthRes where
-  toJSON (Rejected i p) = object [ "rejected" .= object [ "ident" .= i
-                                                        , "pass" .= p
-                                                        ]
-                                 ]
+  toJSON (Rejected i p r) = object [ "rejected" .= object [ "ident" .= i
+                                                          , "pass" .= p
+                                                          , "reason" .= r
+                                                          ]
+                                   ]
   toJSON (Accepted i me) = object [ "accepted" .= object [ "ident" .= i
                                                          , "email" .= me
                                                          ]
@@ -71,12 +80,9 @@ authOwl =  AuthPlugin "owl" dispatch login
       case fromJSON v of
         Success (Accepted i e) ->
           setCreds True $ Creds "owl" ident []
-        Success (Rejected i p) -> do
-          P.setPNotify $ P.PNotify P.JqueryUI P.Error "login failed"
-            $ T.intercalate "<br>" [ "could not accept your inputs"
-                                   , "account: " `T.append` i
-                                   , "password: " `T.append` p
-                                   ]
+        Success (Rejected i p r) -> do
+          liftIO $ putStrLn $ show v
+          P.setPNotify $ P.PNotify P.JqueryUI P.Error "login failed" r
           toMaster <- getRouteToMaster
           redirect $ toMaster LoginR
         Error msg -> invalidArgs [T.pack msg]

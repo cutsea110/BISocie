@@ -11,7 +11,7 @@ import Control.Monad (mzero)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Conduit as C
-import Network.HTTP.Conduit as C -- (http, parseUrl, Request(..), Response(..))
+import Network.HTTP.Conduit
 
 import Data.Aeson
 import Data.Conduit.Attoparsec (sinkParser)

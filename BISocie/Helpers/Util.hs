@@ -5,6 +5,8 @@ module BISocie.Helpers.Util
        , readText
        , encodeUrl
        , decodeUrl
+       , fromLazy
+       , toLazy
          -- RSA
        , genKey
        , encrypt

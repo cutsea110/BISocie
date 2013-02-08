@@ -14,7 +14,10 @@ import Data.Conduit as C
 import Network.HTTP.Conduit
 
 import Data.Aeson
+import Data.Conduit.Binary (sourceLbs)
 import Data.Conduit.Attoparsec (sinkParser)
+import qualified Data.ByteString.Lazy.Char8 as LB
+import qualified Data.ByteString.Lazy.UTF8 as LB
 import qualified Data.HashMap.Strict as M (toList)
 import qualified Yesod.Goodies.PNotify as P
 import BISocie.Helpers.Util
@@ -34,6 +37,13 @@ instance ToJSON AuthReq where
   toJSON (AuthReq i p) = object ["ident" .= i, "pass" .= p]
 
 -- for Response
+data AuthRes' = AuthRes' { cipher :: LB.ByteString }
+instance FromJSON AuthRes' where
+  parseJSON (Object o) = AuthRes' <$> o .: "cipher"
+  parseJSON _ = mzero
+instance ToJSON AuthRes' where
+  toJSON (AuthRes' e) = object [ "cipher" .= e ]
+
 data AuthRes = Rejected
                { rejected_ident :: Text
                , rejected_pass :: Text
@@ -80,6 +90,19 @@ authOwl owlPubkey myPrivkey ep =  AuthPlugin "owl" dispatch login
                      }
       res <- http req =<< authHttpManager <$> getYesod
       v <- responseBody res $$+- sinkParser json
+      case fromJSON v of
+        Success (AuthRes' e) -> do
+          let plain = decrypt myPrivkey $ fromLazy e
+          v' <- sourceLbs (toLazy plain) $$ sinkParser json
+          case fromJSON v' of
+            Success (Accepted i e) ->
+              setCreds True $ Creds "owl" ident []
+            Success (Rejected i p r) -> do
+              liftIO $ putStrLn $ show v
+              P.setPNotify $ P.PNotify P.JqueryUI P.Error "login failed" r
+              toMaster <- getRouteToMaster
+              redirect $ toMaster LoginR
+        Error msg -> invalidArgs [T.pack msg]
       case fromJSON v of
         Success (Accepted i e) ->
           setCreds True $ Creds "owl" ident []

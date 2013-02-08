@@ -25,6 +25,7 @@ import Yesod
 import Yesod.Static
 import Yesod.Auth
 import BISocie.Helpers.Auth.HashDB
+import BISocie.Helpers.Auth.Owl
 import Yesod.Auth.GoogleEmail
 import Yesod.Default.Config
 import Yesod.Default.Util (addStaticContentExternal)
@@ -241,16 +242,13 @@ instance YesodAuth BISocie where
               lift $ setPNotify $ PNotify JqueryUI Success "Login" "You are now logged in."
               fmap Just $ insert $ initUser $ credsIdent creds
 
-    authPlugins _ = [ authHashDB, authGoogleEmail ]
+    authPlugins _ = [ authOwl Settings.owl_pub Settings.bisocie_priv Settings.owl_auth_service_url
+                    , authHashDB
+                    , authGoogleEmail
+                    ]
     
     authHttpManager = httpManager
-    
-    loginHandler = do
-      defaultLayout $ do
-        setTitle "ログイン"
-        toWidget $(cassiusFile "templates/login.cassius")
-        toWidget $(hamletFile "templates/login.hamlet")
-                  
+
 instance YesodAuthHashDB BISocie where
     type AuthHashDBId BISocie = UserId
 

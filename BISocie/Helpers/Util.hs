@@ -13,17 +13,16 @@ module BISocie.Helpers.Util
        , verify
        ) where
 
-import Data.Text (Text)
-import qualified Data.Text as T
 import Codec.Binary.UTF8.String (encodeString, decodeString)
-import Network.HTTP.Base (urlEncode, urlDecode)
-
+import qualified Codec.Crypto.RSA as RSA
 import Control.Arrow (first)
 import Crypto.Random
-import qualified Codec.Crypto.RSA as RSA
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BL
 import qualified Data.ByteString.Base64 as Base64
+import Data.Text (Text)
+import qualified Data.Text as T
+import Network.HTTP.Base (urlEncode, urlDecode)
 
 (+++) :: Text -> Text -> Text
 (+++) = T.append

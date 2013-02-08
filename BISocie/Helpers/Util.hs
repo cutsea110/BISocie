@@ -80,8 +80,8 @@ encrypt pub plain = do
   g <- newGenIO :: IO SystemRandom
   return $ first encode $ RSA.encrypt g pub plain
 
-decrypt :: RSA.PrivateKey -> BL.ByteString -> BL.ByteString
-decrypt priv cipher = either BL.pack (RSA.decrypt priv . toLazy) $ Base64.decode $ fromLazy cipher
+decrypt :: RSA.PrivateKey -> BS.ByteString -> BS.ByteString
+decrypt priv cipher = either BS.pack (fromLazy . RSA.decrypt priv . toLazy) $ Base64.decode cipher
 
 sign :: RSA.PrivateKey -> BL.ByteString -> BL.ByteString
 sign = (encode.).RSA.sign

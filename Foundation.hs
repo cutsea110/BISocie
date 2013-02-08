@@ -242,7 +242,10 @@ instance YesodAuth BISocie where
               lift $ setPNotify $ PNotify JqueryUI Success "Login" "You are now logged in."
               fmap Just $ insert $ initUser $ credsIdent creds
 
-    authPlugins _ = [ authOwl, authHashDB, authGoogleEmail ]
+    authPlugins _ = [ authOwl Settings.owl_pub Settings.bisocie_priv Settings.owl_auth_service_url
+                    , authHashDB
+                    , authGoogleEmail
+                    ]
     
     authHttpManager = httpManager
 

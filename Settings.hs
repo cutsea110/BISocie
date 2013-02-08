@@ -25,10 +25,11 @@ module Settings
     , fillGapWidth
     , pagenateWidth
     , tz
-      -- RSA keys
+      -- for Owl service
     , bisocie_pub
     , bisocie_priv
     , owl_pub
+    , owl_auth_service_url
     ) where
 
 import Text.Shakespeare.Text (st)
@@ -127,6 +128,11 @@ pagenateWidth = 3
 tz :: Int
 tz = 9
 
+-- |
+-- Owl service URL
+--
+owl_auth_service_url :: String
+owl_auth_service_url = "http://localhost:3002/srv/auth"
 
 -- |
 -- BISocie RSA keys

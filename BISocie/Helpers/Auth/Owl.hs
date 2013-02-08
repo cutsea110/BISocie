@@ -17,6 +17,8 @@ import Data.Aeson
 import Data.Conduit.Attoparsec (sinkParser)
 import qualified Data.HashMap.Strict as M (toList)
 import qualified Yesod.Goodies.PNotify as P
+import BISocie.Helpers.Util
+import Crypto.PubKey.RSA
 
 -- for Request
 data AuthReq = AuthReq
@@ -62,18 +64,19 @@ instance ToJSON AuthRes where
                                                          ]
                                   ]
 
-owl_auth_url = "http://localhost:3002/srv/auth"
+type ServiceURL = String
 
-authOwl :: YesodAuth m => AuthPlugin m
-authOwl =  AuthPlugin "owl" dispatch login
+authOwl :: YesodAuth m => PublicKey -> PrivateKey -> ServiceURL -> AuthPlugin m
+authOwl owlPubkey myPrivkey ep =  AuthPlugin "owl" dispatch login
   where
     dispatch "POST" [] = do
       (ident, pass) <- (,) <$> (runInputPost $ ireq textField "ident")
                            <*> (runInputPost $ ireq passwordField "password")
-      req' <- lift $ parseUrl owl_auth_url
+      req' <- lift $ parseUrl ep
+      (e, _) <- liftIO $ encrypt owlPubkey $ encode $ AuthReq ident pass
       let req = req' { requestHeaders = [("Content-Type", "application/json")]
                      , method = "POST"
-                     , requestBody = RequestBodyLBS $ encode $ AuthReq ident pass
+                     , requestBody = RequestBodyLBS e
                      }
       res <- http req =<< authHttpManager <$> getYesod
       v <- responseBody res $$+- sinkParser json

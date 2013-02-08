@@ -98,7 +98,6 @@ authOwl owlPubkey myPrivkey ep =  AuthPlugin "owl" dispatch login
             Success (Accepted i e) ->
               setCreds True $ Creds "owl" ident []
             Success (Rejected i p r) -> do
-              liftIO $ putStrLn $ show v
               P.setPNotify $ P.PNotify P.JqueryUI P.Error "login failed" r
               toMaster <- getRouteToMaster
               redirect $ toMaster LoginR
@@ -107,7 +106,6 @@ authOwl owlPubkey myPrivkey ep =  AuthPlugin "owl" dispatch login
         Success (Accepted i e) ->
           setCreds True $ Creds "owl" ident []
         Success (Rejected i p r) -> do
-          liftIO $ putStrLn $ show v
           P.setPNotify $ P.PNotify P.JqueryUI P.Error "login failed" r
           toMaster <- getRouteToMaster
           redirect $ toMaster LoginR

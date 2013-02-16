@@ -24,7 +24,6 @@ module Foundation
 import Yesod
 import Yesod.Static
 import Yesod.Auth
-import BISocie.Helpers.Auth.HashDB
 import BISocie.Helpers.Auth.Owl
 import Yesod.Auth.GoogleEmail
 import Yesod.Default.Config
@@ -245,27 +244,7 @@ instance YesodAuth BISocie where
               fmap Just $ insert $ initUser $ credsIdent creds
 
     authPlugins _ = [ authOwl Settings.owl_pub Settings.bisocie_priv Settings.owl_auth_service_url
-                    , authHashDB
                     , authGoogleEmail
                     ]
     
     authHttpManager = httpManager
-
-instance YesodAuthHashDB BISocie where
-    type AuthHashDBId BISocie = UserId
-
-    getPassword uid = runDB $ do
-      ma <- get uid
-      case ma of
-        Nothing -> return Nothing
-        Just u -> return $ userPassword u
-    setPassword uid encripted = runDB $ update uid [UserPassword =. Just encripted]
-    getHashDBCreds account = runDB $ do
-        ma <- getBy $ UniqueUser account
-        case ma of
-            Nothing -> return Nothing
-            Just (Entity uid _) -> return $ Just HashDBCreds
-                { hashdbCredsId = uid
-                , hashdbCredsAuthId = Just uid
-                }
-    getHashDB = runDB . fmap (fmap userIdent) . get

@@ -8,5 +8,5 @@ $newline never
     <a title=プロフィール href=@{ProfileR (entityKey u)}>#{userFullName (entityVal u)}.
     <form method=get action=@{AuthR LogoutR} .inline>
       <button type=submit .link>ログアウト
-    <form method=get action=@{AuthR setpassR} .inline>
+    <form method=get action="" .inline>
       <button type=submit .link>パスワード変更

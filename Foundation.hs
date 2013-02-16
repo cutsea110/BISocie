@@ -36,7 +36,6 @@ import qualified Database.Persist.Store
 import Database.Persist.GenericSql
 import Settings (widgetFile, Extra (..))
 import Model
-import Data.Text (Text)
 import Text.Jasmine (minifym)
 import Text.Julius (RawJS(..))
 import Web.ClientSession (getKey)

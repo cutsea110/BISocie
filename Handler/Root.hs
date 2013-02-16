@@ -24,7 +24,6 @@ import Network.Socket (getNameInfo)
 
 import Foundation
 import BISocie.Helpers.Util
-import qualified BISocie.Helpers.Auth.HashDB as AH (encrypt)
 import Settings
 
 -- This is a handler function for the GET request method on the RootR
@@ -104,7 +103,7 @@ postSystemBatchR = do
       uid' <- case userExist ident users of
         Nothing ->
           insert $ User { userIdent=ident
-                        , userPassword=Just (AH.encrypt rawpass)
+                        , userPassword=Nothing
                         , userRole=Student
                         , userFamilyName=fname
                         , userGivenName=gname
@@ -113,7 +112,7 @@ postSystemBatchR = do
                         , userActive=True
                         }
         Just (Entity id' _) -> do
-          update id' [ UserPassword  =. Just (AH.encrypt rawpass)
+          update id' [ UserPassword  =. Nothing
                      , UserRole =. Student
                      , UserFamilyName =. fname
                      , UserGivenName =. gname

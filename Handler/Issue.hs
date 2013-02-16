@@ -16,7 +16,6 @@ import Control.Monad (when, unless, forM, liftM2)
 import Data.List (intercalate, intersperse, nub, groupBy)
 import Data.Time
 import Data.Time.Calendar.WeekDate
-import Data.Time.Calendar.OrdinalDate
 import Data.Tuple.HT
 import Data.Maybe (fromMaybe, fromJust, isJust, isNothing)
 import Network.Mail.Mime

@@ -2,7 +2,6 @@
 module Handler.Admin where
 
 import Foundation
-import BISocie.Helpers.Auth.HashDB (encrypt)
 import BISocie.Helpers.Util
 
 import Yesod
@@ -47,14 +46,10 @@ postUserR uid = do
          <*> ireq boolField "active"
   runDB $ do 
     orig <- get404 uid
-    replace uid new { userPassword = pass orig new 
-                    , userAvatar = userAvatar orig
-                    }
+    replace uid new { userAvatar = userAvatar orig }
   redirect $ UserR uid
   where
     roles = [(T.pack $ show r, r) | r <- [minBound::Role .. maxBound]]
-    pass :: User -> User -> Maybe T.Text
-    pass old new = maybe (userPassword old) (return . encrypt) (userPassword new)
 
 getNewUserR :: Handler RepHtml
 getNewUserR = do
@@ -80,7 +75,7 @@ postNewUserR = do
          <*> ireq textField "email"
          <*> fmap (fmap readText) (iopt textField "avatar") --always Nothing
          <*> ireq boolField "active"
-  uid <- runDB $ insert new {userPassword = fmap encrypt (userPassword new)}
+  uid <- runDB $ insert new {userPassword = Nothing}
   redirect $ UserR uid
   where
     roles = [(T.pack $ show r, r) | r <- [minBound::Role .. maxBound]]

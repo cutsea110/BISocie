@@ -36,7 +36,6 @@ import qualified Database.Persist.Store
 import Database.Persist.GenericSql
 import Settings (widgetFile, Extra (..))
 import Model
-import Data.Text (Text)
 import Text.Jasmine (minifym)
 import Text.Julius (RawJS(..))
 import Web.ClientSession (getKey)
@@ -44,6 +43,7 @@ import Text.Hamlet (hamletFile)
 import Text.Cassius (cassiusFile)
 import Text.Julius (juliusFile)
 import Yesod.Form.Jquery
+import Control.Applicative ((<$>),(<*>))
 
 import Settings.StaticFiles
 import BISocie.Helpers.Util
@@ -227,19 +227,21 @@ instance YesodAuth BISocie where
     -- Where to send a user after logout
     logoutDest _ = RootR
 
-    getAuthId creds = runDB $ do
+    getAuthId creds = do
+      (y, l) <- (,) <$> getYesod <*> fmap reqLangs getRequest
+      runDB $ do
         x <- getBy $ UniqueUser $ credsIdent creds
         case x of
             Just (Entity uid u) ->
               if userActive u
               then do
-                lift $ setPNotify $ PNotify JqueryUI Success "Login" "You are now logged in."
+                lift $ setPNotify $ PNotify JqueryUI Success "Login" (renderMessage y l MsgSuccessLogin)
                 return $ Just uid
               else do
                 lift $ setPNotify $ PNotify JqueryUI Error "fail to Login" "Invalid login."
                 return Nothing
             Nothing -> do
-              lift $ setPNotify $ PNotify JqueryUI Success "Login" "You are now logged in."
+              lift $ setPNotify $ PNotify JqueryUI Success "Login" (renderMessage y l MsgSuccessLogin)
               fmap Just $ insert $ initUser $ credsIdent creds
 
     authPlugins _ = [ authOwl Settings.owl_pub Settings.bisocie_priv Settings.owl_auth_service_url

@@ -16,8 +16,8 @@ import Network.HTTP.Conduit
 import Data.Aeson
 import Data.Conduit.Binary (sourceLbs)
 import Data.Conduit.Attoparsec (sinkParser)
+import qualified Data.ByteString.Char8 as SB
 import qualified Data.ByteString.Lazy.Char8 as LB
-import qualified Data.ByteString.Lazy.UTF8 as LB
 import qualified Data.HashMap.Strict as M (toList)
 import qualified Yesod.Goodies.PNotify as P
 import BISocie.Helpers.Util
@@ -80,11 +80,17 @@ authOwl :: YesodAuth m => PublicKey -> PrivateKey -> ServiceURL -> AuthPlugin m
 authOwl owlPubkey myPrivkey ep =  AuthPlugin "owl" dispatch login
   where
     dispatch "POST" [] = do
+      oreq <- getRequest
       (ident, pass) <- (,) <$> (runInputPost $ ireq textField "ident")
                            <*> (runInputPost $ ireq passwordField "password")
       req' <- lift $ parseUrl ep
       (e, _) <- liftIO $ encrypt owlPubkey $ encode $ AuthReq ident pass
-      let req = req' { requestHeaders = [("Content-Type", "application/json")]
+      let req = req' { requestHeaders =
+                          [ ("Content-Type", "application/json")
+                          , ("X-Owl-clientId", "BISocie")
+                          , ("X-Owl-signature", fromLazy $ sign myPrivkey e)
+                          , ("Accept-Language", SB.pack $ T.unpack $ T.intercalate ";" $ reqLangs oreq)
+                          ]
                      , method = "POST"
                      , requestBody = RequestBodyLBS e
                      }

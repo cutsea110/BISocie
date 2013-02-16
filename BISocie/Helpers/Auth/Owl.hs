@@ -84,7 +84,10 @@ authOwl owlPubkey myPrivkey ep =  AuthPlugin "owl" dispatch login
                            <*> (runInputPost $ ireq passwordField "password")
       req' <- lift $ parseUrl ep
       (e, _) <- liftIO $ encrypt owlPubkey $ encode $ AuthReq ident pass
-      let req = req' { requestHeaders = [("Content-Type", "application/json")]
+      let req = req' { requestHeaders = [ ("Content-Type", "application/json")
+                                        , ("X-Owl-clientId", "BISocie")
+                                        , ("X-Owl-signature", fromLazy $ sign myPrivkey e)
+                                        ]
                      , method = "POST"
                      , requestBody = RequestBodyLBS e
                      }

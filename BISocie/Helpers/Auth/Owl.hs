@@ -76,8 +76,8 @@ instance ToJSON AuthRes where
 
 type ServiceURL = String
 
-authOwl :: YesodAuth m => PublicKey -> PrivateKey -> ServiceURL -> AuthPlugin m
-authOwl owlPubkey myPrivkey ep =  AuthPlugin "owl" dispatch login
+authOwl :: YesodAuth m => SB.ByteString -> PublicKey -> PrivateKey -> ServiceURL -> AuthPlugin m
+authOwl clientId owlPubkey myPrivkey ep =  AuthPlugin "owl" dispatch login
   where
     dispatch "POST" [] = do
       oreq <- getRequest
@@ -87,7 +87,7 @@ authOwl owlPubkey myPrivkey ep =  AuthPlugin "owl" dispatch login
       (e, _) <- liftIO $ encrypt owlPubkey $ encode $ AuthReq ident pass
       let req = req' { requestHeaders =
                           [ ("Content-Type", "application/json")
-                          , ("X-Owl-clientId", "BISocie")
+                          , ("X-Owl-clientId", clientId)
                           , ("X-Owl-signature", fromLazy $ sign myPrivkey e)
                           , ("Accept-Language", SB.pack $ T.unpack $ T.intercalate ";" $ reqLangs oreq)
                           ]

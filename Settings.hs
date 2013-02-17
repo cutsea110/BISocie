@@ -26,6 +26,7 @@ module Settings
     , pagenateWidth
     , tz
       -- for Owl service
+    , clientId
     , bisocie_pub
     , bisocie_priv
     , owl_pub
@@ -39,6 +40,7 @@ import Yesod.Default.Config
 import Yesod.Default.Util
 import Data.Text (Text)
 import Data.ByteString (ByteString)
+import qualified Data.ByteString.Lazy.Char8 as LB
 import Data.Yaml
 import Control.Applicative
 import Settings.Development
@@ -137,6 +139,9 @@ owl_auth_service_url = "http://localhost:3002/srv/auth"
 -- |
 -- BISocie RSA keys
 --
+clientId :: LB.ByteString
+clientId = "BISocie"
+
 bisocie_pub :: PublicKey
 bisocie_pub = PublicKey
                 { public_size = 128

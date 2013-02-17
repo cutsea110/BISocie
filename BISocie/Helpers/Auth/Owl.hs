@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell, QuasiQuotes, OverloadedStrings #-}
-module BISocie.Helpers.Auth.Owl 
+module BISocie.Helpers.Auth.Owl
        ( authOwl
        ) where
 
@@ -118,7 +118,7 @@ authOwl owlPubkey myPrivkey ep =  AuthPlugin "owl" dispatch login
         Error msg -> invalidArgs [T.pack msg]
     dispatch _ _ = notFound
     url = PluginR "owl" []
-    login authToMaster = 
+    login authToMaster =
       toWidget [hamlet|
 <form method="post" action="@{authToMaster url}" .form-horizontal>
   <div .control-group.info>

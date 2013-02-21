@@ -239,8 +239,8 @@ instance YesodAuth BISocie where
                 lift $ setPNotify $ PNotify JqueryUI Error "fail to Login" $ render MsgInvalidAccount
                 return Nothing
             Nothing -> do
-              lift $ setPNotify $ PNotify JqueryUI Success "Login" $ render MsgSuccessLogin
-              fmap Just $ insert $ initUser $ credsIdent creds
+              lift $ setPNotify $ PNotify JqueryUI Error "fail to Login" $ render MsgInvalidAccount
+              return Nothing
 
     authPlugins _ = [ authOwl Settings.clientId Settings.owl_pub Settings.bisocie_priv Settings.owl_auth_service_url
                     ]

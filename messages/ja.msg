@@ -3,3 +3,4 @@ Home: ホーム
 
 SuccessLogin: ログインしました.
 FailLogin: ログインに失敗しました.アカウントとパスワードを確認してください.
+InvalidAccount: あなたのアカウントは無効です.

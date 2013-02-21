@@ -226,20 +226,20 @@ instance YesodAuth BISocie where
     logoutDest _ = RootR
 
     getAuthId creds = do
-      (y, l) <- (,) <$> getYesod <*> fmap reqLangs getRequest
+      render <- getMessageRender
       runDB $ do
         x <- getBy $ UniqueUser $ credsIdent creds
         case x of
             Just (Entity uid u) ->
               if userActive u
               then do
-                lift $ setPNotify $ PNotify JqueryUI Success "Login" (renderMessage y l MsgSuccessLogin)
+                lift $ setPNotify $ PNotify JqueryUI Success "Login" $ render MsgSuccessLogin
                 return $ Just uid
               else do
-                lift $ setPNotify $ PNotify JqueryUI Error "fail to Login" "Invalid login."
+                lift $ setPNotify $ PNotify JqueryUI Error "fail to Login" $ render MsgInvalidAccount
                 return Nothing
             Nothing -> do
-              lift $ setPNotify $ PNotify JqueryUI Success "Login" (renderMessage y l MsgSuccessLogin)
+              lift $ setPNotify $ PNotify JqueryUI Success "Login" $ render MsgSuccessLogin
               fmap Just $ insert $ initUser $ credsIdent creds
 
     authPlugins _ = [ authOwl Settings.clientId Settings.owl_pub Settings.bisocie_priv Settings.owl_auth_service_url

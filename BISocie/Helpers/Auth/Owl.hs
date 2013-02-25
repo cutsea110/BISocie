@@ -37,12 +37,12 @@ instance ToJSON AuthReq where
   toJSON (AuthReq i p) = object ["ident" .= i, "pass" .= p]
 
 -- for Response
-data AuthRes' = AuthRes' { cipher :: LB.ByteString }
-instance FromJSON AuthRes' where
-  parseJSON (Object o) = AuthRes' <$> o .: "cipher"
+data OwlRes = OwlRes { cipher :: LB.ByteString }
+instance FromJSON OwlRes where
+  parseJSON (Object o) = OwlRes <$> o .: "cipher"
   parseJSON _ = mzero
-instance ToJSON AuthRes' where
-  toJSON (AuthRes' e) = object [ "cipher" .= e ]
+instance ToJSON OwlRes where
+  toJSON (OwlRes e) = object [ "cipher" .= e ]
 
 data AuthRes = Rejected
                { rejected_ident :: Text
@@ -97,7 +97,7 @@ authOwl clientId owlPubkey myPrivkey ep =  AuthPlugin "owl" dispatch login
       res <- http req =<< authHttpManager <$> getYesod
       v <- responseBody res $$+- sinkParser json
       case fromJSON v of
-        Success (AuthRes' e) -> do
+        Success (OwlRes e) -> do
           let plain = decrypt myPrivkey $ fromLazy e
           v' <- sourceLbs (toLazy plain) $$ sinkParser json
           case fromJSON v' of

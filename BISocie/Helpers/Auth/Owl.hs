@@ -1,14 +1,14 @@
 {-# LANGUAGE TemplateHaskell, QuasiQuotes, OverloadedStrings #-}
 module BISocie.Helpers.Auth.Owl
        ( authOwl
+       , loginR
+       , setPassR
        ) where
 
 import Yesod hiding (object)
 import Yesod.Auth
 
 import Control.Applicative ((<$>),(<*>))
-import Control.Monad (mzero)
-import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Conduit as C
 import Network.HTTP.Conduit
@@ -17,8 +17,6 @@ import Data.Aeson
 import Data.Conduit.Binary (sourceLbs)
 import Data.Conduit.Attoparsec (sinkParser)
 import qualified Data.ByteString.Char8 as SB
-import qualified Data.ByteString.Lazy.Char8 as LB
-import qualified Data.HashMap.Strict as M (toList)
 import qualified Yesod.Goodies.PNotify as P
 import BISocie.Helpers.Util
 import Crypto.PubKey.RSA
@@ -26,10 +24,16 @@ import Owl.Service.API.Auth
 
 type ServiceURL = String
 
+loginR :: AuthRoute
+loginR = PluginR "owl" ["login"]
+
+setPassR :: AuthRoute
+setPassR = PluginR "owl" ["set-password"]
+
 authOwl :: YesodAuth m => SB.ByteString -> PublicKey -> PrivateKey -> ServiceURL -> AuthPlugin m
 authOwl clientId owlPubkey myPrivkey ep =  AuthPlugin "owl" dispatch login
   where
-    dispatch "POST" [] = do
+    dispatch "POST" ["login"] = do
       oreq <- getRequest
       (ident, pass) <- (,) <$> (runInputPost $ ireq textField "ident")
                            <*> (runInputPost $ ireq passwordField "password")
@@ -66,11 +70,12 @@ authOwl clientId owlPubkey myPrivkey ep =  AuthPlugin "owl" dispatch login
           toMaster <- getRouteToMaster
           redirect $ toMaster LoginR
         Error msg -> invalidArgs [T.pack msg]
+    dispatch "GET" ["set-password"] = getPasswordR >>= sendResponse
+    dispatch "POST" ["set-password"] = postPasswordR >>= sendResponse
     dispatch _ _ = notFound
-    url = PluginR "owl" []
     login authToMaster =
       toWidget [hamlet|
-<form method="post" action="@{authToMaster url}" .form-horizontal>
+<form method="post" action="@{authToMaster loginR}" .form-horizontal>
   <div .control-group.info>
     <label .control-label for=ident>Owl Account ID
     <div .controls>
@@ -83,3 +88,37 @@ authOwl clientId owlPubkey myPrivkey ep =  AuthPlugin "owl" dispatch login
     <div .controls.btn-group>
       <input type=submit .btn.btn-primary value=Login>
 |]
+
+getPasswordR :: Yesod master => GHandler Auth master RepHtml
+getPasswordR = do
+  authToMaster <- getRouteToMaster
+  defaultLayout $ do
+    setTitle "Set password"
+    [whamlet|
+<form method="post" action="@{authToMaster setPassR}" .form-horizontal>
+  <div .control-group.info>
+    <label .control-label for=current_pass>Current Password
+    <div .controls>
+      <input type=password #current_pass name=current_pass .span3 autofocus="" required>
+  <div .control-group.info>
+    <label .control-label for=new_pass>New Password
+    <div .controls>
+      <input type=password #new_pass name=new_pass .span3 required>
+  <div .control-group.info>
+    <label .control-label for=new_pass2>Confirm
+    <div .controls>
+      <input type=password #new_pass2 name=new_pass2 .span3 required>
+  <div .control-group>
+    <div .controls.btn-group>
+      <input type=submit .btn.btn-primary value="Set password">
+|]
+
+postPasswordR :: YesodAuth master => GHandler Auth master ()
+postPasswordR = do
+  oreq <- getRequest
+  (cur, pass, pass2) <- (,,) 
+                        <$> (runInputPost $ ireq passwordField "current_pass")
+                        <*> (runInputPost $ ireq passwordField "new_pass")
+                        <*> (runInputPost $ ireq passwordField "new_pass2")
+  y <- getYesod
+  redirect $ loginDest y

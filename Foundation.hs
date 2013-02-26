@@ -24,7 +24,7 @@ module Foundation
 import Yesod
 import Yesod.Static
 import Yesod.Auth
-import BISocie.Helpers.Auth.Owl
+import Yesod.Auth.Owl
 import Yesod.Auth.GoogleEmail
 import Yesod.Default.Config
 import Yesod.Default.Util (addStaticContentExternal)
@@ -42,7 +42,6 @@ import Text.Hamlet (hamletFile)
 import Text.Cassius (cassiusFile)
 import Text.Julius (juliusFile)
 import Yesod.Form.Jquery
-import Control.Applicative ((<$>),(<*>))
 
 import Settings.StaticFiles
 import BISocie.Helpers.Util
@@ -227,24 +226,32 @@ instance YesodAuth BISocie where
     logoutDest _ = RootR
 
     getAuthId creds = do
-      (y, l) <- (,) <$> getYesod <*> fmap reqLangs getRequest
+      render <- getMessageRender
       runDB $ do
         x <- getBy $ UniqueUser $ credsIdent creds
         case x of
             Just (Entity uid u) ->
               if userActive u
               then do
-                lift $ setPNotify $ PNotify JqueryUI Success "Login" (renderMessage y l MsgSuccessLogin)
+                lift $ setPNotify $ PNotify JqueryUI Success "Login" $ render MsgSuccessLogin
                 return $ Just uid
               else do
                 lift $ setPNotify $ PNotify JqueryUI Error "fail to Login" "Invalid login."
                 return Nothing
             Nothing -> do
-              lift $ setPNotify $ PNotify JqueryUI Success "Login" (renderMessage y l MsgSuccessLogin)
+              lift $ setPNotify $ PNotify JqueryUI Success "Login" $ render MsgSuccessLogin
               fmap Just $ insert $ initUser $ credsIdent creds
 
-    authPlugins _ = [ authOwl Settings.clientId Settings.owl_pub Settings.bisocie_priv Settings.owl_auth_service_url
+    authPlugins _ = [ authOwl
                     , authGoogleEmail
                     ]
     
     authHttpManager = httpManager
+
+instance YesodAuthOwl BISocie where
+  getOwlIdent = return . userIdent . entityVal =<< requireAuth
+  clientId _ = Settings.clientId
+  owlPubkey _ = Settings.owl_pub
+  myPrivkey _ = Settings.bisocie_priv
+  endpoint_auth _ = Settings.owl_auth_service_url
+  endpoint_pass _ = Settings.owl_pass_service_url

@@ -196,9 +196,6 @@ putProfileR uid = do
           Just (Entity pid _) -> replace pid prof >> return pid
       redirect (ProfileR uid, [("mode", "e")] :: [(Text, Text)])
     
-getChangePassR :: UserId -> Handler RepHtml
-getChangePassR uid = undefined
-
 getAvatarImageR :: UserId -> Handler RepHtml
 getAvatarImageR uid = do
   _ <- requireAuth

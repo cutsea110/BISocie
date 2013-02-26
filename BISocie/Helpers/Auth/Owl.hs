@@ -19,18 +19,22 @@ import Data.Aeson
 import Data.Conduit.Binary (sourceLbs)
 import Data.Conduit.Attoparsec (sinkParser)
 import qualified Data.ByteString.Char8 as SB
+import Data.Text (Text)
 import qualified Yesod.Goodies.PNotify as P
 import BISocie.Helpers.Util
 import Crypto.PubKey.RSA
-import Owl.Service.API.Auth
+import Owl.Service.API.Auth as A
+import Owl.Service.API.ChangePass as CP
 
 type ServiceURL = String
 
 class YesodAuth m => YesodAuthOwl m where
+  getOwlIdent :: GHandler Auth m Text
   clientId :: m -> SB.ByteString
   owlPubkey :: m -> PublicKey
   myPrivkey :: m -> PrivateKey
-  endpoint :: m -> ServiceURL
+  endpoint_auth :: m -> ServiceURL
+  endpoint_pass :: m -> ServiceURL
 
 loginR :: AuthRoute
 loginR = PluginR "owl" ["login"]
@@ -43,7 +47,7 @@ authOwl =  AuthPlugin "owl" dispatch login
   where
     dispatch "POST" ["login"] = do
       y <- getYesod
-      let (clid, owlpub, mypriv, ep) = (clientId y, owlPubkey y, myPrivkey y, endpoint y)
+      let (clid, owlpub, mypriv, ep) = (clientId y, owlPubkey y, myPrivkey y, endpoint_auth y)
       oreq <- getRequest
       (ident, pass) <- (,) <$> (runInputPost $ ireq textField "ident")
                            <*> (runInputPost $ ireq passwordField "password")
@@ -65,20 +69,12 @@ authOwl =  AuthPlugin "owl" dispatch login
           let plain = decrypt mypriv $ fromLazy e
           v' <- sourceLbs (toLazy plain) $$ sinkParser json
           case fromJSON v' of
-            Success (Accepted i e) ->
+            Success (A.Accepted i e) ->
               setCreds True $ Creds "owl" ident []
-            Success (Rejected i p r) -> do
+            Success (A.Rejected i p r) -> do
               P.setPNotify $ P.PNotify P.JqueryUI P.Error "login failed" r
               toMaster <- getRouteToMaster
               redirect $ toMaster LoginR
-        Error msg -> invalidArgs [T.pack msg]
-      case fromJSON v of
-        Success (Accepted i e) ->
-          setCreds True $ Creds "owl" ident []
-        Success (Rejected i p r) -> do
-          P.setPNotify $ P.PNotify P.JqueryUI P.Error "login failed" r
-          toMaster <- getRouteToMaster
-          redirect $ toMaster LoginR
         Error msg -> invalidArgs [T.pack msg]
     dispatch "GET" ["set-password"] = getPasswordR >>= sendResponse
     dispatch "POST" ["set-password"] = postPasswordR >>= sendResponse
@@ -123,12 +119,37 @@ getPasswordR = do
       <input type=submit .btn.btn-primary value="Set password">
 |]
 
-postPasswordR :: YesodAuth master => GHandler Auth master ()
+postPasswordR :: YesodAuthOwl master => GHandler Auth master ()
 postPasswordR = do
+  uid <- getOwlIdent
+  y <- getYesod
+  let (clid, owlpub, mypriv, ep) = (clientId y, owlPubkey y, myPrivkey y, endpoint_pass y)
   oreq <- getRequest
-  (cur, pass, pass2) <- (,,)
+  (curp, pass, pass2) <- (,,)
                         <$> (runInputPost $ ireq passwordField "current_pass")
                         <*> (runInputPost $ ireq passwordField "new_pass")
                         <*> (runInputPost $ ireq passwordField "new_pass2")
-  y <- getYesod
+  req' <- lift $ parseUrl ep
+  (e, _) <- liftIO $ encrypt owlpub $ encode $ ChangePassReq uid curp pass pass2
+  let req = req' { requestHeaders =
+                      [ ("Content-Type", "application/json")
+                      , ("X-Owl-clientId", clid)
+                      , ("X-Owl-signature", fromLazy $ sign mypriv e)
+                      , ("Accept-Language", SB.pack $ T.unpack $ T.intercalate ";" $ reqLangs oreq)
+                      ]
+                 , method = "POST"
+                 , requestBody = RequestBodyLBS e
+                 }
+  res <- http req =<< authHttpManager <$> getYesod
+  v <- responseBody res $$+- sinkParser json
+  case fromJSON v of
+    Success (OwlRes e) -> do
+      let plain = decrypt mypriv $ fromLazy e
+      v' <- sourceLbs (toLazy plain) $$ sinkParser json
+      case fromJSON v' of
+        Success (CP.Accepted i e) -> do
+          P.setPNotify $ P.PNotify P.JqueryUI P.Success "success" "update password"
+        Success (CP.Rejected i c p p2 r) -> do
+          P.setPNotify $ P.PNotify P.JqueryUI P.Error "failed" r
+        Error msg -> invalidArgs [T.pack msg]
   redirect $ loginDest y

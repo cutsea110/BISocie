@@ -31,6 +31,7 @@ import Yesod.Default.Util (addStaticContentExternal)
 import Yesod.Goodies.PNotify
 import Network.HTTP.Conduit (Manager)
 import qualified Settings
+import Data.Text (Text)
 import qualified Database.Persist.Store
 import Database.Persist.GenericSql
 import Settings (widgetFile, Extra (..))
@@ -250,7 +251,9 @@ instance YesodAuth BISocie where
     authHttpManager = httpManager
 
 instance YesodAuthOwl BISocie where
+  getOwlIdent = return . userIdent . entityVal =<< requireAuth
   clientId _ = Settings.clientId
   owlPubkey _ = Settings.owl_pub
   myPrivkey _ = Settings.bisocie_priv
-  endpoint _ = Settings.owl_auth_service_url
+  endpoint_auth _ = Settings.owl_auth_service_url
+  endpoint_pass _ = Settings.owl_pass_service_url

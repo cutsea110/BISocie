@@ -24,14 +24,13 @@ module Foundation
 import Yesod
 import Yesod.Static
 import Yesod.Auth
-import BISocie.Helpers.Auth.Owl
+import Yesod.Auth.Owl
 import Yesod.Auth.GoogleEmail
 import Yesod.Default.Config
 import Yesod.Default.Util (addStaticContentExternal)
 import Yesod.Goodies.PNotify
 import Network.HTTP.Conduit (Manager)
 import qualified Settings
-import Data.Text (Text)
 import qualified Database.Persist.Store
 import Database.Persist.GenericSql
 import Settings (widgetFile, Extra (..))
@@ -43,7 +42,6 @@ import Text.Hamlet (hamletFile)
 import Text.Cassius (cassiusFile)
 import Text.Julius (juliusFile)
 import Yesod.Form.Jquery
-import Control.Applicative ((<$>),(<*>))
 
 import Settings.StaticFiles
 import BISocie.Helpers.Util

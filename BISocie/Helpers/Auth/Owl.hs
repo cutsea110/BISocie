@@ -1,6 +1,8 @@
 {-# LANGUAGE TemplateHaskell, QuasiQuotes, OverloadedStrings #-}
 module BISocie.Helpers.Auth.Owl
        ( authOwl
+       , YesodAuthOwl(..)
+       , ServiceURL
        , loginR
        , setPassR
        ) where
@@ -24,25 +26,33 @@ import Owl.Service.API.Auth
 
 type ServiceURL = String
 
+class YesodAuth m => YesodAuthOwl m where
+  clientId :: m -> SB.ByteString
+  owlPubkey :: m -> PublicKey
+  myPrivkey :: m -> PrivateKey
+  endpoint :: m -> ServiceURL
+
 loginR :: AuthRoute
 loginR = PluginR "owl" ["login"]
 
 setPassR :: AuthRoute
 setPassR = PluginR "owl" ["set-password"]
 
-authOwl :: YesodAuth m => SB.ByteString -> PublicKey -> PrivateKey -> ServiceURL -> AuthPlugin m
-authOwl clientId owlPubkey myPrivkey ep =  AuthPlugin "owl" dispatch login
+authOwl :: YesodAuthOwl m => AuthPlugin m
+authOwl =  AuthPlugin "owl" dispatch login
   where
     dispatch "POST" ["login"] = do
+      y <- getYesod
+      let (clid, owlpub, mypriv, ep) = (clientId y, owlPubkey y, myPrivkey y, endpoint y)
       oreq <- getRequest
       (ident, pass) <- (,) <$> (runInputPost $ ireq textField "ident")
                            <*> (runInputPost $ ireq passwordField "password")
       req' <- lift $ parseUrl ep
-      (e, _) <- liftIO $ encrypt owlPubkey $ encode $ AuthReq ident pass
+      (e, _) <- liftIO $ encrypt owlpub $ encode $ AuthReq ident pass
       let req = req' { requestHeaders =
                           [ ("Content-Type", "application/json")
-                          , ("X-Owl-clientId", clientId)
-                          , ("X-Owl-signature", fromLazy $ sign myPrivkey e)
+                          , ("X-Owl-clientId", clid)
+                          , ("X-Owl-signature", fromLazy $ sign mypriv e)
                           , ("Accept-Language", SB.pack $ T.unpack $ T.intercalate ";" $ reqLangs oreq)
                           ]
                      , method = "POST"
@@ -52,7 +62,7 @@ authOwl clientId owlPubkey myPrivkey ep =  AuthPlugin "owl" dispatch login
       v <- responseBody res $$+- sinkParser json
       case fromJSON v of
         Success (OwlRes e) -> do
-          let plain = decrypt myPrivkey $ fromLazy e
+          let plain = decrypt mypriv $ fromLazy e
           v' <- sourceLbs (toLazy plain) $$ sinkParser json
           case fromJSON v' of
             Success (Accepted i e) ->
@@ -116,7 +126,7 @@ getPasswordR = do
 postPasswordR :: YesodAuth master => GHandler Auth master ()
 postPasswordR = do
   oreq <- getRequest
-  (cur, pass, pass2) <- (,,) 
+  (cur, pass, pass2) <- (,,)
                         <$> (runInputPost $ ireq passwordField "current_pass")
                         <*> (runInputPost $ ireq passwordField "new_pass")
                         <*> (runInputPost $ ireq passwordField "new_pass2")

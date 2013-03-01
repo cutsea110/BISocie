@@ -1,7 +1,7 @@
 $newline never
 <div #bisocie-title>
   <a href=@{RootR}>
-    <img src=@{StaticR img_bisocie_logo_png}>
+    <img src=@{StaticR img_bisocie_logo_gif}>
 <div #userbox>
   $maybe u <- mu
     ログイン中 

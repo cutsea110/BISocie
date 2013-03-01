@@ -14,7 +14,6 @@ import Data.Time
 import System.Directory
 import System.FilePath ((</>))
 import Text.Blaze.Internal (preEscapedText)
-import Text.Cassius (cassiusFile)
 import qualified Data.Text as T
 
 import qualified Settings
@@ -32,7 +31,6 @@ getNewProjectR = do
       help = $(widgetFile "help")
   defaultLayout $ do
     setTitle "プロジェクト新規作成"
-    toWidget $(cassiusFile "templates/project.cassius")
     $(widgetFile "newproject")
     
 postNewProjectR :: Handler RepHtml

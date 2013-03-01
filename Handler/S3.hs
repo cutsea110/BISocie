@@ -22,7 +22,6 @@ import Data.Time
 import qualified Data.ByteString.Lazy as L
 import System.Directory
 import System.FilePath
-import Text.Cassius (cassiusFile)
 import qualified Data.Text as T
 
 import qualified Settings (s3dir)
@@ -32,7 +31,6 @@ getUploadR :: Handler RepHtml
 getUploadR = do
   (Entity uid _) <- requireAuth
   defaultLayout $ do
-    toWidget $(cassiusFile "templates/s3/s3.cassius")
     $(widgetFile "s3/upload")
 
 upload uid fi = do

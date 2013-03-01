@@ -24,7 +24,6 @@ import qualified Data.Text.Lazy.Encoding as LE
 import qualified Data.Text as T
 import Data.Text (Text)
 import Text.Blaze.Internal (preEscapedText)
-import Text.Cassius (cassiusFile)
 
 import BISocie.Helpers.Util
 import Settings (mailXHeader, mailMessageIdDomain, fromEmailAddress, issueListLimit, fillGapWidth, pagenateWidth, projectListLimit)
@@ -190,7 +189,6 @@ getCrossSearchR = do
     return $ map toProjectBis prjs'
   defaultLayout $ do
     setTitle "クロスサーチ"
-    toWidget $(cassiusFile "templates/issue.cassius")
     $(widgetFile "crosssearch")
 
 postCrossSearchR :: Handler RepJson
@@ -307,7 +305,6 @@ getIssueListR pid = do
       paging = $(widgetFile "paging")
   defaultLayout $ do
     setTitle $ preEscapedText $ projectBisName prj +++ "案件一覧"
-    toWidget $(cassiusFile "templates/issue.cassius")
     $(widgetFile "issuelist")
 
 getNewIssueR :: ProjectId -> Handler RepHtml
@@ -324,7 +321,6 @@ getNewIssueR pid = do
     return (ptcpts, stss, prj)
   defaultLayout $ do
     setTitle "新規案件作成"
-    toWidget $(cassiusFile "templates/issue.cassius")
     $(widgetFile "newissue")
       
 postNewIssueR :: ProjectId -> Handler RepHtml

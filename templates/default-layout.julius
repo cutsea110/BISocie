@@ -46,14 +46,6 @@ $(document).ready(function(){
   });
 
   $(".watermark").watermark();
-  $(".login-options").attr("title","Login to BISocie").dialog({
-    autoOpen: true,
-    width: 520,
-    modal: true,
-    open: function () {
-      document.getElementById('loginAccountId').focus();
-    }
-  });
 
   AjaxZip2.JSONDATA = '#{rawJS $ approot' y}' + '/static/plugins/ajaxzip2/data';
 

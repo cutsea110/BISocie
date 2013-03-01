@@ -248,6 +248,11 @@ instance YesodAuth BISocie where
     
     authHttpManager = httpManager
 
+    loginHandler = defaultLayout $ do
+      setTitle "ログイン"
+      $(widgetFile "login")
+
+
 instance YesodAuthOwl BISocie where
   getOwlIdent = return . userIdent . entityVal =<< requireAuth
   clientId _ = Settings.clientId

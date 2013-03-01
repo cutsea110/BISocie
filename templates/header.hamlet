@@ -4,9 +4,12 @@ $newline never
     <img src=@{StaticR img_bisocie_logo_gif}>
 <div #userbox>
   $maybe u <- mu
-    ログイン中 
-    <a title=プロフィール href=@{ProfileR (entityKey u)}>#{userFullName (entityVal u)}.
-    <form method=get action=@{AuthR LogoutR} .inline>
-      <button type=submit .link>ログアウト
-    <form method=get action="@{AuthR setPassR}" .inline>
-      <button type=submit .link>パスワード変更
+    <span>ログイン中
+    <span>
+      <a title=プロフィール href=@{ProfileR (entityKey u)}>#{userFullName (entityVal u)}.
+    <span>
+      <form method=get action=@{AuthR LogoutR} .inline>
+        <button type=submit .link>ログアウト
+    <span>
+      <form method=get action="@{AuthR setPassR}" .inline>
+        <button type=submit .link>パスワード変更

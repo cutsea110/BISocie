@@ -15,6 +15,7 @@ $newline never
                 <li>
                   <a href=@{fst p}>#{snd p}
             <li>#{title}
-          ^{pageBody pc}
+          <div .tabs>
+            ^{pageBody pc}
         <div #ui-footer>
           ^{footer}

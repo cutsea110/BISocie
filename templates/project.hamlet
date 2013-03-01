@@ -7,7 +7,7 @@ $newline never
   <li .selected>
     <a href=@{ProjectR pid}>プロジェクト設定
 <div #main-content>
-  <h3>#{projectName prj} プロジェクト設定 
+  <h3 .project>#{projectName prj} プロジェクト設定
     $if canEditProjectSetting self
       <button #button-delete-confirm type=submit name=_method value=delete .link>このプロジェクトを削除する.
   <form method=post action=@{ProjectR pid}>

@@ -31,29 +31,25 @@ $newline never
     <table>
       <tr>
         <th>プロジェクト
-        <th>ステータス
-        <th>アサイン
+        <th width="100px">ステータス
+        <th width="100px">アサイン
         <th>期限
-      <tr>
-        <td rowspan=3>
-          <select #projectid name=projectid multiple=multiple size=5>
-            $forall p <- prjs
-              <option selected=selected value=#{show (projectBisId p)}>#{projectBisName p}
-        <td rowspan=3>
-          <select #status name=status multiple=multiple size=5>
-        <td rowspan=3>
-          <select #assign name=assign multiple=multiple size=5>
-        <td>
-          <input #limitdatefrom name=limitdatefrom .date>
-          〜
-          <input #limitdateto name=limitdateto .date>
-      <tr>
         <th>更新日
       <tr>
         <td>
-          <input #updatedfrom name=updatedfrom .date>
-          〜
-          <input #updatedto name=updatedto .date>
+          <select #projectid name=projectid multiple=multiple size=5>
+            $forall p <- prjs
+              <option selected=selected value=#{show (projectBisId p)}>#{projectBisName p}
+        <td .center>
+          <select #status name=status multiple=multiple size=5>
+        <td .center>
+          <select #assign name=assign multiple=multiple size=5>
+        <td width="280px">
+          <input .date #limitdatefrom name=limitdatefrom placeholder=yyyy/mm/dd> ~ #
+          <input .date #limitdateto name=limitdateto placeholder=yyyy/mm/dd>
+        <td width="280px">
+          <input .date #updatedfrom name=updatedfrom placeholder=yyyy/mm/dd> ~ #
+          <input .date #updatedto name=updatedto placeholder=yyyy/mm/dd>
       <tr>
         <th>
           <a .complement href=# target=#projectid>選択⇔非選択
@@ -61,6 +57,8 @@ $newline never
           <a .complement href=# target=#status>選択⇔非選択
         <th>
           <a .complement href=# target=#assign>選択⇔非選択
+        <th>
+        <th>
   <table .list>
     <caption>対象案件一覧
     <thead>

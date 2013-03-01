@@ -1,7 +1,7 @@
 $newline never
 <ul .tabs>
-  <li .selected>
-    <a href=@{HomeR selfid}>ホーム
+  <li>
+    <a .selected href=@{HomeR selfid}>ホーム
   $if canCreateProject self
     <li>
       <a href=@{NewProjectR}>プロジェクト新規作成

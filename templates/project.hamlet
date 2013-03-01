@@ -4,8 +4,8 @@ $newline never
     <a href=@{IssueListR pid}>#{projectName prj} 案件一覧
   <li>
     <a href=@{NewIssueR pid}>案件追加
-  <li .selected>
-    <a href=@{ProjectR pid}>プロジェクト設定
+  <li>
+    <a .selected href=@{ProjectR pid}>プロジェクト設定
 <div #main-content>
   <h3 .project>#{projectName prj} プロジェクト設定
     $if canEditProjectSetting self

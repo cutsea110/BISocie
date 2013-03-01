@@ -2,8 +2,8 @@ $newline never
 <ul .tabs>
   <li>
     <a href=@{HomeR selfid}>ホーム
-  <li .selected>
-    <a href=@?{viewprof}>プロフィール
+  <li>
+    <a .selected href=@?{viewprof}>プロフィール
 <div #main-content>
   <h3>#{userIdent user}のプロフィール
     $if canEdit self user

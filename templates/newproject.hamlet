@@ -2,8 +2,8 @@ $newline never
 <ul .tabs>
   <li>
     <a href=@{HomeR selfid}>ホーム
-  <li .selected>
-    <a href=@{NewProjectR}>プロジェクト新規作成
+  <li>
+    <a .selected href=@{NewProjectR}>プロジェクト新規作成
   <li>
     <a href=@{CrossSearchR}>クロスサーチ
   $if canViewHumannetwork self

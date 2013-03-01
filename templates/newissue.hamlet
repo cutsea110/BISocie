@@ -2,8 +2,8 @@ $newline never
 <ul .tabs>
   <li>
     <a href=@{IssueListR pid}>#{projectName prj} 案件一覧
-  <li .selected>
-    <a href=@{NewIssueR pid}>案件追加
+  <li>
+    <a .selected href=@{NewIssueR pid}>案件追加
   <li>
     <a href=@{ProjectR pid}>プロジェクト設定
 <div #main-content>

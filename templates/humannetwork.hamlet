@@ -7,8 +7,8 @@ $newline never
       <a href=@{NewProjectR}>プロジェクト新規作成
   <li>
     <a href=@{CrossSearchR}>クロスサーチ
-  <li .selected>
-    <a href=@{HumanNetworkR}>ヒューマンネットワーク
+  <li>
+    <a .selected href=@{HumanNetworkR}>ヒューマンネットワーク
   <li>
     <a href=@{CurrentScheduleR}>スケジュール
 <div #main-content>

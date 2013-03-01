@@ -5,8 +5,8 @@ $newline never
   $if (canCreateProject self)
     <li>
       <a href=@{NewProjectR}>プロジェクト新規作成
-  <li .selected>
-    <a href=@{CrossSearchR}>クロスサーチ
+  <li>
+    <a .selected href=@{CrossSearchR}>クロスサーチ
   $if (canViewHumannetwork self)
     <li>
       <a href=@{HumanNetworkR}>ヒューマンネットワーク

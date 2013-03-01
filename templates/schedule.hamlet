@@ -10,8 +10,8 @@ $newline never
   $if canViewHumannetwork self
     <li>
       <a href=@{HumanNetworkR}>ヒューマンネットワーク
-  <li .selected>
-    <a href=@{CurrentScheduleR}>スケジュール
+  <li>
+    <a .selected href=@{CurrentScheduleR}>スケジュール
 <div #main-content>
   <table .calendar>
    <thead>

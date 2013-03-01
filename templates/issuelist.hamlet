@@ -1,7 +1,7 @@
 $newline never
 <ul .tabs>
-  <li .selected>
-    <a href=@{IssueListR pid}>#{projectBisName prj} 案件一覧
+  <li>
+    <a .selected href=@{IssueListR pid}>#{projectBisName prj} 案件一覧
   <li>
     <a href=@{NewIssueR pid}>案件追加
   <li>

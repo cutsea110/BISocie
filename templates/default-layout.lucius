@@ -862,6 +862,9 @@ textarea[name="courses"] {
 }
 
 /*** ICONS ***/
+.humannetwork {
+  background: url(@{StaticR img_icons_icon_map_png}) no-repeat left top; padding-left: 24px;
+}
 .project {
   background: url(@{StaticR img_icons_project_png}) no-repeat left top; padding-left: 24px;
 }

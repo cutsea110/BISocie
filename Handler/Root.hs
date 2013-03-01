@@ -25,6 +25,7 @@ import Network.Socket (getNameInfo)
 
 import Foundation
 import BISocie.Helpers.Util
+import Settings.StaticFiles
 import Settings
 
 -- This is a handler function for the GET request method on the RootR

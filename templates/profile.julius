@@ -27,7 +27,8 @@ $(document).ready(function(){
             var marker = new google.maps.Marker({
                 map: areamap,
                 position: new google.maps.LatLng(data.locations[i].lat, data.locations[i].lng),
-                title: data.locations[i].name
+                title: data.locations[i].name,
+                icon: "@{StaticR img_icons_icon_map_png}"
             });
             addMarkerLink(marker, data.locations[i].uri);
         }
@@ -63,11 +64,13 @@ $(document).ready(function(){
 
      if (clat != 0 || clng != 0) new google.maps.Marker({
          map: map,
-         position: clatlng
+         position: clatlng,
+         icon: "@{StaticR img_icons_icon_map_png}"
      });
      if (hlat != 0 || hlng != 0) new google.maps.Marker({
          map: map,
-         position: hlatlng
+         position: hlatlng,
+         icon: "@{StaticR img_icons_icon_map_png}"
      });
 
      $("#cloc, #hloc").each(function(){
@@ -80,7 +83,8 @@ $(document).ready(function(){
                map.setCenter(results[0].geometry.location);
                var marker = new google.maps.Marker({
                    map: map, 
-                   position: results[0].geometry.location
+                   position: results[0].geometry.location,
+                   icon: "@{StaticR img_icons_icon_map_png}"
                });
                $(lonid).val(results[0].geometry.location.lng());
                $(latid).val(results[0].geometry.location.lat());

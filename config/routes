@@ -1,4 +1,5 @@
 / RootR GET
+/change-pass  ChangePasswordR GET
 /home/#UserId HomeR GET
 /human-network HumanNetworkR GET
 /user-address.json UserLocationsR GET

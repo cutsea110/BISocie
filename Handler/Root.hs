@@ -5,6 +5,7 @@
 module Handler.Root where
 
 import Yesod
+import Yesod.Auth.Owl (setPassR)
 import Control.Applicative ((<$>))
 import Control.Monad (unless, forM)
 import Data.Conduit (($$))
@@ -45,6 +46,12 @@ getHomeR uid = do
   defaultLayout $ do
     setTitle $ preEscapedText $ userFullName self +++ " ホーム"
     $(widgetFile "home")
+
+getChangePasswordR :: Handler RepHtml
+getChangePasswordR = do
+  defaultLayout $ do
+    setTitle "パスワード変更"
+    $(widgetFile "change-pass")
     
 getHumanNetworkR :: Handler RepHtml
 getHumanNetworkR = do

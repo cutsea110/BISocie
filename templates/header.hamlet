@@ -11,5 +11,5 @@ $newline never
       <form method=get action=@{AuthR LogoutR} .inline>
         <button type=submit .link>ログアウト
     <span>
-      <form method=get action="@{AuthR setPassR}" .inline>
+      <form method=get action="@{ChangePasswordR}" .inline>
         <button type=submit .link>パスワード変更

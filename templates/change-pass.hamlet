@@ -1,0 +1,20 @@
+$newline never
+<ul .tabs>
+<div .login-options>
+  <div align=center>
+    <form .validate.auth method=post action="@{AuthR setPassR}">
+      <table>
+        <tbody>
+          <tr>
+            <th>現在のパスワード:
+            <td>
+              <input .watermark.required type=password name=current_pass>
+          <tr>
+            <th>新しいパスワード:
+            <td>
+              <input .watermark.required type=password name=new_pass>
+          <tr>
+            <th>新しいパスワード(確認):
+            <td>
+              <input .watermark.required type=password name=new_pass2>
+      <input .login_button type=submit value="変更">

@@ -39,7 +39,7 @@ import Text.Jasmine (minifym)
 import Text.Julius (RawJS(..))
 import Web.ClientSession (getKey)
 import Text.Hamlet (hamletFile)
-import Text.Cassius (cassiusFile)
+import Text.Lucius (luciusFile)
 import Text.Julius (juliusFile)
 import Yesod.Form.Jquery
 
@@ -128,7 +128,7 @@ instance Yesod BISocie where
         addScriptEither $ Left $ StaticR plugins_zClip_jquery_zclip_min_js
         addScriptEither $ Left $ StaticR plugins_pnotify_jquery_pnotify_min_js
         addStylesheetEither $ Left $ StaticR plugins_pnotify_jquery_pnotify_default_css
-        toWidget $(cassiusFile "templates/default-layout.cassius")
+        toWidget $(luciusFile "templates/default-layout.lucius")
         toWidget $(juliusFile "templates/default-layout.julius")
       hamletToRepHtml $(hamletFile "templates/default-layout.hamlet")
 

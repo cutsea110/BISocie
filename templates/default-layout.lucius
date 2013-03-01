@@ -400,12 +400,10 @@ ul.tabs li a:hover, ul.tabs li a.selected {
 #main-content {
   font-size:108%;
   padding-bottom:20px;    
-
   padding:1em;
-  margin: 0 auto;
   background: url(@{StaticR img_ui_main_bg_gif}) repeat top #fff;
+  margin: 0 70px;
   height: auto !important;
-  height: 100%;
   min-height: 100%;
   position:relative;
 }
@@ -863,3 +861,23 @@ textarea[name="courses"] {
   margin-left: 10px;
 }
 
+/*** ICONS ***/
+.project {
+  background: url(@{StaticR img_icons_project_png}) no-repeat left top; padding-left: 24px;
+}
+.issue {
+  background: url(@{StaticR img_icons_issue_png}) no-repeat left top; padding-left: 32px;
+}
+#child-issues {
+  font-weight: bold;
+  width: 96%;
+  border: 1px solid #CCCCCC;
+  padding: 1em;
+  background:#fff;
+}
+.child-issues {
+  background: url(@{StaticR img_icons_list_png}) no-repeat left top; padding-left:24px;
+}
+.parent-issue {
+  background: url(@{StaticR img_icons_parent_png}) no-repeat left top; padding-left:24px;
+}

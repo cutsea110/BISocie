@@ -289,7 +289,7 @@ button:disabled {
 #userbox span:last-child { margin-right: 10px;}
 
 div.tabs {
-  background: url(../images/ui-main_bg.gif) repeat bottom;
+  background: url(@{img_ui_main_bg_gif}) repeat bottom;
   padding-bottom: 15px;
   min-height: 600px;
 	position: relative;
@@ -308,7 +308,7 @@ ul.tabs{
     overflow: hidden;
     padding: 0 0 0 215px
 */
-  background: url(../images/tabs_bg.gif) repeat-x;
+  background: url(@{img_tabs_bg_gif}) repeat-x;
 	margin: 0 0 20px 0;
 	padding: 18px 0 0 0;
 	height: 36px;   
@@ -326,7 +326,7 @@ ul.tabs li{
 	margin:0 0 0 1.2em;
 	padding:0 0.6em;
 */
-/*    background: url("../images/diamond-black.gif") no-repeat scroll 100% 66% transparent;
+/*    background: url(@{img_diamond_black_gif}) no-repeat scroll 100% 66% transparent;
     float: left;
     margin-right: 5px;
     padding: 0 23px 0 13px;
@@ -418,7 +418,7 @@ color: #fff;}
 	/***	font-size:67%***?
 	padding:1em;
 	margin: 0 auto;
-	background: url(../images/ui-main_bg.gif) repeat top #fff;
+	background: url(@{img_ui_main_bg_gif}) repeat top #fff;
 
  /***
 	font-size:86%;
@@ -506,7 +506,7 @@ input.time{width:6em;}
 
 /* div領域 */
 #ui-header {
-	background: url(../images/header_top.gif) repeat-x top #a69196;
+	background: url(@{img_header_top_gif}) repeat-x top #a69196;
 	color: #fff;
 	font-size: 14px;
 	width: 100%;
@@ -534,7 +534,7 @@ div.prof-tooltip{
 {
     width: 79px;
     height: 22px;
-    background: url(../images/btn-choose-file.gif) 0 0 no-repeat;
+    background: url(@{img_btn_choose_file_gif}) 0 0 no-repeat;
 
     display: block;
     overflow: hidden;

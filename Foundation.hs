@@ -145,6 +145,7 @@ instance Yesod BISocie where
     isAuthorized (HomeR uid) _ = isMyOwn uid
     isAuthorized ChangePasswordR _ = loggedInAuth
     isAuthorized HumanNetworkR _ = checkUser canViewHumannetwork
+    isAuthorized UserLocationsR _ = checkUser canViewUserLocations
     isAuthorized _ _ = loggedInAuth
 
     -- Maximum allowed length of the request body, in bytes.

@@ -23,7 +23,7 @@ $newline never
     <tbody>
       $forall issue <- issues
         $with i <- snd issue, i' <- issueBisIssue i
-          <tr bgcolor=#{colorOf $ issueStatus i'} .#{effectOf $ issueStatus i'}>
+          <tr .#{effectOf $ issueStatus i'} style="background-color:#{colorOf $ issueStatus i'}">
             <td .number>#{show $ issueNumber i'}
             <td>
               <a href=@{IssueR pid $ issueNumber i'}>

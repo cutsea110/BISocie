@@ -12,24 +12,31 @@ $newline never
   <li>
     <a href=@{CurrentScheduleR}>スケジュール
 <div #main-content>
-  <h3>プロジェクト設定
+  <h3 .project>プロジェクト設定
      <button #button-search-users .link>ユーザー検索
   <form method=post action=@{NewProjectR} .validate>
-    <dl>
-      <dt>プロジェクト名 
-        <span .alert>(必須)
-      <dd>
-        <input #name type=text name=name placeholder=(プロジェクト名) .watermark .required>
-      <dt>概要 
-        <span .alert>(必須)
-      <dd>
-        <textarea #description type=text name=description placeholder=(プロジェクト概要) .watermark .required>
-      <dt>ステータス 
-        <span .alert>(必須) 
-        <button #button-status-syntax-help type=submit .link>ヘルプ
-      <dd>
-        <textarea #statuses name=statuses placeholder=(ステータス設定) .watermark .required>#{inintstatuses}
-    <button type=submit name=_method value=create>プロジェクトを作成する
+    <p>
+      <table width="800px">
+        <tbody>
+          <tr>
+            <th .left width="160px">プロジェクト名 #
+              <span .alert>(必須) #
+            <td>
+              <input .watermark.required #name type=text name=name placeholder="(プロジェクト名)" size="100">
+          <tr>
+            <th .left>概要 #
+              <span .alert>(必須) #
+            <td>
+              <textarea .watermark.required #description name=description placeholder="(プロジェクト概要)" cols="61" rows="5">
+          <tr>
+            <th .left>ステータス #
+              <span .alert>(必須) #
+              <br>
+              <button .link #button-status-syntax-help type=submit>ヘルプ
+            <td>
+              <textarea .watermark.required #statuses name=statuses placeholder="(ステータス設定)" cols="32" rows="6">#{inintstatuses}
+    <button .common type=submit name=_method value=create>プロジェクトを作成する
+
 <div #search-users>
   <label for=search-bay-name>名前:
   <input #search-by-name type=text name=username>

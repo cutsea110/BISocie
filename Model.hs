@@ -127,11 +127,11 @@ color = do
       if (length c == 3 || length c == 6) && all isHexDigit c
         then return $ Just ("#" ++ (take 6 $ concat $ repeat c))
         else do
-        let known = lookup c [ ("赤", "#ffcccc")
-                             , ("緑", "#ccffcc")
-                             , ("青", "#ccccff")
-                             , ("灰", "#888888")
-                             , ("黄", "#ffffcc")]
+        let known = lookup c [ ("赤", "#ffb6c1")
+                             , ("緑", "#f0fff0")
+                             , ("青", "#add8e6")
+                             , ("灰", "#dedfdf")
+                             , ("黄", "#f2eeaf")]
         case known of
           Nothing -> return $ Just c
           Just k  -> return $ Just k

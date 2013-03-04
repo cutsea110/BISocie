@@ -1,47 +1,47 @@
 $with id' <- entityKey u, u' <- entityVal u
   <ul .tabs>
     <li>
-      <a .selected href=@{HomeR id'}>ホーム
+      <a .selected href=@{HomeR id'}>_{MsgHome}
     $if canCreateProject u'
       <li>
-        <a href=@{NewProjectR}>プロジェクト新規作成
+        <a href=@{NewProjectR}>_{MsgCreateNewProject}
     <li>
-      <a href=@{CrossSearchR}>クロスサーチ
+      <a href=@{CrossSearchR}>_{MsgCrossSearch}
     $if canViewHumannetwork u'
       <li>
-        <a href=@{HumanNetworkR}>ヒューマンネットワーク
+        <a href=@{HumanNetworkR}>_{MsgHumanNetwork}
     <li>
-      <a href=@{CurrentScheduleR}>スケジュール
+      <a href=@{CurrentScheduleR}>_{MsgSchedule}
 <div #main-content>
   <div .searchbox>
     <table>
-      <caption>検索条件
+      <caption>_{MsgSearchCondition}
       <tr>
         <th>
-          <label for=project_name>プロジェクト名:
+          <label for=project_name>_{MsgProjectName}:
           <input #project_name type=text name=project_name>
         <th>
-          <label for=user_ident_or_name>参加者ID or 氏名
+          <label for=user_ident_or_name>_{MsgParticipantsIdOrName}
           <input #user_ident_or_name type=text name=user_ident_or_name>
       <tr>
-        <th>
+ <th>
           <input #includeterminated type=checkbox name=includeterminated>
-          <label for=includeterminated>終了プロジェクトを含む
+          <label for=includeterminated>_{MsgIncludeTerminated}
   <table .list>
-    <caption>参加プロジェクト一覧
+    <caption>_{MsgProjectList}
     <thead>
       <tr #pagenate-top>
       <tr>
-        <th .name .sortable-header>プロジェクト名
-          <a href=# .sorter by=DescProjectName>△
-          <a href=# .sorter by=AscProjectName>▽
-        <th .desc>概要
-        <th .date .sortable-header>作成日
-          <a href=# .sorter by=DescProjectCdate> △
-          <a href=# .sorter by=AscProjectCdate> ▽
-        <th .date .sortable-header>更新日
-          <a href=# .sorter by=DescProjectUdate> △
-          <a href=# .sorter by=AscProjectUdate> ▽
+        <th .name .sortable-header>_{MsgProjectName}
+          <a href=# .sorter by=DescProjectName>_{MsgDesc}
+          <a href=# .sorter by=AscProjectName>_{MsgAsc}
+        <th .desc>_{MsgDescription}
+        <th .date .sortable-header>_{MsgCreatedDate}
+          <a href=# .sorter by=DescProjectCdate> _{MsgDesc}
+          <a href=# .sorter by=AscProjectCdate> _{MsgAsc}
+        <th .date .sortable-header>_{MsgUpdatedDate}
+          <a href=# .sorter by=DescProjectUdate> _{MsgDesc}
+          <a href=# .sorter by=AscProjectUdate> _{MsgAsc}
     <tbody #container-projects>
     <tfoot>
       <tr #pagenate-bottom>

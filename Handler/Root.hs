@@ -42,7 +42,7 @@ getHomeR :: UserId -> Handler RepHtml
 getHomeR uid = do
   u <- requireAuth
   defaultLayout $ do
-    setTitle $ preEscapedText $ userFullName (entityVal u) +++ " ホーム"
+    setTitleI $ MsgHomeOf $ entityVal u
     $(widgetFile "home")
 
 getChangePasswordR :: Handler RepHtml

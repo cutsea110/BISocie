@@ -88,12 +88,12 @@ postSystemBatchR = do
   Just fi <- lookupFile "studentscsv"
   lbs <- lift $ L.fromChunks <$> (fileSource fi $$ consume)
   let recs = filter (not . T.null) $ T.lines $ T.pack $ decodeString $ L.unpack lbs
-      idents = map (head . T.splitOn ",") recs
+      recs' = map (T.splitOn ",") recs
   runDB $ do
-    users <- selectList [UserIdent <-. idents] []
+    users <- selectList [UserIdent <-. map head recs'] []
     profs <- selectList [ProfileUser <-. map entityKey users] []
-    forM recs $ \rec -> do
-      let (ident:rawpass:email:fname:gname:eyear:gyear:_) = T.splitOn "," rec
+    forM recs' $ \rec -> do
+      let (ident:rawpass:email:fname:gname:eyear:gyear:_) = rec
           (eyear', gyear') = (Just (readText eyear), Just (readText gyear))
       uid' <- case userExist ident users of
         Nothing ->

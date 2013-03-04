@@ -186,7 +186,7 @@ function mkUser(u, ps){
 }
 
 function modifyParticipant(c){
-  var uid = c.closest('div').attr('uid'),
+  var uid = c.closest('div.user').attr('uid'),
       checked = c.attr('checked'),
       method = checked ? "add" : "del",
       mail = c.closest('div').find("img.mail");
@@ -219,7 +219,7 @@ function modifyParticipant(c){
 }
 
 function toggleSendmailParticipant(mail){
-  var uid = mail.closest('div').attr('uid'),
+  var uid = mail.closest('div.user').attr('uid'),
       method = "mod",
       sendstop = 'none';
 

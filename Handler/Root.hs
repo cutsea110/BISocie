@@ -90,8 +90,8 @@ postSystemBatchR = do
   let recs = filter (not . T.null) $ T.lines $ T.pack $ decodeString $ L.unpack lbs
       idents = map (head . T.splitOn ",") recs
   runDB $ do
-    users <- selectList [] []
-    profs <- selectList [] []
+    users <- selectList [UserIdent <-. idents] []
+    profs <- selectList [ProfileUser <-. map entityKey users] []
     forM recs $ \rec -> do
       let (ident:rawpass:email:fname:gname:eyear:gyear:_) = T.splitOn "," rec
           (eyear', gyear') = (Just (readText eyear), Just (readText gyear))

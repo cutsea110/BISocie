@@ -144,6 +144,7 @@ instance Yesod BISocie where
     isAuthorized (AuthR _) _ = return Authorized
     isAuthorized (HomeR uid) _ = isMyOwn uid
     isAuthorized ChangePasswordR _ = loggedInAuth
+    isAuthorized HumanNetworkR _ = checkUser canViewHumannetwork
     isAuthorized _ _ = loggedInAuth
 
     -- Maximum allowed length of the request body, in bytes.
@@ -166,10 +167,19 @@ loggedInAuth = fmap (maybe AuthenticationRequired $ const Authorized) maybeAuthI
 isMyOwn :: UserId -> GHandler s BISocie AuthResult
 isMyOwn uid = do
   self <- requireAuthId
-  return $ if self == uid
-           then Authorized
-           else Unauthorized "あなたはこの情報を閲覧することはできません."
-
+  if self == uid
+    then return Authorized
+    else do
+    r <- getMessageRender
+    return $ Unauthorized $ r MsgYouCannotAccessThisPage
+checkUser :: (User -> Bool) -> GHandler s BISocie AuthResult
+checkUser pred = do
+  u <- requireAuth
+  if pred $ entityVal u
+    then return Authorized
+    else do
+    r <- getMessageRender
+    return $ Unauthorized $ r MsgYouCannotAccessThisPage
 
 instance YesodBreadcrumbs BISocie where
   breadcrumb RootR = return ("", Nothing)

@@ -22,3 +22,6 @@ CreatedDate: Created date
 UpdatedDate: Updated date
 Desc: ↑
 Asc: ↓
+
+ChangePassword: Change password
+YouCannotAccessThisPage: You can't access this page.

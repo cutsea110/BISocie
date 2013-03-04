@@ -48,16 +48,14 @@ getHomeR uid = do
 getChangePasswordR :: Handler RepHtml
 getChangePasswordR = do
   defaultLayout $ do
-    setTitle "パスワード変更"
+    setTitleI MsgChangePassword
     $(widgetFile "change-pass")
     
 getHumanNetworkR :: Handler RepHtml
 getHumanNetworkR = do
-  (Entity selfid self) <- requireAuth
-  unless (canViewHumannetwork self) $ 
-    permissionDenied "あなたはヒューマンエットワークを閲覧することはできません."
+  u <- requireAuth
   defaultLayout $ do
-    setTitle "ヒューマンネットワーク"
+    setTitleI MsgHumanNetwork
     addScriptRemote "https://maps.google.com/maps/api/js?sensor=false"
     $(widgetFile "humannetwork")
 

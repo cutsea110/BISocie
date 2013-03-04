@@ -22,3 +22,6 @@ CreatedDate: 作成日
 UpdatedDate: 更新日
 Desc: ↑
 Asc: ↓
+
+ChangePassword: パスワード変更
+YouCannotAccessThisPage: あなたはこの情報を閲覧することはできません.

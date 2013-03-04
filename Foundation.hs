@@ -142,6 +142,7 @@ instance Yesod BISocie where
     authRoute _ = Just $ AuthR LoginR
 
     isAuthorized (AuthR _) _ = return Authorized
+    isAuthorized (HomeR uid) _ = isMyOwn uid
     isAuthorized _ _ = loggedInAuth
 
     -- Maximum allowed length of the request body, in bytes.
@@ -161,6 +162,12 @@ instance Yesod BISocie where
 -- Utility functions for isAuthorized
 loggedInAuth :: GHandler s BISocie AuthResult
 loggedInAuth = fmap (maybe AuthenticationRequired $ const Authorized) maybeAuthId
+isMyOwn :: UserId -> GHandler s BISocie AuthResult
+isMyOwn uid = do
+  self <- requireAuthId
+  return $ if self == uid
+           then Authorized
+           else Unauthorized "あなたはこの情報を閲覧することはできません."
 
 
 instance YesodBreadcrumbs BISocie where

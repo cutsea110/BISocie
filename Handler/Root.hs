@@ -40,10 +40,9 @@ getRootR = redirect . HomeR . entityKey =<< requireAuth
 
 getHomeR :: UserId -> Handler RepHtml
 getHomeR uid = do
-  (Entity selfid self) <- requireAuth
-  unless (selfid==uid) $ permissionDenied "他人のホームを見ることはできません."
+  u <- requireAuth
   defaultLayout $ do
-    setTitle $ preEscapedText $ userFullName self +++ " ホーム"
+    setTitle $ preEscapedText $ userFullName (entityVal u) +++ " ホーム"
     $(widgetFile "home")
 
 getChangePasswordR :: Handler RepHtml

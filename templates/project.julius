@@ -149,6 +149,7 @@ function mkUser(u, ps){
             .attr({uid: u.id, ident: u.ident, fullname: u.name, eyear: u.entryYear})
             .addClass(u.role+' user-logo'),
       i = $('<div/>').text(u.ident).hide(),
+      area = $('<div/>').addClass('avatar_area'),
       c = $('<input/>').attr({type:'checkbox'}),
       avatar = $("<img class='avatar'/>").attr({src: u.avatar}),
       s =$('<a/>').attr({href: u.uri}).html(u.name),
@@ -168,7 +169,7 @@ function mkUser(u, ps){
   }
 
   if(#{rawJS $ not (canEditProjectSetting self)})
-    return div.append(i).append(s).append(mail).append(avatar);
+    return div.append(i).append(area.append(s).append(mail).append(avatar));
 
   if (ps[u.id])c.attr('checked', true);
   c.click(function(){
@@ -181,7 +182,7 @@ function mkUser(u, ps){
     .attr({src: mail.attr('src'), receivemail: mail.attr('receivemail')});
   }).addClass('clickable');
 
-  return div.append(i).append(c).append(s).append(mail).append(avatar);
+  return div.append(i).append(area.append(c).append(s).append(mail).append(avatar));
 }
 
 function modifyParticipant(c){

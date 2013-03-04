@@ -84,12 +84,11 @@ getSystemBatchR = defaultLayout $ do
 
 postSystemBatchR :: Handler ()
 postSystemBatchR = do
-  (Entity _ self) <- requireAuth
-  unless (isAdmin self) $
-    permissionDenied "あなたはこの機能を利用することはできません."
+  r <- getMessageRender
   Just fi <- lookupFile "studentscsv"
   lbs <- lift $ L.fromChunks <$> (fileSource fi $$ consume)
   let recs = filter (not . T.null) $ T.lines $ T.pack $ decodeString $ L.unpack lbs
+      idents = map (head . T.splitOn ",") recs
   runDB $ do
     users <- selectList [] []
     profs <- selectList [] []
@@ -122,7 +121,7 @@ postSystemBatchR = do
                                            , profileGraduateYear=gyear'
                                            }
         Just (Entity pid _) -> return pid
-  setPNotify $ PNotify JqueryUI Info "Add Student" "学生を登録しました。"
+  setPNotify $ PNotify JqueryUI Info "Add Student" $ r MsgImportStudents
   redirect SystemBatchR
   where
     userExist :: Text -> [Entity User] -> Maybe (Entity User)

@@ -61,10 +61,7 @@ getHumanNetworkR = do
 
 getUserLocationsR :: Handler RepJson
 getUserLocationsR = do
-  (Entity _ self) <- requireAuth
   r <- getUrlRender
-  unless (canViewUserLocations self) $ 
-    permissionDenied "あなたはこの情報を取得することはできません."
   profs <- runDB $ do
     us <- selectList [UserRole ==. Student] []
     profs' <- selectList [ProfileUser <-. (map entityKey us)] []
@@ -76,8 +73,8 @@ getUserLocationsR = do
     go r (u, p) = 
       object [ "uri" .= r (ProfileR $ profileUser p)
              , "name" .= userFullName u
-             , "lat" .= showMaybeDouble (profileLatitude p)
-             , "lng" .= showMaybeDouble (profileLongitude p)
+             , "lat" .= profileLatitude p
+             , "lng" .= profileLongitude p
              ]
 
 getSystemBatchR :: Handler RepHtml

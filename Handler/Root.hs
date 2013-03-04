@@ -36,9 +36,7 @@ import Settings
 -- functions. You can spread them across multiple files if you are so
 -- inclined, or create a single monolithic file.
 getRootR :: Handler RepHtml
-getRootR = do
-    (Entity uid _) <- requireAuth
-    redirect $ HomeR uid
+getRootR = redirect . HomeR . entityKey =<< requireAuth
 
 getHomeR :: UserId -> Handler RepHtml
 getHomeR uid = do

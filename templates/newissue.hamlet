@@ -13,44 +13,44 @@ $newline never
   <form method=post enctype=multipart/form-data action=@{NewIssueR pid} .validate>
     $maybe parent <- mparent
       <input type=hidden name=parent value=#{parent}>
-    <table .nostyle>
+    <table width="800px">
       <tr>
-        <th>件名: 
+        <th .left width="160px">件名: 
           <span .alert>(必須)
         <td>
           <input #subject type=text name=subject placeholder=案件名... .watermark .required>
       <tr>
-        <th>内容: 
+        <th .left>内容: 
         <td>
           <textarea #content name=content placeholder=内容を書く... .watermark>
       <tr>
-        <th>アサイン:
+        <th .left>アサイン:
         <td>
           <select name=assign>
             <option selected>
             $forall p <- ptcpts
               <option value=#{show $ fst p}>#{userFullName $ snd p}
       <tr>
-        <th>ステータス:
+        <th .left>ステータス:
         <td>
           <select name=status>
             $forall s <- stss
               <option>#{fst3 s}
       <tr>
-        <th>期限:
+        <th .left>期限:
         <td>
           <input name=limitdate displayname=期限日 placeholder=yyyy-mm-dd .watermark .date cond="limittime,reminderdate" .cond-required>
           <input type=time name=limittime displayname=期限時刻 placeholder=HH:MM .watermark .time cond="limitdate,reminderdate" .cond-required>
       <tr>
-        <th>リマインダメール通知日
+        <th .left>リマインダメール通知日
         <td>
           <input name=reminderdate displayname=リマインダメール通知日 placeholder=yyyy-mm-dd .watermark .date>
       <tr>
-        <th>添付ファイル:
+        <th .left>添付ファイル:
         <td>
           <input type=file name=attached>
       <tr>
-        <th>読者確認:
+        <th .left>読者確認:
         <td>
           <input #checkreader-no type=radio name=checkreader value=no checked>
           <label for=checkreader-no>しない

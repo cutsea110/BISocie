@@ -78,12 +78,8 @@ getUserLocationsR = do
              ]
 
 getSystemBatchR :: Handler RepHtml
-getSystemBatchR = do
-  (Entity _ self) <- requireAuth
-  unless (isAdmin self) $
-    permissionDenied "あなたはこの機能を利用することはできません."
-  defaultLayout $ do
-    setTitle "システムバッチ"
+getSystemBatchR = defaultLayout $ do
+    setTitleI MsgSystemBatch
     $(widgetFile "systembatch")
 
 postSystemBatchR :: Handler ()

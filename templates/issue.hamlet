@@ -9,9 +9,9 @@ $newline never
 <div #main-content>
   $maybe parent <- mparent
     <a.parent-issue href=@{IssueR pid $ issueNumber parent}>#{show $ issueNumber parent}:#{issueSubject parent}
-  <h3>#{show ino} : #{issueSubject issue}
+  <h3 .issue>#{show ino} : #{issueSubject issue}
   <form method=post enctype=multipart/form-data action=@{CommentR pid ino} .validate>
-    <table .nostyle>
+    <table width="800px">
       <tr>
         <th>内容: 
         <td>
@@ -74,10 +74,12 @@ $newline never
           $if commentBisCheckReader c'
             <div #readers-#{cid'} .readers url=@{CommentReadersR cid}>
   $if not (null children)
-    <div #child-issues>子イシュー
-      <ul>
-        $forall child <- children
-          $with ch <- entityVal child
-            <li>
-              <a href=@{IssueR pid $ issueNumber ch}>#{issueSubject ch}
+    <div #child-issues>
+      <div .child-issues>子イシュー
+        <ul>
+          $forall child <- children
+            $with ch <- entityVal child
+              <li>
+                <a href=@{IssueR pid $ issueNumber ch}>#{issueSubject ch}
+
 <div #popup-profile>

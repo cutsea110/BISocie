@@ -12,48 +12,55 @@ $newline never
       <button #button-delete-confirm type=submit name=_method value=delete .link>このプロジェクトを削除する.
   <form method=post action=@{ProjectR pid}>
     <input type=hidden name=_method value=modify>
-    <dl>
-      <dt>プロジェクト名 
-        $if canEditProjectSetting self
-          <span .alert>(必須)
-      <dd>
-        $if canEditProjectSetting self
-          <input #name type=text name=name placeholder=(プロジェクト名) uri=@{ProjectR pid} value=#{projectName prj} .inplaceedit>
-        $else
-          #{projectName prj}
-      <dt>概要 
-        $if canEditProjectSetting self
-          <span .alert>(必須)
-      <dd>
-        $if canEditProjectSetting self
-          <textarea #description type=text name=description placeholder=(プロジェクト概要) uri=@{ProjectR pid} .inplaceedit>#{projectDescription prj}
-        $else
-          #{showMultilineText $ projectDescription prj}
-      <dt>プロジェクト状態
-        $if canEditProjectSetting self
-          <span .alert>(必須)
-      <dd>
-        $if canEditProjectSetting self
-          <input #terminated-no type=radio name=terminated value=no :not (projectTerminated prj):checked>
-          <label for=terminated-no>活動中
-          <input #terminated-yes type=radio name=terminated value=yes :projectTerminated prj:checked>
-          <label for=terminated-yes>終了
-        $else
-          #{showTerminated prj}
-      <dt>ステータス 
-        $if canEditProjectSetting self
-          <span .alert>(必須) 
-        <button #button-status-syntax-help type=submit .link>ヘルプ
-      <dd>
-        $if canEditProjectSetting self
-          <textarea #statuses name=statuses placeholder=(ステータス設定) uri=@{ProjectR pid} .inplaceedit>#{projectStatuses prj}
-        $else
-          #{showMultilineText $ projectStatuses prj}
-      <dt>参加者
-        $if canEditProjectSetting self
-          <button #button-search-users .link>参加者追加
-      <dd>
-        <div #participants>
+    <table width="800px">
+      <tbody>
+        <tr>
+          <th .left width="160px">プロジェクト名 #
+            $if canEditProjectSetting self
+              <span .alert>(必須) #
+          $if canEditProjectSetting self
+            <td>
+              <input .inplaceedit type=text #name name=name placeholder="(プロジェクト名)" uri=@{ProjectR pid} value=#{projectName prj}>
+          $else
+            #{projectName prj}
+        <tr>
+          <th .left>概要 #
+            $if canEditProjectSetting self
+              <span .alert>(必須) #
+          $if canEditProjectSetting self
+            <td>
+              <textarea .inplaceedit #description name=description placeholder="(プロジェクト概要)" uri=@{ProjectR pid}>#{projectDescription prj}
+          $else
+            #{showMultilineText $ projectDescription prj}
+        <tr>
+          <th .left>状態 #
+            $if canEditProjectSetting self
+              <span .alert>(必須) #
+          $if canEditProjectSetting self
+            <td>
+              <input type=radio #terminated-no name=terminated value=no :not (projectTerminated prj):checked>
+              <label for=terminated-no>活動中
+              <input type=radio #terminated-yes name=terminated value=yes :projectTerminated prj:checked>
+              <label for=terminated-yes>終了
+          $else
+            #{showTerminated prj}
+        <tr>
+          <th .left>ステータス #
+            $if canEditProjectSetting self
+              <span .alert>(必須) #
+              <button #button-status-syntax-help type=submit .link>ヘルプ
+          $if canEditProjectSetting self
+            <td>
+              <textarea .inplaceedit #statuses name=statuses placeholder="(ステータス設定)" uri=@{ProjectR pid}>#{projectStatuses prj}
+          $else
+            #{showMultilineText $ projectStatuses prj}
+        <tr>
+          <th .left>参加者 #
+            $if canEditProjectSetting self
+              <button #button-search-users .link>参加者追加
+          <td>
+            <div #participants>
+
 <div #search-users>
   <label for=search-bay-name>名前:
   <input #search-by-name type=text name=username>

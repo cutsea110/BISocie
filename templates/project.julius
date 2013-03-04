@@ -169,7 +169,7 @@ function mkUser(u, ps){
   }
 
   if(#{rawJS $ not (canEditProjectSetting self)})
-    return div.append(i).append(area.append(s).append(mail).append(avatar));
+    return div.append(i).append(area.append(s).append(avatar).append(mail));
 
   if (ps[u.id])c.attr('checked', true);
   c.click(function(){
@@ -182,7 +182,7 @@ function mkUser(u, ps){
     .attr({src: mail.attr('src'), receivemail: mail.attr('receivemail')});
   }).addClass('clickable');
 
-  return div.append(i).append(area.append(c).append(s).append(mail).append(avatar));
+  return div.append(i).append(area.append(c).append(s).append(avatar).append(mail));
 }
 
 function modifyParticipant(c){

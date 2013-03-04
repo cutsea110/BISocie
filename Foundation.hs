@@ -141,6 +141,9 @@ instance Yesod BISocie where
     -- The page to be redirected to when authentication is required.
     authRoute _ = Just $ AuthR LoginR
 
+    isAuthorized (AuthR _) _ = return Authorized
+    isAuthorized _ _ = loggedInAuth
+
     -- Maximum allowed length of the request body, in bytes.
     maximumContentLength _ (Just (AvatarR _))      =   2 * 1024 * 1024 --  2 megabytes for default
     maximumContentLength _ (Just (AvatarImageR _)) =   2 * 1024 * 1024 --  2 megabytes for default
@@ -154,6 +157,11 @@ instance Yesod BISocie where
     
     -- Enable Javascript async loading
 --    yepnopeJs _ = Just $ Right $ StaticR js_modernizr_js
+
+-- Utility functions for isAuthorized
+loggedInAuth :: GHandler s BISocie AuthResult
+loggedInAuth = fmap (maybe AuthenticationRequired $ const Authorized) maybeAuthId
+
 
 instance YesodBreadcrumbs BISocie where
   breadcrumb RootR = return ("", Nothing)

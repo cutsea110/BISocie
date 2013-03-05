@@ -59,7 +59,7 @@ data Effect = Impact | Strike deriving (Show, Eq)
 type Color = Text
 data ProjectBis = ProjectBis { projectBisId :: ProjectId
                              , projectBisName :: Text
-                             , projectBisDescription :: Text
+                             , projectBisDescription :: Textarea
                              , projectBisStatuses :: [(Text, Maybe Color, Maybe Effect)]
                              }
 toProjectBis :: Entity Project -> ProjectBis

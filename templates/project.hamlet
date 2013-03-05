@@ -29,9 +29,9 @@ $newline never
               <span .alert>(必須) #
           $if canEditProjectSetting self
             <td>
-              <textarea .inplaceedit #description name=description placeholder="(プロジェクト概要)" uri=@{ProjectR pid}>#{projectDescription prj}
+              <textarea .inplaceedit #description name=description placeholder="(プロジェクト概要)" uri=@{ProjectR pid}>#{unTextarea $ projectDescription prj}
           $else
-            #{showMultilineText $ projectDescription prj}
+            #{showMultilineText $ unTextarea $ projectDescription prj}
         <tr>
           <th .left>状態 #
             $if canEditProjectSetting self

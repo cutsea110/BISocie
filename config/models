@@ -54,7 +54,7 @@ Email
 
 Project
     name Text
-    description Text
+    description Textarea
     statuses Text
     issuecounter IssueNo default=0
     terminated Bool default=false

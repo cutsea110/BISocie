@@ -38,7 +38,7 @@ postNewProjectR = do
       uid <- requireAuthId
       (name, desc, sts) <- runInputPost $ (,,)
                            <$> ireq textField "name"
-                           <*> ireq textField "description"
+                           <*> ireq textareaField "description"
                            <*> ireq textField "statuses"
       now <- liftIO getCurrentTime
       pid <- runDB $ do
@@ -104,7 +104,7 @@ putProjectR pid = do
     Just ds <- case ds' of
         Nothing -> return $ Just $ projectDescription prj
         Just "" -> lift $ invalidArgs ["概要は入力必須項目です."]
-        Just ds'' -> return $ Just ds''
+        Just ds'' -> return $ Just $ Textarea ds''
     Just tm <- case tm' of
         Nothing -> return $ Just $ projectTerminated prj
         Just "no" -> return $ Just False
@@ -121,7 +121,7 @@ putProjectR pid = do
     get404 pid
   cacheSeconds 10 -- FIXME
   jsonToRepJson $ object [ "name" .= projectName prj
-                         , "description" .= projectDescription prj
+                         , "description" .= unTextarea (projectDescription prj)
                          , "terminated" .= showTerminated prj
                          , "statuses" .= projectStatuses prj
                          ]

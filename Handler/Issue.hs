@@ -127,7 +127,7 @@ getProjectListR = do
   where
     go r (Entity pid p) = object [ "pid" .= show pid
                                  , "name" .= projectName p
-                                 , "description" .= projectDescription p
+                                 , "description" .= unTextarea (projectDescription p)
                                  , "cdate" .= showDate (projectCdate p)
                                  , "udate" .= showDate (projectUdate p)
                                  , "issuelistUri" .= r (IssueListR pid)

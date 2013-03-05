@@ -47,8 +47,8 @@ Laboratory
 
 Email
     email Text
-    user UserId Maybe Update
-    verkey Text Maybe Update
+    user UserId Maybe
+    verkey Text Maybe
 
     UniqueEmail email
 

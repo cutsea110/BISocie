@@ -41,6 +41,7 @@ library
                      Handler.User
                      Handler.S3
                      Handler.Admin
+                     BISocie.Helpers.Form
                      BISocie.Helpers.Util
 
     ghc-options:   -Wall -threaded -O0

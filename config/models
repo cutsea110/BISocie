@@ -84,12 +84,12 @@ Issue
 Comment
     project ProjectId
     issue IssueId
-    automemo Text
+    automemo Textarea
     attached FileHeaderId Maybe
     cuser UserId
     cdate UTCTime default=now()
 
-    content Text Maybe
+    content Textarea Maybe
     assign UserId Maybe
     status Text
     limitdate Day Maybe

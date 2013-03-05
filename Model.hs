@@ -144,9 +144,9 @@ data IssueBis = IssueBis { issueBisId :: IssueId
                          , issueBisAssign :: Maybe User
                          }
 data CommentBis = CommentBis { commentBisId :: CommentId
-                             , commentBisContent :: Maybe Text
+                             , commentBisContent :: Maybe Textarea
                              , commentBisStatus :: Text
-                             , commentBisAutomemo :: Text
+                             , commentBisAutomemo :: Textarea
                              , commentBisAttached :: Maybe (FileHeaderId, FileHeader)
                              , commentBisCheckReader :: Bool
                              , commentBisCuser :: (UserId, User)

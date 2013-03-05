@@ -64,9 +64,9 @@ $newline never
             <label for=readThis-#{cid'}>読んだ
         <div .post-body>
           $maybe cmt <- commentBisContent c'
-            #{showMultilineText cmt}
+            #{showMultilineText $ unTextarea cmt}
           $nothing
-            <span .automemo>#{showMultilineText $ commentBisAutomemo c'}
+            <span .automemo>#{showMultilineText $ unTextarea $ commentBisAutomemo c'}
           $maybe f <- commentBisAttached c'
             <div .attached>添付ファイル: 
               <a href=@{AttachedFileR cid (fst f)}>#{fileHeaderFullname (snd f)}

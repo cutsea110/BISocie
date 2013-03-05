@@ -335,8 +335,8 @@ postNewIssueR pid = do
         <*> iopt timeField "limittime"
         <*> iopt dayField "reminderdate"
         <*> fmap (fmap readText) (iopt hiddenField "parent")
-      comment <- runInputPost $ Comment pid undefined "init." undefined selfid now
-        <$> iopt textField "content"
+      comment <- runInputPost $ Comment pid undefined undefined undefined selfid now
+        <$> iopt textareaField "content"
         <*> fmap (fmap readText) (iopt textField "assign")
         <*> ireq textField "status"
         <*> iopt dayField "limitdate"
@@ -354,7 +354,10 @@ postNewIssueR pid = do
         let ino = projectIssuecounter prj
         mfh <- storeAttachedFile selfid mfi
         iid <- insert $ issue {issueNumber=ino}
-        cid <- insert $ comment {commentIssue=iid, commentAttached=fmap fst mfh}
+        cid <- insert $ comment { commentIssue=iid
+                                , commentAttached=fmap fst mfh
+                                , commentAutomemo=Textarea "init."
+                                }
         emails <- selectMailAddresses pid
         let msgid = toMessageId iid cid now mailMessageIdDomain
             fragment = "#" +++ toPathPiece cid
@@ -381,7 +384,7 @@ postNewIssueR pid = do
                                        , "ステータス: " +++ issueStatus issue
                                        , ""
                                        ]
-                                     ++ T.lines (fromJust (commentContent comment))
+                                     ++ T.lines (unTextarea (fromJust (commentContent comment)))
                                      ++ [ ""
                                         , "*このメールに直接返信せずにこちらのページから投稿してください。"
                                         , "イシューURL: " +++ r (IssueR pid ino) +++ fragment]
@@ -455,8 +458,8 @@ postCommentR pid ino = do
     addCommentR = do
       (Entity selfid _) <- requireAuth
       now <- liftIO getCurrentTime
-      comment <- runInputPost $ Comment pid undefined "now writing..." undefined selfid now
-        <$> iopt textField "content"
+      comment <- runInputPost $ Comment pid undefined undefined undefined selfid now
+        <$> iopt textareaField "content"
         <*> fmap (fmap readText) (iopt textField "assign")
         <*> ireq textField "status"
         <*> iopt dayField "limitdate"
@@ -481,7 +484,7 @@ postCommentR pid ino = do
                           , issueAssign = commentAssign comment
                           , issueStatus = commentStatus comment
                           }
-        when (isNothing (commentContent comment) && T.null amemo) $ do
+        when (isNothing (commentContent comment) && T.null (unTextarea amemo)) $ do
           lift $ invalidArgs ["内容を入力するかイシューの状態を変更してください."]
         cid <- insert $ comment { commentIssue=iid
                                 , commentAttached=fmap fst mfh
@@ -517,7 +520,7 @@ postCommentR pid ino = do
                                        , "ステータス: " +++ issueStatus issue
                                        , ""
                                        ]
-                                     ++ T.lines (fromJust (commentContent comment))
+                                     ++ T.lines (unTextarea (fromJust (commentContent comment)))
                                      ++ [ ""
                                         , "*このメールに直接返信せずにこちらのページから投稿してください。"
                                         , "イシューURL: " +++ r (IssueR pid ino) +++ fragment]
@@ -659,4 +662,4 @@ generateAutomemo c i f = do
         then return []
         else return ["担当者を " +++ userFullName x' +++ " から " +++ 
                      userFullName y' +++ " に変更."]
-  return $ T.intercalate "\n" (st ++ as ++ lm ++ rm ++ af)
+  return $ Textarea $ T.intercalate "\n" (st ++ as ++ lm ++ rm ++ af)

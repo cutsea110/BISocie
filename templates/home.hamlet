@@ -24,7 +24,7 @@ $with id' <- entityKey u, u' <- entityVal u
           <label for=user_ident_or_name>_{MsgParticipantsIdOrName}
           <input #user_ident_or_name type=text name=user_ident_or_name>
       <tr>
- <th>
+        <th>
           <input #includeterminated type=checkbox name=includeterminated>
           <label for=includeterminated>_{MsgIncludeTerminated}
   <table .list>

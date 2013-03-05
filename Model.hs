@@ -267,7 +267,7 @@ nocare :: Comment -> Bool
 nocare = not . commentCheckReader
 
 showmaybe :: Maybe Text -> Text
-showmaybe = fromMaybe "" . fmap id
+showmaybe = fromMaybe ""
 
 showMultilineText :: Text -> Html
 showMultilineText = preEscapedText . T.intercalate "<br/>" . T.splitOn "\n"

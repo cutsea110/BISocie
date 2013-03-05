@@ -269,8 +269,8 @@ nocare = not . commentCheckReader
 showmaybe :: Maybe Text -> Text
 showmaybe = fromMaybe ""
 
-showMultilineText :: Text -> Html
-showMultilineText = preEscapedText . T.intercalate "<br/>" . T.splitOn "\n"
+showMultilineText :: Textarea -> Html
+showMultilineText = preEscapedText . T.intercalate "<br/>" . T.splitOn "\n" . unTextarea
 
 showShortenText :: Text -> Html
 showShortenText = preEscapedText . shorten 26 . safeHead . T.splitOn "\n"

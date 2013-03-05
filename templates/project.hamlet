@@ -31,7 +31,7 @@ $newline never
             <td>
               <textarea .inplaceedit #description name=description placeholder="(プロジェクト概要)" uri=@{ProjectR pid}>#{unTextarea $ projectDescription prj}
           $else
-            #{showMultilineText $ unTextarea $ projectDescription prj}
+            #{showMultilineText $ projectDescription prj}
         <tr>
           <th .left>状態 #
             $if canEditProjectSetting self
@@ -53,7 +53,7 @@ $newline never
             <td>
               <textarea .inplaceedit #statuses name=statuses placeholder="(ステータス設定)" uri=@{ProjectR pid}>#{unTextarea $ projectStatuses prj}
           $else
-            #{showMultilineText $ unTextarea $ projectStatuses prj}
+            #{showMultilineText $ projectStatuses prj}
         <tr>
           <th .left>参加者 #
             $if canEditProjectSetting self

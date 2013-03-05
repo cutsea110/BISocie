@@ -4,20 +4,18 @@
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 module Handler.Project where
 
-import Foundation
-
-import Yesod
-import Control.Monad (unless, forM_)
 import Control.Applicative ((<$>),(<*>))
+import Control.Monad (unless, forM_)
 import Data.Maybe
+import qualified Data.Text as T
 import Data.Time
+import Foundation
+import qualified Settings
+import Settings.StaticFiles
 import System.Directory
 import System.FilePath ((</>))
 import Text.Blaze.Internal (preEscapedText)
-import qualified Data.Text as T
-
-import qualified Settings
-import Settings.StaticFiles
+import Yesod
 
 getNewProjectR :: Handler RepHtml
 getNewProjectR = do

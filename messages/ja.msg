@@ -28,3 +28,11 @@ YouCannotAccessThisPage: あなたはこの情報を閲覧することはでき�
 SystemBatch: システムバッチ
 
 ImportStudents: 学生を登録しました.
+
+SendReminder i@Issue: 【リマインダメール送信】 #{issueSubject i}
+Project: プロジェクト
+Issue: 案件
+LimitDate: 期限
+CloseLimitDateOfThisIssue: この案件の期限が近づいてきました.
+NoteOnThisReminderMail: このメールに直接返信せずにこちらのページから投稿してください.
+SendingReminder: リマインダメールを送信しました.

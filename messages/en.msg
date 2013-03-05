@@ -28,3 +28,11 @@ YouCannotAccessThisPage: You can't access this page.
 SystemBatch: System batch
 
 ImportStudents: Import students
+
+SendReminder i@Issue: Send reminder mail #{issueSubject i}
+Project: Project
+Issue: Issue
+LimitDate: Limite date
+CloseLimitDateOfThisIssue: Close to this issue's limit date
+NoteOnThisReminderMail: Don't reply this mail. Please post the url below.
+SendingReminder: Sending reminder mails.

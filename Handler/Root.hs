@@ -2,32 +2,41 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
-module Handler.Root where
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
+module Handler.Root
+       ( getRootR
+       , getHomeR
+       , getChangePasswordR
+       , getHumanNetworkR
+       , getUserLocationsR
+       , getSystemBatchR
+       , postSystemBatchR
+       , getSendReminderMailR
+       ) where
 
-import Yesod
-import Yesod.Auth.Owl (setPassR)
-import Control.Applicative ((<$>))
-import Control.Arrow ((&&&),(***))
-import Control.Monad (unless, forM)
+import BISocie.Helpers.Util
+import Control.Applicative ((<$>),(<*>))
+import Control.Arrow ((&&&))
+import Control.Monad (forM)
+import Codec.Binary.UTF8.String (decodeString)
+import qualified Data.ByteString.Lazy.Char8 as L
 import Data.Conduit (($$))
 import Data.Conduit.List (consume)
 import Data.List (find)
-import qualified Data.ByteString.Lazy.Char8 as L
-import Codec.Binary.UTF8.String (decodeString)
 import Data.Text (Text)
 import qualified Data.Text as T
-import Text.Blaze.Internal (preEscapedText)
+import qualified Data.Text.Lazy.Encoding as TL
 import Data.Time (fromGregorian)
-import Network.Mail.Mime
-import qualified Data.Text.Lazy as TL
-import qualified Data.Text.Lazy.Encoding as LE
-import Network.Wai (Request(..))
-import Network.Socket (getNameInfo)
-
 import Foundation
-import BISocie.Helpers.Util
+import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
+import Text.Hamlet (shamlet)
+import Text.Shakespeare.Text (stext)
+import Network.Mail.Mime
+import Network.Socket (getNameInfo)
 import Settings.StaticFiles
 import Settings
+import Yesod
+import Yesod.Auth.Owl (setPassR)
 
 -- This is a handler function for the GET request method on the RootR
 -- resource pattern. All of your resource patterns are defined in
@@ -133,40 +142,58 @@ postSystemBatchR = do
 getSendReminderMailR :: Year -> Month -> Date -> Handler RepHtml
 getSendReminderMailR y m d = do
   let rday = fromGregorian y m d
-  r <- getUrlRender
+  (r, r') <- (,) <$> getUrlRender <*> getMessageRender
   runDB $ do
     issues <- selectList [IssueReminderdate ==. Just rday] []
-    forM issues $ \(Entity _ issue) -> do
-      let (pid, ino) = (issueProject &&& issueNumber) issue
-      prj <- get404 pid
-      emails <- selectMailAddresses $ issueProject issue
-      liftIO $ renderSendMail Mail
-        { mailFrom = fromEmailAddress
-        , mailTo = []
-        , mailCc = []
-        , mailBcc = emails
-        , mailHeaders =
-          [ ("Subject", "【リマインダメール送信】" +++ issueSubject issue)
-          , (mailXHeader, toPathPiece $ issueProject issue)
-          ]
-        , mailParts =
-            [[ Part
-               { partType = "text/plain; charset=utf-8"
-               , partEncoding = None
-               , partFilename = Nothing
-               , partHeaders = []
-               , partContent = LE.encodeUtf8 $ TL.pack $ T.unpack $ T.unlines
-                               $ [ "プロジェクト: " +++ projectName prj
-                                 , "案件: " +++ issueSubject issue
-                                 , "期限: " +++ showLimitdatetime issue
-                                 , ""
-                                 , "この案件の期限が近づいてきました。"
-                                 , ""
-                                 , "*このメールに直接返信せずにこちらのページから投稿してください。"
-                                 , "イシューURL: " +++ r (IssueR pid ino)
-                                 ]
-               }
-             ]]
-        }
-  defaultLayout [whamlet|$newline never
-Sending reminder mails|]
+    forM issues $ \issue -> do
+      sendReminder r r' $ entityVal issue
+  defaultLayout [whamlet|_{MsgSendingReminder}|]
+
+sendReminder r r' issue = do
+  let (pid, ino) = (issueProject &&& issueNumber) issue
+  prj <- get404 pid
+  liftIO . renderSendMail =<< mkMail r' prj issue (r $ IssueR pid ino)
+
+mkMail render prj issue url = do
+  bcc <- selectMailAddresses $ issueProject issue
+  return Mail { mailFrom = fromEmailAddress
+              , mailTo = []
+              , mailCc = []
+              , mailBcc = bcc
+              , mailHeaders =
+                [ ("Subject", render (MsgSendReminder issue))
+                , (mailXHeader, toPathPiece $ issueProject issue)
+                ]
+              , mailParts =
+                  [[ Part "text/plain; charset=utf-8" QuotedPrintableText Nothing []
+                     $ TL.encodeUtf8 textPart
+                   , Part "text/html; charset=utf-8" QuotedPrintableText Nothing []
+                     $ TL.encodeUtf8 htmlPart
+                   ]]
+              }
+  where
+    textPart = [stext|
+\#{render MsgProject}: #{projectName prj}
+\#{render MsgIssue}: #{issueSubject issue}
+\#{render MsgLimitDate}: #{showLimitdatetime issue}
+
+\#{render MsgCloseLimitDateOfThisIssue}
+
+* #{render MsgNoteOnThisReminderMail}
+\#{render MsgIssue} URL: #{url}
+|]
+    htmlPart = TL.decodeUtf8 $ renderHtml [shamlet|
+<p>
+  <dl>
+    <dt>#{render MsgProject}
+    <dd>#{projectName prj}
+    <dt>#{render MsgIssue}
+    <dd>#{issueSubject issue}
+    <dt>#{render MsgLimitDate}
+    <dd>#{showLimitdatetime issue}
+
+  #{render MsgCloseLimitDateOfThisIssue}
+
+<p>* #{render MsgNoteOnThisReminderMail}
+   #{render MsgIssue} URL: <a href=#{url}>#{url}</a>
+|]

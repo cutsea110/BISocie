@@ -63,7 +63,7 @@ data ProjectBis = ProjectBis { projectBisId :: ProjectId
                              , projectBisStatuses :: [(Text, Maybe Color, Maybe Effect)]
                              }
 toProjectBis :: Entity Project -> ProjectBis
-toProjectBis (Entity pid prj) = 
+toProjectBis (Entity pid prj) =
   let Right es = parseStatuses $ projectStatuses prj
   in         
    ProjectBis { projectBisId=pid
@@ -78,8 +78,8 @@ lookupStatus = find . (\x y -> x == fst3 y)
 lookupProjectBis :: ProjectId -> [ProjectBis] -> Maybe ProjectBis
 lookupProjectBis = find . (\x y -> x == projectBisId y)
 
-parseStatuses :: Text -> Either ParseError [(Text, Maybe Color, Maybe Effect)]
-parseStatuses t = 
+parseStatuses :: Textarea -> Either ParseError [(Text, Maybe Color, Maybe Effect)]
+parseStatuses (Textarea t) =
     case ps (T.unpack t) of
       Right xs -> Right $ map toText xs
       Left e -> Left e

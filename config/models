@@ -55,7 +55,7 @@ Email
 Project
     name Text
     description Textarea
-    statuses Text
+    statuses Textarea
     issuecounter IssueNo default=0
     terminated Bool default=false
     cuser UserId

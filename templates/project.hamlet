@@ -51,9 +51,9 @@ $newline never
               <button #button-status-syntax-help type=submit .link>ヘルプ
           $if canEditProjectSetting self
             <td>
-              <textarea .inplaceedit #statuses name=statuses placeholder="(ステータス設定)" uri=@{ProjectR pid}>#{projectStatuses prj}
+              <textarea .inplaceedit #statuses name=statuses placeholder="(ステータス設定)" uri=@{ProjectR pid}>#{unTextarea $ projectStatuses prj}
           $else
-            #{showMultilineText $ projectStatuses prj}
+            #{showMultilineText $ unTextarea $ projectStatuses prj}
         <tr>
           <th .left>参加者 #
             $if canEditProjectSetting self

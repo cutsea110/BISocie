@@ -39,7 +39,7 @@ postNewProjectR = do
       (name, desc, sts) <- runInputPost $ (,,)
                            <$> ireq textField "name"
                            <*> ireq textareaField "description"
-                           <*> ireq textField "statuses"
+                           <*> ireq textareaField "statuses"
       now <- liftIO getCurrentTime
       pid <- runDB $ do
         pid <- insert $ Project { projectName=name
@@ -112,7 +112,7 @@ putProjectR pid = do
     Just st <- case st' of
         Nothing -> return $ Just $ projectStatuses prj
         Just "" -> lift $ invalidArgs ["ステータスは入力必須項目です."]
-        Just st'' -> return $ Just st''
+        Just st'' -> return $ Just $ Textarea st''
     update pid [ ProjectName =. nm
                , ProjectDescription =. ds
                , ProjectTerminated =. tm
@@ -123,7 +123,7 @@ putProjectR pid = do
   jsonToRepJson $ object [ "name" .= projectName prj
                          , "description" .= unTextarea (projectDescription prj)
                          , "terminated" .= showTerminated prj
-                         , "statuses" .= projectStatuses prj
+                         , "statuses" .= unTextarea (projectStatuses prj)
                          ]
 
 deleteProjectR :: ProjectId -> Handler RepJson

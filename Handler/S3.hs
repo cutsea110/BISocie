@@ -12,20 +12,15 @@ module Handler.S3
        , upload -- Internal API
        ) where
 
-import Foundation
-
-import Yesod
-import Control.Applicative ((<$>))
+import Import
+import BISocie.Helpers.Util ((+++), encodeUrl)
+import qualified Data.ByteString.Lazy as L
 import Data.Conduit (($$))
 import Data.Conduit.List (consume)
+import qualified Data.Text as T
 import Data.Time
-import qualified Data.ByteString.Lazy as L
 import System.Directory
 import System.FilePath
-import qualified Data.Text as T
-
-import qualified Settings (s3dir)
-import BISocie.Helpers.Util ((+++), encodeUrl)
 
 getUploadR :: Handler RepHtml
 getUploadR = do
@@ -51,10 +46,10 @@ upload uid fi = do
                         , fileHeaderCreator=uid
                         , fileHeaderCreated=now
                         }
-    let s3dir = Settings.s3dir </> T.unpack (toPathPiece uid)
-        s3fp = s3dir </> T.unpack (toPathPiece fid)
+    let s3dir' = s3dir </> T.unpack (toPathPiece uid)
+        s3fp = s3dir' </> T.unpack (toPathPiece fid)
     liftIO $ do
-      createDirectoryIfMissing True s3dir
+      createDirectoryIfMissing True s3dir'
       L.writeFile s3fp lbs
     return $ Just (fid, fileName' fi, T.pack ext, fsize, now)
     else return Nothing
@@ -104,8 +99,8 @@ putUploadR = do
 getFileR :: UserId -> FileHeaderId -> Handler RepHtml
 getFileR uid fid = do
   h <- runDB $ get404 fid
-  let s3dir = Settings.s3dir </> T.unpack (toPathPiece uid)
-      s3fp = s3dir </> T.unpack (toPathPiece fid)
+  let s3dir' = s3dir </> T.unpack (toPathPiece uid)
+      s3fp = s3dir' </> T.unpack (toPathPiece fid)
   setHeader "Content-Type" $ fileHeaderContentType h
   setHeader "Content-Disposition" $ "attachment; filename=" +++ fileHeaderEfname h
   return $ RepHtml $ ContentFile s3fp Nothing
@@ -127,8 +122,8 @@ deleteFileR uid fid = do
     else do
     r <- getUrlRender
     runDB $ delete fid
-    let s3dir = Settings.s3dir </> T.unpack (toPathPiece uid)
-        s3fp = s3dir </> T.unpack (toPathPiece fid)
+    let s3dir' = s3dir </> T.unpack (toPathPiece uid)
+        s3fp = s3dir' </> T.unpack (toPathPiece fid)
         rf = r $ FileR uid fid
     liftIO $ removeFile s3fp
     fmap RepXml $ hamletToContent

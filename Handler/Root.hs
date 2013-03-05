@@ -14,8 +14,8 @@ module Handler.Root
        , getSendReminderMailR
        ) where
 
+import Import
 import BISocie.Helpers.Util
-import Control.Applicative ((<$>),(<*>))
 import Control.Arrow ((&&&))
 import Control.Monad (forM)
 import Codec.Binary.UTF8.String (decodeString)
@@ -23,19 +23,14 @@ import qualified Data.ByteString.Lazy.Char8 as L
 import Data.Conduit (($$))
 import Data.Conduit.List (consume)
 import Data.List (find)
-import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as TL
 import Data.Time (fromGregorian)
-import Foundation
 import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
 import Text.Hamlet (shamlet)
 import Text.Shakespeare.Text (stext)
 import Network.Mail.Mime
 import Network.Socket (getNameInfo)
-import Settings.StaticFiles
-import Settings
-import Yesod
 import Yesod.Auth.Owl (setPassR)
 
 -- This is a handler function for the GET request method on the RootR

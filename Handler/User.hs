@@ -1,14 +1,11 @@
 {-# LANGUAGE TemplateHaskell, OverloadedStrings #-}
 module Handler.User where
 
-import Yesod
-import Control.Monad (unless, forM, mplus, join)
-import Control.Applicative ((<$>),(<*>))
-import Data.Text (isInfixOf)
-import Data.Maybe (isNothing)
-
-import Foundation
+import Import
 import BISocie.Helpers.Util
+import Control.Monad (forM, mplus, join)
+import Data.Maybe (isNothing)
+import Data.Text (isInfixOf)
 
 getUserListR :: Handler RepJson
 getUserListR = do

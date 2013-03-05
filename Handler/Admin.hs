@@ -1,13 +1,10 @@
 {-# LANGUAGE TemplateHaskell, QuasiQuotes, OverloadedStrings #-}
 module Handler.Admin where
 
-import Foundation
+import Import
 import BISocie.Helpers.Util
-
-import Yesod
-import qualified Data.Text as T
-import Control.Applicative ((<$>),(<*>))
 import Control.Monad (unless)
+import qualified Data.Text as T
 
 getUsersR :: Handler RepHtml
 getUsersR = do

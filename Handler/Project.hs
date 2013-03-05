@@ -4,19 +4,14 @@
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 module Handler.Project where
 
-import Control.Applicative ((<$>),(<*>))
+import Import
 import Control.Monad (unless, forM_)
 import Data.Maybe
-import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time
-import Foundation
-import qualified Settings
-import Settings.StaticFiles
 import System.Directory
 import System.FilePath ((</>))
 import Text.Blaze.Internal (preEscapedText)
-import Yesod
 import Yesod.Auth (requireAuthId)
 
 getNewProjectR :: Handler RepHtml
@@ -25,7 +20,7 @@ getNewProjectR = do
   now <- liftIO getCurrentTime
   let inintstatuses = "!未着手#赤\n着手#緑\n完了#灰\n=却下#灰\n保留\n議論\n報告" :: Text
       (y,_,_) = toGregorian $ utctDay now
-      eyears = [Settings.entryStartYear..y+5]
+      eyears = [entryStartYear..y+5]
       help = $(widgetFile "help")
   defaultLayout $ do
     setTitleI MsgCreateNewProject
@@ -69,7 +64,7 @@ getProjectR pid = do
   (Entity selfid self) <- requireAuth
   now <- liftIO getCurrentTime
   let (y,_,_) = toGregorian $ utctDay now
-      eyears = [Settings.entryStartYear..y+5]
+      eyears = [entryStartYear..y+5]
       help = $(widgetFile "help")
   prj <- runDB $ do 
     p <- getBy $ UniqueParticipants pid selfid
@@ -150,8 +145,8 @@ deleteProjectR pid = do
       forM_ fids $ \(Just fid) -> do 
         f <- get404 fid
         let uid = fileHeaderCreator f
-            s3dir = Settings.s3dir </> T.unpack (toPathPiece uid)
-            s3fp = s3dir </> T.unpack (toPathPiece fid)
+            s3dir' = s3dir </> T.unpack (toPathPiece uid)
+            s3fp = s3dir' </> T.unpack (toPathPiece fid)
         delete fid
         liftIO $ removeFile s3fp
       -- delete issues

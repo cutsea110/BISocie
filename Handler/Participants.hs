@@ -2,14 +2,12 @@
 {-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
 module Handler.Participants where
 
-import Yesod
+import Import
+import BISocie.Helpers.Util
 import Control.Monad (unless, when, forM)
 import Data.Maybe
 import Data.Time
 import qualified Data.Text as T
-
-import Foundation
-import BISocie.Helpers.Util
 
 getParticipantsListR :: ProjectId -> Handler RepJson
 getParticipantsListR pid = do

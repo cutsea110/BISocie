@@ -4,19 +4,12 @@
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 module Handler.Profile where
 
-import Foundation
-
-import Settings (entryStartYear, graduateStartYear)
-import Settings.StaticFiles
-import Handler.S3
-
-import Prelude hiding (zip)
-import Yesod
+import Import
 import Control.Monad
-import Control.Applicative
 import Data.Time
 import Data.Maybe (fromMaybe, fromJust)
-import Data.Text (Text)
+import Handler.S3
+import Settings (entryStartYear, graduateStartYear)
 
 getProfileR :: UserId -> Handler RepHtml
 getProfileR uid = do

@@ -8,27 +8,20 @@
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 module Handler.Issue where
 
-import Foundation
-
-import Yesod
-import Control.Applicative ((<$>),(<*>))
+import Import
+import BISocie.Helpers.Util
 import Control.Monad (when, unless, forM, liftM2)
 import Data.List (intercalate, intersperse, nub, groupBy)
 import Data.Time
 import Data.Time.Calendar.WeekDate
 import Data.Tuple.HT
 import Data.Maybe (fromMaybe, fromJust, isJust, isNothing)
-import Network.Mail.Mime
 import qualified Data.Text.Lazy as L
 import qualified Data.Text.Lazy.Encoding as LE
 import qualified Data.Text as T
-import Data.Text (Text)
-import Text.Blaze.Internal (preEscapedText)
-
-import BISocie.Helpers.Util
-import Settings (mailXHeader, mailMessageIdDomain, fromEmailAddress, issueListLimit, fillGapWidth, pagenateWidth, projectListLimit)
-import Settings.StaticFiles
 import Handler.S3
+import Network.Mail.Mime
+import Text.Blaze.Internal (preEscapedText)
 
 getCurrentScheduleR :: Handler RepHtml
 getCurrentScheduleR = do

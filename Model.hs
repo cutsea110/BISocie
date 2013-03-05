@@ -19,7 +19,6 @@ import Data.Int
 import Data.Time
 import Data.Maybe (fromMaybe, maybeToList)
 import Data.List (find)
-import Data.Tuple.HT (fst3)
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec as P (string)
 import Data.Text (Text)

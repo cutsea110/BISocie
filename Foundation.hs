@@ -19,6 +19,7 @@ module Foundation
     , module Model
     , module Yesod.Goodies.PNotify
     , RawJS(..)
+    , Form
     ) where
 
 import qualified Database.Persist.Store

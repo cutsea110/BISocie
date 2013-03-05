@@ -5,11 +5,15 @@ module BISocie.Helpers.Util
        , readText
        , encodeUrl
        , decodeUrl
+       , fst3
+       , snd3
+       , thd3
        ) where
 
 import Codec.Binary.UTF8.String (encodeString, decodeString)
 import Data.Text (Text)
 import qualified Data.Text as T
+import Data.Tuple.HT (fst3, snd3, thd3)
 import Network.HTTP.Base (urlEncode, urlDecode)
 
 (+++) :: Text -> Text -> Text

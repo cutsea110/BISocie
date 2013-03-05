@@ -14,7 +14,6 @@ import Control.Monad (when, unless, forM, liftM2)
 import Data.List (intercalate, intersperse, nub, groupBy)
 import Data.Time
 import Data.Time.Calendar.WeekDate
-import Data.Tuple.HT
 import Data.Maybe (fromMaybe, fromJust, isJust, isNothing)
 import qualified Data.Text.Lazy as L
 import qualified Data.Text.Lazy.Encoding as LE

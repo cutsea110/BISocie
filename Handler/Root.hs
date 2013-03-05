@@ -30,7 +30,6 @@ import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
 import Text.Hamlet (shamlet)
 import Text.Shakespeare.Text (stext)
 import Network.Mail.Mime
-import Network.Socket (getNameInfo)
 import Yesod.Auth.Owl (setPassR)
 
 -- This is a handler function for the GET request method on the RootR

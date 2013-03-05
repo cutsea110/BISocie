@@ -17,6 +17,7 @@ import System.Directory
 import System.FilePath ((</>))
 import Text.Blaze.Internal (preEscapedText)
 import Yesod
+import Yesod.Auth (requireAuthId)
 
 getNewProjectR :: Handler RepHtml
 getNewProjectR = do
@@ -39,9 +40,7 @@ postNewProjectR = do
   where
     createProject :: Handler RepHtml
     createProject = do
-      (Entity selfid self) <- requireAuth
-      unless (canCreateProject self) $ 
-        permissionDenied "あなたはプロジェクトを作成することはできません."
+      uid <- requireAuthId
       (name, desc, sts) <- runInputPost $ (,,)
                            <$> ireq textField "name"
                            <*> ireq textField "description"
@@ -53,12 +52,12 @@ postNewProjectR = do
                                 , projectDescription=desc
                                 , projectStatuses=sts
                                 , projectTerminated=False
-                                , projectCuser=selfid
+                                , projectCuser=uid
                                 , projectCdate=now
                                 , projectUdate=now
                                 }
-        _ <- insert $ Participants { participantsProject=pid 
-                                   , participantsUser=selfid 
+        _ <- insert $ Participants { participantsProject=pid
+                                   , participantsUser=uid
                                    , participantsReceivemail=True
                                    , participantsCdate=now
                                    }

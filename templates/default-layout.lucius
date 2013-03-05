@@ -671,7 +671,7 @@ img.avatar {
 }
 div.user-logo {
   width:110px;
-  height:110px;
+  height:140px;
   margin:0.5em;
 }
 div.user-logo a {

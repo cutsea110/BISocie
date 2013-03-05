@@ -7,6 +7,7 @@ module Handler.Root where
 import Yesod
 import Yesod.Auth.Owl (setPassR)
 import Control.Applicative ((<$>))
+import Control.Arrow ((&&&),(***))
 import Control.Monad (unless, forM)
 import Data.Conduit (($$))
 import Data.Conduit.List (consume)
@@ -133,16 +134,10 @@ getSendReminderMailR :: Year -> Month -> Date -> Handler RepHtml
 getSendReminderMailR y m d = do
   let rday = fromGregorian y m d
   r <- getUrlRender
-  req <- fmap reqWaiRequest getRequest
-  let rhost = remoteHost req
-  (Just rhostname, _) <- liftIO $ getNameInfo [] True True rhost
-  unless (rhostname == "localhost") $
-    permissionDenied "あなたはこの機能を利用することはできません."
   runDB $ do
     issues <- selectList [IssueReminderdate ==. Just rday] []
     forM issues $ \(Entity _ issue) -> do
-      let pid = issueProject issue
-          ino = issueNumber issue
+      let (pid, ino) = (issueProject &&& issueNumber) issue
       prj <- get404 pid
       emails <- selectMailAddresses $ issueProject issue
       liftIO $ renderSendMail Mail

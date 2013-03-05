@@ -21,6 +21,20 @@ module Foundation
     , RawJS(..)
     ) where
 
+import qualified Database.Persist.Store
+import Database.Persist.GenericSql
+import Model
+import Network.HTTP.Conduit (Manager)
+import Network.Wai (Request(..))
+import Network.Socket (getNameInfo)
+import qualified Settings
+import Settings (widgetFile, Extra (..))
+import Text.Jasmine (minifym)
+import Text.Julius (RawJS(..))
+import Text.Hamlet (hamletFile)
+import Text.Lucius (luciusFile)
+import Text.Julius (juliusFile)
+import Web.ClientSession (getKey)
 import Yesod
 import Yesod.Static
 import Yesod.Auth
@@ -28,20 +42,8 @@ import Yesod.Auth.Owl
 import Yesod.Auth.GoogleEmail
 import Yesod.Default.Config
 import Yesod.Default.Util (addStaticContentExternal)
-import Yesod.Goodies.PNotify
-import Network.HTTP.Conduit (Manager)
-import qualified Settings
-import qualified Database.Persist.Store
-import Database.Persist.GenericSql
-import Settings (widgetFile, Extra (..))
-import Model
-import Text.Jasmine (minifym)
-import Text.Julius (RawJS(..))
-import Web.ClientSession (getKey)
-import Text.Hamlet (hamletFile)
-import Text.Lucius (luciusFile)
-import Text.Julius (juliusFile)
 import Yesod.Form.Jquery
+import Yesod.Goodies.PNotify
 
 import Settings.StaticFiles
 import BISocie.Helpers.Util
@@ -147,6 +149,7 @@ instance Yesod BISocie where
     isAuthorized HumanNetworkR _ = checkUser canViewHumannetwork
     isAuthorized UserLocationsR _ = checkUser canViewUserLocations
     isAuthorized SystemBatchR _ = checkUser isAdmin
+    isAuthorized (SendReminderMailR _ _ _) _ = reqFromLocalhost
     isAuthorized _ _ = loggedInAuth
 
     -- Maximum allowed length of the request body, in bytes.
@@ -178,6 +181,15 @@ checkUser :: (User -> Bool) -> GHandler s BISocie AuthResult
 checkUser pred = do
   u <- requireAuth
   if pred $ entityVal u
+    then return Authorized
+    else do
+    r <- getMessageRender
+    return $ Unauthorized $ r MsgYouCannotAccessThisPage
+reqFromLocalhost :: GHandler s BISocie AuthResult
+reqFromLocalhost = do
+  req <- fmap reqWaiRequest getRequest
+  (Just rhostname, _) <- liftIO $ getNameInfo [] True True $ remoteHost req
+  if rhostname == "localhost"
     then return Authorized
     else do
     r <- getMessageRender

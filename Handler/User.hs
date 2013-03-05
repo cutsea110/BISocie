@@ -12,10 +12,7 @@ import BISocie.Helpers.Util
 
 getUserListR :: Handler RepJson
 getUserListR = do
-  (Entity _ self) <- requireAuth
   r <- getUrlRender
-  unless (canSearchUser self) $ 
-    permissionDenied "あなたは他のユーザを検索することはできません."
   (mn, mey, mt, mstf, ma) <- runInputGet $ (,,,,)
                             <$> iopt textField "name_like"
                             <*> fmap (fmap readText) (iopt textField "entry_year")
@@ -41,7 +38,7 @@ getUserListR = do
              , "name" .= userFullName u
              , "role" .= show (userRole u)
              , "prettyrole" .= userRoleName u
-             , "entryYear" .= showmaybe (fmap (showEntryYear.entityVal) mp)
+             , "entryYear" .= fmap (showEntryYear.entityVal) mp
              , "avatar" .= r ra
              ]
     toRoles (t,ey,s,a) = foldr (mplus.q2r) (q2r ey) [t, s, a]

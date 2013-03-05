@@ -7,6 +7,7 @@ module Handler.Project where
 import Control.Applicative ((<$>),(<*>))
 import Control.Monad (unless, forM_)
 import Data.Maybe
+import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time
 import Foundation
@@ -19,16 +20,14 @@ import Yesod
 
 getNewProjectR :: Handler RepHtml
 getNewProjectR = do
-  (Entity selfid self) <- requireAuth
-  unless (canCreateProject self) $ 
-    permissionDenied "あなたはプロジェクトを作成することはできません."
+  u <- requireAuth
   now <- liftIO getCurrentTime
-  let inintstatuses = "!未着手#赤\n着手#緑\n完了#灰\n=却下#灰\n保留\n議論\n報告" :: String
+  let inintstatuses = "!未着手#赤\n着手#緑\n完了#灰\n=却下#灰\n保留\n議論\n報告" :: Text
       (y,_,_) = toGregorian $ utctDay now
       eyears = [Settings.entryStartYear..y+5]
       help = $(widgetFile "help")
   defaultLayout $ do
-    setTitle "プロジェクト新規作成"
+    setTitleI MsgCreateNewProject
     $(widgetFile "newproject")
     
 postNewProjectR :: Handler RepHtml

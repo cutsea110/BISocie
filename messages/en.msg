@@ -36,3 +36,21 @@ LimitDate: Limite date
 CloseLimitDateOfThisIssue: Close to this issue's limit date
 NoteOnThisReminderMail: Don't reply this mail. Please post the url below.
 SendingReminder: Sending reminder mails.
+
+ProjectSetting: Project setting
+SearchUser: Search user
+
+Required: (Req)
+ProjectDescription: Project description
+Status: Status
+Help: Help
+StatusSetting: Status setting
+CreateProject: Create new project
+
+Name: Name
+EntryYear: Entry year
+Teacher: Teacher
+Staff: Staff
+Admin: Admin
+Student: Student
+Search: Search

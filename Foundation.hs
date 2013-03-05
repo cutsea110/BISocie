@@ -150,6 +150,7 @@ instance Yesod BISocie where
     isAuthorized UserLocationsR _ = checkUser canViewUserLocations
     isAuthorized SystemBatchR _ = checkUser isAdmin
     isAuthorized (SendReminderMailR _ _ _) _ = reqFromLocalhost
+    isAuthorized NewProjectR _ = checkUser canCreateProject
     isAuthorized _ _ = loggedInAuth
 
     -- Maximum allowed length of the request body, in bytes.

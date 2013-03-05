@@ -36,3 +36,21 @@ LimitDate: 期限
 CloseLimitDateOfThisIssue: この案件の期限が近づいてきました.
 NoteOnThisReminderMail: このメールに直接返信せずにこちらのページから投稿してください.
 SendingReminder: リマインダメールを送信しました.
+
+ProjectSetting: プロジェクト設定
+SearchUser: ユーザ検索
+
+Required: (必須)
+ProjectDescription: プロジェクト概要
+Status: ステータス
+Help: ヘルプ
+StatusSetting: ステータス設定
+CreateProject: プロジェクトを作成する
+
+Name: 名前
+EntryYear: 入学年度
+Teacher: 教員
+Staff: 職員
+Admin: 管理者
+Student: 学生
+Search: 検索

@@ -145,7 +145,7 @@ putProfileR uid = do
       lab <- runInputPost $ Laboratory uid
         <$> iopt textField "roomnumber"
         <*> iopt textField "extensionnumber"
-        <*> iopt textField "courses"
+        <*> iopt textareaField "courses"
       runDB $ do
         -- update user
         update uid [UserEmail =. em, UserFamilyName =. fn, UserGivenName =. gn]

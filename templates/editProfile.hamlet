@@ -49,7 +49,7 @@ $newline never
         <tr>
           <th>担当科目
           <td colspan=3>
-            <textarea placeholder=関数プログラミング概論 name=courses .watermark>#{showmaybe $ laboratoryCourses lab}
+            <textarea placeholder=関数プログラミング概論 name=courses .watermark>#{showmaybe $ fmap unTextarea $ laboratoryCourses lab}
       $maybe prof <- mprof
         <tr>
           <th>生年月日 

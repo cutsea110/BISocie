@@ -39,7 +39,7 @@ $newline never
         <td colspan=3>#{showmaybe $ laboratoryExtensionNumber lab}
       <tr>
         <th>担当科目
-        <td colspan=3>#{showMultilineText $ showmaybe $ laboratoryCourses lab}
+        <td colspan=3>#{showMultilineText $ showmaybe $ fmap unTextarea $ laboratoryCourses lab}
     $if canView self user
       $maybe prof <- mprof
         <tr>

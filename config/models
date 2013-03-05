@@ -41,7 +41,7 @@ Laboratory
     headResearcher UserId
     roomNumber Text Maybe
     extensionNumber Text Maybe
-    courses Text Maybe
+    courses Textarea Maybe
 
     UniqueLaboratory headResearcher
 

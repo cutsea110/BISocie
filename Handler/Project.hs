@@ -82,7 +82,6 @@ postProjectR pid = do
 
 putProjectR :: ProjectId -> Handler RepJson
 putProjectR pid = do
-  (Entity selfid self) <- requireAuth
   nm' <- lookupPostParam "name"
   ds' <- lookupPostParam "description"
   tm' <- lookupPostParam "terminated"
@@ -122,9 +121,9 @@ putProjectR pid = do
 
 deleteProjectR :: ProjectId -> Handler RepJson
 deleteProjectR pid = do
-  (Entity selfid self) <- requireAuth
+  u <- requireAuth
   deleted <- runDB $ do
-    if isAdmin self
+    if isAdmin (entityVal u)
       then do
       -- delete participants
       deleteWhere [ParticipantsProject ==. pid]
@@ -156,4 +155,4 @@ deleteProjectR pid = do
   cacheSeconds 10 -- FIXME
   if deleted
     then jsonToRepJson $ object ["deleted" .= show pid]
-    else jsonToRepJson $ object ["error" .= ("このプロジェクトは削除できませんでした." :: T.Text)]
+    else jsonToRepJson $ object ["error" .= ("このプロジェクトは削除できませんでした." :: Text)]

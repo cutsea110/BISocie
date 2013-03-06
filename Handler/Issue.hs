@@ -517,13 +517,7 @@ postCommentR pid ino = do
         
 getAttachedFileR :: CommentId -> FileHeaderId -> Handler RepHtml
 getAttachedFileR cid fid = do
-  (Entity selfid self) <- requireAuth
-  f <- runDB $ do
-    c <- get404 cid
-    p <- getBy $ UniqueParticipants (commentProject c) selfid
-    unless (isJust p || isAdmin self) $
-      lift $ permissionDenied "あなたはこのファイルをダウンロードできません."
-    get404 fid
+  f <- runDB $ get404 fid
   getFileR (fileHeaderCreator f) fid
   
 postReadCommentR :: CommentId -> Handler RepJson

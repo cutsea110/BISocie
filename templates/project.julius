@@ -6,7 +6,7 @@ $(document).ready(function(){
     buttons: {
       '閉じる': function(){
         $(this).dialog('close');
-        location.href='@{HomeR selfid}';
+        location.href='@{HomeR uid}';
       }
     }
   });
@@ -63,7 +63,7 @@ $(document).ready(function(){
     buttons: {
       '閉じる': function(){
         $(this).dialog('close');
-        location.href='@{HomeR selfid}';
+        location.href='@{HomeR uid}';
       }
     }
   });
@@ -201,7 +201,7 @@ function modifyParticipant(c){
           break;
         case 'deleted':
           mail.attr({src: '@{StaticR img_mail_checked_png}', receivemail: 'none'});
-          if (json.participants.user == '#{rawJS $ show selfid}') {
+          if (json.participants.user == '#{rawJS $ show uid}') {
             $('#release-self-participate').dialog('open');
           }
           break;

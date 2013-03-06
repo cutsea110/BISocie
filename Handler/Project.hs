@@ -62,7 +62,7 @@ postNewProjectR = do
 
 getProjectR :: ProjectId -> Handler RepHtml
 getProjectR pid = do
-  (Entity selfid self) <- requireAuth
+  uid <- requireAuthId
   now <- liftIO getCurrentTime
   let (y,_,_) = toGregorian $ utctDay now
       eyears = [entryStartYear..y+5]

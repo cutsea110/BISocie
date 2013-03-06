@@ -442,9 +442,9 @@ postCommentR pid ino = do
     
   where
     addCommentR = do
-      (Entity selfid _) <- requireAuth
+      uid <- requireAuthId
       now <- liftIO getCurrentTime
-      comment <- runInputPost $ Comment pid undefined undefined undefined selfid now
+      comment <- runInputPost $ Comment pid undefined undefined undefined uid now
         <$> iopt textareaField "content"
         <*> fmap (fmap readText) (iopt textField "assign")
         <*> ireq textField "status"
@@ -454,15 +454,12 @@ postCommentR pid ino = do
         <*> ireq boolField "checkreader"
       mfi <- lookupFile "attached"
       runDB $ do
-        p <- getBy $ UniqueParticipants pid selfid
-        unless (isJust p) $ 
-          lift $ permissionDenied "あなたはこのプロジェクトに投稿することはできません."
         r <- lift getUrlRender
         (Entity iid issue) <- getBy404 $ UniqueIssue pid ino
         Just (Entity lastCid lastC) <- selectFirst [CommentIssue ==. iid] [Desc CommentCdate]
-        mfh <- storeAttachedFile selfid mfi
+        mfh <- storeAttachedFile uid mfi
         amemo <- generateAutomemo comment issue mfh
-        replace iid issue { issueUuser = selfid
+        replace iid issue { issueUuser = uid
                           , issueUdate = now
                           , issueLimitdate = commentLimitdate comment
                           , issueLimittime = commentLimittime comment

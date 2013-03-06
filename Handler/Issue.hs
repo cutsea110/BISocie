@@ -189,11 +189,11 @@ getCrossSearchR = do
 
 postCrossSearchR :: Handler RepJson
 postCrossSearchR = do
-  u <- requireAuth
-  r <- getUrlRender
-  ps <- fmap (fmap readText) $ lookupPostParams "projectid"
-  ss <- lookupPostParams "status"
-  as <- fmap (fmap (Just . readText)) $ lookupPostParams "assign"
+  (u, r) <- (,) <$> requireAuth <*> getUrlRender
+  (ps, ss, as) <- 
+    (,,) <$> fmap (fmap readText) (lookupPostParams "projectid")
+    <*> lookupPostParams "status"
+    <*> fmap (fmap (Just . readText)) (lookupPostParams "assign")
   (lf, lt) <- uncurry (liftM2 (,))
               (fmap (fmap (Just . readText)) $ lookupPostParam "limitdatefrom",
                fmap (fmap (Just . addDays 1 . readText)) $ lookupPostParam "limitdateto")
@@ -320,9 +320,8 @@ postNewIssueR pid = do
     
   where
     addIssueR = do
-      uid <- requireAuthId
-      now <- liftIO getCurrentTime
-      r <- getUrlRender
+      (uid, r, now) <- 
+        (,,) <$> requireAuthId <*> getUrlRender <*> liftIO getCurrentTime
       issue <- runInputPost $ Issue pid undefined uid now uid now
         <$> ireq textField "subject"
         <*> fmap (fmap readText) (iopt textField "assign")
@@ -350,15 +349,15 @@ postNewIssueR pid = do
                                 , commentAttached=fmap fst mfh
                                 , commentAutomemo=Textarea "init."
                                 }
-        emails <- selectMailAddresses pid
+        bcc <- selectMailAddresses pid
         let msgid = toMessageId iid cid now mailMessageIdDomain
             fragment = "#" +++ toPathPiece cid
-        when (isJust (commentContent comment) && not (null emails)) $
+        when (isJust (commentContent comment) && not (null bcc)) $
           liftIO $ renderSendMail Mail
             { mailFrom = fromEmailAddress
             , mailTo = []
             , mailCc = []
-            , mailBcc = emails
+            , mailBcc = bcc
             , mailHeaders =
                  [ ("Subject", issueSubject issue)
                  , ("Message-ID", msgid)

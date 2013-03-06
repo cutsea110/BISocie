@@ -388,12 +388,9 @@ postNewIssueR pid = do
 
 getIssueR :: ProjectId -> IssueNo -> Handler RepHtml
 getIssueR pid ino = do
-  (Entity selfid self) <- requireAuth
+  selfid <- requireAuthId
   (prj, ptcpts, iid, issue, comments, mparent, children) <- 
     runDB $ do
-      p <- getBy $ UniqueParticipants pid selfid
-      unless (isJust p || isAdmin self) $ 
-        lift $ permissionDenied "あなたはこの案件を閲覧することはできません."
       (Entity iid issue) <- getBy404 $ UniqueIssue pid ino
       cs <- selectList [CommentIssue ==. iid] [Desc CommentCdate]
       comments <- forM cs $ \(Entity cid c) -> do

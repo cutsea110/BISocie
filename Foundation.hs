@@ -153,7 +153,20 @@ instance Yesod BISocie where
     isAuthorized SystemBatchR _ = checkUser isAdmin
     isAuthorized (SendReminderMailR _ _ _) _ = reqFromLocalhost
     isAuthorized NewProjectR _ = checkUser canCreateProject
-    isAuthorized (ProjectR pid) _ = isParticipant pid
+    isAuthorized (ProjectR pid) _ = isParticipant' pid
+    isAuthorized CurrentScheduleR _ = loggedInAuth
+    isAuthorized (ScheduleR _ _) _ = loggedInAuth
+    isAuthorized (TaskR _ _ _) _ = loggedInAuth
+    isAuthorized ProjectListR _ = loggedInAuth
+    isAuthorized AssignListR _ = loggedInAuth
+    isAuthorized StatusListR _ = loggedInAuth
+    isAuthorized CrossSearchR _ = loggedInAuth
+    isAuthorized (IssueListR pid) _ = isParticipant' pid
+    isAuthorized (NewIssueR pid) _ = isParticipant pid
+    isAuthorized (IssueR pid _) _ = isParticipant' pid
+    isAuthorized (CommentR pid _) _ = isParticipant pid
+    isAuthorized (AttachedFileR cid _) _ = canReadComment cid
+    isAuthorized (CommentReadersR cid) _ = canReadComment cid
     isAuthorized _ _ = loggedInAuth
 
     -- Maximum allowed length of the request body, in bytes.
@@ -198,11 +211,35 @@ reqFromLocalhost = do
     else do
     r <- getMessageRender
     return $ Unauthorized $ r MsgYouCannotAccessThisPage
+
 isParticipant :: ProjectId -> GHandler s BISocie AuthResult
 isParticipant pid = do
   u <- requireAuth
   mp <- runDB $ getBy $ UniqueParticipants pid (entityKey u)
+  if isJust mp
+    then return Authorized
+    else do
+    r <- getMessageRender
+    return $ Unauthorized $ r MsgYouCannotAccessThisPage
+
+isParticipant' :: ProjectId -> GHandler s BISocie AuthResult
+isParticipant' pid = do
+  u <- requireAuth
+  mp <- runDB $ getBy $ UniqueParticipants pid (entityKey u)
   if isJust mp || isAdmin (entityVal u)
+    then return Authorized
+    else do
+    r <- getMessageRender
+    return $ Unauthorized $ r MsgYouCannotAccessThisPage
+
+canReadComment :: CommentId -> GHandler s BISocie AuthResult
+canReadComment cid = do
+  u <- requireAuth
+  b <- runDB $ do
+    c <- get404 cid
+    mp <- getBy $ UniqueParticipants (commentProject c) (entityKey u)
+    return $ isJust mp || isAdmin (entityVal u)
+  if b
     then return Authorized
     else do
     r <- getMessageRender

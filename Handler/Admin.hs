@@ -8,9 +8,6 @@ import qualified Data.Text as T
 
 getUsersR :: Handler RepHtml
 getUsersR = do
-  (Entity _ self) <- requireAuth
-  unless (isAdmin self) $
-    permissionDenied "あなたはこのページにアクセスできません."
   users <- runDB $ selectList [] [Asc UserIdent]
   defaultLayout $(whamletFile "templates/users.hamlet")
 

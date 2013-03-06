@@ -154,13 +154,13 @@ getAssignListR = do
 
 getStatusListR :: Handler RepJson
 getStatusListR = do
-  (Entity selfid self) <- requireAuth
+  u <- requireAuth
   pids <- fmap (fmap readText) $ lookupGetParams "projectid"
   stss <- runDB $ do
-    prjs <- if isAdmin self
+    prjs <- if isAdmin (entityVal u)
             then selectList [ProjectId <-. pids] []
             else do
-              ps <- selectList [ParticipantsUser ==. selfid, ParticipantsProject <-. pids] []
+              ps <- selectList [ParticipantsUser ==. entityKey u, ParticipantsProject <-. pids] []
               selectList [ProjectId <-. (map (participantsProject.entityVal) ps)] []
     return $ nub $ concatMap (\(Entity _ prj) -> 
                                let (Right es) = parseStatuses $ projectStatuses prj 

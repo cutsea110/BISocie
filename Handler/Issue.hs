@@ -317,9 +317,10 @@ postNewIssueR pid = do
     
   where
     addIssueR = do
-      (Entity selfid _) <- requireAuth
+      uid <- requireAuthId
       now <- liftIO getCurrentTime
-      issue <- runInputPost $ Issue pid undefined selfid now selfid now
+      r <- getUrlRender
+      issue <- runInputPost $ Issue pid undefined uid now uid now
         <$> ireq textField "subject"
         <*> fmap (fmap readText) (iopt textField "assign")
         <*> ireq textField "status"
@@ -327,7 +328,7 @@ postNewIssueR pid = do
         <*> iopt timeField "limittime"
         <*> iopt dayField "reminderdate"
         <*> fmap (fmap readText) (iopt hiddenField "parent")
-      comment <- runInputPost $ Comment pid undefined undefined undefined selfid now
+      comment <- runInputPost $ Comment pid undefined undefined undefined uid now
         <$> iopt textareaField "content"
         <*> fmap (fmap readText) (iopt textField "assign")
         <*> ireq textField "status"
@@ -337,14 +338,10 @@ postNewIssueR pid = do
         <*> ireq boolField "checkreader"
       mfi <- lookupFile "attached"
       ino <- runDB $ do
-        p <- getBy $ UniqueParticipants pid selfid
-        unless (isJust p) $ 
-          lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
-        r <- lift getUrlRender
         update pid [ProjectIssuecounter +=. 1, ProjectUdate =. now]
         prj <- get404 pid
         let ino = projectIssuecounter prj
-        mfh <- storeAttachedFile selfid mfi
+        mfh <- storeAttachedFile uid mfi
         iid <- insert $ issue {issueNumber=ino}
         cid <- insert $ comment { commentIssue=iid
                                 , commentAttached=fmap fst mfh

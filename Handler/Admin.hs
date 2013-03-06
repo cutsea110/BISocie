@@ -41,9 +41,6 @@ postUserR uid = do
 
 getNewUserR :: Handler RepHtml
 getNewUserR = do
-  (Entity _ self) <- requireAuth
-  unless (isAdmin self) $
-    permissionDenied "あなたはこのページを参照できません."
   let toInt = (+1) . fromEnum
   defaultLayout $(whamletFile "templates/newUser.hamlet")
   where

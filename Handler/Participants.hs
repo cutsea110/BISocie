@@ -8,6 +8,8 @@ import Control.Monad (unless, when, forM)
 import Data.Maybe
 import Data.Time
 import qualified Data.Text as T
+import Data.Text (Text)
+import Yesod.Auth (requireAuthId)
 
 getParticipantsListR :: ProjectId -> Handler RepJson
 getParticipantsListR pid = do
@@ -45,57 +47,43 @@ postParticipantsR pid = do
   where
     addParticipants :: UserId -> Handler RepJson
     addParticipants uid = do
-      (Entity selfid self) <- requireAuth
       now <- liftIO getCurrentTime
-      runDB $ do
-        p <- getBy $ UniqueParticipants pid selfid
-        unless (isJust p) $ 
-          lift $ permissionDenied "あなたはこのプロジェクトの参加者を編集できません."
-        insert $ Participants pid uid True now
+      runDB $ insert $ Participants pid uid True now
       cacheSeconds 10 -- FIXME
       jsonToRepJson $ object ["participants" .= object
                               [ "project" .= show pid
                               , "user" .= show uid
-                              , "status" .= ("added" :: T.Text)
+                              , "status" .= ("added" :: Text)
                               ]
                              ]
-
     delParticipants :: UserId -> Handler RepJson
     delParticipants uid = do
-      (Entity selfid self) <- requireAuth
+      uid' <- requireAuthId
       runDB $ do
-        p <- getBy $ UniqueParticipants pid selfid
-        unless (isJust p) $ 
-          lift $ permissionDenied "あなたはこのプロジェクトの参加者を編集できません."
         c <- count [ParticipantsProject ==. pid, ParticipantsUser !=. uid]
-        when (selfid==uid && c==0) $ 
+        when (uid'==uid && c==0) $ 
           lift $ permissionDenied "他に参加者が居ないため削除することはできません."
         deleteBy $ UniqueParticipants pid uid
       cacheSeconds 10 -- FIXME
       jsonToRepJson $ object ["participants" .= object
                               [ "project" .= show pid
                               , "user" .= show uid
-                              , "status" .= ("deleted" :: T.Text)
+                              , "status" .= ("deleted" :: Text)
                               ]
                              ]
     modParticipants :: UserId -> Handler RepJson
     modParticipants uid = do
-      (Entity selfid self) <- requireAuth
       mmail <- lookupPostParam "mail"
-      sendMail <- runDB $ do
-        p <- getBy $ UniqueParticipants pid selfid
-        unless (isJust p) $
-          lift $ permissionDenied "あなたはこのプロジェクトの参加者を編集できません."
+      send'stop <- runDB $ do
         (Entity ptcptid _) <- getBy404 $ UniqueParticipants pid uid
         case mmail of
-          Just "send" -> update ptcptid [ParticipantsReceivemail =. True] >> return True
-          Just "stop" -> update ptcptid [ParticipantsReceivemail =. False] >> return False
+          Just x -> update ptcptid [ParticipantsReceivemail =. (x == "send")] >> return x
           _           -> lift $ invalidArgs ["The possible values of 'mail' is send,stop."]
       cacheSeconds 10 -- FIXME
       jsonToRepJson $ object ["participants" .= object
                               [ "project" .= show pid
                               , "user" .= show uid
-                              , "status" .= ("modified" :: T.Text)
-                              , "mail" .= if sendMail then "send" else ("stop" :: T.Text)
+                              , "status" .= ("modified" :: Text)
+                              , "mail" .= send'stop
                               ]
                              ]

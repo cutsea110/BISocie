@@ -168,6 +168,7 @@ instance Yesod BISocie where
     isAuthorized (AttachedFileR cid _) _ = canReadComment cid
     isAuthorized (CommentReadersR cid) _ = canReadComment cid
     isAuthorized (ParticipantsListR pid) _ = isParticipant' pid
+    isAuthorized (ParticipantsR pid) _ = isParticipant pid
     isAuthorized _ _ = loggedInAuth
 
     -- Maximum allowed length of the request body, in bytes.

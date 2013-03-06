@@ -11,6 +11,7 @@ module Handler.Issue where
 import Import
 import BISocie.Helpers.Util
 import Control.Monad (when, unless, forM, liftM2)
+import Data.Function (on)
 import Data.List (intercalate, intersperse, nub, groupBy)
 import Data.Time
 import Data.Time.Calendar.WeekDate
@@ -37,7 +38,7 @@ getScheduleR y m = do
   u <- requireAuth
   today <- liftIO $ fmap utctDay getCurrentTime
   let days = map (map (\(y,w,d) -> let day = fromWeekDate y w d in (day, classOf day d today)))
-             $ groupBy (\d1 d2 -> snd3 d1 == snd3 d2)
+             $ groupBy ((==) `on` snd3)
              $ map toWeekDate [fromWeekDate fy fm 1 .. fromWeekDate ly lm 7]
   defaultLayout $ do
     setTitle $ preEscapedText $ showText y +++ "年" +++ showText m +++ "月のスケジュール"

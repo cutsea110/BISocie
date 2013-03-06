@@ -36,17 +36,17 @@ getScheduleR :: Year -> Month -> Handler RepHtml
 getScheduleR y m = do
   u <- requireAuth
   today <- liftIO $ fmap utctDay getCurrentTime
-  let fday = fromGregorian y m 1
-      lday = fromGregorian y m $ gregorianMonthLength y m
-      (fy, fm, _) = toWeekDate fday
-      (ly, lm, _) = toWeekDate lday
-      days = map (map (\(y,w,d) -> let day = fromWeekDate y w d in (day, classOf day d today)))
+  let days = map (map (\(y,w,d) -> let day = fromWeekDate y w d in (day, classOf day d today)))
              $ groupBy (\d1 d2 -> snd3 d1 == snd3 d2)
              $ map toWeekDate [fromWeekDate fy fm 1 .. fromWeekDate ly lm 7]
   defaultLayout $ do
     setTitle $ preEscapedText $ showText y +++ "年" +++ showText m +++ "月のスケジュール"
     $(widgetFile "schedule")
   where
+    fday = fromGregorian y m 1
+    lday = fromGregorian y m $ gregorianMonthLength y m
+    (fy, fm, _) = toWeekDate fday
+    (ly, lm, _) = toWeekDate lday
     classOf :: Day -> Int -> Day -> String
     classOf day d today = intercalate " " 
                           $ ["schedule-day-cell", toWeekName d] 

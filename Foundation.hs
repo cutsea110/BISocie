@@ -174,6 +174,10 @@ instance Yesod BISocie where
     isAuthorized (AvatarImageR _) _ = loggedInAuth
     isAuthorized (AvatarR uid) _ = canEditUser uid
     isAuthorized UserListR _ = loggedInAuth
+    isAuthorized UsersR _ = checkUser isAdmin
+    isAuthorized (UserR _) _ = checkUser isAdmin
+    isAuthorized NewUserR _ = checkUser isAdmin
+    isAuthorized (DeleteUserR _) _ = checkUser isAdmin
     isAuthorized _ _ = loggedInAuth
 
     -- Maximum allowed length of the request body, in bytes.

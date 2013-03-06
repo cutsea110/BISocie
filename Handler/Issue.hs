@@ -522,26 +522,22 @@ getAttachedFileR cid fid = do
   
 postReadCommentR :: CommentId -> Handler RepJson
 postReadCommentR cid = do
-  (Entity selfid self) <- requireAuth
+  (Entity uid u) <- requireAuth
   r <- getUrlRender
   _method <- lookupPostParam "_method"
   ret <- runDB $ do
     cmt <- get404 cid
-    let pid = commentProject cmt
-    p <- getBy $ UniqueParticipants pid selfid
-    unless (isJust p) $
-      lift $ permissionDenied "あなたはこのプロジェクトに参加していません."
     case _method of
       Just "add" -> do    
-        mr <- getBy $ UniqueReader cid selfid
+        mr <- getBy $ UniqueReader cid uid
         case mr of
           Just _ -> return "added"
           Nothing -> do
             now <- liftIO getCurrentTime
-            _ <- insert $ Reader cid selfid now
+            _ <- insert $ Reader cid uid now
             return "added"
       Just "delete" -> do 
-        deleteBy $ UniqueReader cid selfid
+        deleteBy $ UniqueReader cid uid
         return "deleted"
       _ -> lift $ invalidArgs ["The possible values of '_method' is add or delete"]
   cacheSeconds 10 -- FIXME
@@ -549,11 +545,11 @@ postReadCommentR cid = do
                          , "read" .=
                            object [ "comment" .= show cid
                                   , "reader" .=
-                                    object [ "id" .= show selfid
-                                           , "ident" .= userIdent self
-                                           , "name" .= userFullName self
-                                           , "uri" .= r (ProfileR selfid)
-                                           , "avatar" .= r (AvatarImageR selfid)
+                                    object [ "id" .= show uid
+                                           , "ident" .= userIdent u
+                                           , "name" .= userFullName u
+                                           , "uri" .= r (ProfileR uid)
+                                           , "avatar" .= r (AvatarImageR uid)
                                            ]
                                   ]
                          ]

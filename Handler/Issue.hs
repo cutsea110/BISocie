@@ -136,13 +136,13 @@ getProjectListR = do
 
 getAssignListR :: Handler RepJson
 getAssignListR = do
-  (Entity selfid self) <- requireAuth
+  u <- requireAuth
   pids <- fmap (fmap readText) $ lookupGetParams "projectid"
   users <- runDB $ do
-    ps <- if isAdmin self
+    ps <- if isAdmin (entityVal u)
           then selectList [ParticipantsProject <-. pids] []
           else do
-            ps' <- selectList [ParticipantsUser ==. selfid, ParticipantsProject <-. pids] []
+            ps' <- selectList [ParticipantsUser ==. entityKey u, ParticipantsProject <-. pids] []
             selectList [ParticipantsProject <-. (map (participantsProject.entityVal) ps')] []
     selectList [UserId <-. (map (participantsUser.entityVal) ps)] []
   cacheSeconds 10 -- FIXME

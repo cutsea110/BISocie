@@ -169,6 +169,8 @@ instance Yesod BISocie where
     isAuthorized (CommentReadersR cid) _ = canReadComment cid
     isAuthorized (ParticipantsListR pid) _ = isParticipant' pid
     isAuthorized (ParticipantsR pid) _ = isParticipant pid
+    isAuthorized (ProfileR uid) True = canEditUser uid
+    isAuthorized (ProfileR _) False = loggedInAuth
     isAuthorized _ _ = loggedInAuth
 
     -- Maximum allowed length of the request body, in bytes.
@@ -246,6 +248,16 @@ canReadComment cid = do
     else do
     r <- getMessageRender
     return $ Unauthorized $ r MsgYouCannotAccessThisPage
+
+canEditUser :: UserId -> GHandler s BISocie AuthResult
+canEditUser uid = do
+  u' <- requireAuth
+  u <- runDB $ get404 uid
+  if entityVal u' `canEdit` u
+    then return Authorized
+    else do
+    r <- getMessageRender
+    return $ Unauthorized $ r MsgYouCannotEditThisData
 
 instance YesodBreadcrumbs BISocie where
   breadcrumb RootR = return ("", Nothing)

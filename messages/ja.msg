@@ -25,6 +25,7 @@ Asc: ↓
 
 ChangePassword: パスワード変更
 YouCannotAccessThisPage: あなたはこの情報を閲覧することはできません.
+YouCannotEditThisData: あなたはこの情報を編集することはできません.
 SystemBatch: システムバッチ
 
 ImportStudents: 学生を登録しました.

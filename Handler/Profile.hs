@@ -116,10 +116,7 @@ postProfileR uid = do
 
 putProfileR :: UserId -> Handler RepHtml
 putProfileR uid = do
-  (Entity _ self) <- requireAuth
   user <- runDB $ get404 uid
-  unless (self `canEdit` user) $ 
-    permissionDenied "あなたはこのユーザプロファイルを編集することはできません."
   case userRole user of
     Student -> putStudentProf
     Teacher -> putTeacherProf

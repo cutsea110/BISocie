@@ -25,6 +25,7 @@ Asc: ↓
 
 ChangePassword: Change password
 YouCannotAccessThisPage: You can't access this page.
+YouCannotEditThisData: You can't edit this data.
 SystemBatch: System batch
 
 ImportStudents: Import students

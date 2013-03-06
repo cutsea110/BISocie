@@ -21,6 +21,7 @@ import qualified Data.Text as T
 import Handler.S3
 import Network.Mail.Mime
 import Text.Blaze.Internal (preEscapedText)
+import Yesod.Auth (requireAuthId)
 
 getCurrentScheduleR :: Handler RepHtml
 getCurrentScheduleR = do
@@ -71,11 +72,11 @@ getScheduleR y m = do
     
 getTaskR :: Year -> Month -> Date -> Handler RepJson
 getTaskR y m d = do
-  (Entity selfid _) <- requireAuth
+  uid <- requireAuthId
   r <- getUrlRender
   let day = fromGregorian y m d
   issues <- runDB $ do
-    ptcpts <- selectList [ParticipantsUser ==. selfid] []
+    ptcpts <- selectList [ParticipantsUser ==. uid] []
     let pids = map (participantsProject.entityVal) ptcpts
     selectList [IssueLimitdate ==. Just day, IssueProject <-. pids ] [Asc IssueLimittime]
   jsonToRepJson $ object ["tasks" .= array (map (go r) issues)]

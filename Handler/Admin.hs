@@ -64,9 +64,6 @@ postNewUserR = do
 
 getDeleteUserR :: UserId -> Handler RepHtml
 getDeleteUserR uid = do
-  (Entity _ self) <- requireAuth
-  unless (isAdmin self) $
-    permissionDenied "あなたはこのページを参照できません."
   user <- runDB $ get404 uid
   defaultLayout $(whamletFile "templates/deleteUser.hamlet")
 

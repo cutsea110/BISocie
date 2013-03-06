@@ -199,14 +199,10 @@ getAvatarImageR uid = do
 
 postAvatarR :: UserId -> Handler RepJson
 postAvatarR uid = do
-  (Entity _ self) <- requireAuth
   r <- getUrlRender
   mfhid <- lookupPostParam "avatar"
   let avatar = fmap (fromJust . fromPathPiece) mfhid
   runDB $ do
-    user <- get404 uid
-    unless (self `canEdit` user) $
-      lift $ permissionDenied "あなたはこのユーザのアバターを変更することはできません."
     update uid [UserAvatar =. avatar]
   cacheSeconds 10 -- FIXME
   jsonToRepJson $ object [ "uri" .= r (AvatarImageR uid)

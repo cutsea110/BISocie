@@ -23,9 +23,6 @@ getUserR uid = do
 
 postUserR :: UserId -> Handler ()
 postUserR uid = do
-  (Entity _ self) <- requireAuth
-  unless (isAdmin self) $
-    permissionDenied "あなたはこのページを参照できません."
   new <- runInputPost $ User
          <$> ireq textField "ident"
          <*> iopt passwordField "password"

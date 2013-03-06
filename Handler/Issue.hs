@@ -298,12 +298,8 @@ getIssueListR pid = do
 
 getNewIssueR :: ProjectId -> Handler RepHtml
 getNewIssueR pid = do
-  (Entity selfid self) <- requireAuth
   mparent <- lookupGetParam "parent"
   (ptcpts, stss, prj) <- runDB $ do
-    p <- getBy $ UniqueParticipants pid selfid
-    unless (isJust p) $ 
-      lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
     prj <- get404 pid
     ptcpts <- selectParticipants pid
     let (Right stss) = parseStatuses $ projectStatuses prj

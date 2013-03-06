@@ -250,13 +250,9 @@ postCrossSearchR = do
                 
 getIssueListR :: ProjectId -> Handler RepHtml
 getIssueListR pid = do
-  (Entity selfid self) <- requireAuth
   page' <- lookupGetParam "page"
   let page = max 0 $ fromMaybe 0  $ fmap readText $ page'
   (alliis, issues'', prj, es) <- runDB $ do
-    p <- getBy $ UniqueParticipants pid selfid
-    unless (isJust p || isAdmin self) $ 
-      lift $ permissionDenied "あなたはこのプロジェクトの参加者ではありません."
     prj' <- get404 pid
     let (Right es) = parseStatuses $ projectStatuses prj'
         prj = ProjectBis { projectBisId=pid

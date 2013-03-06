@@ -171,6 +171,7 @@ instance Yesod BISocie where
     isAuthorized (ParticipantsR pid) _ = isParticipant pid
     isAuthorized (ProfileR uid) True = canEditUser uid
     isAuthorized (ProfileR _) False = loggedInAuth
+    isAuthorized (AvatarImageR _) _ = loggedInAuth
     isAuthorized _ _ = loggedInAuth
 
     -- Maximum allowed length of the request body, in bytes.

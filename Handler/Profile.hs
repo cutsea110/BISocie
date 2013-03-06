@@ -188,7 +188,6 @@ putProfileR uid = do
     
 getAvatarImageR :: UserId -> Handler RepHtml
 getAvatarImageR uid = do
-  _ <- requireAuth
   (fid, f) <- runDB $ do
     u <- get404 uid
     case userAvatar u of

@@ -22,6 +22,7 @@ module Foundation
     , Form
     ) where
 
+import Data.Maybe (isJust)
 import qualified Database.Persist.Store
 import Database.Persist.GenericSql
 import Model
@@ -152,6 +153,7 @@ instance Yesod BISocie where
     isAuthorized SystemBatchR _ = checkUser isAdmin
     isAuthorized (SendReminderMailR _ _ _) _ = reqFromLocalhost
     isAuthorized NewProjectR _ = checkUser canCreateProject
+    isAuthorized (ProjectR pid) _ = isParticipant pid
     isAuthorized _ _ = loggedInAuth
 
     -- Maximum allowed length of the request body, in bytes.
@@ -192,6 +194,15 @@ reqFromLocalhost = do
   req <- fmap reqWaiRequest getRequest
   (Just rhostname, _) <- liftIO $ getNameInfo [] True True $ remoteHost req
   if rhostname == "localhost"
+    then return Authorized
+    else do
+    r <- getMessageRender
+    return $ Unauthorized $ r MsgYouCannotAccessThisPage
+isParticipant :: ProjectId -> GHandler s BISocie AuthResult
+isParticipant pid = do
+  u <- requireAuth
+  mp <- runDB $ getBy $ UniqueParticipants pid (entityKey u)
+  if isJust mp || isAdmin (entityVal u)
     then return Authorized
     else do
     r <- getMessageRender

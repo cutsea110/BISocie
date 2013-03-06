@@ -329,9 +329,6 @@ canViewHumannetwork u =
     Staff -> True
     Student -> False
 
-canEditProjectSetting :: User -> Bool
-canEditProjectSetting _ = True
-
 canViewUserLocations :: User -> Bool
 canViewUserLocations u =
   case userRole u of

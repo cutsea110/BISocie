@@ -53,7 +53,7 @@ postParticipantsR pid = do
       now <- liftIO getCurrentTime
       runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
-        unless (isJust p && canEditProjectSetting self) $ 
+        unless (isJust p) $ 
           lift $ permissionDenied "あなたはこのプロジェクトの参加者を編集できません."
         insert $ Participants pid uid True now
       cacheSeconds 10 -- FIXME
@@ -69,7 +69,7 @@ postParticipantsR pid = do
       (Entity selfid self) <- requireAuth
       runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
-        unless (isJust p && canEditProjectSetting self) $ 
+        unless (isJust p) $ 
           lift $ permissionDenied "あなたはこのプロジェクトの参加者を編集できません."
         c <- count [ParticipantsProject ==. pid, ParticipantsUser !=. uid]
         when (selfid==uid && c==0) $ 
@@ -88,7 +88,7 @@ postParticipantsR pid = do
       mmail <- lookupPostParam "mail"
       sendMail <- runDB $ do
         p <- getBy $ UniqueParticipants pid selfid
-        unless (isJust p && canEditProjectSetting self) $
+        unless (isJust p) $
           lift $ permissionDenied "あなたはこのプロジェクトの参加者を編集できません."
         (Entity ptcptid _) <- getBy404 $ UniqueParticipants pid uid
         case mmail of

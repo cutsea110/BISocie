@@ -67,11 +67,7 @@ getProjectR pid = do
   let (y,_,_) = toGregorian $ utctDay now
       eyears = [entryStartYear..y+5]
       help = $(widgetFile "help")
-  prj <- runDB $ do 
-    p <- getBy $ UniqueParticipants pid selfid
-    unless (isJust p || isAdmin self) $ 
-      lift $ permissionDenied "あなたはこのプロジェクトの参加者ではありません."
-    get404 pid
+  prj <- runDB $ get404 pid
   defaultLayout $ do
     setTitle $ preEscapedText $ projectName prj
     $(widgetFile "project")
@@ -94,9 +90,6 @@ putProjectR pid = do
   now <- liftIO getCurrentTime
 
   prj <- runDB $ do
-    p <- getBy $ UniqueParticipants pid selfid
-    unless (isJust p && canEditProjectSetting self) $ 
-      lift $ permissionDenied "あなたはこのプロジェクトの設定を編集できません."
     prj <- get404 pid
     Just nm <- case nm' of
         Nothing -> return $ Just $ projectName prj
@@ -131,9 +124,6 @@ deleteProjectR :: ProjectId -> Handler RepJson
 deleteProjectR pid = do
   (Entity selfid self) <- requireAuth
   deleted <- runDB $ do
-    p <- getBy $ UniqueParticipants pid selfid
-    unless ((isJust p || isAdmin self) && canEditProjectSetting self) $ 
-      lift $ permissionDenied "あなたはこのプロジェクトを削除することはできません."
     if isAdmin self
       then do
       -- delete participants

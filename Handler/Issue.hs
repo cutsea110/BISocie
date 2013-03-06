@@ -25,8 +25,8 @@ import Yesod.Auth (requireAuthId)
 
 getCurrentScheduleR :: Handler RepHtml
 getCurrentScheduleR = do
-  now <- liftIO getCurrentTime
-  let (y, m, _) = toGregorian $ utctDay now
+  today <- liftIO $ fmap utctDay getCurrentTime
+  let (y, m, _) = toGregorian today
   redirect $ ScheduleR y m
   
 data WeekDay = Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sunday
@@ -35,9 +35,8 @@ data WeekDay = Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sun
 getScheduleR :: Year -> Month -> Handler RepHtml
 getScheduleR y m = do
   u <- requireAuth
-  now <- liftIO getCurrentTime
-  let today = utctDay now
-      fday = fromGregorian y m 1
+  today <- liftIO $ fmap utctDay getCurrentTime
+  let fday = fromGregorian y m 1
       lday = fromGregorian y m $ gregorianMonthLength y m
       (fy, fm, _) = toWeekDate fday
       (ly, lm, _) = toWeekDate lday

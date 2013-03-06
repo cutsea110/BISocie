@@ -556,14 +556,9 @@ postReadCommentR cid = do
 
 getCommentReadersR :: CommentId -> Handler RepJson
 getCommentReadersR cid = do
-  (Entity selfid self) <- requireAuth
   r <- getUrlRender
   readers <- runDB $ do
     cmt <- get404 cid
-    let pid = commentProject cmt
-    p <- getBy $ UniqueParticipants pid selfid
-    unless (isJust p || isAdmin self) $
-      lift $ permissionDenied "あなたはこのプロジェクトに参加していません."
     rds' <- selectList [ReaderComment ==. cid] [Asc ReaderCheckdate]
     forM rds' $ \(Entity _ rd') -> do
       let uid' = readerReader rd'

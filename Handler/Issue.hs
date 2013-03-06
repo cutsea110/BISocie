@@ -93,14 +93,14 @@ getTaskR y m d = do
 
 getProjectListR :: Handler RepJson
 getProjectListR = do
-  u <- requireAuth
-  r <- getUrlRender
-  includeTerminated <- fmap isJust $ lookupGetParam "includeterminated"
-  project_name <- lookupGetParam "project_name"
-  user_ident_or_name <- lookupGetParam "user_ident_or_name"
+  (u, r) <- (,) <$> requireAuth <*> getUrlRender
+  (includeTerminated, project_name, user_ident_or_name, mpage, ordName) <-
+    (,,,,) <$> fmap isJust (lookupGetParam "includeterminated")
+    <*> lookupGetParam "project_name"
+    <*> lookupGetParam "user_ident_or_name"
+    <*> fmap (fmap readText) (lookupGetParam "page")
+    <*> fmap (fromMaybe "DescProjectUdate") (lookupGetParam "order")
   let tf = if includeTerminated then [] else [ProjectTerminated ==. False]
-  mpage <- fmap (fmap readText) $ lookupGetParam "page"
-  ordName <- fmap (fromMaybe "DescProjectUdate") $ lookupGetParam "order"
   let order = [textToOrder ordName]
   prjs' <- runDB $ do
     pats <- case user_ident_or_name of

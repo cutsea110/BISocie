@@ -69,8 +69,5 @@ getDeleteUserR uid = do
 
 postDeleteUserR :: UserId -> Handler ()
 postDeleteUserR uid = do
-  (Entity _ self) <- requireAuth
-  unless (isAdmin self) $
-    permissionDenied "あなたはこのページを参照できません."
   runDB $ delete uid
   redirect UsersR

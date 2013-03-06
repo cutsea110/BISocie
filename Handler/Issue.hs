@@ -170,13 +170,13 @@ getStatusListR = do
 
 getCrossSearchR :: Handler RepHtml
 getCrossSearchR = do
-  (Entity selfid self) <- requireAuth
+  u <- requireAuth
   prjs <- runDB $ do
     -- 初回GETなので終了プロジェクトは除外.
-    prjs' <- if isAdmin self
+    prjs' <- if isAdmin (entityVal u)
              then selectList [ProjectTerminated ==. False] []
              else do
-               ps <- selectList [ParticipantsUser ==. selfid] []
+               ps <- selectList [ParticipantsUser ==. entityKey u] []
                selectList [ ProjectTerminated ==. False
                           , ProjectId <-. (map (participantsProject.entityVal) ps)] []
     return $ map toProjectBis prjs'

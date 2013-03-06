@@ -186,7 +186,7 @@ getCrossSearchR = do
 
 postCrossSearchR :: Handler RepJson
 postCrossSearchR = do
-  (Entity selfid self) <- requireAuth
+  u <- requireAuth
   r <- getUrlRender
   ps <- fmap (fmap readText) $ lookupPostParams "projectid"
   ss <- lookupPostParams "status"
@@ -199,10 +199,10 @@ postCrossSearchR = do
                fmap (fmap (localDayToUTC . addDays 1 . readText)) $ lookupPostParam "updatedto")
   page <- fmap (max 0 . fromMaybe 0 . fmap readText) $ lookupPostParam "page"
   issues <- runDB $ do
-    prjs <- if isAdmin self
+    prjs <- if isAdmin (entityVal u)
             then selectList [ProjectId <-. ps] []
             else do
-              ps' <- selectList [ParticipantsUser ==. selfid, ParticipantsProject <-. ps] []
+              ps' <- selectList [ParticipantsUser ==. entityKey u, ParticipantsProject <-. ps] []
               selectList [ProjectId <-. (map (participantsProject.entityVal) ps')] []
     let (pS, sS, aS) = (toInFilter (IssueProject <-.) $ map entityKey prjs,
                         toInFilter (IssueStatus <-.) ss, 

@@ -33,7 +33,7 @@ data WeekDay = Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sun
 
 getScheduleR :: Year -> Month -> Handler RepHtml
 getScheduleR y m = do
-  (Entity selfid self) <- requireAuth
+  u <- requireAuth
   now <- liftIO getCurrentTime
   let today = utctDay now
       fday = fromGregorian y m 1

@@ -90,7 +90,7 @@ getTaskR y m d = do
 
 getProjectListR :: Handler RepJson
 getProjectListR = do
-  (Entity selfid self) <- requireAuth
+  u <- requireAuth
   r <- getUrlRender
   includeTerminated <- fmap isJust $ lookupGetParam "includeterminated"
   project_name <- lookupGetParam "project_name"
@@ -107,10 +107,10 @@ getProjectListR = do
         let uids = map entityKey $ filter (userIdentOrName q.entityVal) users
         selectList [ParticipantsUser <-. uids] []
     let pf = [ProjectId <-. map (participantsProject.entityVal) pats]
-    if isAdmin self
+    if isAdmin (entityVal u)
       then selectList (tf++pf) order
       else do
-      ps <- selectList [ParticipantsUser ==. selfid] []
+      ps <- selectList [ParticipantsUser ==. entityKey u] []
       selectList (tf ++ pf ++ [ProjectId <-. (map (participantsProject.entityVal) ps)]) order
   let allprjs = case project_name of
         Just pn -> filter (T.isInfixOf pn . projectName . entityVal) prjs'

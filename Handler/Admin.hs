@@ -13,9 +13,6 @@ getUsersR = do
 
 getUserR :: UserId -> Handler RepHtml
 getUserR uid = do
-  (Entity _ self) <- requireAuth
-  unless (isAdmin self) $
-    permissionDenied "あなたはこのページを参照できません."
   user <- runDB $ get404 uid
   let roleIs r = r == userRole user
       toInt = (+1) . fromEnum

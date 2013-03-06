@@ -73,12 +73,14 @@ getScheduleR y m = do
     
 getTaskR :: Year -> Month -> Date -> Handler RepJson
 getTaskR y m d = do
-  uid <- requireAuthId
-  r <- getUrlRender
+  (uid, r) <- (,) <$> requireAuthId <*> getUrlRender
   issues <- runDB $ do
     ptcpts <- selectList [ParticipantsUser ==. uid] []
-    let pids = map (participantsProject.entityVal) ptcpts
-    selectList [IssueLimitdate ==. Just day, IssueProject <-. pids ] [Asc IssueLimittime]
+    selectList
+      [ IssueLimitdate ==. Just day
+      , IssueProject <-. map (participantsProject.entityVal) ptcpts
+      ] 
+      [Asc IssueLimittime]
   jsonToRepJson $ object ["tasks" .= array (map (go r) issues)]
   where
     day = fromGregorian y m d

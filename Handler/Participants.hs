@@ -11,12 +11,8 @@ import qualified Data.Text as T
 
 getParticipantsListR :: ProjectId -> Handler RepJson
 getParticipantsListR pid = do
-  (Entity selfid self) <- requireAuth
   r <- getUrlRender
   us <- runDB $ do
-    p <- getBy $ UniqueParticipants pid selfid
-    unless (isJust p || isAdmin self) $ 
-      lift $ permissionDenied "あなたはこのプロジェクトに参加していません."
     ps' <- selectList [ParticipantsProject ==. pid] [Asc ParticipantsCdate]
     forM ps' $ \(Entity _ p') -> do
       let uid' = participantsUser p'

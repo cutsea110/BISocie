@@ -48,9 +48,6 @@ getNewUserR = do
 
 postNewUserR :: Handler ()
 postNewUserR = do
-  (Entity _ self) <- requireAuth
-  unless (isAdmin self) $
-    permissionDenied "あなたはこのページを参照できません."
   new <- runInputPost $ User
          <$> ireq textField "ident"
          <*> iopt passwordField "password"

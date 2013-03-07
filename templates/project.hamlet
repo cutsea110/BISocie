@@ -15,7 +15,7 @@ $newline never
     <table width="800px">
       <tbody>
         <tr>
-          <th .left width="100px">プロジェクト名 #
+          <th .left width="160px">プロジェクト名 #
             <span .alert>(必須) #
           <td>
             <input type=text #name name=name placeholder="(プロジェクト名)" uri=@{ProjectR pid} value=#{projectName prj} required>

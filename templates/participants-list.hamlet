@@ -8,7 +8,7 @@
   <li>
     <a .selected href=@{ParticipantsListR pid}>参加者
 <div #main-content>
-  <h3 .participants>参加者
+  <h3 .participants>#{projectName prj} 参加者
     <button #button-search-users .link>参加者追加
 
   <div #participants>

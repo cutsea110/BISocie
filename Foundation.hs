@@ -122,8 +122,6 @@ instance Yesod BISocie where
         addScriptEither $ Left $ StaticR plugins_bubbleup_jquery_bubbleup_js
         addScriptEither $ Left $ StaticR plugins_exinplaceeditor_jquery_exinplaceeditor_0_1_3_min_js
         addStylesheetEither $ Left $ StaticR plugins_exinplaceeditor_exinplaceeditor_css
-        addScriptEither $ Left $ StaticR plugins_clockpick_jquery_clockpick_1_2_9_min_js
-        addStylesheetEither $ Left $ StaticR plugins_clockpick_jquery_clockpick_1_2_9_css
         addScriptEither $ Left $ StaticR plugins_ajaxzip2_ajaxzip2_js
         addScriptEither $ Left $ StaticR plugins_selection_jquery_selection_min_js
         addScriptEither $ Left $ StaticR plugins_textchange_jquery_textchange_min_js

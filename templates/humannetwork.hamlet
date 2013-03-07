@@ -1,16 +1,16 @@
-$newline never
-<ul .tabs>
-  <li>
-    <a href=@{HomeR selfid}>ホーム
-  $if canCreateProject self
+$with id' <- entityKey u, u' <- entityVal u
+  <ul .tabs>
     <li>
-      <a href=@{NewProjectR}>プロジェクト新規作成
-  <li>
-    <a href=@{CrossSearchR}>クロスサーチ
-  <li .selected>
-    <a href=@{HumanNetworkR}>ヒューマンネットワーク
-  <li>
-    <a href=@{CurrentScheduleR}>スケジュール
+      <a href=@{HomeR id'}>_{MsgHome}
+    $if canCreateProject u'
+      <li>
+        <a href=@{NewProjectR}>_{MsgCreateNewProject}
+    <li>
+      <a href=@{CrossSearchR}>_{MsgCrossSearch}
+    <li>
+      <a .selected href=@{HumanNetworkR}>_{MsgHumanNetwork}
+    <li>
+      <a href=@{CurrentScheduleR}>_{MsgSchedule}
 <div #main-content>
-  <h3>ヒューマンネットワーク
+  <h3 .page-header>_{MsgHumanNetwork}
   <div #global_map_canvas>

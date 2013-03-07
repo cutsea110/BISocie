@@ -1,9 +1,10 @@
 / RootR GET
+/change-pass  ChangePasswordR GET
 /home/#UserId HomeR GET
 /human-network HumanNetworkR GET
 /user-address.json UserLocationsR GET
 /project NewProjectR GET POST
-/project/#ProjectId ProjectR GET POST PUT DELETE
+/project/#ProjectId ProjectR GET POST DELETE
 
 /participantslist/#ProjectId ParticipantsListR GET
 /participants/#ProjectId ParticipantsR POST

@@ -2,10 +2,10 @@ $newline never
 <ul .tabs>
   <li>
     <a href=@{HomeR selfid}>ホーム
-  <li .selected>
-    <a href=@?{viewprof}>プロフィール
+  <li>
+    <a .selected href=@?{viewprof}>プロフィール
 <div #main-content>
-  <h3>#{userIdent user}のプロフィール
+  <h3 .page-header>#{userIdent user}のプロフィール
     $if canEdit self user
       <form method=get action=@{ProfileR uid} .inline>
         <input type=hidden name=mode value=e>
@@ -15,7 +15,7 @@ $newline never
       <th>アバター
       <td>
         <div #avatar>
-          <img #myavatar src=@{AvatarImageR uid} .avatar>
+          <img #myavatar src=@{AvatarImageR uid}>
     $if canView self user
       <tr>
         <th>
@@ -39,7 +39,7 @@ $newline never
         <td colspan=3>#{showmaybe $ laboratoryExtensionNumber lab}
       <tr>
         <th>担当科目
-        <td colspan=3>#{showMultilineText $ showmaybe $ laboratoryCourses lab}
+        <td colspan=3>#{showMultilineText $ fromMaybe (Textarea "") $ laboratoryCourses lab}
     $if canView self user
       $maybe prof <- mprof
         <tr>

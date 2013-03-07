@@ -62,7 +62,7 @@ function create_issue_line(item) {
       link2project = $('<a/>').attr({href: item.projecturi}).text(item.project),
       link2issue = $('<a/>').attr({href: item.issueuri}).text(item.subject);
   if(item.effect!="") tr.addClass(item.effect);
-  if(item.color!="") tr.attr({bgcolor: item.color});
+  if(item.color!="") tr.attr({style: 'background-color:'+item.color+';table-row;'});
   tr.append(project.append(link2project))
     .append(no)
     .append(subject.append(link2issue))

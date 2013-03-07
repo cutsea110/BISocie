@@ -1,17 +1,17 @@
-$newline never
-<ul .tabs>
-  <li>
-    <a href=@{HomeR selfid}>ホーム
-  $if (canCreateProject self)
+$with id' <- entityKey u, u' <- entityVal u
+  <ul .tabs>
     <li>
-      <a href=@{NewProjectR}>プロジェクト新規作成
-  <li .selected>
-    <a href=@{CrossSearchR}>クロスサーチ
-  $if (canViewHumannetwork self)
+      <a href=@{HomeR id'}>_{MsgHome}
+    $if canCreateProject u'
+      <li>
+        <a href=@{NewProjectR}>_{MsgCreateNewProject}
     <li>
-      <a href=@{HumanNetworkR}>ヒューマンネットワーク
-  <li>
-    <a href=@{CurrentScheduleR}>スケジュール
+      <a .selected href=@{CrossSearchR}>_{MsgCrossSearch}
+    $if canViewHumannetwork u'
+      <li>
+        <a href=@{HumanNetworkR}>_{MsgHumanNetwork}
+    <li>
+      <a href=@{CurrentScheduleR}>_{MsgSchedule}
 <div #main-content>
   <div .searchbox>
     <table>
@@ -19,10 +19,10 @@ $newline never
       <tr>
         <th>
           <label for=project_name>プロジェクト名:
-          <input #project_name type=text name=project_name target=#projectid>
+          <input type=search #project_name name=project_name target=#projectid>
         <th>
           <label for=user_ident_or_name>参加者ID or 氏名
-          <input #user_ident_or_name type=text name=user_ident_or_name target=#projectid>
+          <input type=search #user_ident_or_name name=user_ident_or_name target=#projectid>
       <tr>
         <th>
           <input #includeterminated type=checkbox name=includeterminated target=#projectid>
@@ -31,29 +31,25 @@ $newline never
     <table>
       <tr>
         <th>プロジェクト
-        <th>ステータス
-        <th>アサイン
+        <th width="100px">ステータス
+        <th width="100px">アサイン
         <th>期限
-      <tr>
-        <td rowspan=3>
-          <select #projectid name=projectid multiple=multiple size=5>
-            $forall p <- prjs
-              <option selected=selected value=#{show (projectBisId p)}>#{projectBisName p}
-        <td rowspan=3>
-          <select #status name=status multiple=multiple size=5>
-        <td rowspan=3>
-          <select #assign name=assign multiple=multiple size=5>
-        <td>
-          <input #limitdatefrom name=limitdatefrom .date>
-          〜
-          <input #limitdateto name=limitdateto .date>
-      <tr>
         <th>更新日
       <tr>
         <td>
-          <input #updatedfrom name=updatedfrom .date>
-          〜
-          <input #updatedto name=updatedto .date>
+          <select #projectid name=projectid multiple=multiple size=5>
+            $forall p <- prjs
+              <option selected=selected value=#{show (projectBisId p)}>#{projectBisName p}
+        <td .center>
+          <select #status name=status multiple=multiple size=5>
+        <td .center>
+          <select #assign name=assign multiple=multiple size=5>
+        <td width="280px">
+          <input type=date #limitdatefrom name=limitdatefrom placeholder=yyyy-mm-dd> ~ #
+          <input type=date #limitdateto name=limitdateto placeholder=yyyy-mm-dd>
+        <td width="280px">
+          <input type=date #updatedfrom name=updatedfrom placeholder=yyyy-mm-dd> ~ #
+          <input type=date #updatedto name=updatedto placeholder=yyyy-mm-dd>
       <tr>
         <th>
           <a .complement href=# target=#projectid>選択⇔非選択
@@ -61,8 +57,10 @@ $newline never
           <a .complement href=# target=#status>選択⇔非選択
         <th>
           <a .complement href=# target=#assign>選択⇔非選択
+        <th>
+        <th>
   <table .list>
-    <caption>対象案件一覧
+    <caption>対象タスク一覧
     <thead>
       <th .pname>プロジェクト名
       <th .ino>No

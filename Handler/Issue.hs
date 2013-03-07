@@ -8,33 +8,26 @@
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 module Handler.Issue where
 
-import Foundation
-
-import Yesod
-import Control.Applicative ((<$>),(<*>))
+import Import
+import BISocie.Helpers.Util
 import Control.Monad (when, unless, forM, liftM2)
+import Data.Function (on)
 import Data.List (intercalate, intersperse, nub, groupBy)
 import Data.Time
 import Data.Time.Calendar.WeekDate
-import Data.Tuple.HT
 import Data.Maybe (fromMaybe, fromJust, isJust, isNothing)
-import Network.Mail.Mime
 import qualified Data.Text.Lazy as L
 import qualified Data.Text.Lazy.Encoding as LE
 import qualified Data.Text as T
-import Data.Text (Text)
-import Text.Blaze.Internal (preEscapedText)
-import Text.Cassius (cassiusFile)
-
-import BISocie.Helpers.Util
-import Settings (mailXHeader, mailMessageIdDomain, fromEmailAddress, issueListLimit, fillGapWidth, pagenateWidth, projectListLimit)
-import Settings.StaticFiles
 import Handler.S3
+import Network.Mail.Mime
+import Text.Blaze.Internal (preEscapedText)
+import Yesod.Auth (requireAuthId)
 
 getCurrentScheduleR :: Handler RepHtml
 getCurrentScheduleR = do
-  now <- liftIO getCurrentTime
-  let (y, m, _) = toGregorian $ utctDay now
+  today <- liftIO $ fmap utctDay getCurrentTime
+  let (y, m, _) = toGregorian today
   redirect $ ScheduleR y m
   
 data WeekDay = Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sunday
@@ -42,20 +35,20 @@ data WeekDay = Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sun
 
 getScheduleR :: Year -> Month -> Handler RepHtml
 getScheduleR y m = do
-  (Entity selfid self) <- requireAuth
-  now <- liftIO getCurrentTime
-  let today = utctDay now
-      fday = fromGregorian y m 1
-      lday = fromGregorian y m $ gregorianMonthLength y m
-      (fy, fm, _) = toWeekDate fday
-      (ly, lm, _) = toWeekDate lday
-      days = map (map (\(y,w,d) -> let day = fromWeekDate y w d in (day, classOf day d today)))
-             $ groupBy (\d1 d2 -> snd3 d1 == snd3 d2)
-             $ map toWeekDate [fromWeekDate fy fm 1 .. fromWeekDate ly lm 7]
+  u <- requireAuth
+  today <- liftIO $ fmap utctDay getCurrentTime
+  let days = map (map (ywd2cell today))
+             $ groupBy ((==) `on` snd3)
+             $ [toWeekDate d | d <- [fromWeekDate fy fm 1 .. fromWeekDate ly lm 7]]
   defaultLayout $ do
     setTitle $ preEscapedText $ showText y +++ "年" +++ showText m +++ "月のスケジュール"
     $(widgetFile "schedule")
   where
+    ywd2cell c (y,w,d) = let d' = fromWeekDate y w d in (d', classOf d' d c)
+    fday = fromGregorian y m 1
+    lday = fromGregorian y m $ gregorianMonthLength y m
+    (fy, fm, _) = toWeekDate fday
+    (ly, lm, _) = toWeekDate lday
     classOf :: Day -> Int -> Day -> String
     classOf day d today = intercalate " " 
                           $ ["schedule-day-cell", toWeekName d] 
@@ -80,15 +73,17 @@ getScheduleR y m = do
     
 getTaskR :: Year -> Month -> Date -> Handler RepJson
 getTaskR y m d = do
-  (Entity selfid _) <- requireAuth
-  r <- getUrlRender
-  let day = fromGregorian y m d
+  (uid, r) <- (,) <$> requireAuthId <*> getUrlRender
   issues <- runDB $ do
-    ptcpts <- selectList [ParticipantsUser ==. selfid] []
-    let pids = map (participantsProject.entityVal) ptcpts
-    selectList [IssueLimitdate ==. Just day, IssueProject <-. pids ] [Asc IssueLimittime]
+    ptcpts <- selectList [ParticipantsUser ==. uid] []
+    selectList
+      [ IssueLimitdate ==. Just day
+      , IssueProject <-. map (participantsProject.entityVal) ptcpts
+      ] 
+      [Asc IssueLimittime]
   jsonToRepJson $ object ["tasks" .= array (map (go r) issues)]
   where
+    day = fromGregorian y m d
     go r (Entity iid issue) = 
       object [ "id" .= show iid
              , "subject" .= issueSubject issue
@@ -98,14 +93,14 @@ getTaskR y m d = do
 
 getProjectListR :: Handler RepJson
 getProjectListR = do
-  (Entity selfid self) <- requireAuth
-  r <- getUrlRender
-  includeTerminated <- fmap isJust $ lookupGetParam "includeterminated"
-  project_name <- lookupGetParam "project_name"
-  user_ident_or_name <- lookupGetParam "user_ident_or_name"
+  (u, r) <- (,) <$> requireAuth <*> getUrlRender
+  (includeTerminated, project_name, user_ident_or_name, mpage, ordName) <-
+    (,,,,) <$> fmap isJust (lookupGetParam "includeterminated")
+    <*> lookupGetParam "project_name"
+    <*> lookupGetParam "user_ident_or_name"
+    <*> fmap (fmap readText) (lookupGetParam "page")
+    <*> fmap (fromMaybe "DescProjectUdate") (lookupGetParam "order")
   let tf = if includeTerminated then [] else [ProjectTerminated ==. False]
-  mpage <- fmap (fmap readText) $ lookupGetParam "page"
-  ordName <- fmap (fromMaybe "DescProjectUdate") $ lookupGetParam "order"
   let order = [textToOrder ordName]
   prjs' <- runDB $ do
     pats <- case user_ident_or_name of
@@ -115,10 +110,10 @@ getProjectListR = do
         let uids = map entityKey $ filter (userIdentOrName q.entityVal) users
         selectList [ParticipantsUser <-. uids] []
     let pf = [ProjectId <-. map (participantsProject.entityVal) pats]
-    if isAdmin self
+    if isAdmin (entityVal u)
       then selectList (tf++pf) order
       else do
-      ps <- selectList [ParticipantsUser ==. selfid] []
+      ps <- selectList [ParticipantsUser ==. entityKey u] []
       selectList (tf ++ pf ++ [ProjectId <-. (map (participantsProject.entityVal) ps)]) order
   let allprjs = case project_name of
         Just pn -> filter (T.isInfixOf pn . projectName . entityVal) prjs'
@@ -135,7 +130,7 @@ getProjectListR = do
   where
     go r (Entity pid p) = object [ "pid" .= show pid
                                  , "name" .= projectName p
-                                 , "description" .= projectDescription p
+                                 , "description" .= unTextarea (projectDescription p)
                                  , "cdate" .= showDate (projectCdate p)
                                  , "udate" .= showDate (projectUdate p)
                                  , "issuelistUri" .= r (IssueListR pid)
@@ -144,13 +139,13 @@ getProjectListR = do
 
 getAssignListR :: Handler RepJson
 getAssignListR = do
-  (Entity selfid self) <- requireAuth
+  u <- requireAuth
   pids <- fmap (fmap readText) $ lookupGetParams "projectid"
   users <- runDB $ do
-    ps <- if isAdmin self
+    ps <- if isAdmin (entityVal u)
           then selectList [ParticipantsProject <-. pids] []
           else do
-            ps' <- selectList [ParticipantsUser ==. selfid, ParticipantsProject <-. pids] []
+            ps' <- selectList [ParticipantsUser ==. entityKey u, ParticipantsProject <-. pids] []
             selectList [ParticipantsProject <-. (map (participantsProject.entityVal) ps')] []
     selectList [UserId <-. (map (participantsUser.entityVal) ps)] []
   cacheSeconds 10 -- FIXME
@@ -162,13 +157,13 @@ getAssignListR = do
 
 getStatusListR :: Handler RepJson
 getStatusListR = do
-  (Entity selfid self) <- requireAuth
+  u <- requireAuth
   pids <- fmap (fmap readText) $ lookupGetParams "projectid"
   stss <- runDB $ do
-    prjs <- if isAdmin self
+    prjs <- if isAdmin (entityVal u)
             then selectList [ProjectId <-. pids] []
             else do
-              ps <- selectList [ParticipantsUser ==. selfid, ParticipantsProject <-. pids] []
+              ps <- selectList [ParticipantsUser ==. entityKey u, ParticipantsProject <-. pids] []
               selectList [ProjectId <-. (map (participantsProject.entityVal) ps)] []
     return $ nub $ concatMap (\(Entity _ prj) -> 
                                let (Right es) = parseStatuses $ projectStatuses prj 
@@ -178,28 +173,27 @@ getStatusListR = do
 
 getCrossSearchR :: Handler RepHtml
 getCrossSearchR = do
-  (Entity selfid self) <- requireAuth
+  u <- requireAuth
   prjs <- runDB $ do
     -- 初回GETなので終了プロジェクトは除外.
-    prjs' <- if isAdmin self
+    prjs' <- if isAdmin (entityVal u)
              then selectList [ProjectTerminated ==. False] []
              else do
-               ps <- selectList [ParticipantsUser ==. selfid] []
+               ps <- selectList [ParticipantsUser ==. entityKey u] []
                selectList [ ProjectTerminated ==. False
                           , ProjectId <-. (map (participantsProject.entityVal) ps)] []
     return $ map toProjectBis prjs'
   defaultLayout $ do
     setTitle "クロスサーチ"
-    toWidget $(cassiusFile "templates/issue.cassius")
     $(widgetFile "crosssearch")
 
 postCrossSearchR :: Handler RepJson
 postCrossSearchR = do
-  (Entity selfid self) <- requireAuth
-  r <- getUrlRender
-  ps <- fmap (fmap readText) $ lookupPostParams "projectid"
-  ss <- lookupPostParams "status"
-  as <- fmap (fmap (Just . readText)) $ lookupPostParams "assign"
+  (u, r) <- (,) <$> requireAuth <*> getUrlRender
+  (ps, ss, as) <- 
+    (,,) <$> fmap (fmap readText) (lookupPostParams "projectid")
+    <*> lookupPostParams "status"
+    <*> fmap (fmap (Just . readText)) (lookupPostParams "assign")
   (lf, lt) <- uncurry (liftM2 (,))
               (fmap (fmap (Just . readText)) $ lookupPostParam "limitdatefrom",
                fmap (fmap (Just . addDays 1 . readText)) $ lookupPostParam "limitdateto")
@@ -208,10 +202,10 @@ postCrossSearchR = do
                fmap (fmap (localDayToUTC . addDays 1 . readText)) $ lookupPostParam "updatedto")
   page <- fmap (max 0 . fromMaybe 0 . fmap readText) $ lookupPostParam "page"
   issues <- runDB $ do
-    prjs <- if isAdmin self
+    prjs <- if isAdmin (entityVal u)
             then selectList [ProjectId <-. ps] []
             else do
-              ps' <- selectList [ParticipantsUser ==. selfid, ParticipantsProject <-. ps] []
+              ps' <- selectList [ParticipantsUser ==. entityKey u, ParticipantsProject <-. ps] []
               selectList [ProjectId <-. (map (participantsProject.entityVal) ps')] []
     let (pS, sS, aS) = (toInFilter (IssueProject <-.) $ map entityKey prjs,
                         toInFilter (IssueStatus <-.) ss, 
@@ -259,13 +253,9 @@ postCrossSearchR = do
                 
 getIssueListR :: ProjectId -> Handler RepHtml
 getIssueListR pid = do
-  (Entity selfid self) <- requireAuth
   page' <- lookupGetParam "page"
   let page = max 0 $ fromMaybe 0  $ fmap readText $ page'
   (alliis, issues'', prj, es) <- runDB $ do
-    p <- getBy $ UniqueParticipants pid selfid
-    unless (isJust p || isAdmin self) $ 
-      lift $ permissionDenied "あなたはこのプロジェクトの参加者ではありません."
     prj' <- get404 pid
     let (Right es) = parseStatuses $ projectStatuses prj'
         prj = ProjectBis { projectBisId=pid
@@ -306,25 +296,19 @@ getIssueListR pid = do
       colspan = 8
       paging = $(widgetFile "paging")
   defaultLayout $ do
-    setTitle $ preEscapedText $ projectBisName prj +++ "案件一覧"
-    toWidget $(cassiusFile "templates/issue.cassius")
+    setTitle $ preEscapedText $ projectBisName prj +++ "タスク一覧"
     $(widgetFile "issuelist")
 
 getNewIssueR :: ProjectId -> Handler RepHtml
 getNewIssueR pid = do
-  (Entity selfid self) <- requireAuth
   mparent <- lookupGetParam "parent"
   (ptcpts, stss, prj) <- runDB $ do
-    p <- getBy $ UniqueParticipants pid selfid
-    unless (isJust p) $ 
-      lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
     prj <- get404 pid
     ptcpts <- selectParticipants pid
     let (Right stss) = parseStatuses $ projectStatuses prj
     return (ptcpts, stss, prj)
   defaultLayout $ do
-    setTitle "新規案件作成"
-    toWidget $(cassiusFile "templates/issue.cassius")
+    setTitle "新規タスク作成"
     $(widgetFile "newissue")
       
 postNewIssueR :: ProjectId -> Handler RepHtml
@@ -336,9 +320,9 @@ postNewIssueR pid = do
     
   where
     addIssueR = do
-      (Entity selfid _) <- requireAuth
-      now <- liftIO getCurrentTime
-      issue <- runInputPost $ Issue pid undefined selfid now selfid now
+      (uid, r, now) <- 
+        (,,) <$> requireAuthId <*> getUrlRender <*> liftIO getCurrentTime
+      issue <- runInputPost $ Issue pid undefined uid now uid now
         <$> ireq textField "subject"
         <*> fmap (fmap readText) (iopt textField "assign")
         <*> ireq textField "status"
@@ -346,8 +330,8 @@ postNewIssueR pid = do
         <*> iopt timeField "limittime"
         <*> iopt dayField "reminderdate"
         <*> fmap (fmap readText) (iopt hiddenField "parent")
-      comment <- runInputPost $ Comment pid undefined "init." undefined selfid now
-        <$> iopt textField "content"
+      comment <- runInputPost $ Comment pid undefined undefined undefined uid now
+        <$> iopt textareaField "content"
         <*> fmap (fmap readText) (iopt textField "assign")
         <*> ireq textField "status"
         <*> iopt dayField "limitdate"
@@ -356,25 +340,24 @@ postNewIssueR pid = do
         <*> ireq boolField "checkreader"
       mfi <- lookupFile "attached"
       ino <- runDB $ do
-        p <- getBy $ UniqueParticipants pid selfid
-        unless (isJust p) $ 
-          lift $ permissionDenied "あなたはこのプロジェクトに案件を追加することはできません."
-        r <- lift getUrlRender
         update pid [ProjectIssuecounter +=. 1, ProjectUdate =. now]
         prj <- get404 pid
         let ino = projectIssuecounter prj
-        mfh <- storeAttachedFile selfid mfi
+        mfh <- storeAttachedFile uid mfi
         iid <- insert $ issue {issueNumber=ino}
-        cid <- insert $ comment {commentIssue=iid, commentAttached=fmap fst mfh}
-        emails <- selectMailAddresses pid
+        cid <- insert $ comment { commentIssue=iid
+                                , commentAttached=fmap fst mfh
+                                , commentAutomemo=Textarea "init."
+                                }
+        bcc <- selectMailAddresses pid
         let msgid = toMessageId iid cid now mailMessageIdDomain
             fragment = "#" +++ toPathPiece cid
-        when (isJust (commentContent comment) && not (null emails)) $
+        when (isJust (commentContent comment) && not (null bcc)) $
           liftIO $ renderSendMail Mail
             { mailFrom = fromEmailAddress
             , mailTo = []
             , mailCc = []
-            , mailBcc = emails
+            , mailBcc = bcc
             , mailHeaders =
                  [ ("Subject", issueSubject issue)
                  , ("Message-ID", msgid)
@@ -388,14 +371,14 @@ postNewIssueR pid = do
                      , partHeaders = []
                      , partContent = LE.encodeUtf8 $ L.pack $ T.unpack $ T.unlines
                                      $ [ "プロジェクト: " +++ projectName prj
-                                       , "案件: " +++ issueSubject issue
+                                       , "タスク: " +++ issueSubject issue
                                        , "ステータス: " +++ issueStatus issue
                                        , ""
                                        ]
-                                     ++ T.lines (fromJust (commentContent comment))
+                                     ++ T.lines (unTextarea (fromJust (commentContent comment)))
                                      ++ [ ""
                                         , "*このメールに直接返信せずにこちらのページから投稿してください。"
-                                        , "イシューURL: " +++ r (IssueR pid ino) +++ fragment]
+                                        , "URL: " +++ r (IssueR pid ino) +++ fragment]
                                      ++ case mfh of
                                        Nothing -> []
                                        Just (fid,_) -> ["添付ファイル: " +++ (r $ AttachedFileR cid fid)]
@@ -407,12 +390,9 @@ postNewIssueR pid = do
 
 getIssueR :: ProjectId -> IssueNo -> Handler RepHtml
 getIssueR pid ino = do
-  (Entity selfid self) <- requireAuth
+  selfid <- requireAuthId
   (prj, ptcpts, iid, issue, comments, mparent, children) <- 
     runDB $ do
-      p <- getBy $ UniqueParticipants pid selfid
-      unless (isJust p || isAdmin self) $ 
-        lift $ permissionDenied "あなたはこの案件を閲覧することはできません."
       (Entity iid issue) <- getBy404 $ UniqueIssue pid ino
       cs <- selectList [CommentIssue ==. iid] [Desc CommentCdate]
       comments <- forM cs $ \(Entity cid c) -> do
@@ -464,10 +444,10 @@ postCommentR pid ino = do
     
   where
     addCommentR = do
-      (Entity selfid _) <- requireAuth
+      uid <- requireAuthId
       now <- liftIO getCurrentTime
-      comment <- runInputPost $ Comment pid undefined "now writing..." undefined selfid now
-        <$> iopt textField "content"
+      comment <- runInputPost $ Comment pid undefined undefined undefined uid now
+        <$> iopt textareaField "content"
         <*> fmap (fmap readText) (iopt textField "assign")
         <*> ireq textField "status"
         <*> iopt dayField "limitdate"
@@ -476,15 +456,12 @@ postCommentR pid ino = do
         <*> ireq boolField "checkreader"
       mfi <- lookupFile "attached"
       runDB $ do
-        p <- getBy $ UniqueParticipants pid selfid
-        unless (isJust p) $ 
-          lift $ permissionDenied "あなたはこのプロジェクトに投稿することはできません."
         r <- lift getUrlRender
         (Entity iid issue) <- getBy404 $ UniqueIssue pid ino
         Just (Entity lastCid lastC) <- selectFirst [CommentIssue ==. iid] [Desc CommentCdate]
-        mfh <- storeAttachedFile selfid mfi
+        mfh <- storeAttachedFile uid mfi
         amemo <- generateAutomemo comment issue mfh
-        replace iid issue { issueUuser = selfid
+        replace iid issue { issueUuser = uid
                           , issueUdate = now
                           , issueLimitdate = commentLimitdate comment
                           , issueLimittime = commentLimittime comment
@@ -492,8 +469,11 @@ postCommentR pid ino = do
                           , issueAssign = commentAssign comment
                           , issueStatus = commentStatus comment
                           }
-        when (isNothing (commentContent comment) && T.null amemo) $ do
-          lift $ invalidArgs ["内容を入力するかイシューの状態を変更してください."]
+        when (isNothing (commentContent comment) && T.null (unTextarea amemo)) $ do
+          lift $ do
+            r <- getMessageRender
+            setPNotify $ PNotify JqueryUI Error "invalid input" $ r MsgInvalidCommentPosted
+            redirect $ IssueR pid ino
         cid <- insert $ comment { commentIssue=iid
                                 , commentAttached=fmap fst mfh
                                 , commentAutomemo=amemo
@@ -524,14 +504,14 @@ postCommentR pid ino = do
                      , partHeaders = []
                      , partContent = LE.encodeUtf8 $ L.pack $ T.unpack $ T.unlines
                                      $ [ "プロジェクト: " +++ projectName prj
-                                       , "案件: " +++ issueSubject issue
+                                       , "タスク: " +++ issueSubject issue
                                        , "ステータス: " +++ issueStatus issue
                                        , ""
                                        ]
-                                     ++ T.lines (fromJust (commentContent comment))
+                                     ++ T.lines (unTextarea (fromJust (commentContent comment)))
                                      ++ [ ""
                                         , "*このメールに直接返信せずにこちらのページから投稿してください。"
-                                        , "イシューURL: " +++ r (IssueR pid ino) +++ fragment]
+                                        , "URL: " +++ r (IssueR pid ino) +++ fragment]
                                      ++ case mfh of
                                        Nothing -> []
                                        Just (fid,_) -> ["添付ファイル: " +++ (r $ AttachedFileR cid fid)]
@@ -542,37 +522,27 @@ postCommentR pid ino = do
         
 getAttachedFileR :: CommentId -> FileHeaderId -> Handler RepHtml
 getAttachedFileR cid fid = do
-  (Entity selfid self) <- requireAuth
-  f <- runDB $ do
-    c <- get404 cid
-    p <- getBy $ UniqueParticipants (commentProject c) selfid
-    unless (isJust p || isAdmin self) $
-      lift $ permissionDenied "あなたはこのファイルをダウンロードできません."
-    get404 fid
+  f <- runDB $ get404 fid
   getFileR (fileHeaderCreator f) fid
   
 postReadCommentR :: CommentId -> Handler RepJson
 postReadCommentR cid = do
-  (Entity selfid self) <- requireAuth
+  (Entity uid u) <- requireAuth
   r <- getUrlRender
   _method <- lookupPostParam "_method"
   ret <- runDB $ do
     cmt <- get404 cid
-    let pid = commentProject cmt
-    p <- getBy $ UniqueParticipants pid selfid
-    unless (isJust p) $
-      lift $ permissionDenied "あなたはこのプロジェクトに参加していません."
     case _method of
       Just "add" -> do    
-        mr <- getBy $ UniqueReader cid selfid
+        mr <- getBy $ UniqueReader cid uid
         case mr of
           Just _ -> return "added"
           Nothing -> do
             now <- liftIO getCurrentTime
-            _ <- insert $ Reader cid selfid now
+            _ <- insert $ Reader cid uid now
             return "added"
       Just "delete" -> do 
-        deleteBy $ UniqueReader cid selfid
+        deleteBy $ UniqueReader cid uid
         return "deleted"
       _ -> lift $ invalidArgs ["The possible values of '_method' is add or delete"]
   cacheSeconds 10 -- FIXME
@@ -580,25 +550,20 @@ postReadCommentR cid = do
                          , "read" .=
                            object [ "comment" .= show cid
                                   , "reader" .=
-                                    object [ "id" .= show selfid
-                                           , "ident" .= userIdent self
-                                           , "name" .= userFullName self
-                                           , "uri" .= r (ProfileR selfid)
-                                           , "avatar" .= r (AvatarImageR selfid)
+                                    object [ "id" .= show uid
+                                           , "ident" .= userIdent u
+                                           , "name" .= userFullName u
+                                           , "uri" .= r (ProfileR uid)
+                                           , "avatar" .= r (AvatarImageR uid)
                                            ]
                                   ]
                          ]
 
 getCommentReadersR :: CommentId -> Handler RepJson
 getCommentReadersR cid = do
-  (Entity selfid self) <- requireAuth
   r <- getUrlRender
   readers <- runDB $ do
     cmt <- get404 cid
-    let pid = commentProject cmt
-    p <- getBy $ UniqueParticipants pid selfid
-    unless (isJust p || isAdmin self) $
-      lift $ permissionDenied "あなたはこのプロジェクトに参加していません."
     rds' <- selectList [ReaderComment ==. cid] [Asc ReaderCheckdate]
     forM rds' $ \(Entity _ rd') -> do
       let uid' = readerReader rd'
@@ -645,11 +610,11 @@ generateAutomemo c i f = do
                                     +++  showDate y +++ " に変更."]
       rm = case (issueReminderdate i, commentReminderdate c) of
         (Nothing, Nothing) -> []
-        (Just x , Nothing) -> ["リマインダメール通知日 " +++ showText x +++ " を通知なしに変更"]
-        (Nothing, Just y ) -> ["リマインダメール通知日を " +++ showText y +++ " に設定."]
+        (Just x , Nothing) -> ["通知日 " +++ showText x +++ " を通知なしに変更"]
+        (Nothing, Just y ) -> ["通知日を " +++ showText y +++ " に設定."]
         (Just x , Just y ) -> if x == y
                               then []
-                              else ["リマインダ通知日を " +++ showText x +++ " から "
+                              else ["通知日を " +++ showText x +++ " から "
                                     +++ showText y +++ " に変更."]
 
       af = case f of
@@ -670,4 +635,4 @@ generateAutomemo c i f = do
         then return []
         else return ["担当者を " +++ userFullName x' +++ " から " +++ 
                      userFullName y' +++ " に変更."]
-  return $ T.intercalate "\n" (st ++ as ++ lm ++ rm ++ af)
+  return $ Textarea $ T.intercalate "\n" (st ++ as ++ lm ++ rm ++ af)

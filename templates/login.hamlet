@@ -1,0 +1,16 @@
+$newline never
+<ul .tabs>
+<div .login-options>
+  <div align=center>
+    <form .validate.auth method=post action="@{AuthR loginR}">
+      <table>
+        <tbody>
+          <tr>
+            <th>アカウントID:
+            <td>
+             <input #loginAccountId type=account name=ident placeholder=account autofocus required>
+          <tr>
+            <th>パスワード:
+            <td>
+              <input type=password name=password placeholder=password required>
+      <input .login_button type=submit value="ログイン">

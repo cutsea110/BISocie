@@ -2,29 +2,35 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
-module Handler.Root where
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
+module Handler.Root
+       ( getRootR
+       , getHomeR
+       , getChangePasswordR
+       , getHumanNetworkR
+       , getUserLocationsR
+       , getSystemBatchR
+       , postSystemBatchR
+       , getSendReminderMailR
+       ) where
 
-import Yesod
-import Control.Applicative ((<$>))
-import Control.Monad (unless, forM)
+import Import
+import BISocie.Helpers.Util
+import Control.Arrow ((&&&))
+import Control.Monad (forM)
+import Codec.Binary.UTF8.String (decodeString)
+import qualified Data.ByteString.Lazy.Char8 as L
 import Data.Conduit (($$))
 import Data.Conduit.List (consume)
 import Data.List (find)
-import qualified Data.ByteString.Lazy.Char8 as L
-import Codec.Binary.UTF8.String (decodeString)
-import Data.Text (Text)
 import qualified Data.Text as T
-import Text.Blaze.Internal (preEscapedText)
+import qualified Data.Text.Lazy.Encoding as TL
 import Data.Time (fromGregorian)
+import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
+import Text.Hamlet (shamlet)
+import Text.Shakespeare.Text (stext)
 import Network.Mail.Mime
-import qualified Data.Text.Lazy as TL
-import qualified Data.Text.Lazy.Encoding as LE
-import Network.Wai (Request(..))
-import Network.Socket (getNameInfo)
-
-import Foundation
-import BISocie.Helpers.Util
-import Settings
+import Yesod.Auth.Owl (setPassR)
 
 -- This is a handler function for the GET request method on the RootR
 -- resource pattern. All of your resource patterns are defined in
@@ -34,34 +40,32 @@ import Settings
 -- functions. You can spread them across multiple files if you are so
 -- inclined, or create a single monolithic file.
 getRootR :: Handler RepHtml
-getRootR = do
-    (Entity uid _) <- requireAuth
-    redirect $ HomeR uid
+getRootR = redirect . HomeR . entityKey =<< requireAuth
 
 getHomeR :: UserId -> Handler RepHtml
 getHomeR uid = do
-  (Entity selfid self) <- requireAuth
-  unless (selfid==uid) $ permissionDenied "他人のホームを見ることはできません."
+  u <- requireAuth
   defaultLayout $ do
-    setTitle $ preEscapedText $ userFullName self +++ " ホーム"
+    setTitleI $ MsgHomeOf $ entityVal u
     $(widgetFile "home")
+
+getChangePasswordR :: Handler RepHtml
+getChangePasswordR = do
+  defaultLayout $ do
+    setTitleI MsgChangePassword
+    $(widgetFile "change-pass")
     
 getHumanNetworkR :: Handler RepHtml
 getHumanNetworkR = do
-  (Entity selfid self) <- requireAuth
-  unless (canViewHumannetwork self) $ 
-    permissionDenied "あなたはヒューマンエットワークを閲覧することはできません."
+  u <- requireAuth
   defaultLayout $ do
-    setTitle "ヒューマンネットワーク"
+    setTitleI MsgHumanNetwork
     addScriptRemote "https://maps.google.com/maps/api/js?sensor=false"
     $(widgetFile "humannetwork")
 
 getUserLocationsR :: Handler RepJson
 getUserLocationsR = do
-  (Entity _ self) <- requireAuth
   r <- getUrlRender
-  unless (canViewUserLocations self) $ 
-    permissionDenied "あなたはこの情報を取得することはできません."
   profs <- runDB $ do
     us <- selectList [UserRole ==. Student] []
     profs' <- selectList [ProfileUser <-. (map entityKey us)] []
@@ -73,32 +77,27 @@ getUserLocationsR = do
     go r (u, p) = 
       object [ "uri" .= r (ProfileR $ profileUser p)
              , "name" .= userFullName u
-             , "lat" .= showMaybeDouble (profileLatitude p)
-             , "lng" .= showMaybeDouble (profileLongitude p)
+             , "lat" .= profileLatitude p
+             , "lng" .= profileLongitude p
              ]
 
 getSystemBatchR :: Handler RepHtml
-getSystemBatchR = do
-  (Entity _ self) <- requireAuth
-  unless (isAdmin self) $
-    permissionDenied "あなたはこの機能を利用することはできません."
-  defaultLayout $ do
-    setTitle "システムバッチ"
+getSystemBatchR = defaultLayout $ do
+    setTitleI MsgSystemBatch
     $(widgetFile "systembatch")
 
 postSystemBatchR :: Handler ()
 postSystemBatchR = do
-  (Entity _ self) <- requireAuth
-  unless (isAdmin self) $
-    permissionDenied "あなたはこの機能を利用することはできません."
+  r <- getMessageRender
   Just fi <- lookupFile "studentscsv"
   lbs <- lift $ L.fromChunks <$> (fileSource fi $$ consume)
   let recs = filter (not . T.null) $ T.lines $ T.pack $ decodeString $ L.unpack lbs
+      recs' = map (T.splitOn ",") recs
   runDB $ do
-    users <- selectList [] []
-    profs <- selectList [] []
-    forM recs $ \rec -> do
-      let (ident:rawpass:email:fname:gname:eyear:gyear:_) = T.splitOn "," rec
+    users <- selectList [UserIdent <-. map head recs'] []
+    profs <- selectList [ProfileUser <-. map entityKey users] []
+    forM recs' $ \rec -> do
+      let (ident:rawpass:email:fname:gname:eyear:gyear:_) = rec
           (eyear', gyear') = (Just (readText eyear), Just (readText gyear))
       uid' <- case userExist ident users of
         Nothing ->
@@ -126,7 +125,7 @@ postSystemBatchR = do
                                            , profileGraduateYear=gyear'
                                            }
         Just (Entity pid _) -> return pid
-  setPNotify $ PNotify JqueryUI Info "Add Student" "学生を登録しました。"
+  setPNotify $ PNotify JqueryUI Info "Add Student" $ r MsgImportStudents
   redirect SystemBatchR
   where
     userExist :: Text -> [Entity User] -> Maybe (Entity User)
@@ -137,46 +136,58 @@ postSystemBatchR = do
 getSendReminderMailR :: Year -> Month -> Date -> Handler RepHtml
 getSendReminderMailR y m d = do
   let rday = fromGregorian y m d
-  r <- getUrlRender
-  req <- fmap reqWaiRequest getRequest
-  let rhost = remoteHost req
-  (Just rhostname, _) <- liftIO $ getNameInfo [] True True rhost
-  unless (rhostname == "localhost") $
-    permissionDenied "あなたはこの機能を利用することはできません."
+  (r, r') <- (,) <$> getUrlRender <*> getMessageRender
   runDB $ do
     issues <- selectList [IssueReminderdate ==. Just rday] []
-    forM issues $ \(Entity _ issue) -> do
-      let pid = issueProject issue
-          ino = issueNumber issue
-      prj <- get404 pid
-      emails <- selectMailAddresses $ issueProject issue
-      liftIO $ renderSendMail Mail
-        { mailFrom = fromEmailAddress
-        , mailTo = []
-        , mailCc = []
-        , mailBcc = emails
-        , mailHeaders =
-          [ ("Subject", "【リマインダメール送信】" +++ issueSubject issue)
-          , (mailXHeader, toPathPiece $ issueProject issue)
-          ]
-        , mailParts =
-            [[ Part
-               { partType = "text/plain; charset=utf-8"
-               , partEncoding = None
-               , partFilename = Nothing
-               , partHeaders = []
-               , partContent = LE.encodeUtf8 $ TL.pack $ T.unpack $ T.unlines
-                               $ [ "プロジェクト: " +++ projectName prj
-                                 , "案件: " +++ issueSubject issue
-                                 , "期限: " +++ showLimitdatetime issue
-                                 , ""
-                                 , "この案件の期限が近づいてきました。"
-                                 , ""
-                                 , "*このメールに直接返信せずにこちらのページから投稿してください。"
-                                 , "イシューURL: " +++ r (IssueR pid ino)
-                                 ]
-               }
-             ]]
-        }
-  defaultLayout [whamlet|$newline never
-Sending reminder mails|]
+    forM issues $ \issue -> do
+      sendReminder r r' $ entityVal issue
+  defaultLayout [whamlet|_{MsgSendingReminder}|]
+
+sendReminder r r' issue = do
+  let (pid, ino) = (issueProject &&& issueNumber) issue
+  prj <- get404 pid
+  liftIO . renderSendMail =<< mkMail r' prj issue (r $ IssueR pid ino)
+
+mkMail render prj issue url = do
+  bcc <- selectMailAddresses $ issueProject issue
+  return Mail { mailFrom = fromEmailAddress
+              , mailTo = []
+              , mailCc = []
+              , mailBcc = bcc
+              , mailHeaders =
+                [ ("Subject", render (MsgSendReminder issue))
+                , (mailXHeader, toPathPiece $ issueProject issue)
+                ]
+              , mailParts =
+                  [[ Part "text/plain; charset=utf-8" QuotedPrintableText Nothing []
+                     $ TL.encodeUtf8 textPart
+                   , Part "text/html; charset=utf-8" QuotedPrintableText Nothing []
+                     $ TL.encodeUtf8 htmlPart
+                   ]]
+              }
+  where
+    textPart = [stext|
+\#{render MsgProject}: #{projectName prj}
+\#{render MsgIssue}: #{issueSubject issue}
+\#{render MsgLimitDate}: #{showLimitdatetime issue}
+
+\#{render MsgCloseLimitDateOfThisIssue}
+
+* #{render MsgNoteOnThisReminderMail}
+\#{render MsgIssue} URL: #{url}
+|]
+    htmlPart = TL.decodeUtf8 $ renderHtml [shamlet|
+<p>
+  <dl>
+    <dt>#{render MsgProject}
+    <dd>#{projectName prj}
+    <dt>#{render MsgIssue}
+    <dd>#{issueSubject issue}
+    <dt>#{render MsgLimitDate}
+    <dd>#{showLimitdatetime issue}
+
+  #{render MsgCloseLimitDateOfThisIssue}
+
+<p>* #{render MsgNoteOnThisReminderMail}
+   #{render MsgIssue} URL: <a href=#{url}>#{url}</a>
+|]

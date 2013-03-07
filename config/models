@@ -41,21 +41,21 @@ Laboratory
     headResearcher UserId
     roomNumber Text Maybe
     extensionNumber Text Maybe
-    courses Text Maybe
+    courses Textarea Maybe
 
     UniqueLaboratory headResearcher
 
 Email
     email Text
-    user UserId Maybe Update
-    verkey Text Maybe Update
+    user UserId Maybe
+    verkey Text Maybe
 
     UniqueEmail email
 
 Project
     name Text
-    description Text
-    statuses Text
+    description Textarea
+    statuses Textarea
     issuecounter IssueNo default=0
     terminated Bool default=false
     cuser UserId
@@ -84,12 +84,12 @@ Issue
 Comment
     project ProjectId
     issue IssueId
-    automemo Text
+    automemo Textarea
     attached FileHeaderId Maybe
     cuser UserId
     cdate UTCTime default=now()
 
-    content Text Maybe
+    content Textarea Maybe
     assign UserId Maybe
     status Text
     limitdate Day Maybe

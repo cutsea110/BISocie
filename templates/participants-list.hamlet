@@ -1,0 +1,35 @@
+<ul .tabs>
+  <li>
+    <a href=@{IssueListR pid}>#{projectName prj} タスク一覧
+  <li>
+    <a href=@{NewIssueR pid}>タスク追加
+  <li>
+    <a href=@{ProjectR pid}>プロジェクト設定
+  <li>
+    <a .selected href=@{ParticipantsListR pid}>参加者
+<div #main-content>
+  <h3 .participants.page-header>#{projectName prj} 参加者
+    <button #button-search-users .link>参加者追加
+
+  <div #participants>
+
+<div #search-users>
+  <label for=search-bay-name>名前:
+  <input #search-by-name type=text name=username>
+  <label for=select-entry-year>入学年度:
+  <select #select-entry-year>
+    <option>
+    $forall ey <- eyears
+      <option value=#{show ey}>#{show ey}
+  <input #select-teacher type=checkbox value=Teacher>
+  <label for=select-teacher>教員
+  <input #select-staff type=checkbox value=Staff>
+  <label for=select-staff>職員
+  <input #select-admin type=checkbox value=Admin>
+  <label for=select-admin>管理者
+  <button .common #go-search-users>検索
+  <div #search-result .scroll>
+
+<div #release-self-participate>
+  このプロジェクトの参加者ではなくなりました。
+  このダイアログを閉じると強制的にホームに移動します。

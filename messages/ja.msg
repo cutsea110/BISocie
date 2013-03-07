@@ -3,6 +3,11 @@ AccountID: アカウントID
 Password: パスワード
 Login: ログイン
 
+CurrentPassword: 現在のパスワード
+NewPassword: 新しいパスワード
+ConfirmPassword: 新しいパスワード(確認)
+Update: 変更
+
 Home: ホーム
 
 SuccessLogin: ログインしました.

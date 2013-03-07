@@ -5,15 +5,15 @@
       <table>
         <tbody>
           <tr>
-            <th>現在のパスワード:
+            <th>_{MsgCurrentPassword}:
             <td>
               <input type=password name=current_pass placeholder="current password" autofocus required>
           <tr>
-            <th>新しいパスワード:
+            <th>_{MsgNewPassword}:
             <td>
               <input type=password name=new_pass placeholder="new password" required>
           <tr>
-            <th>新しいパスワード(確認):
+            <th>_{MsgConfirmPassword}:
             <td>
               <input type=password name=new_pass2 placeholder="new pass again" required>
-      <input .login_button type=submit value="変更">
+      <input .login_button type=submit value="_{MsgUpdate}">

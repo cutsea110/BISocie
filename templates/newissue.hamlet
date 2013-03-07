@@ -18,11 +18,11 @@ $newline never
         <th .left width="160px">件名: 
           <span .alert>(必須)
         <td>
-          <input #subject type=text name=subject placeholder=案件名... .watermark required>
+          <input #subject type=text name=subject placeholder=案件名... required>
       <tr>
         <th .left>内容: 
         <td>
-          <textarea #content name=content placeholder=内容を書く... .watermark>
+          <textarea #content name=content placeholder=内容を書く...>
       <tr>
         <th .left>アサイン:
         <td>
@@ -39,12 +39,12 @@ $newline never
       <tr>
         <th .left>期限:
         <td>
-          <input name=limitdate displayname=期限日 placeholder=yyyy-mm-dd .watermark .date cond="limittime,reminderdate" .cond-required>
-          <input type=time name=limittime displayname=期限時刻 placeholder=HH:MM .watermark .time cond="limitdate,reminderdate" .cond-required>
+          <input name=limitdate displayname=期限日 placeholder=yyyy-mm-dd .date cond="limittime,reminderdate" .cond-required>
+          <input type=time name=limittime displayname=期限時刻 placeholder=HH:MM .time cond="limitdate,reminderdate" .cond-required>
       <tr>
         <th .left>リマインダメール通知日
         <td>
-          <input name=reminderdate displayname=リマインダメール通知日 placeholder=yyyy-mm-dd .watermark .date>
+          <input name=reminderdate displayname=リマインダメール通知日 placeholder=yyyy-mm-dd .date>
       <tr>
         <th .left>添付ファイル:
         <td>

@@ -1,4 +1,3 @@
-$newline never
 <ul .tabs>
 <div .login-options>
   <div align=center>
@@ -8,13 +7,13 @@ $newline never
           <tr>
             <th>現在のパスワード:
             <td>
-              <input .watermark type=password name=current_pass required>
+              <input type=password name=current_pass placeholder="current password" required>
           <tr>
             <th>新しいパスワード:
             <td>
-              <input .watermark type=password name=new_pass required>
+              <input type=password name=new_pass placeholder="new password" required>
           <tr>
             <th>新しいパスワード(確認):
             <td>
-              <input .watermark type=password name=new_pass2 required>
+              <input type=password name=new_pass2 placeholder="new pass again" required>
       <input .login_button type=submit value="変更">

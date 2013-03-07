@@ -8,9 +8,9 @@ $newline never
           <tr>
             <th>アカウントID:
             <td>
-             <input .watermark #loginAccountId type=account name=ident placeholder=account required>
+             <input #loginAccountId type=account name=ident placeholder=account required>
           <tr>
             <th>パスワード:
             <td>
-              <input .watermark type=password name=password placeholder=password required>
+              <input type=password name=password placeholder=password required>
       <input .login_button type=submit value="ログイン">

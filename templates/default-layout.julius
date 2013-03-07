@@ -37,8 +37,6 @@ $(document).ready(function(){
     return valid;
   });
 
-  $(".watermark").watermark();
-
   AjaxZip2.JSONDATA = '#{rawJS $ approot' y}' + '/static/plugins/ajaxzip2/data';
 
   $.datepicker.regional['ja'] = {

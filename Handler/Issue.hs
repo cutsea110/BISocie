@@ -470,7 +470,10 @@ postCommentR pid ino = do
                           , issueStatus = commentStatus comment
                           }
         when (isNothing (commentContent comment) && T.null (unTextarea amemo)) $ do
-          lift $ invalidArgs ["内容を入力するかイシューの状態を変更してください."]
+          lift $ do
+            r <- getMessageRender
+            setPNotify $ PNotify JqueryUI Error "invalid input" $ r MsgInvalidCommentPosted
+            redirect $ IssueR pid ino
         cid <- insert $ comment { commentIssue=iid
                                 , commentAttached=fmap fst mfh
                                 , commentAutomemo=amemo

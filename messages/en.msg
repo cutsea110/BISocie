@@ -55,3 +55,5 @@ Staff: Staff
 Admin: Admin
 Student: Student
 Search: Search
+
+InvalidCommentPosted: Input comment or change any status.

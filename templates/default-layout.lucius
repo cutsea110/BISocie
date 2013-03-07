@@ -41,6 +41,10 @@ pre {
   color:#888;
 }
 
+.small {
+  font-size: 70%;
+}
+
 input {
   width: 600px;
 }

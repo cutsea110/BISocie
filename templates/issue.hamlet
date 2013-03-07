@@ -8,7 +8,9 @@
 <div #main-content>
   $maybe parent <- mparent
     <a.parent-issue href=@{IssueR pid $ issueNumber parent}>#{show $ issueNumber parent}:#{issueSubject parent}
-  <h3 .issue>#{show ino} : #{issueSubject issue}
+  <h3 .issue>#{show ino} : #{issueSubject issue} #
+    $if not (null children)
+      <a href="#child-issues" .small>#{show $ length children}件のサブタスクがあります.
   <form method=post enctype=multipart/form-data action=@{CommentR pid ino} .validate>
     <table width="800px">
       <tr>

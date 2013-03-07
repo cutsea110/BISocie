@@ -54,11 +54,11 @@ input[type="search"] {
 }
 
 input[type="date"] {
-  width: 6em;
+  width: 8em;
 }
 
 input[type="time"] {
-  width: 4em;
+  width: 6em;
 }
 
 /*** TABLED ***/

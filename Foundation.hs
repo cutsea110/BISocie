@@ -114,7 +114,6 @@ instance Yesod BISocie where
       let header = $(hamletFile "templates/header.hamlet")
           footer = $(hamletFile "templates/footer.hamlet")
       pc <- widgetToPageContent $ do
-        widget
         pnotify y
         addScriptEither $ urlJqueryJs y
         addScriptEither $ urlJqueryUiJs y
@@ -132,9 +131,8 @@ instance Yesod BISocie where
         addScriptEither $ Left $ StaticR plugins_zClip_jquery_zclip_min_js
         addScriptEither $ Left $ StaticR plugins_pnotify_jquery_pnotify_min_js
         addStylesheetEither $ Left $ StaticR plugins_pnotify_jquery_pnotify_default_css
-        toWidget $(luciusFile "templates/default-layout.lucius")
-        toWidget $(juliusFile "templates/default-layout.julius")
-      hamletToRepHtml $(hamletFile "templates/default-layout.hamlet")
+        $(widgetFile "default-layout")
+      hamletToRepHtml $(hamletFile "templates/default-layout-wrapper.hamlet")
 
     -- This is done to provide an optimization for serving static files from
     -- a separate domain. Please see the staticroot setting in Settings.hs

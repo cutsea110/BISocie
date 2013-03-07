@@ -1,4 +1,8 @@
 # BISocie.hs
+AccountID: Account ID
+Password: Password
+Login: Login
+
 Home: Home
 
 SuccessLogin: You are now logged in.

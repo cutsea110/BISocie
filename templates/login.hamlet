@@ -6,11 +6,11 @@ $newline never
       <table>
         <tbody>
           <tr>
-            <th>アカウントID:
+            <th>_{MsgAccountID}:
             <td>
              <input #loginAccountId type=account name=ident placeholder=account autofocus required>
           <tr>
-            <th>パスワード:
+            <th>_{MsgPassword}:
             <td>
               <input type=password name=password placeholder=password required>
-      <input .login_button type=submit value="ログイン">
+      <input .login_button type=submit value="_{MsgLogin}">

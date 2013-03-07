@@ -1,4 +1,8 @@
 # BISocie.hs
+AccountID: アカウントID
+Password: パスワード
+Login: ログイン
+
 Home: ホーム
 
 SuccessLogin: ログインしました.

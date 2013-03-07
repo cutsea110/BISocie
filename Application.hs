@@ -9,11 +9,8 @@ module Application
     , makeFoundation
     ) where
 
-import Foundation
+import Import
 import Settings
-import Settings.Development
-import Settings.StaticFiles (staticSite)
-import Yesod
 import Yesod.Auth
 import Yesod.Default.Config
 import Yesod.Default.Main

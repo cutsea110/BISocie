@@ -16,7 +16,6 @@ module Foundation
     , maybeAuth
     , requireAuth
     , module Settings
-    , module Model
     , module Yesod.Goodies.PNotify
     , RawJS(..)
     , Form
@@ -25,17 +24,15 @@ module Foundation
 import Data.Maybe (isJust)
 import qualified Database.Persist.Store
 import Database.Persist.GenericSql
-import Model
 import Network.HTTP.Conduit (Manager)
 import Network.Wai (Request(..))
 import Network.Socket (getNameInfo)
+import Model
 import qualified Settings
 import Settings (widgetFile, Extra (..))
 import Text.Jasmine (minifym)
 import Text.Julius (RawJS(..))
 import Text.Hamlet (hamletFile)
-import Text.Lucius (luciusFile)
-import Text.Julius (juliusFile)
 import Web.ClientSession (getKey)
 import Yesod
 import Yesod.Static

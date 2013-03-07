@@ -3,7 +3,6 @@ module Handler.Admin where
 
 import Import
 import BISocie.Helpers.Util
-import Control.Monad (unless)
 import qualified Data.Text as T
 
 getUsersR :: Handler RepHtml

@@ -17,7 +17,7 @@ $newline never
       <input type=hidden name=parent value=#{parent}>
     <table width="800px">
       <tr>
-        <th .left width="160px">件名: 
+        <th .left width="100px">件名: 
           <span .alert>(必須)
         <td>
           <input #subject type=text name=subject placeholder=タスク名... autofocus required>

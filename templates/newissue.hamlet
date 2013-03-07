@@ -9,7 +9,7 @@ $newline never
   <li>
     <a href=@{ParticipantsListR pid}>参加者
 <div #main-content>
-  <h3 .issue>#{projectName prj} への新規タスク追加
+  <h3 .issue.page-header>#{projectName prj} への新規タスク追加
     <form method=get action=@{IssueListR pid} .inline>
       <button type=submit .link>キャンセル
   <form method=post enctype=multipart/form-data action=@{NewIssueR pid} .validate>

@@ -1,6 +1,6 @@
 $newline never
 <div #main-content>
-  <h3>システムバッチ
+  <h3 .page-header>システムバッチ
   <div .function-block>
     <div .subheader>学生アカウント一括登録
     <div .form-block>

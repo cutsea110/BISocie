@@ -12,7 +12,7 @@ $with id' <- entityKey u, u' <- entityVal u
     <li>
       <a href=@{CurrentScheduleR}>_{MsgSchedule}
 <div #main-content>
-  <h3 .project>_{MsgProjectSetting}
+  <h3 .project.page-header>_{MsgProjectSetting}
      <button #button-search-users .link>_{MsgSearchUser}
   <form method=post action=@{NewProjectR} .validate>
     <p>

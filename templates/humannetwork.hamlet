@@ -12,5 +12,5 @@ $with id' <- entityKey u, u' <- entityVal u
     <li>
       <a href=@{CurrentScheduleR}>_{MsgSchedule}
 <div #main-content>
-  <h3>_{MsgHumanNetwork}
+  <h3 .page-header>_{MsgHumanNetwork}
   <div #global_map_canvas>

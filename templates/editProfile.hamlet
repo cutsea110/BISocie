@@ -5,7 +5,7 @@ $newline never
   <li>
     <a .selected href=@?{viewprof}>プロフィール
 <div #main-content>
-  <h3>#{userIdent user}のプロフィール
+  <h3 .page-header>#{userIdent user}のプロフィール
     <form method=get action=@{ProfileR uid} .inline>
       <input type=hidden name=mode value=v>
       <button type=submit .link>編集を終了する

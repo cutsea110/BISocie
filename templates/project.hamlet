@@ -9,7 +9,7 @@ $newline never
   <li>
     <a href=@{ParticipantsListR pid}>参加者
 <div #main-content>
-  <h3 .project>#{projectName prj} プロジェクト設定
+  <h3 .project.page-header>#{projectName prj} プロジェクト設定
     <button #button-delete-confirm type=submit name=_method value=delete .link>このプロジェクトを削除する.
   <form method=post action=@{ProjectR pid}>
     <table width="800px">

@@ -887,6 +887,10 @@ textarea[name="courses"] {
 .issue {
   background: url(@{StaticR img_icons_issue_png}) no-repeat left top; padding-left: 32px;
 }
+.participants {
+  background: url(@{StaticR img_icons_participants_png}) no-repeat left top; padding-left: 32px;
+}
+
 #child-issues {
   font-weight: bold;
   width: 96%;

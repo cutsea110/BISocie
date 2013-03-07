@@ -60,7 +60,7 @@ $with id' <- entityKey u, u' <- entityVal u
         <th>
         <th>
   <table .list>
-    <caption>対象案件一覧
+    <caption>対象タスク一覧
     <thead>
       <th .pname>プロジェクト名
       <th .ino>No

@@ -1,8 +1,8 @@
 <ul .tabs>
   <li>
-    <a href=@{IssueListR pid}>#{projectName prj} 案件一覧
+    <a href=@{IssueListR pid}>#{projectName prj} タスク一覧
   <li>
-    <a href=@{NewIssueR pid}>案件追加
+    <a href=@{NewIssueR pid}>タスク追加
   <li>
     <a href=@{ProjectR pid}>プロジェクト設定
   <li>

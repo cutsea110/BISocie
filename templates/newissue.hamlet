@@ -1,15 +1,15 @@
 $newline never
 <ul .tabs>
   <li>
-    <a href=@{IssueListR pid}>#{projectName prj} 案件一覧
+    <a href=@{IssueListR pid}>#{projectName prj} タスク一覧
   <li>
-    <a .selected href=@{NewIssueR pid}>案件追加
+    <a .selected href=@{NewIssueR pid}>タスク追加
   <li>
     <a href=@{ProjectR pid}>プロジェクト設定
   <li>
     <a href=@{ParticipantsListR pid}>参加者
 <div #main-content>
-  <h3 .issue>#{projectName prj} への新規案件追加
+  <h3 .issue>#{projectName prj} への新規タスク追加
     <form method=get action=@{IssueListR pid} .inline>
       <button type=submit .link>キャンセル
   <form method=post enctype=multipart/form-data action=@{NewIssueR pid} .validate>
@@ -20,7 +20,7 @@ $newline never
         <th .left width="160px">件名: 
           <span .alert>(必須)
         <td>
-          <input #subject type=text name=subject placeholder=案件名... autofocus required>
+          <input #subject type=text name=subject placeholder=タスク名... autofocus required>
       <tr>
         <th .left>内容: 
         <td>
@@ -59,4 +59,4 @@ $newline never
           <input #checkreader-yes type=radio name=checkreader value=yes>
           <label for=checkreader-yes>する
     \
-    <button .common type=submit name=_method value=add>案件作成
+    <button .common type=submit name=_method value=add>タスク作成

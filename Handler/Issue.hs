@@ -296,7 +296,7 @@ getIssueListR pid = do
       colspan = 8
       paging = $(widgetFile "paging")
   defaultLayout $ do
-    setTitle $ preEscapedText $ projectBisName prj +++ "案件一覧"
+    setTitle $ preEscapedText $ projectBisName prj +++ "タスク一覧"
     $(widgetFile "issuelist")
 
 getNewIssueR :: ProjectId -> Handler RepHtml
@@ -308,7 +308,7 @@ getNewIssueR pid = do
     let (Right stss) = parseStatuses $ projectStatuses prj
     return (ptcpts, stss, prj)
   defaultLayout $ do
-    setTitle "新規案件作成"
+    setTitle "新規タスク作成"
     $(widgetFile "newissue")
       
 postNewIssueR :: ProjectId -> Handler RepHtml
@@ -371,7 +371,7 @@ postNewIssueR pid = do
                      , partHeaders = []
                      , partContent = LE.encodeUtf8 $ L.pack $ T.unpack $ T.unlines
                                      $ [ "プロジェクト: " +++ projectName prj
-                                       , "案件: " +++ issueSubject issue
+                                       , "タスク: " +++ issueSubject issue
                                        , "ステータス: " +++ issueStatus issue
                                        , ""
                                        ]
@@ -504,7 +504,7 @@ postCommentR pid ino = do
                      , partHeaders = []
                      , partContent = LE.encodeUtf8 $ L.pack $ T.unpack $ T.unlines
                                      $ [ "プロジェクト: " +++ projectName prj
-                                       , "案件: " +++ issueSubject issue
+                                       , "タスク: " +++ issueSubject issue
                                        , "ステータス: " +++ issueStatus issue
                                        , ""
                                        ]

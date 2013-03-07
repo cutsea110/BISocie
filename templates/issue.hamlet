@@ -2,9 +2,9 @@
   <li>
     <a .selected href=@{IssueR pid ino}>#{show ino} : #{issueSubject issue}
   <li>
-    <a href=@{NewIssueR pid}>案件追加
+    <a href=@{NewIssueR pid}>タスク追加
   <li>
-    <a href=@{NewIssueR pid}?parent=#{show iid}>子案件追加
+    <a href=@{NewIssueR pid}?parent=#{show iid}>サブタスク追加
 <div #main-content>
   $maybe parent <- mparent
     <a.parent-issue href=@{IssueR pid $ issueNumber parent}>#{show $ issueNumber parent}:#{issueSubject parent}

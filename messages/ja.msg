@@ -30,13 +30,13 @@ SystemBatch: システムバッチ
 
 ImportStudents: 学生を登録しました.
 
-SendReminder i@Issue: 【リマインダメール送信】 #{issueSubject i}
+SendReminder i@Issue: 【通知メール送信】 #{issueSubject i}
 Project: プロジェクト
 Issue: タスク
 LimitDate: 期限
 CloseLimitDateOfThisIssue: このタスクの期限が近づいてきました.
 NoteOnThisReminderMail: このメールに直接返信せずにこちらのページから投稿してください.
-SendingReminder: リマインダメールを送信しました.
+SendingReminder: 通知メールを送信しました.
 
 ProjectSetting: プロジェクト設定
 SearchUser: ユーザ検索

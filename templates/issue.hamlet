@@ -34,9 +34,9 @@
           <input type=date name=limitdate displayname=期限日 placeholder=yyyy-mm-dd value=#{showLimitdate issue} cond="limittime,reminderdate" .cond-required>
           <input type=time name=limittime dKisplayname=期限時刻 placeholder=HH:MM value=#{showLimittime issue} cond="limitdate,reminderdate" .cond-required>
       <tr>
-        <th>リマインダメール通知日
+        <th>通知日
         <td>
-          <input type=date name=reminderdate displayname=リマインダメール通知日 placeholder=yyyy-mm-dd value=#{showReminderdate issue}>
+          <input type=date name=reminderdate displayname=通知日 placeholder=yyyy-mm-dd value=#{showReminderdate issue}>
       <tr>
         <th>添付ファイル
         <td>

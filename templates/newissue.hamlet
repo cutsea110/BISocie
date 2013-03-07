@@ -44,9 +44,9 @@ $newline never
           <input type=date name=limitdate displayname=期限日 placeholder=yyyy-mm-dd cond="limittime,reminderdate" .cond-required>
           <input type=time name=limittime displayname=期限時刻 placeholder=HH:MM cond="limitdate,reminderdate" .cond-required>
       <tr>
-        <th .left>リマインダメール通知日
+        <th .left>通知日
         <td>
-          <input type=date name=reminderdate displayname=リマインダメール通知日 placeholder=yyyy-mm-dd>
+          <input type=date name=reminderdate displayname=通知日 placeholder=yyyy-mm-dd>
       <tr>
         <th .left>添付ファイル:
         <td>

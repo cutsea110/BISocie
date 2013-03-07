@@ -12,7 +12,8 @@ $(function(){
             var marker = new google.maps.Marker({
                 map: map,
                 position: new google.maps.LatLng(data.locations[i].lat, data.locations[i].lng),
-                title: data.locations[i].name
+                title: data.locations[i].name,
+                icon: "@{StaticR img_icons_icon_map_png}"
             });
             addMarkerLink(marker, data.locations[i].uri);
         }

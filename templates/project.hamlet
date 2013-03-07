@@ -1,75 +1,45 @@
 $newline never
 <ul .tabs>
   <li>
-    <a href=@{IssueListR pid}>#{projectName prj} 案件一覧
+    <a href=@{IssueListR pid}>#{projectName prj} タスク一覧
   <li>
-    <a href=@{NewIssueR pid}>案件追加
-  <li .selected>
-    <a href=@{ProjectR pid}>プロジェクト設定
+    <a href=@{NewIssueR pid}>タスク追加
+  <li>
+    <a .selected href=@{ProjectR pid}>プロジェクト設定
+  <li>
+    <a href=@{ParticipantsListR pid}>参加者
 <div #main-content>
-  <h3>#{projectName prj} プロジェクト設定 
-    $if canEditProjectSetting self
-      <button #button-delete-confirm type=submit name=_method value=delete .link>このプロジェクトを削除する.
+  <h3 .project.page-header>#{projectName prj} プロジェクト設定
+    <button #button-delete-confirm type=submit name=_method value=delete .link>このプロジェクトを削除する.
   <form method=post action=@{ProjectR pid}>
-    <input type=hidden name=_method value=modify>
-    <dl>
-      <dt>プロジェクト名 
-        $if canEditProjectSetting self
-          <span .alert>(必須)
-      <dd>
-        $if canEditProjectSetting self
-          <input #name type=text name=name placeholder=(プロジェクト名) uri=@{ProjectR pid} value=#{projectName prj} .inplaceedit>
-        $else
-          #{projectName prj}
-      <dt>概要 
-        $if canEditProjectSetting self
-          <span .alert>(必須)
-      <dd>
-        $if canEditProjectSetting self
-          <textarea #description type=text name=description placeholder=(プロジェクト概要) uri=@{ProjectR pid} .inplaceedit>#{projectDescription prj}
-        $else
-          #{showMultilineText $ projectDescription prj}
-      <dt>プロジェクト状態
-        $if canEditProjectSetting self
-          <span .alert>(必須)
-      <dd>
-        $if canEditProjectSetting self
-          <input #terminated-no type=radio name=terminated value=no :not (projectTerminated prj):checked>
-          <label for=terminated-no>活動中
-          <input #terminated-yes type=radio name=terminated value=yes :projectTerminated prj:checked>
-          <label for=terminated-yes>終了
-        $else
-          #{showTerminated prj}
-      <dt>ステータス 
-        $if canEditProjectSetting self
-          <span .alert>(必須) 
-        <button #button-status-syntax-help type=submit .link>ヘルプ
-      <dd>
-        $if canEditProjectSetting self
-          <textarea #statuses name=statuses placeholder=(ステータス設定) uri=@{ProjectR pid} .inplaceedit>#{projectStatuses prj}
-        $else
-          #{showMultilineText $ projectStatuses prj}
-      <dt>参加者
-        $if canEditProjectSetting self
-          <button #button-search-users .link>参加者追加
-      <dd>
-        <div #participants>
-<div #search-users>
-  <label for=search-bay-name>名前:
-  <input #search-by-name type=text name=username>
-  <label for=select-entry-year>入学年度:
-  <select #select-entry-year>
-    <option>
-    $forall ey <- eyears
-      <option value=#{show ey}>#{show ey}
-  <input #select-teacher type=checkbox value=Teacher>
-  <label for=select-teacher>教員
-  <input #select-staff type=checkbox value=Staff>
-  <label for=select-staff>職員
-  <input #select-admin type=checkbox value=Admin>
-  <label for=select-admin>管理者
-  <button #go-search-users>検索
-  <div #search-result .scroll>
+    <table width="800px">
+      <tbody>
+        <tr>
+          <th .left width="160px">プロジェクト名 #
+            <span .alert>(必須) #
+          <td>
+            <input type=text #name name=name placeholder="(プロジェクト名)" uri=@{ProjectR pid} value=#{projectName prj} required>
+        <tr>
+          <th .left>概要 #
+            <span .alert>(必須) #
+          <td>
+            <textarea #description name=description placeholder="(プロジェクト概要)" uri=@{ProjectR pid} required>#{unTextarea $ projectDescription prj}
+        <tr>
+          <th .left>状態 #
+            <span .alert>(必須) #
+          <td>
+            <input type=radio #terminated-no name=terminated value=no :not (projectTerminated prj):checked>
+            <label for=terminated-no>活動中
+            <input type=radio #terminated-yes name=terminated value=yes :projectTerminated prj:checked>
+            <label for=terminated-yes>終了
+        <tr>
+          <th .left>ステータス #
+            <span .alert>(必須) #
+            <button #button-status-syntax-help type=submit .link>ヘルプ
+          <td>
+            <textarea #statuses name=statuses placeholder="(ステータス設定)" uri=@{ProjectR pid} required>#{unTextarea $ projectStatuses prj}
+    <button .common type=submit name=_method value=modify>変更する
+
 ^{help}
 <div #delete-confirm .alert>
   削除をすると二度と元に戻すことはできません。
@@ -82,7 +52,3 @@ $newline never
 <div #delete-failed .errors>
   プロジェクトを削除できませんでした。
   このダイアログを閉じてください。
-
-<div #release-self-participate>
-  このプロジェクトの参加者ではなくなりました。
-  このダイアログを閉じると強制的にホームに移動します。

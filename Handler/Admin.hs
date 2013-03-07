@@ -1,27 +1,18 @@
 {-# LANGUAGE TemplateHaskell, QuasiQuotes, OverloadedStrings #-}
 module Handler.Admin where
 
-import Foundation
+import Import
 import BISocie.Helpers.Util
-
-import Yesod
-import qualified Data.Text as T
-import Control.Applicative ((<$>),(<*>))
 import Control.Monad (unless)
+import qualified Data.Text as T
 
 getUsersR :: Handler RepHtml
 getUsersR = do
-  (Entity _ self) <- requireAuth
-  unless (isAdmin self) $
-    permissionDenied "あなたはこのページにアクセスできません."
   users <- runDB $ selectList [] [Asc UserIdent]
   defaultLayout $(whamletFile "templates/users.hamlet")
 
 getUserR :: UserId -> Handler RepHtml
 getUserR uid = do
-  (Entity _ self) <- requireAuth
-  unless (isAdmin self) $
-    permissionDenied "あなたはこのページを参照できません."
   user <- runDB $ get404 uid
   let roleIs r = r == userRole user
       toInt = (+1) . fromEnum
@@ -32,9 +23,6 @@ getUserR uid = do
 
 postUserR :: UserId -> Handler ()
 postUserR uid = do
-  (Entity _ self) <- requireAuth
-  unless (isAdmin self) $
-    permissionDenied "あなたはこのページを参照できません."
   new <- runInputPost $ User
          <$> ireq textField "ident"
          <*> iopt passwordField "password"
@@ -53,9 +41,6 @@ postUserR uid = do
 
 getNewUserR :: Handler RepHtml
 getNewUserR = do
-  (Entity _ self) <- requireAuth
-  unless (isAdmin self) $
-    permissionDenied "あなたはこのページを参照できません."
   let toInt = (+1) . fromEnum
   defaultLayout $(whamletFile "templates/newUser.hamlet")
   where
@@ -63,9 +48,6 @@ getNewUserR = do
 
 postNewUserR :: Handler ()
 postNewUserR = do
-  (Entity _ self) <- requireAuth
-  unless (isAdmin self) $
-    permissionDenied "あなたはこのページを参照できません."
   new <- runInputPost $ User
          <$> ireq textField "ident"
          <*> iopt passwordField "password"
@@ -82,16 +64,10 @@ postNewUserR = do
 
 getDeleteUserR :: UserId -> Handler RepHtml
 getDeleteUserR uid = do
-  (Entity _ self) <- requireAuth
-  unless (isAdmin self) $
-    permissionDenied "あなたはこのページを参照できません."
   user <- runDB $ get404 uid
   defaultLayout $(whamletFile "templates/deleteUser.hamlet")
 
 postDeleteUserR :: UserId -> Handler ()
 postDeleteUserR uid = do
-  (Entity _ self) <- requireAuth
-  unless (isAdmin self) $
-    permissionDenied "あなたはこのページを参照できません."
   runDB $ delete uid
   redirect UsersR

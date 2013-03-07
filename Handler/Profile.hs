@@ -4,19 +4,12 @@
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 module Handler.Profile where
 
-import Foundation
-
-import Settings (entryStartYear, graduateStartYear)
-import Settings.StaticFiles
-import Handler.S3
-
-import Prelude hiding (zip)
-import Yesod
+import Import
 import Control.Monad
-import Control.Applicative
 import Data.Time
 import Data.Maybe (fromMaybe, fromJust)
-import Data.Text (Text)
+import Handler.S3
+import Settings (entryStartYear, graduateStartYear)
 
 getProfileR :: UserId -> Handler RepHtml
 getProfileR uid = do
@@ -123,10 +116,7 @@ postProfileR uid = do
 
 putProfileR :: UserId -> Handler RepHtml
 putProfileR uid = do
-  (Entity _ self) <- requireAuth
   user <- runDB $ get404 uid
-  unless (self `canEdit` user) $ 
-    permissionDenied "あなたはこのユーザプロファイルを編集することはできません."
   case userRole user of
     Student -> putStudentProf
     Teacher -> putTeacherProf
@@ -152,7 +142,7 @@ putProfileR uid = do
       lab <- runInputPost $ Laboratory uid
         <$> iopt textField "roomnumber"
         <*> iopt textField "extensionnumber"
-        <*> iopt textField "courses"
+        <*> iopt textareaField "courses"
       runDB $ do
         -- update user
         update uid [UserEmail =. em, UserFamilyName =. fn, UserGivenName =. gn]
@@ -198,7 +188,6 @@ putProfileR uid = do
     
 getAvatarImageR :: UserId -> Handler RepHtml
 getAvatarImageR uid = do
-  _ <- requireAuth
   (fid, f) <- runDB $ do
     u <- get404 uid
     case userAvatar u of
@@ -210,14 +199,10 @@ getAvatarImageR uid = do
 
 postAvatarR :: UserId -> Handler RepJson
 postAvatarR uid = do
-  (Entity _ self) <- requireAuth
   r <- getUrlRender
   mfhid <- lookupPostParam "avatar"
   let avatar = fmap (fromJust . fromPathPiece) mfhid
   runDB $ do
-    user <- get404 uid
-    unless (self `canEdit` user) $
-      lift $ permissionDenied "あなたはこのユーザのアバターを変更することはできません."
     update uid [UserAvatar =. avatar]
   cacheSeconds 10 -- FIXME
   jsonToRepJson $ object [ "uri" .= r (AvatarImageR uid)

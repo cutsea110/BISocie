@@ -121,6 +121,7 @@ $(document).ready(function(){
 function mkUser(u) {
   var div = $("<div class='inline user'>").attr({uid: u.id, ident: u.ident}),
       avatar = $("<img class='avatar'/>").attr({src: u.avatar}),
-      s = $('<a/>').attr({href: u.uri}).html(u.name);
-  return div.append(s).append(avatar);
+      br = $('<br>'),
+      s = $('<a/>').attr({href: u.uri}).addClass('small').html(u.name);
+  return div.append(s).append(br).append(avatar);
 }

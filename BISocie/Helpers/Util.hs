@@ -1,15 +1,23 @@
-module BISocie.Helpers.Util 
+{-# LANGUAGE OverloadedStrings #-}
+module BISocie.Helpers.Util
        ( mkPagenate
        , (+++)
        , showText
        , readText
        , encodeUrl
        , decodeUrl
+       , fst3
+       , snd3
+       , thd3
+       , ilike
        ) where
 
+import Yesod
+import Database.Persist.Store
 import Codec.Binary.UTF8.String (encodeString, decodeString)
 import Data.Text (Text)
 import qualified Data.Text as T
+import Data.Tuple.HT (fst3, snd3, thd3)
 import Network.HTTP.Base (urlEncode, urlDecode)
 
 (+++) :: Text -> Text -> Text
@@ -18,6 +26,13 @@ showText :: (Show a) => a -> Text
 showText = T.pack . show
 readText :: (Read a) => Text -> a
 readText = read . T.unpack
+
+ilike :: EntityField v Text -> Text -> Filter v
+ilike field val = Filter field (Left $ T.concat ["%", escape val, "%"]) (BackendSpecificFilter "ILIKE")
+  where
+    escape = T.foldr esc ""
+    esc c t | T.any (==c) "%?'" = '\\' `T.cons` c `T.cons` t
+            | otherwise = c `T.cons` t
 
 mkPagenate :: Int -> Int -> Int -> Int -> [[Int]]
 mkPagenate fillGap width current maxpage =

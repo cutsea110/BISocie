@@ -1,60 +1,62 @@
 $newline never
 <ul .tabs>
   <li>
-    <a href=@{IssueListR pid}>#{projectName prj} 案件一覧
-  <li .selected>
-    <a href=@{NewIssueR pid}>案件追加
+    <a href=@{IssueListR pid}>#{projectName prj} タスク一覧
+  <li>
+    <a .selected href=@{NewIssueR pid}>タスク追加
   <li>
     <a href=@{ProjectR pid}>プロジェクト設定
+  <li>
+    <a href=@{ParticipantsListR pid}>参加者
 <div #main-content>
-  <h3>#{projectName prj} への新規案件追加
+  <h3 .issue.page-header>#{projectName prj} への新規タスク追加
     <form method=get action=@{IssueListR pid} .inline>
       <button type=submit .link>キャンセル
   <form method=post enctype=multipart/form-data action=@{NewIssueR pid} .validate>
     $maybe parent <- mparent
       <input type=hidden name=parent value=#{parent}>
-    <table .nostyle>
+    <table width="800px">
       <tr>
-        <th>件名: 
+        <th .left width="100px">件名: 
           <span .alert>(必須)
         <td>
-          <input #subject type=text name=subject placeholder=案件名... .watermark .required>
+          <input #subject type=text name=subject placeholder=タスク名... autofocus required>
       <tr>
-        <th>内容: 
+        <th .left>内容: 
         <td>
-          <textarea #content name=content placeholder=内容を書く... .watermark>
+          <textarea #content name=content placeholder=内容を書く...>
       <tr>
-        <th>アサイン:
+        <th .left>アサイン:
         <td>
           <select name=assign>
             <option selected>
             $forall p <- ptcpts
               <option value=#{show $ fst p}>#{userFullName $ snd p}
       <tr>
-        <th>ステータス:
+        <th .left>ステータス:
         <td>
           <select name=status>
             $forall s <- stss
               <option>#{fst3 s}
       <tr>
-        <th>期限:
+        <th .left>期限:
         <td>
-          <input name=limitdate displayname=期限日 placeholder=yyyy-mm-dd .watermark .date cond="limittime,reminderdate" .cond-required>
-          <input type=time name=limittime displayname=期限時刻 placeholder=HH:MM .watermark .time cond="limitdate,reminderdate" .cond-required>
+          <input type=date name=limitdate displayname=期限日 placeholder=yyyy-mm-dd cond="limittime,reminderdate" .cond-required>
+          <input type=time name=limittime displayname=期限時刻 placeholder=HH:MM cond="limitdate,reminderdate" .cond-required>
       <tr>
-        <th>リマインダメール通知日
+        <th .left>通知日
         <td>
-          <input name=reminderdate displayname=リマインダメール通知日 placeholder=yyyy-mm-dd .watermark .date>
+          <input type=date name=reminderdate displayname=通知日 placeholder=yyyy-mm-dd>
       <tr>
-        <th>添付ファイル:
+        <th .left>添付ファイル:
         <td>
           <input type=file name=attached>
       <tr>
-        <th>読者確認:
+        <th .left>読者確認:
         <td>
           <input #checkreader-no type=radio name=checkreader value=no checked>
           <label for=checkreader-no>しない
           <input #checkreader-yes type=radio name=checkreader value=yes>
           <label for=checkreader-yes>する
     \
-    <button type=submit name=_method value=add>案件作成
+    <button .common type=submit name=_method value=add>タスク作成

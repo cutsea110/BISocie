@@ -19,7 +19,6 @@ import Data.Int
 import Data.Time
 import Data.Maybe (fromMaybe, maybeToList)
 import Data.List (find)
-import Data.Tuple.HT (fst3)
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec as P (string)
 import Data.Text (Text)
@@ -59,11 +58,11 @@ data Effect = Impact | Strike deriving (Show, Eq)
 type Color = Text
 data ProjectBis = ProjectBis { projectBisId :: ProjectId
                              , projectBisName :: Text
-                             , projectBisDescription :: Text
+                             , projectBisDescription :: Textarea
                              , projectBisStatuses :: [(Text, Maybe Color, Maybe Effect)]
                              }
 toProjectBis :: Entity Project -> ProjectBis
-toProjectBis (Entity pid prj) = 
+toProjectBis (Entity pid prj) =
   let Right es = parseStatuses $ projectStatuses prj
   in         
    ProjectBis { projectBisId=pid
@@ -78,8 +77,8 @@ lookupStatus = find . (\x y -> x == fst3 y)
 lookupProjectBis :: ProjectId -> [ProjectBis] -> Maybe ProjectBis
 lookupProjectBis = find . (\x y -> x == projectBisId y)
 
-parseStatuses :: Text -> Either ParseError [(Text, Maybe Color, Maybe Effect)]
-parseStatuses t = 
+parseStatuses :: Textarea -> Either ParseError [(Text, Maybe Color, Maybe Effect)]
+parseStatuses (Textarea t) =
     case ps (T.unpack t) of
       Right xs -> Right $ map toText xs
       Left e -> Left e
@@ -127,11 +126,11 @@ color = do
       if (length c == 3 || length c == 6) && all isHexDigit c
         then return $ Just ("#" ++ (take 6 $ concat $ repeat c))
         else do
-        let known = lookup c [ ("赤", "#ffcccc")
-                             , ("緑", "#ccffcc")
-                             , ("青", "#ccccff")
-                             , ("灰", "#888888")
-                             , ("黄", "#ffffcc")]
+        let known = lookup c [ ("赤", "#ffb6c1")
+                             , ("緑", "#f0fff0")
+                             , ("青", "#add8e6")
+                             , ("灰", "#dedfdf")
+                             , ("黄", "#f2eeaf")]
         case known of
           Nothing -> return $ Just c
           Just k  -> return $ Just k
@@ -144,9 +143,9 @@ data IssueBis = IssueBis { issueBisId :: IssueId
                          , issueBisAssign :: Maybe User
                          }
 data CommentBis = CommentBis { commentBisId :: CommentId
-                             , commentBisContent :: Maybe Text
+                             , commentBisContent :: Maybe Textarea
                              , commentBisStatus :: Text
-                             , commentBisAutomemo :: Text
+                             , commentBisAutomemo :: Textarea
                              , commentBisAttached :: Maybe (FileHeaderId, FileHeader)
                              , commentBisCheckReader :: Bool
                              , commentBisCuser :: (UserId, User)
@@ -267,10 +266,10 @@ nocare :: Comment -> Bool
 nocare = not . commentCheckReader
 
 showmaybe :: Maybe Text -> Text
-showmaybe = fromMaybe "" . fmap id
+showmaybe = fromMaybe ""
 
-showMultilineText :: Text -> Html
-showMultilineText = preEscapedText . T.intercalate "<br/>" . T.splitOn "\n"
+showMultilineText :: Textarea -> Html
+showMultilineText = preEscapedText . T.intercalate "<br/>" . T.splitOn "\n" . unTextarea
 
 showShortenText :: Text -> Html
 showShortenText = preEscapedText . shorten 26 . safeHead . T.splitOn "\n"
@@ -329,9 +328,6 @@ canViewHumannetwork u =
     Teacher -> True
     Staff -> True
     Student -> False
-
-canEditProjectSetting :: User -> Bool
-canEditProjectSetting _ = True
 
 canViewUserLocations :: User -> Bool
 canViewUserLocations u =

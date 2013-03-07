@@ -1,14 +1,16 @@
 $newline never
 <ul .tabs>
-  <li .selected>
-    <a href=@{IssueListR pid}>#{projectBisName prj} 案件一覧
   <li>
-    <a href=@{NewIssueR pid}>案件追加
+    <a .selected href=@{IssueListR pid}>#{projectBisName prj} タスク一覧
+  <li>
+    <a href=@{NewIssueR pid}>タスク追加
   <li>
     <a href=@{ProjectR pid}>プロジェクト設定
+  <li>
+    <a href=@{ParticipantsListR pid}>参加者
 <div #main-content>
   <table .list>
-    <caption>#{projectBisName prj} 案件一覧
+    <caption>#{projectBisName prj} タスク一覧
     <thead>
       ^{paging}
       <tr>
@@ -23,7 +25,7 @@ $newline never
     <tbody>
       $forall issue <- issues
         $with i <- snd issue, i' <- issueBisIssue i
-          <tr bgcolor=#{colorOf $ issueStatus i'} .#{effectOf $ issueStatus i'}>
+          <tr .#{effectOf $ issueStatus i'} style="background-color:#{colorOf $ issueStatus i'}">
             <td .number>#{show $ issueNumber i'}
             <td>
               <a href=@{IssueR pid $ issueNumber i'}>

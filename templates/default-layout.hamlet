@@ -1,20 +1,14 @@
-$newline never
-!!!
-<html>
-    <head>
-      <title>#{pageTitle pc}
-      ^{pageHead pc}
-    <body>
-      <div #main>
-        <div #ui-header .clearfix>
-          ^{header}
-        <div #ui-main>
-          <ul #breadcrumbs>
-            $if not (null parents)
-              $forall p <- parents
-                <li>
-                  <a href=@{fst p}>#{snd p}
-            <li>#{title}
-          ^{pageBody pc}
-        <div #ui-footer>
-          ^{footer}
+<div #main>
+  <div #ui-header .clearfix>
+    ^{header}
+  <div #ui-main>
+    <ul #breadcrumbs>
+      $if not (null parents)
+        $forall p <- parents
+          <li>
+            <a href=@{fst p}>#{snd p}
+      <li>#{title}
+    <div .tabs>
+      ^{widget}
+  <div #ui-footer>
+    ^{footer}

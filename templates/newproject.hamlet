@@ -1,49 +1,56 @@
-$newline never
-<ul .tabs>
-  <li>
-    <a href=@{HomeR selfid}>ホーム
-  <li .selected>
-    <a href=@{NewProjectR}>プロジェクト新規作成
-  <li>
-    <a href=@{CrossSearchR}>クロスサーチ
-  $if canViewHumannetwork self
+$with id' <- entityKey u, u' <- entityVal u
+  <ul .tabs>
     <li>
-      <a href=@{HumanNetworkR}>ヒューマンネットワーク
-  <li>
-    <a href=@{CurrentScheduleR}>スケジュール
+      <a href=@{HomeR id'}>_{MsgHome}
+    <li>
+      <a .selected href=@{NewProjectR}>_{MsgCreateNewProject}
+    <li>
+      <a href=@{CrossSearchR}>_{MsgCrossSearch}
+    $if canViewHumannetwork u'
+      <li>
+        <a href=@{HumanNetworkR}>_{MsgHumanNetwork}
+    <li>
+      <a href=@{CurrentScheduleR}>_{MsgSchedule}
 <div #main-content>
-  <h3>プロジェクト設定
-     <button #button-search-users .link>ユーザー検索
+  <h3 .project.page-header>_{MsgProjectSetting}
+     <button #button-search-users .link>_{MsgSearchUser}
   <form method=post action=@{NewProjectR} .validate>
-    <dl>
-      <dt>プロジェクト名 
-        <span .alert>(必須)
-      <dd>
-        <input #name type=text name=name placeholder=(プロジェクト名) .watermark .required>
-      <dt>概要 
-        <span .alert>(必須)
-      <dd>
-        <textarea #description type=text name=description placeholder=(プロジェクト概要) .watermark .required>
-      <dt>ステータス 
-        <span .alert>(必須) 
-        <button #button-status-syntax-help type=submit .link>ヘルプ
-      <dd>
-        <textarea #statuses name=statuses placeholder=(ステータス設定) .watermark .required>#{inintstatuses}
-    <button type=submit name=_method value=create>プロジェクトを作成する
+    <p>
+      <table width="800px">
+        <tbody>
+          <tr>
+            <th .left width="160px">_{MsgProjectName} #
+              <span .alert>_{MsgRequired} #
+            <td>
+              <input #name type=text name=name placeholder="(_{MsgProjectName})" size="100" autofocus required>
+          <tr>
+            <th .left>_{MsgDescription} #
+              <span .alert>_{MsgRequired} #
+            <td>
+              <textarea #description name=description placeholder="(_{MsgProjectDescription})" cols="61" rows="5" required>
+          <tr>
+            <th .left>_{MsgStatus} #
+              <span .alert>_{MsgRequired} #
+              <br>
+              <button .link #button-status-syntax-help type=submit>_{MsgHelp}
+            <td>
+              <textarea #statuses name=statuses placeholder="(_{MsgStatusSetting})" cols="32" rows="6" required>#{inintstatuses}
+    <button .common type=submit name=_method value=create>_{MsgCreateProject}
+
 <div #search-users>
-  <label for=search-bay-name>名前:
+  <label for=search-bay-name>_{MsgName}:
   <input #search-by-name type=text name=username>
-  <label for=select-entry-year>入学年度:
+  <label for=select-entry-year>_{MsgEntryYear}:
   <select #select-entry-year>
     <option>
     $forall ey <- eyears
       <option value=#{show ey}>#{show ey}
   <input #select-teacher type=checkbox value=Teacher>
-  <label for=select-teacher>教員
+  <label for=select-teacher>_{MsgTeacher}
   <input #select-staff type=checkbox value=Staff>
-  <label for=select-staff>職員
+  <label for=select-staff>_{MsgStaff}
   <input #select-admin type=checkbox value=Admin>
-  <label for=select-admin>管理者
-  <button #go-search-users>検索
+  <label for=select-admin>_{MsgAdmin}
+  <button .common #go-search-users>_{MsgSearch}
   <div #search-result .scroll>
 ^{help}

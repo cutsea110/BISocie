@@ -1,21 +1,22 @@
-$newline never
 <ul .tabs>
-  <li .selected>
-    <a href=@{IssueR pid ino}>#{show ino} : #{issueSubject issue}
   <li>
-    <a href=@{NewIssueR pid}>案件追加
+    <a .selected href=@{IssueR pid ino}>#{show ino} : #{issueSubject issue}
   <li>
-    <a href=@{NewIssueR pid}?parent=#{show iid}>子案件追加
+    <a href=@{NewIssueR pid}>タスク追加
+  <li>
+    <a href=@{NewIssueR pid}?parent=#{show iid}>サブタスク追加
 <div #main-content>
   $maybe parent <- mparent
     <a.parent-issue href=@{IssueR pid $ issueNumber parent}>#{show $ issueNumber parent}:#{issueSubject parent}
-  <h3>#{show ino} : #{issueSubject issue}
+  <h3 .issue.page-header>#{show ino} : #{issueSubject issue} #
+    $if not (null children)
+      <a href="#child-issues" .small>#{show $ length children}件のサブタスクがあります.
   <form method=post enctype=multipart/form-data action=@{CommentR pid ino} .validate>
-    <table .nostyle>
+    <table width="800px">
       <tr>
         <th>内容: 
         <td>
-          <textarea #content placeholder=内容... name=content .watermark>
+          <textarea #content placeholder=内容... name=content autofocus>
       <tr>
         <th>アサイン:
         <td>
@@ -32,12 +33,12 @@ $newline never
       <tr>
         <th>期限:
         <td>
-          <input name=limitdate displayname=期限日 placeholder=yyyy-mm-dd value=#{showLimitdate issue} .watermark .date cond="limittime,reminderdate" .cond-required>
-          <input type=time name=limittime dKisplayname=期限時刻 placeholder=HH:MM value=#{showLimittime issue} .watermark .time cond="limitdate,reminderdate" .cond-required>
+          <input type=date name=limitdate displayname=期限日 placeholder=yyyy-mm-dd value=#{showLimitdate issue} cond="limittime,reminderdate" .cond-required>
+          <input type=time name=limittime dKisplayname=期限時刻 placeholder=HH:MM value=#{showLimittime issue} cond="limitdate,reminderdate" .cond-required>
       <tr>
-        <th>リマインダメール通知日
+        <th>通知日
         <td>
-          <input name=reminderdate displayname=リマインダメール通知日 placeholder=yyyy-mm-dd value=#{showReminderdate issue} .watermark .date>
+          <input type=date name=reminderdate displayname=通知日 placeholder=yyyy-mm-dd value=#{showReminderdate issue}>
       <tr>
         <th>添付ファイル
         <td>
@@ -49,7 +50,7 @@ $newline never
           <label for=checkreader-no>しない
           <input #checkreader-yes type=radio name=checkreader value=yes>
           <label for=checkreader-yes>する
-    <button type=submit name=_method value=add>投稿
+    <button .common type=submit name=_method value=add>投稿
   <ul #issue-thread>
     $forall c <- comments
       $with c' <- snd3 c, cid <- fst3 c, cid' <- toPathPiece cid
@@ -74,10 +75,12 @@ $newline never
           $if commentBisCheckReader c'
             <div #readers-#{cid'} .readers url=@{CommentReadersR cid}>
   $if not (null children)
-    <div #child-issues>子イシュー
-      <ul>
-        $forall child <- children
-          $with ch <- entityVal child
-            <li>
-              <a href=@{IssueR pid $ issueNumber ch}>#{issueSubject ch}
+    <div #child-issues>
+      <div .child-issues>サブタスク
+        <ul>
+          $forall child <- children
+            $with ch <- entityVal child
+              <li>
+                <a href=@{IssueR pid $ issueNumber ch}>#{issueSubject ch}
+
 <div #popup-profile>

@@ -31,10 +31,10 @@ $(document).ready(function(){
       '削除する': function(){
         $.ajax({
           async: false,
-          type: 'POST',
+          type: 'DELETE',
           url: '@{ProjectR pid}',
           dataType: 'json',
-          data: {_method: 'delete'},
+          data: null,
           success: function(json){
             $('#delete-confirm').dialog('close');
             if (json.deleted) {
@@ -66,22 +66,6 @@ $(document).ready(function(){
         location.href='@{HomeR uid}';
       }
     }
-  });
-
-  $('#terminated-no, #terminated-yes').click(function(){
-    $.ajax({
-      async: true,
-      type: 'POST',
-      url: '@{ProjectR pid}',
-      dataType: 'json',
-      data: {_method: 'modify', terminated: $(this).val()},
-      success: function(json) {
-      },
-      error: function(res, status) {
-        // FIXME
-        alert(status + ': 終了状態の変更に失敗しました.');
-      }
-    });
   });
 
   $('#search-users').hide().attr('title', 'ユーザ検索').dialog({

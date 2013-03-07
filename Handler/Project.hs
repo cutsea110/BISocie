@@ -72,52 +72,24 @@ getProjectR pid = do
     setTitle $ preEscapedText $ projectName prj
     $(widgetFile "project")
 
-postProjectR :: ProjectId -> Handler RepJson
+postProjectR :: ProjectId -> Handler ()
 postProjectR pid = do
-  _method <- lookupPostParam "_method"
-  case _method of
-    Just "modify" -> putProjectR pid
-    Just "delete" -> deleteProjectR pid
-    _             -> invalidArgs ["The possible values of '_method' are modify or delete"]
-
-putProjectR :: ProjectId -> Handler RepJson
-putProjectR pid = do
-  nm' <- lookupPostParam "name"
-  ds' <- lookupPostParam "description"
-  tm' <- lookupPostParam "terminated"
-  st' <- lookupPostParam "statuses"
+  (nm, ds, tm, st) <- runInputPost $ (,,,)
+                           <$> ireq textField "name"
+                           <*> ireq textareaField "description"
+                           <*> ireq boolField "terminated"
+                           <*> ireq textareaField "statuses"
   now <- liftIO getCurrentTime
-
-  prj <- runDB $ do
+  runDB $ do
     prj <- get404 pid
-    Just nm <- case nm' of
-        Nothing -> return $ Just $ projectName prj
-        Just "" -> lift $ invalidArgs ["プロジェクト名は入力必須項目です."]
-        Just nm'' -> return $ Just nm''
-    Just ds <- case ds' of
-        Nothing -> return $ Just $ projectDescription prj
-        Just "" -> lift $ invalidArgs ["概要は入力必須項目です."]
-        Just ds'' -> return $ Just $ Textarea ds''
-    Just tm <- case tm' of
-        Nothing -> return $ Just $ projectTerminated prj
-        Just "no" -> return $ Just False
-        Just "yes" -> return $ Just True
-    Just st <- case st' of
-        Nothing -> return $ Just $ projectStatuses prj
-        Just "" -> lift $ invalidArgs ["ステータスは入力必須項目です."]
-        Just st'' -> return $ Just $ Textarea st''
-    update pid [ ProjectName =. nm
-               , ProjectDescription =. ds
-               , ProjectTerminated =. tm
-               , ProjectStatuses =. st
-               , ProjectUdate =. now]
-    get404 pid
-  cacheSeconds 10 -- FIXME
-  jsonToRepJson $ object [ "name" .= projectName prj
-                         , "description" .= unTextarea (projectDescription prj)
-                         , "terminated" .= showTerminated prj
-                         , "statuses" .= unTextarea (projectStatuses prj)
-                         ]
+    let prj' = prj { projectName = nm
+                   , projectDescription = ds
+                   , projectTerminated = tm
+                   , projectStatuses = st
+                   , projectUdate = now
+                   }
+    replace pid prj'
+  redirect $ ProjectR pid
 
 deleteProjectR :: ProjectId -> Handler RepJson
 deleteProjectR pid = do

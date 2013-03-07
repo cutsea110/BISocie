@@ -56,4 +56,4 @@ Admin: 管理者
 Student: 学生
 Search: 検索
 
-InvalidCommentPosted: 内容を入力するかイシューの状態を変更してください.
+InvalidCommentPosted: 内容を入力するかタスクの状態を変更してください.

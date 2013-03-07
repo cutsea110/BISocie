@@ -378,7 +378,7 @@ postNewIssueR pid = do
                                      ++ T.lines (unTextarea (fromJust (commentContent comment)))
                                      ++ [ ""
                                         , "*このメールに直接返信せずにこちらのページから投稿してください。"
-                                        , "イシューURL: " +++ r (IssueR pid ino) +++ fragment]
+                                        , "URL: " +++ r (IssueR pid ino) +++ fragment]
                                      ++ case mfh of
                                        Nothing -> []
                                        Just (fid,_) -> ["添付ファイル: " +++ (r $ AttachedFileR cid fid)]
@@ -511,7 +511,7 @@ postCommentR pid ino = do
                                      ++ T.lines (unTextarea (fromJust (commentContent comment)))
                                      ++ [ ""
                                         , "*このメールに直接返信せずにこちらのページから投稿してください。"
-                                        , "イシューURL: " +++ r (IssueR pid ino) +++ fragment]
+                                        , "URL: " +++ r (IssueR pid ino) +++ fragment]
                                      ++ case mfh of
                                        Nothing -> []
                                        Just (fid,_) -> ["添付ファイル: " +++ (r $ AttachedFileR cid fid)]

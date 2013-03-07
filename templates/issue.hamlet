@@ -74,7 +74,7 @@
             <div #readers-#{cid'} .readers url=@{CommentReadersR cid}>
   $if not (null children)
     <div #child-issues>
-      <div .child-issues>子イシュー
+      <div .child-issues>サブタスク
         <ul>
           $forall child <- children
             $with ch <- entityVal child

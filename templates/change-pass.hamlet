@@ -8,13 +8,13 @@ $newline never
           <tr>
             <th>現在のパスワード:
             <td>
-              <input .watermark.required type=password name=current_pass>
+              <input .watermark type=password name=current_pass required>
           <tr>
             <th>新しいパスワード:
             <td>
-              <input .watermark.required type=password name=new_pass>
+              <input .watermark type=password name=new_pass required>
           <tr>
             <th>新しいパスワード(確認):
             <td>
-              <input .watermark.required type=password name=new_pass2>
+              <input .watermark type=password name=new_pass2 required>
       <input .login_button type=submit value="変更">

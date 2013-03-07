@@ -27,16 +27,16 @@ $newline never
         <th>メールアドレス 
           <span .alert>(必須)
         <td colspan=3>
-          <input placeholder=your@mail.address.ac.jp type=email name=email value=#{userEmail user} .watermark .required>
+          <input placeholder=your@mail.address.ac.jp type=email name=email value=#{userEmail user} .watermark required>
       <tr>
         <th>姓 
           <span .alert>(必須)
         <td>
-          <input placeholder=聖徳 type=text name=familyName value=#{userFamilyName user} .watermark .required>
+          <input placeholder=聖徳 type=text name=familyName value=#{userFamilyName user} .watermark required>
         <th>名
           <span .alert>(必須)
         <td>
-          <input placeholder=花子 type=text name=givenName value=#{userGivenName user} .watermark .required>
+          <input placeholder=花子 type=text name=givenName value=#{userGivenName user} .watermark required>
       $maybe lab <- mlab
         <tr>
           <th>研究室番号

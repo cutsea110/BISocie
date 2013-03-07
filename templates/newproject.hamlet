@@ -22,19 +22,19 @@ $with id' <- entityKey u, u' <- entityVal u
             <th .left width="160px">_{MsgProjectName} #
               <span .alert>_{MsgRequired} #
             <td>
-              <input .watermark.required #name type=text name=name placeholder="(_{MsgProjectName})" size="100">
+              <input .watermark #name type=text name=name placeholder="(_{MsgProjectName})" size="100" required>
           <tr>
             <th .left>_{MsgDescription} #
               <span .alert>_{MsgRequired} #
             <td>
-              <textarea .watermark.required #description name=description placeholder="(_{MsgProjectDescription})" cols="61" rows="5">
+              <textarea .watermark #description name=description placeholder="(_{MsgProjectDescription})" cols="61" rows="5" required>
           <tr>
             <th .left>_{MsgStatus} #
               <span .alert>_{MsgRequired} #
               <br>
               <button .link #button-status-syntax-help type=submit>_{MsgHelp}
             <td>
-              <textarea .watermark.required #statuses name=statuses placeholder="(_{MsgStatusSetting})" cols="32" rows="6">#{inintstatuses}
+              <textarea .watermark #statuses name=statuses placeholder="(_{MsgStatusSetting})" cols="32" rows="6" required>#{inintstatuses}
     <button .common type=submit name=_method value=create>_{MsgCreateProject}
 
 <div #search-users>

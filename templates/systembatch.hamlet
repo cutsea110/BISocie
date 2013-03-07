@@ -6,6 +6,6 @@ $newline never
     <div .form-block>
       <form method=post enctype=multipart/form-data action=@{SystemBatchR} .validate>
         <label for=students-list-csv>学生アカウントCSVファイル:
-        <input #students-list-csv type=file name=studentscsv .required>
+        <input #students-list-csv type=file name=studentscsv required>
         <br>
         <button type=submit name=_method value=upload>学生一括登録

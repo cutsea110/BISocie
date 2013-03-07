@@ -7,9 +7,11 @@
     <a href=@{ProjectR pid}>プロジェクト設定
   <li>
     <a .selected href=@{ParticipantsListR pid}>参加者
-<h3>参加者 #
-  <button #button-search-users .link>参加者追加
-<div #participants>
+<div #main-content>
+  <h3 .participants>参加者
+    <button #button-search-users .link>参加者追加
+
+  <div #participants>
 
 <div #search-users>
   <label for=search-bay-name>名前:

@@ -271,20 +271,20 @@ instance YesodBreadcrumbs BISocie where
   breadcrumb NewProjectR = do
     (Entity uid _) <- requireAuth
     return ("新規プロジェクト作成", Just $ HomeR uid)
-  breadcrumb (ProjectR pid) = return ("設定", Just $ IssueListR pid)
+  breadcrumb (ProjectR pid) = do
+    uid <- requireAuthId
+    p <- runDB $ get404 pid
+    return (projectName p, Just $ HomeR uid)
     
-  breadcrumb ParticipantsListR{} = return ("", Nothing)
+  breadcrumb (ParticipantsListR pid) = return ("参加者", Just $ ProjectR pid)
   breadcrumb ParticipantsR{} = return ("", Nothing)
   breadcrumb UserListR = return ("ユーザ一覧", Nothing)
   
   breadcrumb CrossSearchR = do
     (Entity uid _) <- requireAuth
     return ("クロスサーチ", Just $ HomeR uid)
-  breadcrumb (IssueListR pid) = do 
-    (Entity uid _) <- requireAuth
-    p <- runDB $ get404 pid
-    return (projectName p, Just $ HomeR uid)
-  breadcrumb (NewIssueR pid) = return ("案件追加", Just $ IssueListR pid)
+  breadcrumb (IssueListR pid) = return ("案件一覧", Just $ ProjectR pid)
+  breadcrumb (NewIssueR pid) = return ("案件追加", Just $ ProjectR pid)
   breadcrumb (IssueR pid ino) = do
     (Entity _ issue) <- runDB $ getBy404 $ UniqueIssue pid ino
     return (showText (issueNumber issue) +++ ": " +++ issueSubject issue, Just $ IssueListR pid)

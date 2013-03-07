@@ -49,12 +49,16 @@ input[type="radio"], input[type="checkbox"] {
   width: 20px;
 }
 
+input[type="search"] {
+  width: 200px;
+}
+
 input[type="date"] {
-  width: 10em;
+  width: 6em;
 }
 
 input[type="time"] {
-  width: 6em;
+  width: 4em;
 }
 
 /*** TABLED ***/
@@ -159,7 +163,6 @@ td.number {
 
 .searchbox label, .searchbox input {
   margin-right: 10px;
-  width: 200px;
 }
 
 .searchbox input[type="checkbox"] {

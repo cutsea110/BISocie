@@ -19,10 +19,10 @@ $with id' <- entityKey u, u' <- entityVal u
       <tr>
         <th>
           <label for=project_name>_{MsgProjectName}:
-          <input #project_name type=text name=project_name>
+          <input type=search #project_name name=project_name>
         <th>
           <label for=user_ident_or_name>_{MsgParticipantsIdOrName}
-          <input #user_ident_or_name type=text name=user_ident_or_name>
+          <input type=search #user_ident_or_name name=user_ident_or_name>
       <tr>
         <th>
           <input #includeterminated type=checkbox name=includeterminated>

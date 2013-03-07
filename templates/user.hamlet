@@ -1,4 +1,3 @@
-$newline never
 <a href=@{UsersR}>Return to list
 <h1>Edit item
 <form method=post action=@{UserR uid}>

@@ -1,4 +1,3 @@
-$newline never
 <h1>Hello
 <h2 id="#{h2id}">You do not have Javascript enabled.
 $maybe u <- mu

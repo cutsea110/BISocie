@@ -10,19 +10,18 @@ $newline never
   <h3 .project>#{projectName prj} プロジェクト設定
     <button #button-delete-confirm type=submit name=_method value=delete .link>このプロジェクトを削除する.
   <form method=post action=@{ProjectR pid}>
-    <input type=hidden name=_method value=modify>
     <table width="800px">
       <tbody>
         <tr>
           <th .left width="160px">プロジェクト名 #
             <span .alert>(必須) #
           <td>
-            <input .inplaceedit type=text #name name=name placeholder="(プロジェクト名)" uri=@{ProjectR pid} value=#{projectName prj}>
+            <input type=text #name name=name placeholder="(プロジェクト名)" uri=@{ProjectR pid} value=#{projectName prj} required>
         <tr>
           <th .left>概要 #
             <span .alert>(必須) #
           <td>
-            <textarea .inplaceedit #description name=description placeholder="(プロジェクト概要)" uri=@{ProjectR pid}>#{unTextarea $ projectDescription prj}
+            <textarea #description name=description placeholder="(プロジェクト概要)" uri=@{ProjectR pid} required>#{unTextarea $ projectDescription prj}
         <tr>
           <th .left>状態 #
             <span .alert>(必須) #
@@ -36,12 +35,12 @@ $newline never
             <span .alert>(必須) #
             <button #button-status-syntax-help type=submit .link>ヘルプ
           <td>
-            <textarea .inplaceedit #statuses name=statuses placeholder="(ステータス設定)" uri=@{ProjectR pid}>#{unTextarea $ projectStatuses prj}
-        <tr>
-          <th .left>参加者 #
-            <button #button-search-users .link>参加者追加
-          <td>
-            <div #participants>
+            <textarea #statuses name=statuses placeholder="(ステータス設定)" uri=@{ProjectR pid} required>#{unTextarea $ projectStatuses prj}
+    <button .common type=submit name=_method value=modify>変更する
+
+    <h3>参加者 #
+      <button #button-search-users .link>参加者追加
+    <div #participants>
 
 <div #search-users>
   <label for=search-bay-name>名前:

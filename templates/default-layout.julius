@@ -38,31 +38,6 @@ $(document).ready(function(){
   });
 
   AjaxZip2.JSONDATA = '#{rawJS $ approot' y}' + '/static/plugins/ajaxzip2/data';
-
-  $(".inplaceedit").each(function(){
-    $(this).exInPlaceEditor({
-      nulltext: $(this).attr('placeholder') || '未設定',
-      onsave: function(api) {
-        var text = api.getEditor(),
-            data = '_method=modify&'+text.attr('name')+'='+api.getValue();
-        api.saving();
-        $.ajax({
-          type: 'post',
-          dataType: 'json',
-          url: text.attr('uri'),
-          data: data,
-          success: function(res){
-            api.saveComplete();
-          },
-          error: function(res,status){
-            var msg = $(res.responseText).find('div#ui-main li:last').text();
-            api.saveError(res.statusText+'['+res.status+']: '+$(res.responseText).find('p').text()+msg);
-          }
-        });
-        return false;
-      }
-    });
-  });
 });
 
 function mkList(from,to) {

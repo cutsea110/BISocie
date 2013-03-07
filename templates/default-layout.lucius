@@ -48,6 +48,15 @@ input {
 input[type="radio"], input[type="checkbox"] {
   width: 20px;
 }
+
+input[type="date"] {
+  width: 10em;
+}
+
+input[type="time"] {
+  width: 6em;
+}
+
 /*** TABLED ***/
 table {
   border-collapse: collapse;

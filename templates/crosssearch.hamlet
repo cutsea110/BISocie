@@ -45,11 +45,11 @@ $with id' <- entityKey u, u' <- entityVal u
         <td .center>
           <select #assign name=assign multiple=multiple size=5>
         <td width="280px">
-          <input .date #limitdatefrom name=limitdatefrom placeholder=yyyy/mm/dd> ~ #
-          <input .date #limitdateto name=limitdateto placeholder=yyyy/mm/dd>
+          <input type=date #limitdatefrom name=limitdatefrom placeholder=yyyy-mm-dd> ~ #
+          <input type=date #limitdateto name=limitdateto placeholder=yyyy-mm-dd>
         <td width="280px">
-          <input .date #updatedfrom name=updatedfrom placeholder=yyyy/mm/dd> ~ #
-          <input .date #updatedto name=updatedto placeholder=yyyy/mm/dd>
+          <input type=date #updatedfrom name=updatedfrom placeholder=yyyy-mm-dd> ~ #
+          <input type=date #updatedto name=updatedto placeholder=yyyy-mm-dd>
       <tr>
         <th>
           <a .complement href=# target=#projectid>選択⇔非選択

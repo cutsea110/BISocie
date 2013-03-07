@@ -54,7 +54,7 @@ $newline never
         <tr>
           <th>生年月日 
           <td colspan=3>
-            <input type=date placeholder=yyyy/mm/dd name=birth value=#{showBirthDay prof} .date>
+            <input type=date placeholder=yyyy/mm/dd name=birth value=#{showBirthDay prof}>
         <tr>
           <th>入学年度 
           <td>

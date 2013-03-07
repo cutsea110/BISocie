@@ -117,8 +117,8 @@ $newline never
           <th>勤務(予定)先
           <td colspan=3>
             <input #employment placeholder=未定 type=text name=employment value=#{showmaybe $ profileEmployment prof}>
-    <button type=submit name=_method value=update>更新する
+    <button .common type=submit name=_method value=update>更新する
   <form #upload_form method=post enctype=multipart/form-data action=@{UploadR}>
     <div #fields .inline>
-      <input #upload_file type=file name=upfile>
-      <input #go_upload type=button name=upload value=アバターのアップロード>
+      <input .common #upload_file type=file name=upfile>
+      <button .common #go_upload type=button name=upload>アバターのアップロード

@@ -15,7 +15,7 @@ $newline never
       <th>アバター
       <td>
         <div #avatar>
-          <img #myavatar src=@{AvatarImageR uid} .avatar>
+          <img #myavatar src=@{AvatarImageR uid}>
     $if canView self user
       <tr>
         <th>

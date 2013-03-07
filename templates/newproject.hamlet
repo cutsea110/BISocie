@@ -51,6 +51,6 @@ $with id' <- entityKey u, u' <- entityVal u
   <label for=select-staff>_{MsgStaff}
   <input #select-admin type=checkbox value=Admin>
   <label for=select-admin>_{MsgAdmin}
-  <button #go-search-users>_{MsgSearch}
+  <button .common #go-search-users>_{MsgSearch}
   <div #search-result .scroll>
 ^{help}

@@ -27,7 +27,7 @@
   <label for=select-staff>職員
   <input #select-admin type=checkbox value=Admin>
   <label for=select-admin>管理者
-  <button #go-search-users>検索
+  <button .common #go-search-users>検索
   <div #search-result .scroll>
 
 <div #release-self-participate>

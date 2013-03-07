@@ -7,7 +7,7 @@
           <tr>
             <th>現在のパスワード:
             <td>
-              <input type=password name=current_pass placeholder="current password" required>
+              <input type=password name=current_pass placeholder="current password" autofocus required>
           <tr>
             <th>新しいパスワード:
             <td>

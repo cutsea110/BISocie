@@ -8,7 +8,7 @@ $newline never
           <tr>
             <th>アカウントID:
             <td>
-             <input #loginAccountId type=account name=ident placeholder=account required>
+             <input #loginAccountId type=account name=ident placeholder=account autofocus required>
           <tr>
             <th>パスワード:
             <td>

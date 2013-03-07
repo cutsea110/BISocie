@@ -14,7 +14,7 @@
       <tr>
         <th>内容: 
         <td>
-          <textarea #content placeholder=内容... name=content>
+          <textarea #content placeholder=内容... name=content autofocus>
       <tr>
         <th>アサイン:
         <td>

@@ -18,7 +18,7 @@ $newline never
         <th .left width="160px">件名: 
           <span .alert>(必須)
         <td>
-          <input #subject type=text name=subject placeholder=案件名... required>
+          <input #subject type=text name=subject placeholder=案件名... autofocus required>
       <tr>
         <th .left>内容: 
         <td>

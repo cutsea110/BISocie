@@ -6,6 +6,8 @@ $newline never
     <a .selected href=@{NewIssueR pid}>案件追加
   <li>
     <a href=@{ProjectR pid}>プロジェクト設定
+  <li>
+    <a href=@{ParticipantsListR pid}>参加者
 <div #main-content>
   <h3 .issue>#{projectName prj} への新規案件追加
     <form method=get action=@{IssueListR pid} .inline>

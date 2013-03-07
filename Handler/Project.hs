@@ -63,10 +63,7 @@ postNewProjectR = do
 getProjectR :: ProjectId -> Handler RepHtml
 getProjectR pid = do
   uid <- requireAuthId
-  now <- liftIO getCurrentTime
-  let (y,_,_) = toGregorian $ utctDay now
-      eyears = [entryStartYear..y+5]
-      help = $(widgetFile "help")
+  let help = $(widgetFile "help")
   prj <- runDB $ get404 pid
   defaultLayout $ do
     setTitle $ preEscapedText $ projectName prj

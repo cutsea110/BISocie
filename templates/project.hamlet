@@ -6,6 +6,8 @@ $newline never
     <a href=@{NewIssueR pid}>案件追加
   <li>
     <a .selected href=@{ProjectR pid}>プロジェクト設定
+  <li>
+    <a href=@{ParticipantsListR pid}>参加者
 <div #main-content>
   <h3 .project>#{projectName prj} プロジェクト設定
     <button #button-delete-confirm type=submit name=_method value=delete .link>このプロジェクトを削除する.
@@ -38,26 +40,6 @@ $newline never
             <textarea #statuses name=statuses placeholder="(ステータス設定)" uri=@{ProjectR pid} required>#{unTextarea $ projectStatuses prj}
     <button .common type=submit name=_method value=modify>変更する
 
-    <h3>参加者 #
-      <button #button-search-users .link>参加者追加
-    <div #participants>
-
-<div #search-users>
-  <label for=search-bay-name>名前:
-  <input #search-by-name type=text name=username>
-  <label for=select-entry-year>入学年度:
-  <select #select-entry-year>
-    <option>
-    $forall ey <- eyears
-      <option value=#{show ey}>#{show ey}
-  <input #select-teacher type=checkbox value=Teacher>
-  <label for=select-teacher>教員
-  <input #select-staff type=checkbox value=Staff>
-  <label for=select-staff>職員
-  <input #select-admin type=checkbox value=Admin>
-  <label for=select-admin>管理者
-  <button #go-search-users>検索
-  <div #search-result .scroll>
 ^{help}
 <div #delete-confirm .alert>
   削除をすると二度と元に戻すことはできません。
@@ -70,7 +52,3 @@ $newline never
 <div #delete-failed .errors>
   プロジェクトを削除できませんでした。
   このダイアログを閉じてください。
-
-<div #release-self-participate>
-  このプロジェクトの参加者ではなくなりました。
-  このダイアログを閉じると強制的にホームに移動します。

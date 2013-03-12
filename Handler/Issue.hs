@@ -91,6 +91,30 @@ getTaskR y m d = do
              , "limittime" .= showLimittime issue
              ]
 
+postExportCsvR :: UserId -> Handler (RepCsv Text)
+postExportCsvR uid = do
+  today <- liftIO $ fmap utctDay getCurrentTime
+  issues <- runDB $ do
+    ptcpts <- selectList [ParticipantsUser ==. uid] []
+    selectList
+      [ IssueLimitdate >=. Just today
+      , IssueProject <-. map (participantsProject.entityVal) ptcpts
+      ]
+      [Asc IssueLimitdate, Asc IssueLimittime]
+  download "task-schedule.csv" (CSV $ generateCsv issues)
+  where
+    generateCsv :: [Entity Issue] -> ([Text], [[Text]])
+    generateCsv iss = (header, map (mkRecord.entityVal) iss)
+    header :: [Text]
+    header = ["Subject","Start Date","Start Time","End Date","End Time"]
+    mkRecord :: Issue -> [Text]
+    mkRecord is = sbj:sd:st:ed:et:[]
+      where
+        sbj = issueSubject is
+        sd = toText $ fromJust $ issueLimitdate is
+        st = toText $ fromJust $ issueLimittime is
+        (ed, et) = (sd, st)
+
 getProjectListR :: Handler RepJson
 getProjectListR = do
   (u, r) <- (,) <$> requireAuth <*> getUrlRender

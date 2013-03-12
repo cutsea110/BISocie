@@ -4,11 +4,8 @@ module Handler.Participants where
 
 import Import
 import BISocie.Helpers.Util
-import Control.Monad (unless, when, forM)
-import Data.Maybe
+import Control.Monad (when, forM)
 import Data.Time
-import qualified Data.Text as T
-import Data.Text (Text)
 import Yesod.Auth (requireAuthId)
 
 getParticipantsListR :: ProjectId -> Handler RepHtmlJson

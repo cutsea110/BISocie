@@ -1,4 +1,3 @@
-$newline never
 <ul .tabs>
   <li>
     <a href=@{HomeR selfid}>ホーム

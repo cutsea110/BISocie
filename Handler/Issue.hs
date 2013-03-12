@@ -10,7 +10,7 @@ module Handler.Issue where
 
 import Import
 import BISocie.Helpers.Util
-import Control.Monad (when, unless, forM, liftM2)
+import Control.Monad (when, forM, liftM2)
 import Data.Function (on)
 import Data.List (intercalate, intersperse, nub, groupBy)
 import Data.Time

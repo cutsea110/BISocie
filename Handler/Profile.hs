@@ -109,55 +109,25 @@ getProfileR uid = do
 
 postProfileR :: UserId -> Handler RepHtml
 postProfileR uid = do
-  _method <- lookupPostParam "_method"
-  case _method of
-    Just "update" -> putProfileR uid
-    _             -> invalidArgs ["The possible values of '_method' is modify"]
-
-putProfileR :: UserId -> Handler RepHtml
-putProfileR uid = do
   user <- runDB $ get404 uid
   case userRole user of
-    Student -> putStudentProf
-    Teacher -> putTeacherProf
-    _       -> putUserProf
+    Student -> studentProf
+    Teacher -> teacherProf
+    _       -> redirect (ProfileR uid, [("mode", "e")] :: [(Text, Text)])
   where
-    putUserProf = do
-      (em, fn, gn) <- 
-        runInputPost $ (,,)
-        <$> ireq textField "email"
-        <*> ireq textField "familyName"
-        <*> ireq textField "givenName"
-      runDB $ do
-        -- update user
-        update uid [UserEmail =. em, UserFamilyName =. fn, UserGivenName =. gn]
-      redirect (ProfileR uid, [("mode", "e")] :: [(Text, Text)])
-      
-    putTeacherProf = do
-      (em, fn, gn) <- 
-        runInputPost $ (,,)
-        <$> ireq textField "email"
-        <*> ireq textField "familyName"
-        <*> ireq textField "givenName"
+    teacherProf = do
       lab <- runInputPost $ Laboratory uid
         <$> iopt textField "roomnumber"
         <*> iopt textField "extensionnumber"
         <*> iopt textareaField "courses"
       runDB $ do
-        -- update user
-        update uid [UserEmail =. em, UserFamilyName =. fn, UserGivenName =. gn]
         mlab <- getBy $ UniqueLaboratory uid
         case mlab of
           Nothing -> insert lab
           Just (Entity lid _) -> replace lid lab >> return lid
       redirect (ProfileR uid, [("mode", "e")] :: [(Text, Text)])
     
-    putStudentProf = do
-      (em, fn, gn) <- 
-        runInputPost $ (,,)
-        <$> ireq textField "email"
-        <*> ireq textField "familyName"
-        <*> ireq textField "givenName"
+    studentProf = do
       prof <- runInputPost $ Profile uid
         <$> iopt dayField "birth"
         <*> iopt intField "entryYear"
@@ -178,8 +148,6 @@ putProfileR uid = do
         <*> iopt textField "desiredWorkLocation"
         <*> iopt textField "employment"
       runDB $ do
-        -- update user
-        update uid [UserEmail =. em, UserFamilyName =. fn, UserGivenName =. gn]
         mprof <- getBy $ UniqueProfile uid
         case mprof of
           Nothing -> insert prof

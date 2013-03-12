@@ -6,6 +6,8 @@ module Handler.Profile where
 
 import Import
 import Control.Monad
+import Data.Char (ord)
+import qualified Data.Text as T
 import Data.Time
 import Data.Maybe (fromMaybe, fromJust)
 import Handler.S3
@@ -159,11 +161,17 @@ getAvatarImageR uid = do
   (fid, f) <- runDB $ do
     u <- get404 uid
     case userAvatar u of
-      Nothing -> lift $ redirect $ StaticR img_no_image_png
+      Nothing -> lift $ redirect $ StaticR $ sel $ userIdent u
       Just fid -> do
         f <- get404 fid
         return (fid, f)
   getFileR (fileHeaderCreator f) fid
+  where
+    sel uid = case T.foldl' (\b c -> b + ord c) 0 uid `mod` 4 of
+      0 -> img_avatar_01_png
+      1 -> img_avatar_02_png
+      2 -> img_avatar_03_png
+      _ -> img_avatar_04_png
 
 postAvatarR :: UserId -> Handler RepJson
 postAvatarR uid = do

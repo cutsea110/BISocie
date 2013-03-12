@@ -26,7 +26,7 @@
 /read/#CommentId ReadCommentR POST
 /readers/#CommentId CommentReadersR GET
 
-/profile/#UserId ProfileR GET POST PUT
+/profile/#UserId ProfileR GET POST
 /avatar/#UserId AvatarR POST
 /avatar-image/#UserId AvatarImageR GET
 

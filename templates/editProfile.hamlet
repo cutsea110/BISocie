@@ -25,18 +25,12 @@ $newline never
         <td colspan=3>#{userIdent user}
       <tr>
         <th>メールアドレス 
-          <span .alert>(必須)
-        <td colspan=3>
-          <input placeholder=your@mail.address.ac.jp type=email name=email value=#{userEmail user} required>
+        <td colspan=3>#{userEmail user}
       <tr>
         <th>姓 
-          <span .alert>(必須)
-        <td>
-          <input placeholder=聖徳 type=text name=familyName value=#{userFamilyName user} required>
+        <td>#{userFamilyName user}
         <th>名
-          <span .alert>(必須)
-        <td>
-          <input placeholder=花子 type=text name=givenName value=#{userGivenName user} required>
+        <td>#{userGivenName user}
       $maybe lab <- mlab
         <tr>
           <th>研究室番号
@@ -117,7 +111,7 @@ $newline never
           <th>勤務(予定)先
           <td colspan=3>
             <input #employment placeholder=未定 type=text name=employment value=#{showmaybe $ profileEmployment prof}>
-    <button .common type=submit name=_method value=update>更新する
+    <button .common type=submit>更新する
   <form #upload_form method=post enctype=multipart/form-data action=@{UploadR}>
     <div #fields .inline>
       <input .common #upload_file type=file name=upfile>

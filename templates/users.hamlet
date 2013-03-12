@@ -1,7 +1,8 @@
-<h1>Items
-<ul>
-  $forall user <- users
-    <li>
-      <a href=@{UserR $ entityKey user}>#{userInfoOneline $ entityVal user}
-<p>
-  <a href=@{NewUserR}>Add new item
+<div #main-content>
+  <h1>Items
+  <ul>
+    $forall user <- users
+      <li>
+        <a href=@{UserR $ entityKey user}>#{userInfoOneline $ entityVal user}
+  <p>
+    <a href=@{NewUserR}>Add new item

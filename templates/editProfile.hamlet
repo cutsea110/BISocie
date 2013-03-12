@@ -12,7 +12,7 @@
     <table .profile>
       <tr>
         <th>アバター
-        <td colspan=3>
+        <td>
           <div #avatar>
             <img #myavatar src=@{AvatarImageR uid}>
       <tr>
@@ -21,32 +21,30 @@
             学籍番号
           $else
             アカウントID
-        <td colspan=3>#{userIdent user}
+        <td>#{userIdent user}
       <tr>
         <th>メールアドレス 
-        <td colspan=3>#{userEmail user}
+        <td>#{userEmail user}
       <tr>
-        <th>姓 
-        <td>#{userFamilyName user}
-        <th>名
-        <td>#{userGivenName user}
+        <th>氏名
+        <td>#{userFullName user}
       $maybe lab <- mlab
         <tr>
           <th>研究室番号
-          <td colspan=3>
+          <td>
             <input placeholder=1234 type=text name=roomnumber value=#{showmaybe $ laboratoryRoomNumber lab}>
         <tr>
           <th>内線番号
-          <td colspan=3>
+          <td>
             <input placeholder=1234 type=text name=extensionnumber value=#{showmaybe $ laboratoryExtensionNumber lab}>
         <tr>
           <th>担当科目
-          <td colspan=3>
+          <td>
             <textarea placeholder=関数プログラミング概論 name=courses>#{showmaybe $ fmap unTextarea $ laboratoryCourses lab}
       $maybe prof <- mprof
         <tr>
           <th>生年月日 
-          <td colspan=3>
+          <td>
             <input type=date placeholder=yyyy/mm/dd name=birth value=#{showBirthDay prof}>
         <tr>
           <th>入学年度 
@@ -54,6 +52,7 @@
             <select name=entryYear>
               $forall ey <- eyears
                 <option :fst ey:selected>#{show $ snd ey}
+        <tr>
           <th>卒業年度
             <div .help>#{y}年3月卒業の場合は#{(-) y 1}年度卒業です.
           <td>
@@ -63,11 +62,11 @@
                 <option :fst gy:selected>#{show $ snd gy}
         <tr>
           <th>所属ブランチ 
-          <td colspan=3>
+          <td>
             <input placeholder=ブランチ type=text name=branch value=#{showmaybe $ profileBranch prof}>
         <tr>
           <th>現住所 
-          <td colspan=3>
+          <td>
             <input #clon type=hidden name=longitude value=#{showMaybeDouble $ profileLongitude prof}>
             <input #clat type=hidden name=latitude value=#{showMaybeDouble $ profileLatitude prof}>
             〒
@@ -77,17 +76,17 @@
         $if canEditTel self user
           <tr>
             <th>電話番号 
-            <td colspan=3>
+            <td>
               <input placeholder=090-1234-5678 type=tel name=tel value=#{showmaybe $ profileTel prof}>
         $else
           <input type=hidden name=tel value=#{showmaybe $ profileTel prof}>
         <tr>
           <th>最寄駅 
-          <td colspan=3>
+          <td>
             <input placeholder=松戸 type=text name=station value=#{showmaybe $ profileStation prof}>
         <tr>
           <th>実家住所 
-          <td colspan=3>
+          <td>
             <input #hlon type=hidden name=homeLongitude value=#{showMaybeDouble $ profileHomeLongitude prof}>
             <input #hlat type=hidden name=homeLatitude value=#{showMaybeDouble $ profileHomeLatitude prof}>
             〒
@@ -96,19 +95,19 @@
             <input #hloc placeholder=千葉県松戸市岩瀬550 locprefix=h type=address name=homeAddress value=#{showmaybe $ profileHomeAddress prof}>
         <tr>
           <th>実家電話番号 
-          <td colspan=3>
+          <td>
             <input placeholder=098-7654-3210 type=tel name=homeTel value=#{showmaybe $ profileHomeTel prof}>
         <tr>
           <th>希望進路
-          <td colspan=3>
+          <td>
             <input #desiredCourse placeholder=一般職 type=text name=desiredCourse value=#{showmaybe $ profileDesiredCourse prof}>
         <tr>
           <th>希望勤務地
-          <td colspan=3>
+          <td>
             <input #desiredWorkLocation placeholder=都内 type=text name=desiredWorkLocation value=#{showmaybe $ profileDesiredWorkLocation prof}>
         <tr>
           <th>勤務(予定)先
-          <td colspan=3>
+          <td>
             <input #employment placeholder=未定 type=text name=employment value=#{showmaybe $ profileEmployment prof}>
     <button .common type=submit>更新する
   <form #upload_form method=post enctype=multipart/form-data action=@{UploadR}>

@@ -39,69 +39,9 @@ getParticipantsListR pid = do
                                   , "role" .= show (userRole u)
                                   , "prettyrole" .= userRoleName u
                                   , "receivemail" .= participantsReceivemail p
-                                  , "participant-uri" .= r (ParticipantsR pid uid)
+                                  , "participant_uri" .= r (ParticipantsR pid uid)
                                   , "avatar" .= r ra
                                    ]
-
-postNewParticipantsR :: ProjectId -> Handler RepJson
-postNewParticipantsR pid = do
-  _method <- lookupPostParam "_method"
-  muid <- lookupPostParam "uid"
-  case (_method, muid) of
-    (Just "add", Just uid) -> addParticipants $ readText uid
-    (Just "del", Just uid) -> delParticipants $ readText uid
-    (Just "mod", Just uid) -> modParticipants $ readText uid
-    (_,          Nothing ) -> invalidArgs ["uid query parameter is required."]
-    _                      -> invalidArgs ["The possible values of '_method' is add,del,mod."]
-  where
-    addParticipants :: UserId -> Handler RepJson
-    addParticipants uid = do
-      r <- getUrlRender
-      now <- liftIO getCurrentTime
-      runDB $ insert $ Participants pid uid True now
-      cacheSeconds 10 -- FIXME
-      jsonToRepJson $ object ["participants" .= object
-                              [ "project" .= show pid
-                              , "user" .= show uid
-                              , "status" .= ("added" :: Text)
-                              ]
-                             , "uri" .= r (ParticipantsR pid uid)
-                             ]
-    delParticipants :: UserId -> Handler RepJson
-    delParticipants uid = do
-      r <- getUrlRender
-      uid' <- requireAuthId
-      runDB $ do
-        c <- count [ParticipantsProject ==. pid, ParticipantsUser !=. uid]
-        when (uid'==uid && c==0) $ 
-          lift $ permissionDenied "他に参加者が居ないため削除することはできません."
-        deleteBy $ UniqueParticipants pid uid
-      cacheSeconds 10 -- FIXME
-      jsonToRepJson $ object ["participants" .= object
-                              [ "project" .= show pid
-                              , "user" .= show uid
-                              , "status" .= ("deleted" :: Text)
-                              ]
-                             , "uri" .= r (ParticipantsR pid uid)
-                             ]
-    modParticipants :: UserId -> Handler RepJson
-    modParticipants uid = do
-      r <- getUrlRender
-      mmail <- lookupPostParam "mail"
-      send'stop <- runDB $ do
-        (Entity ptcptid _) <- getBy404 $ UniqueParticipants pid uid
-        case mmail of
-          Just x -> update ptcptid [ParticipantsReceivemail =. (x == "send")] >> return x
-          _           -> lift $ invalidArgs ["The possible values of 'mail' is send,stop."]
-      cacheSeconds 10 -- FIXME
-      jsonToRepJson $ object ["participants" .= object
-                              [ "project" .= show pid
-                              , "user" .= show uid
-                              , "status" .= ("modified" :: Text)
-                              , "mail" .= send'stop
-                              ]
-                             , "uri" .= r (ParticipantsR pid uid)
-                             ]
 
 getParticipantsR :: ProjectId -> UserId -> Handler RepJson
 getParticipantsR pid uid = do
@@ -115,6 +55,59 @@ getParticipantsR pid uid = do
                          , "role" .= show (userRole u)
                          , "prettyrole" .= userRoleName u
                          , "receivemail" .= participantsReceivemail (entityVal p)
-                         , "participant-uri" .= r (ParticipantsR pid uid)
+                         , "participant_uri" .= r (ParticipantsR pid uid)
                          , "avatar" .= r (AvatarImageR uid)
+                         ]
+
+postNewParticipantsR :: ProjectId -> Handler RepJson
+postNewParticipantsR pid = do
+  Just uid' <- lookupPostParam "uid"
+  let uid = readText uid'
+  r <- getUrlRender
+  now <- liftIO getCurrentTime
+  runDB $ insert $ Participants pid uid True now
+  cacheSeconds 10 -- FIXME
+  jsonToRepJson $ object ["participants" .= object
+                          [ "project" .= show pid
+                          , "user" .= show uid
+                          , "status" .= ("added" :: Text)
+                          ]
+                         , "uri" .= r (ParticipantsR pid uid)
+                         ]
+
+putParticipantsR :: ProjectId -> UserId -> Handler RepJson
+putParticipantsR pid uid = do
+  r <- getUrlRender
+  mmail <- lookupPostParam "mail"
+  send'stop <- runDB $ do
+    (Entity ptcptid _) <- getBy404 $ UniqueParticipants pid uid
+    case mmail of
+      Just x -> update ptcptid [ParticipantsReceivemail =. (x == "send")] >> return x
+      _           -> lift $ invalidArgs ["The possible values of 'mail' is send,stop."]
+  cacheSeconds 10 -- FIXME
+  jsonToRepJson $ object ["participants" .= object
+                          [ "project" .= show pid
+                          , "user" .= show uid
+                          , "status" .= ("modified" :: Text)
+                          , "mail" .= send'stop
+                          ]
+                         , "uri" .= r (ParticipantsR pid uid)
+                         ]
+
+deleteParticipantsR :: ProjectId -> UserId -> Handler RepJson
+deleteParticipantsR pid uid = do
+  r <- getUrlRender
+  uid' <- requireAuthId
+  runDB $ do
+    c <- count [ParticipantsProject ==. pid, ParticipantsUser !=. uid]
+    when (uid'==uid && c==0) $
+      lift $ permissionDenied "他に参加者が居ないため削除することはできません."
+    deleteBy $ UniqueParticipants pid uid
+  cacheSeconds 10 -- FIXME
+  jsonToRepJson $ object ["participants" .= object
+                          [ "project" .= show pid
+                          , "user" .= show uid
+                          , "status" .= ("deleted" :: Text)
+                          ]
+                         , "uri" .= r (ParticipantsR pid uid)
                          ]

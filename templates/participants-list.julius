@@ -26,7 +26,7 @@ $(document).ready(function(){
     e.preventDefault();
   });
   $('#go-search-users').click(function(e){
-    var q = {uncache: (new Date).getTime()};
+    var q = {uncache: (new Date).getTime(), project_id: '#{rawJS $ show pid}'};
     var xs = [ {id:'search-by-name', attr:'value', qkey:'name_like'}
              , {id:'select-entry-year', attr:'value', qkey:'entry_year'}
              , {id:'select-teacher', attr:'checked', qkey:'teacher'}
@@ -74,7 +74,7 @@ function json2hash(ps){
 
 function mkUser(u, ps){
   var div = $("<div class='inline user'/>")
-            .attr({uid: u.id, ident: u.ident, fullname: u.name, eyear: u.entryYear})
+            .attr({uid: u.id, ident: u.ident, fullname: u.name, eyear: u.entryYear, uri: u.participant_uri})
             .addClass(u.role+' user-logo'),
       i = $('<div/>').text(u.ident).hide(),
       area = $('<div/>').addClass('avatar_area'),
@@ -113,15 +113,16 @@ function mkUser(u, ps){
 function modifyParticipant(c){
   var uid = c.closest('div.user').attr('uid'),
       checked = c.attr('checked'),
-      method = checked ? "add" : "del",
+      method = checked ? 'POST' : 'DELETE',
+      url = checked ? '@{NewParticipantsR pid}' : c.closest('div.user').attr('uri'),
       mail = c.closest('div').find("img.mail");
 
   $.ajax({
     async: false,
-    type: 'POST',
-    url: '@{NewParticipantsR pid}',
+    type: method,
+    url: url,
     dataType: 'json',
-    data: {_method: method, uid: uid},
+    data: {uid: uid},
     success: function (json) {
       switch (json.participants.status) {
         case 'added':
@@ -146,6 +147,7 @@ function modifyParticipant(c){
 function toggleSendmailParticipant(mail){
   var uid = mail.closest('div.user').attr('uid'),
       method = "mod",
+      url = mail.closest('div.user').attr('uri'),
       sendstop = 'none';
 
   switch (mail.attr('receivemail')) {
@@ -162,10 +164,10 @@ function toggleSendmailParticipant(mail){
 
   $.ajax({
     async: false,
-    type: 'POST',
-    url: '@{NewParticipantsR pid}',
+    type: 'PUT',
+    url: url,
     dataType: 'json',
-    data: {_method: method, mail: sendstop, uid: uid},
+    data: {method: method, mail: sendstop, uid: uid},
     success: function (json) {
       switch (json.participants.mail) {
         case "send":

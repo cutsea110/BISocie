@@ -108,8 +108,8 @@ instance Yesod BISocie where
       (title, parents) <- breadcrumbs
       current <- getCurrentRoute
       tm <- getRouteToMaster
-      let header = $(hamletFile "templates/header.hamlet")
-          footer = $(hamletFile "templates/footer.hamlet")
+      let header = $(widgetFile "header")
+          footer = $(widgetFile "footer")
       pc <- widgetToPageContent $ do
         pnotify y
         addScriptEither $ urlJqueryJs y

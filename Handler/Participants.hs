@@ -59,37 +59,31 @@ getParticipantsR pid uid = do
                          , "avatar" .= r (AvatarImageR uid)
                          ]
 
-postNewParticipantsR :: ProjectId -> Handler RepJson
-postNewParticipantsR pid = do
-  Just uid' <- lookupPostParam "uid"
-  let uid = readText uid'
-  r <- getUrlRender
-  now <- liftIO getCurrentTime
-  runDB $ insert $ Participants pid uid True now
-  cacheSeconds 10 -- FIXME
-  jsonToRepJson $ object ["participants" .= object
-                          [ "project" .= show pid
-                          , "user" .= show uid
-                          , "status" .= ("added" :: Text)
-                          ]
-                         , "uri" .= r (ParticipantsR pid uid)
-                         ]
-
 putParticipantsR :: ProjectId -> UserId -> Handler RepJson
 putParticipantsR pid uid = do
   r <- getUrlRender
-  mmail <- lookupPostParam "mail"
-  send'stop <- runDB $ do
-    (Entity ptcptid _) <- getBy404 $ UniqueParticipants pid uid
-    case mmail of
-      Just x -> update ptcptid [ParticipantsReceivemail =. (x == "send")] >> return x
-      _           -> lift $ invalidArgs ["The possible values of 'mail' is send,stop."]
+  (st, p) <- runDB $ do
+    mp <- getBy $ UniqueParticipants pid uid
+    st <- case mp of
+      Nothing -> do
+        now <- liftIO getCurrentTime
+        insert $ Participants pid uid True now
+        return ("added" :: Text)
+      Just p -> do
+        mmail <- lift $ lookupPostParam "mail"
+        case mmail of
+          Just m -> do
+            replace (entityKey p) (entityVal p) { participantsReceivemail = (m == "true") }
+            return "modified"
+          _ -> lift $ invalidArgs ["The possible values of 'mail' is send,stop."]
+    p <- getBy404 $ UniqueParticipants pid uid
+    return (st, p)
   cacheSeconds 10 -- FIXME
   jsonToRepJson $ object ["participants" .= object
                           [ "project" .= show pid
                           , "user" .= show uid
-                          , "status" .= ("modified" :: Text)
-                          , "mail" .= send'stop
+                          , "status" .= st
+                          , "mail" .= participantsReceivemail (entityVal p)
                           ]
                          , "uri" .= r (ParticipantsR pid uid)
                          ]

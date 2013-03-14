@@ -113,8 +113,8 @@ function mkUser(u, ps){
 function modifyParticipant(c){
   var uid = c.closest('div.user').attr('uid'),
       checked = c.attr('checked'),
-      method = checked ? 'POST' : 'DELETE',
-      url = checked ? '@{NewParticipantsR pid}' : c.closest('div.user').attr('uri'),
+      method = checked ? 'PUT' : 'DELETE',
+      url = c.closest('div.user').attr('uri'),
       mail = c.closest('div').find("img.mail");
 
   $.ajax({
@@ -146,16 +146,15 @@ function modifyParticipant(c){
 
 function toggleSendmailParticipant(mail){
   var uid = mail.closest('div.user').attr('uid'),
-      method = "mod",
       url = mail.closest('div.user').attr('uri'),
       sendstop = 'none';
 
   switch (mail.attr('receivemail')) {
     case 'send':
-      sendstop = 'stop';
+      sendstop = false;
       break;
     case 'stop':
-      sendstop = 'send';
+      sendstop = true;
       break;
     case 'none':
       // NONE
@@ -167,13 +166,13 @@ function toggleSendmailParticipant(mail){
     type: 'PUT',
     url: url,
     dataType: 'json',
-    data: {method: method, mail: sendstop, uid: uid},
+    data: {mail: sendstop},
     success: function (json) {
       switch (json.participants.mail) {
-        case "send":
+        case true:
           mail.attr({src: '@{StaticR img_mail_accept_png}', receivemail: 'send'});
           break;
-        case "stop":
+        case false:
           mail.attr({src: '@{StaticR img_mail_error_png}', receivemail: 'stop'});
           break;
       }

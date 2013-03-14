@@ -7,7 +7,6 @@
 /project/#ProjectId ProjectR GET POST DELETE
 
 /participantslist/#ProjectId ParticipantsListR GET
-/participants/#ProjectId NewParticipantsR POST
 /participants/#ProjectId/#UserId ParticipantsR GET PUT DELETE
 /userlist.json UserListR GET
 

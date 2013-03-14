@@ -159,6 +159,7 @@ instance Yesod BISocie where
     isAuthorized (CommentReadersR cid) _ = canReadComment cid
     isAuthorized (ParticipantsListR pid) _ = isParticipant' pid
     isAuthorized (NewParticipantsR pid) _ = isParticipant pid
+    isAuthorized (ParticipantsR pid _) _ = isParticipant pid
     isAuthorized (ProfileR uid) True = canEditUser uid
     isAuthorized (ProfileR _) False = loggedInAuth
     isAuthorized (AvatarImageR _) _ = loggedInAuth
@@ -275,6 +276,7 @@ instance YesodBreadcrumbs BISocie where
     
   breadcrumb (ParticipantsListR pid) = return ("参加者", Just $ ProjectR pid)
   breadcrumb NewParticipantsR{} = return ("", Nothing)
+  breadcrumb ParticipantsR{} = return ("", Nothing)
   breadcrumb UserListR = return ("ユーザ一覧", Nothing)
   
   breadcrumb CrossSearchR = do

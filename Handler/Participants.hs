@@ -95,3 +95,18 @@ postNewParticipantsR pid = do
                               , "mail" .= send'stop
                               ]
                              ]
+
+getParticipantsR :: ProjectId -> UserId -> Handler RepJson
+getParticipantsR pid uid = do
+  r <- getUrlRender
+  (u, p) <- runDB $ (,) <$> get404 uid <*> getBy404 (UniqueParticipants pid uid)
+  cacheSeconds 10 -- FIXME
+  jsonToRepJson $ object [ "id" .= show uid
+                         , "ident" .= userIdent u
+                         , "uri" .= r (ProfileR uid)
+                         , "name" .= userFullName u
+                         , "role" .= show (userRole u)
+                         , "prettyrole" .= userRoleName u
+                         , "receivemail" .= participantsReceivemail (entityVal p)
+                         , "avatar" .= r (AvatarImageR uid)
+                         ]

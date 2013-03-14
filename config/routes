@@ -24,7 +24,7 @@
 /issue/#ProjectId/#IssueNo IssueR GET
 /comment/#ProjectId/#IssueNo CommentR POST
 /attached/#CommentId/#FileHeaderId AttachedFileR GET
-/read/#CommentId ReadCommentR POST
+/read/#CommentId ReadCommentR POST DELETE
 /readers/#CommentId CommentReadersR GET
 
 /profile/#UserId ProfileR GET POST

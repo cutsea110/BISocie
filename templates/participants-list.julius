@@ -119,7 +119,7 @@ function modifyParticipant(c){
   $.ajax({
     async: false,
     type: 'POST',
-    url: '@{ParticipantsR pid}',
+    url: '@{NewParticipantsR pid}',
     dataType: 'json',
     data: {_method: method, uid: uid},
     success: function (json) {
@@ -163,7 +163,7 @@ function toggleSendmailParticipant(mail){
   $.ajax({
     async: false,
     type: 'POST',
-    url: '@{ParticipantsR pid}',
+    url: '@{NewParticipantsR pid}',
     dataType: 'json',
     data: {_method: method, mail: sendstop, uid: uid},
     success: function (json) {

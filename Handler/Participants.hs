@@ -42,8 +42,8 @@ getParticipantsListR pid = do
                                   , "avatar" .= r ra
                                    ]
 
-postParticipantsR :: ProjectId -> Handler RepJson
-postParticipantsR pid = do
+postNewParticipantsR :: ProjectId -> Handler RepJson
+postNewParticipantsR pid = do
   _method <- lookupPostParam "_method"
   muid <- lookupPostParam "uid"
   case (_method, muid) of

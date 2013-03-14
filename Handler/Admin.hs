@@ -8,14 +8,14 @@ import qualified Data.Text as T
 getUsersR :: Handler RepHtml
 getUsersR = do
   users <- runDB $ selectList [] [Asc UserIdent]
-  defaultLayout $(whamletFile "templates/users.hamlet")
+  defaultLayout $(widgetFile "users")
 
 getUserR :: UserId -> Handler RepHtml
 getUserR uid = do
   user <- runDB $ get404 uid
   let roleIs r = r == userRole user
       toInt = (+1) . fromEnum
-  defaultLayout $(whamletFile "templates/user.hamlet")
+  defaultLayout $(widgetFile "user")
   where
     roles = [(T.pack $ show r, r) | r <- [minBound::Role .. maxBound]]
     
@@ -41,7 +41,7 @@ postUserR uid = do
 getNewUserR :: Handler RepHtml
 getNewUserR = do
   let toInt = (+1) . fromEnum
-  defaultLayout $(whamletFile "templates/newUser.hamlet")
+  defaultLayout $(widgetFile "newUser")
   where
     roles = [(T.pack $ show r, r) | r <- [minBound::Role .. maxBound]]
 
@@ -64,7 +64,7 @@ postNewUserR = do
 getDeleteUserR :: UserId -> Handler RepHtml
 getDeleteUserR uid = do
   user <- runDB $ get404 uid
-  defaultLayout $(whamletFile "templates/deleteUser.hamlet")
+  defaultLayout $(widgetFile "deleteUser")
 
 postDeleteUserR :: UserId -> Handler ()
 postDeleteUserR uid = do

@@ -337,58 +337,51 @@ getNewIssueR pid = do
       
 postNewIssueR :: ProjectId -> Handler RepHtml
 postNewIssueR pid = do
-  _method <- lookupPostParam "_method"
-  case _method of
-    Just "add" -> addIssueR
-    _          -> invalidArgs ["The possible values of '_method' is add"]
-    
-  where
-    addIssueR = do
-      (uid, r, now) <- 
-        (,,) <$> requireAuthId <*> getUrlRender <*> liftIO getCurrentTime
-      issue <- runInputPost $ Issue pid undefined uid now uid now
-        <$> ireq textField "subject"
-        <*> fmap (fmap readText) (iopt textField "assign")
-        <*> ireq textField "status"
-        <*> iopt dayField "limitdate"
-        <*> iopt timeField "limittime"
-        <*> iopt dayField "reminderdate"
-        <*> fmap (fmap readText) (iopt hiddenField "parent")
-      comment <- runInputPost $ Comment pid undefined undefined undefined uid now
-        <$> iopt textareaField "content"
-        <*> fmap (fmap readText) (iopt textField "assign")
-        <*> ireq textField "status"
-        <*> iopt dayField "limitdate"
-        <*> iopt timeField "limittime"
-        <*> iopt dayField "reminderdate"
-        <*> ireq boolField "checkreader"
-      mfi <- lookupFile "attached"
-      ino <- runDB $ do
-        update pid [ProjectIssuecounter +=. 1, ProjectUdate =. now]
-        prj <- get404 pid
-        let ino = projectIssuecounter prj
-        mfh <- storeAttachedFile uid mfi
-        iid <- insert $ issue {issueNumber=ino}
-        cid <- insert $ comment { commentIssue=iid
-                                , commentAttached=fmap fst mfh
-                                , commentAutomemo=Textarea "init."
-                                }
-        bcc <- selectMailAddresses pid
-        let msgid = toMessageId iid cid now mailMessageIdDomain
-            fragment = "#" +++ toPathPiece cid
-        when (isJust (commentContent comment) && not (null bcc)) $
-          liftIO $ renderSendMail Mail
+  (uid, r, now) <- 
+    (,,) <$> requireAuthId <*> getUrlRender <*> liftIO getCurrentTime
+  issue <- runInputPost $ Issue pid undefined uid now uid now
+           <$> ireq textField "subject"
+           <*> fmap (fmap readText) (iopt textField "assign")
+           <*> ireq textField "status"
+           <*> iopt dayField "limitdate"
+           <*> iopt timeField "limittime"
+           <*> iopt dayField "reminderdate"
+           <*> fmap (fmap readText) (iopt hiddenField "parent")
+  comment <- runInputPost $ Comment pid undefined undefined undefined uid now
+             <$> iopt textareaField "content"
+             <*> fmap (fmap readText) (iopt textField "assign")
+             <*> ireq textField "status"
+             <*> iopt dayField "limitdate"
+             <*> iopt timeField "limittime"
+             <*> iopt dayField "reminderdate"
+             <*> ireq boolField "checkreader"
+  mfi <- lookupFile "attached"
+  ino <- runDB $ do
+    update pid [ProjectIssuecounter +=. 1, ProjectUdate =. now]
+    prj <- get404 pid
+    let ino = projectIssuecounter prj
+    mfh <- storeAttachedFile uid mfi
+    iid <- insert $ issue {issueNumber=ino}
+    cid <- insert $ comment { commentIssue=iid
+                            , commentAttached=fmap fst mfh
+                            , commentAutomemo=Textarea "init."
+                            }
+    bcc <- selectMailAddresses pid
+    let msgid = toMessageId iid cid now mailMessageIdDomain
+        fragment = "#" +++ toPathPiece cid
+    when (isJust (commentContent comment) && not (null bcc)) $
+      liftIO $ renderSendMail Mail
             { mailFrom = fromEmailAddress
             , mailTo = []
             , mailCc = []
             , mailBcc = bcc
             , mailHeaders =
-                 [ ("Subject", issueSubject issue)
-                 , ("Message-ID", msgid)
-                 , (mailXHeader, toPathPiece pid)
-                 ]
+              [ ("Subject", issueSubject issue)
+              , ("Message-ID", msgid)
+              , (mailXHeader, toPathPiece pid)
+              ]
             , mailParts = 
-                   [[ Part
+                [[ Part
                      { partType = "text/plain; charset=utf-8"
                      , partEncoding = None
                      , partFilename = Nothing
@@ -407,10 +400,10 @@ postNewIssueR pid = do
                                        Nothing -> []
                                        Just (fid,_) -> ["添付ファイル: " +++ (r $ AttachedFileR cid fid)]
                      }
-                  ]]
-          }
-        return ino
-      redirect $ IssueR pid ino
+                ]]
+            }
+    return ino
+  redirect $ IssueR pid ino
 
 getIssueR :: ProjectId -> IssueNo -> Handler RepHtml
 getIssueR pid ino = do

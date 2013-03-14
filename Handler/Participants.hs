@@ -39,6 +39,7 @@ getParticipantsListR pid = do
                                   , "role" .= show (userRole u)
                                   , "prettyrole" .= userRoleName u
                                   , "receivemail" .= participantsReceivemail p
+                                  , "participant-uri" .= r (ParticipantsR pid uid)
                                   , "avatar" .= r ra
                                    ]
 
@@ -55,6 +56,7 @@ postNewParticipantsR pid = do
   where
     addParticipants :: UserId -> Handler RepJson
     addParticipants uid = do
+      r <- getUrlRender
       now <- liftIO getCurrentTime
       runDB $ insert $ Participants pid uid True now
       cacheSeconds 10 -- FIXME
@@ -63,9 +65,11 @@ postNewParticipantsR pid = do
                               , "user" .= show uid
                               , "status" .= ("added" :: Text)
                               ]
+                             , "uri" .= r (ParticipantsR pid uid)
                              ]
     delParticipants :: UserId -> Handler RepJson
     delParticipants uid = do
+      r <- getUrlRender
       uid' <- requireAuthId
       runDB $ do
         c <- count [ParticipantsProject ==. pid, ParticipantsUser !=. uid]
@@ -78,9 +82,11 @@ postNewParticipantsR pid = do
                               , "user" .= show uid
                               , "status" .= ("deleted" :: Text)
                               ]
+                             , "uri" .= r (ParticipantsR pid uid)
                              ]
     modParticipants :: UserId -> Handler RepJson
     modParticipants uid = do
+      r <- getUrlRender
       mmail <- lookupPostParam "mail"
       send'stop <- runDB $ do
         (Entity ptcptid _) <- getBy404 $ UniqueParticipants pid uid
@@ -94,6 +100,7 @@ postNewParticipantsR pid = do
                               , "status" .= ("modified" :: Text)
                               , "mail" .= send'stop
                               ]
+                             , "uri" .= r (ParticipantsR pid uid)
                              ]
 
 getParticipantsR :: ProjectId -> UserId -> Handler RepJson
@@ -108,5 +115,6 @@ getParticipantsR pid uid = do
                          , "role" .= show (userRole u)
                          , "prettyrole" .= userRoleName u
                          , "receivemail" .= participantsReceivemail (entityVal p)
+                         , "participant-uri" .= r (ParticipantsR pid uid)
                          , "avatar" .= r (AvatarImageR uid)
                          ]

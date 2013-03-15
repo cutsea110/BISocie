@@ -17,7 +17,7 @@
           <th .left width="160px">プロジェクト名 #
             <span .alert>(必須) #
           <td>
-            <input type=text #name name=name placeholder="(プロジェクト名)" uri=@{ProjectR pid} value=#{projectName prj} required>
+            <input type=text #name name=name placeholder="(プロジェクト名)" uri=@{ProjectR pid} value=#{projectName prj} autofocus required>
         <tr>
           <th .left>概要 #
             <span .alert>(必須) #

@@ -47,6 +47,8 @@ pre {
 
 input {
   width: 600px;
+  border: solid 1px #000000;
+  padding-left: 3px;
 }
 
 input[type="radio"], input[type="checkbox"] {
@@ -439,6 +441,15 @@ ul.tabs li a:hover, ul.tabs li a.selected {
   padding-bottom: 20px;
   margin: 0;
 }
+
+div.nowloading {
+  text-align: center;
+  vertical-align: middle;
+  background-image: url('@{StaticR img_ajax_loader_gif}');
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+
 #footer {
   color: #fff;
   font-size:93%;
@@ -580,6 +591,10 @@ img.avatar {
   max-width:40px;
   max-height:40px;
   margin-right:10px
+}
+img.avatar_on_map {
+  width: 100px;
+  margin: 0;
 }
 .attached {
   margin-top:2em;
@@ -797,6 +812,19 @@ dd {
   margin-left:0em;
   margin-top:0.5em
 }
+
+dl.profile {
+  font-size: 70%;
+  dt, dd {
+    margin: 0;
+    padding: 0;
+    border: none;
+  }
+  dd {
+    margin-left: 0.5em;
+  }
+}
+
 img.mail.clickable:hover {
   cursor:pointer;
 }
@@ -820,6 +848,8 @@ table.profile th {
   border: 1px solid #B7B9C5;
   text-align: left;
   padding: 8px;
+  min-width: 160px;
+  max-width: 160px;
 }
 table.profile td {
   border: 1px solid #B7B9C5;
@@ -827,6 +857,17 @@ table.profile td {
   padding: 8px;
   background: #fffffd;
 }
+table.profile td input[type="text"] {
+  width: 400px;
+}
+
+#popup-profile table.profile, .prof-tooltip table.profile {
+  width: 400px;
+  td {
+    width: 240px;
+  }
+}
+
 th.number, td.number {
   text-align: right;
 }

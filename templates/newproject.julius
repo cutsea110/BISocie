@@ -1,7 +1,7 @@
 $(document).ready(function(){
   $('#search-users').hide().attr('title', 'ユーザ検索').dialog({
     autoOpen: false,
-    width: 500,
+    width: 580,
     modal: false
   });
 
@@ -11,6 +11,9 @@ $(document).ready(function(){
   });
 
   $('#go-search-users').click(function(e){
+    $('#search-result .user-logo').remove();
+    $('#search-result').addClass('nowloading');
+
     var q = {};
     var xs = [ {id:'search-by-name', attr:'value', qkey:'name_like'}
              , {id:'select-entry-year', attr:'value', qkey:'entry_year'}
@@ -23,8 +26,8 @@ $(document).ready(function(){
         q[xs[i].qkey] = $('#'+xs[i].id).attr(xs[i].attr);
     }
     $.getJSON('@{UserListR}', q, function(json){
+        $('#search-result').removeClass('nowloading');
         var us = json.userlist;
-        $('#search-result .user-logo').remove();
         $.each(us, function(i, u){
           $('#search-result').append(mkUser(u));
         });

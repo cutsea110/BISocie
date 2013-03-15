@@ -1,4 +1,3 @@
-$newline never
 <ul .tabs>
   <li>
     <a href=@{IssueListR pid}>#{projectName prj} タスク一覧
@@ -59,4 +58,4 @@ $newline never
           <input #checkreader-yes type=radio name=checkreader value=yes>
           <label for=checkreader-yes>する
     \
-    <button .common type=submit name=_method value=add>タスク作成
+    <button .common type=submit>タスク作成

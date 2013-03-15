@@ -7,7 +7,7 @@
 /project/#ProjectId ProjectR GET POST DELETE
 
 /participantslist/#ProjectId ParticipantsListR GET
-/participants/#ProjectId ParticipantsR POST
+/participants/#ProjectId/#UserId ParticipantsR GET PUT DELETE
 /userlist.json UserListR GET
 
 /cross-search CrossSearchR GET POST
@@ -17,16 +17,17 @@
 /current-schedule CurrentScheduleR GET
 /schedule/#Year/#Month ScheduleR GET
 /task/#Year/#Month/#Date TaskR GET
+/export-csv/#UserId ExportCsvR POST
 
 /issuelist/#ProjectId IssueListR GET
 /issue/#ProjectId NewIssueR GET POST
 /issue/#ProjectId/#IssueNo IssueR GET
 /comment/#ProjectId/#IssueNo CommentR POST
 /attached/#CommentId/#FileHeaderId AttachedFileR GET
-/read/#CommentId ReadCommentR POST
+/read/#CommentId ReadCommentR POST DELETE
 /readers/#CommentId CommentReadersR GET
 
-/profile/#UserId ProfileR GET POST PUT
+/profile/#UserId ProfileR GET POST
 /avatar/#UserId AvatarR POST
 /avatar-image/#UserId AvatarImageR GET
 

@@ -16,7 +16,6 @@ module Foundation
     , maybeAuth
     , requireAuth
     , module Settings
-    , module Model
     , module Yesod.Goodies.PNotify
     , RawJS(..)
     , Form
@@ -25,17 +24,15 @@ module Foundation
 import Data.Maybe (isJust)
 import qualified Database.Persist.Store
 import Database.Persist.GenericSql
-import Model
 import Network.HTTP.Conduit (Manager)
 import Network.Wai (Request(..))
 import Network.Socket (getNameInfo)
+import Model
 import qualified Settings
 import Settings (widgetFile, Extra (..))
 import Text.Jasmine (minifym)
 import Text.Julius (RawJS(..))
 import Text.Hamlet (hamletFile)
-import Text.Lucius (luciusFile)
-import Text.Julius (juliusFile)
 import Web.ClientSession (getKey)
 import Yesod
 import Yesod.Static
@@ -111,8 +108,8 @@ instance Yesod BISocie where
       (title, parents) <- breadcrumbs
       current <- getCurrentRoute
       tm <- getRouteToMaster
-      let header = $(hamletFile "templates/header.hamlet")
-          footer = $(hamletFile "templates/footer.hamlet")
+      let header = $(widgetFile "header")
+          footer = $(widgetFile "footer")
       pc <- widgetToPageContent $ do
         pnotify y
         addScriptEither $ urlJqueryJs y
@@ -161,7 +158,7 @@ instance Yesod BISocie where
     isAuthorized (AttachedFileR cid _) _ = canReadComment cid
     isAuthorized (CommentReadersR cid) _ = canReadComment cid
     isAuthorized (ParticipantsListR pid) _ = isParticipant' pid
-    isAuthorized (ParticipantsR pid) _ = isParticipant pid
+    isAuthorized (ParticipantsR pid _) _ = isParticipant pid
     isAuthorized (ProfileR uid) True = canEditUser uid
     isAuthorized (ProfileR _) False = loggedInAuth
     isAuthorized (AvatarImageR _) _ = loggedInAuth

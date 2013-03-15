@@ -4,18 +4,19 @@ module Handler.User where
 import Import
 import BISocie.Helpers.Util
 import Control.Monad (forM, mplus, join)
-import Data.Maybe (isNothing)
+import Data.Maybe (isNothing, maybeToList)
 import Data.Text (isInfixOf)
 
 getUserListR :: Handler RepJson
 getUserListR = do
   r <- getUrlRender
-  (mn, mey, mt, mstf, ma) <- runInputGet $ (,,,,)
+  (mn, mey, mt, mstf, ma, mpid) <- runInputGet $ (,,,,,)
                             <$> iopt textField "name_like"
                             <*> fmap (fmap readText) (iopt textField "entry_year")
                             <*> iopt textField "teacher"
                             <*> iopt textField "staff"
                             <*> iopt textField "admin"
+                            <*> fmap (fmap readText) (iopt textField "project_id")
   let roles = toRoles ((Teacher, mt), (Student, mey), (Staff, mstf), (Admin, ma))
       roleWhere = if null roles then [] else [UserRole <-. roles]
   us' <- runDB $ do
@@ -26,18 +27,22 @@ getUserListR = do
       return (u, mp', ra)
   let us = filter (mkCond mn mey) us'
   cacheSeconds 10 -- FIXME
-  jsonToRepJson $ object ["userlist" .= array (map (go r) us)]
+  jsonToRepJson $ object ["userlist" .= array (map (go mpid r) us)]
   where
-    go r ((Entity uid u), mp, ra) = 
-      object [ "id" .= show uid
-             , "ident" .= userIdent u
-             , "uri" .= r (ProfileR uid)
-             , "name" .= userFullName u
-             , "role" .= show (userRole u)
-             , "prettyrole" .= userRoleName u
-             , "entryYear" .= fmap (showEntryYear.entityVal) mp
-             , "avatar" .= r ra
-             ]
+    go mpid r ((Entity uid u), mp, ra) =
+      object $ [ "id" .= show uid
+               , "ident" .= userIdent u
+               , "uri" .= r (ProfileR uid)
+               , "name" .= userFullName u
+               , "role" .= show (userRole u)
+               , "prettyrole" .= userRoleName u
+               , "entryYear" .= fmap (showEntryYear.entityVal) mp
+               , "avatar" .= r ra
+               , "participant_uri" .=
+                 case mpid of
+                   Just pid -> Just (r (ParticipantsR pid uid))
+                   Nothing -> Nothing
+               ]
     toRoles (t,ey,s,a) = foldr (mplus.q2r) (q2r ey) [t, s, a]
       where q2r (r, m) = maybe [] (const [r]) m
     mkCond mn mey ((Entity _ u), mp, _) =

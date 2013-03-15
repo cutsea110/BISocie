@@ -74,13 +74,13 @@ $(document).ready(function(){
 
   $('input[name=readThis]').click(function(e){
     var thisChkBox = $(this),
-        method = thisChkBox.attr('checked') ? "add" : "delete",
+        method = thisChkBox.attr('checked') ? 'POST' : 'DELETE'
         target_id = thisChkBox.attr('target');
     $.ajax({
       async: true,
-      type: 'POST',
+      type: method,
       dataType: 'json',
-      data: {_method: method},
+      data: null,
       url: thisChkBox.attr('url'),
       success: function(json){
           var u = json.read.reader;

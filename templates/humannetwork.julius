@@ -9,19 +9,59 @@ $(function(){
             mapTypeId: google.maps.MapTypeId.ROADMAP
         });
         for (var i = 0; i < data.locations.length; ++i) {
+          if (data.locations[i].lat != null && data.locations[i].lng != null) {
             var marker = new google.maps.Marker({
                 map: map,
                 position: new google.maps.LatLng(data.locations[i].lat, data.locations[i].lng),
                 title: data.locations[i].name,
                 icon: "@{StaticR img_icons_icon_map_png}"
             });
-            addMarkerLink(marker, data.locations[i].uri);
+            addMarkerLink(map, marker, data.locations[i].uri);
+          }
         }
     });
 });
 
-function addMarkerLink(marker, uri) {
+function addMarkerLink(map, marker, uri) {
     google.maps.event.addListener(marker, "click", function(){
-        document.location = uri;
+      $.ajax({
+        async: false,
+        type: 'GET',
+        dataType: 'json',
+        data: null,
+        url: uri,
+        success: function(json) {
+          var div = $('<div>').addClass('center'),
+              avatar = $('<img>').addClass('avatar_on_map').attr({src: json.avatar, alt: json.name}),
+              name = $('<a>').attr({href: json.uri}).html(json.name);
+          var prof = div.append(avatar).append('<br>').append(name);
+          if (json.profile != null) {
+            var p = json.profile,
+                dl = $('<dl>').addClass('profile');
+            dl.append($('<dt>').text('入学年度')).append($('<dd>').text(p.entryYear))
+              .append($('<dt>').text('ブランチ')).append($('<dd>').text(p.branch));
+          }
+          // そもそも住所がないので学生以外はここには出てこないのでここは不要.
+          if (json.lab != null) {
+            var l = json.lab,
+                dl = $('<dl>').addClass('profile');
+            dl.append($('<dt>').text('研究室番号')).append($('<dd>').text(p.roomNumber))
+              .append($('<dt>').text('内線番号')).append($('<dd>').text(p.extensionNumber));
+          }
+          var infoWindow = new google.maps.InfoWindow({
+            content: $('<div>').append(prof.append(dl)).html(),
+            size: new google.maps.Size(30,30)
+          });
+          infoWindow.open(map, marker);
+        },
+        error: function(res, status) {
+          var msg = $('<span>').addClass('errors').text('プロフィールの取得に失敗しました.');
+          var infoWindow = new google.maps.InfoWindow({
+            content: msg.html(),
+            size: new google.maps.Size(30,30)
+          });
+          infoWindow.open(map, marker);
+        }
+      });
     });
 }

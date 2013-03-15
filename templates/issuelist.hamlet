@@ -1,4 +1,3 @@
-$newline never
 <ul .tabs>
   <li>
     <a .selected href=@{IssueListR pid}>#{projectBisName prj} タスク一覧

@@ -6,12 +6,14 @@ module Handler.Profile where
 
 import Import
 import Control.Monad
+import Data.Char (ord)
+import qualified Data.Text as T
 import Data.Time
 import Data.Maybe (fromMaybe, fromJust)
 import Handler.S3
 import Settings (entryStartYear, graduateStartYear)
 
-getProfileR :: UserId -> Handler RepHtml
+getProfileR :: UserId -> Handler RepHtmlJson
 getProfileR uid = do
   mode <- lookupGetParam "mode"
   case mode of
@@ -64,10 +66,11 @@ getProfileR uid = do
                                     }
 
       
-    viewProf :: Handler RepHtml
+    viewProf :: Handler RepHtmlJson
     viewProf = do
       (Entity selfid self) <- requireAuth
       now <- liftIO getCurrentTime
+      r <- getUrlRender
       let viewprof = (ProfileR uid, [("mode", "v")])
           editprof = (ProfileR uid, [("mode", "e")])
       (user, mprof, mlab) <- 
@@ -76,16 +79,25 @@ getProfileR uid = do
           mprof <- getProf user
           mlab <- getLab user
           return (user, mprof, mlab)
-      defaultLayout $ do
-        setTitle "Profile"
-        addScriptRemote "https://maps.google.com/maps/api/js?sensor=false"
-        $(widgetFile "profile")
-        $(widgetFile "viewProfile")
+      let widget = do
+            setTitle "Profile"
+            addScriptRemote "https://maps.google.com/maps/api/js?sensor=false"
+            $(widgetFile "profile")
+            $(widgetFile "viewProfile")
+          json = object [ "ident" .= userIdent user
+                        , "name" .= userFullName user
+                        , "uri" .= r (ProfileR uid)
+                        , "avatar" .= r (AvatarImageR uid)
+                        , "profile" .= fmap fromProf mprof
+                        , "lab" .= fmap fromLab mlab
+                        ]
+      defaultLayoutJson widget json
     
-    editProf :: Handler RepHtml
+    editProf :: Handler RepHtmlJson
     editProf = do
       (Entity selfid self) <- requireAuth
       now <- liftIO getCurrentTime
+      r <- getUrlRender
       let viewprof = (ProfileR uid, [("mode", "v")])
           editprof = (ProfileR uid, [("mode", "e")])
           (y,_,_) = toGregorian $ utctDay now
@@ -101,63 +113,48 @@ getProfileR uid = do
               gyears = zipWith (\y1 y2 -> (Just y1==y2, y1)) [Settings.graduateStartYear..y+5] $
                        repeat (fromMaybe Nothing (fmap (fmap toInteger.profileGraduateYear) mprof))
           return (user, mprof, mlab, eyears, gyears)
-      defaultLayout $ do
-        setTitle "Profile"
-        addScriptRemote "https://maps.google.com/maps/api/js?sensor=false"
-        $(widgetFile "profile")
-        $(widgetFile "editProfile")
+      let widget = do
+            setTitle "Profile"
+            addScriptRemote "https://maps.google.com/maps/api/js?sensor=false"
+            $(widgetFile "profile")
+            $(widgetFile "editProfile")
+          json = object [ "ident" .= userIdent user
+                        , "name" .= userFullName user
+                        , "uri" .= r (ProfileR uid)
+                        , "avatar" .= r (AvatarImageR uid)
+                        , "profile" .= fmap fromProf mprof
+                        , "lab" .= fmap fromLab mlab
+                        ]
+      defaultLayoutJson widget json
+      
+    fromProf p = object [ "entryYear" .= profileEntryYear p
+                        , "branch" .= profileBranch p
+                        ]
+    fromLab l = object [ "extensionNumber" .= laboratoryExtensionNumber l
+                       , "roomNumber" .= laboratoryRoomNumber l
+                       ]
 
 postProfileR :: UserId -> Handler RepHtml
 postProfileR uid = do
-  _method <- lookupPostParam "_method"
-  case _method of
-    Just "update" -> putProfileR uid
-    _             -> invalidArgs ["The possible values of '_method' is modify"]
-
-putProfileR :: UserId -> Handler RepHtml
-putProfileR uid = do
   user <- runDB $ get404 uid
   case userRole user of
-    Student -> putStudentProf
-    Teacher -> putTeacherProf
-    _       -> putUserProf
+    Student -> studentProf
+    Teacher -> teacherProf
+    _       -> redirect (ProfileR uid, [("mode", "e")] :: [(Text, Text)])
   where
-    putUserProf = do
-      (em, fn, gn) <- 
-        runInputPost $ (,,)
-        <$> ireq textField "email"
-        <*> ireq textField "familyName"
-        <*> ireq textField "givenName"
-      runDB $ do
-        -- update user
-        update uid [UserEmail =. em, UserFamilyName =. fn, UserGivenName =. gn]
-      redirect (ProfileR uid, [("mode", "e")] :: [(Text, Text)])
-      
-    putTeacherProf = do
-      (em, fn, gn) <- 
-        runInputPost $ (,,)
-        <$> ireq textField "email"
-        <*> ireq textField "familyName"
-        <*> ireq textField "givenName"
+    teacherProf = do
       lab <- runInputPost $ Laboratory uid
         <$> iopt textField "roomnumber"
         <*> iopt textField "extensionnumber"
         <*> iopt textareaField "courses"
       runDB $ do
-        -- update user
-        update uid [UserEmail =. em, UserFamilyName =. fn, UserGivenName =. gn]
         mlab <- getBy $ UniqueLaboratory uid
         case mlab of
           Nothing -> insert lab
           Just (Entity lid _) -> replace lid lab >> return lid
       redirect (ProfileR uid, [("mode", "e")] :: [(Text, Text)])
     
-    putStudentProf = do
-      (em, fn, gn) <- 
-        runInputPost $ (,,)
-        <$> ireq textField "email"
-        <*> ireq textField "familyName"
-        <*> ireq textField "givenName"
+    studentProf = do
       prof <- runInputPost $ Profile uid
         <$> iopt dayField "birth"
         <*> iopt intField "entryYear"
@@ -178,8 +175,6 @@ putProfileR uid = do
         <*> iopt textField "desiredWorkLocation"
         <*> iopt textField "employment"
       runDB $ do
-        -- update user
-        update uid [UserEmail =. em, UserFamilyName =. fn, UserGivenName =. gn]
         mprof <- getBy $ UniqueProfile uid
         case mprof of
           Nothing -> insert prof
@@ -191,11 +186,17 @@ getAvatarImageR uid = do
   (fid, f) <- runDB $ do
     u <- get404 uid
     case userAvatar u of
-      Nothing -> lift $ redirect $ StaticR img_no_image_png
+      Nothing -> lift $ redirect $ StaticR $ sel $ userIdent u
       Just fid -> do
         f <- get404 fid
         return (fid, f)
   getFileR (fileHeaderCreator f) fid
+  where
+    sel uid = case T.foldl' (\b c -> b + ord c) 0 uid `mod` 4 of
+      0 -> img_avatar_01_png
+      1 -> img_avatar_02_png
+      2 -> img_avatar_03_png
+      _ -> img_avatar_04_png
 
 postAvatarR :: UserId -> Handler RepJson
 postAvatarR uid = do

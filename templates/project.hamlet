@@ -1,4 +1,3 @@
-$newline never
 <ul .tabs>
   <li>
     <a href=@{IssueListR pid}>#{projectName prj} タスク一覧
@@ -10,7 +9,7 @@ $newline never
     <a href=@{ParticipantsListR pid}>参加者
 <div #main-content>
   <h3 .project.page-header>#{projectName prj} プロジェクト設定
-    <button #button-delete-confirm type=submit name=_method value=delete .link>このプロジェクトを削除する.
+    <button #button-delete-confirm type=submit .link>このプロジェクトを削除する.
   <form method=post action=@{ProjectR pid}>
     <table width="800px">
       <tbody>
@@ -18,7 +17,7 @@ $newline never
           <th .left width="160px">プロジェクト名 #
             <span .alert>(必須) #
           <td>
-            <input type=text #name name=name placeholder="(プロジェクト名)" uri=@{ProjectR pid} value=#{projectName prj} required>
+            <input type=text #name name=name placeholder="(プロジェクト名)" uri=@{ProjectR pid} value=#{projectName prj} autofocus required>
         <tr>
           <th .left>概要 #
             <span .alert>(必須) #
@@ -38,7 +37,7 @@ $newline never
             <button #button-status-syntax-help type=submit .link>ヘルプ
           <td>
             <textarea #statuses name=statuses placeholder="(ステータス設定)" uri=@{ProjectR pid} required>#{unTextarea $ projectStatuses prj}
-    <button .common type=submit name=_method value=modify>変更する
+    <button .common type=submit>変更する
 
 ^{help}
 <div #delete-confirm .alert>

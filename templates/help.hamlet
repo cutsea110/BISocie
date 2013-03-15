@@ -1,4 +1,3 @@
-$newline never
 <div #status-syntax-help>
   <ul>
     <li>1行に1つずつステータス名を書いてください。

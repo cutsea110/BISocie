@@ -50,7 +50,7 @@
           <label for=checkreader-no>しない
           <input #checkreader-yes type=radio name=checkreader value=yes>
           <label for=checkreader-yes>する
-    <button .common type=submit name=_method value=add>投稿
+    <button .common type=submit>投稿
   <ul #issue-thread>
     $forall c <- comments
       $with c' <- snd3 c, cid <- fst3 c, cid' <- toPathPiece cid

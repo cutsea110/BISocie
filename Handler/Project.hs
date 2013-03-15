@@ -5,9 +5,7 @@
 module Handler.Project where
 
 import Import
-import BISocie.Helpers.Form
-import Control.Monad (unless, forM_)
-import Data.Maybe
+import Control.Monad (forM_)
 import qualified Data.Text as T
 import Data.Time
 import System.Directory
@@ -29,36 +27,29 @@ getNewProjectR = do
     
 postNewProjectR :: Handler RepHtml
 postNewProjectR = do
-  _method <- lookupPostParam "_method"
-  case _method of
-    Just "create" -> createProject
-    _             -> invalidArgs ["The possible values of '_method' is create"]
-  where
-    createProject :: Handler RepHtml
-    createProject = do
-      uid <- requireAuthId
-      (name, desc, sts) <- runInputPost $ (,,)
-                           <$> ireq textField "name"
-                           <*> ireq textareaField "description"
-                           <*> ireq textareaField "statuses"
-      now <- liftIO getCurrentTime
-      pid <- runDB $ do
-        pid <- insert $ Project { projectName=name
-                                , projectIssuecounter=0
-                                , projectDescription=desc
-                                , projectStatuses=sts
-                                , projectTerminated=False
-                                , projectCuser=uid
-                                , projectCdate=now
-                                , projectUdate=now
-                                }
-        _ <- insert $ Participants { participantsProject=pid
-                                   , participantsUser=uid
-                                   , participantsReceivemail=True
-                                   , participantsCdate=now
-                                   }
-        return pid
-      redirect $ ProjectR pid
+  uid <- requireAuthId
+  (name, desc, sts) <- runInputPost $ (,,)
+                       <$> ireq textField "name"
+                       <*> ireq textareaField "description"
+                       <*> ireq textareaField "statuses"
+  now <- liftIO getCurrentTime
+  pid <- runDB $ do
+    pid <- insert $ Project { projectName=name
+                            , projectIssuecounter=0
+                            , projectDescription=desc
+                            , projectStatuses=sts
+                            , projectTerminated=False
+                            , projectCuser=uid
+                            , projectCdate=now
+                            , projectUdate=now
+                            }
+    _ <- insert $ Participants { participantsProject=pid
+                               , participantsUser=uid
+                               , participantsReceivemail=True
+                               , participantsCdate=now
+                               }
+    return pid
+  redirect $ ProjectR pid
 
 getProjectR :: ProjectId -> Handler RepHtml
 getProjectR pid = do

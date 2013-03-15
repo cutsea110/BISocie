@@ -22,6 +22,7 @@ import qualified Data.Text as T
 import Handler.S3
 import Network.Mail.Mime
 import Text.Blaze.Internal (preEscapedText)
+import Text.Shakespeare.Text (stext)
 import Yesod.Auth (requireAuthId)
 
 getCurrentScheduleR :: Handler RepHtml
@@ -624,41 +625,39 @@ storeAttachedFile uid (Just fi) = fmap (fmap fst5'snd5) $ upload uid fi
 generateAutomemo c i f = do
   let st = if issueStatus i == commentStatus c
            then []
-           else ["ステータスを " +++ issueStatus i +++ " から " 
-                 +++ commentStatus c +++ " に変更."]
+           else [[stext|ステータス #{issueStatus i} から #{commentStatus c} に変更.|]]
       lm = case (issueLimitDatetime i, commentLimitDatetime c) of
         (Nothing, Nothing) -> []
-        (Just x , Nothing) -> ["期限 " +++ showDate x +++ " を期限なしに変更."]
-        (Nothing, Just y ) -> ["期限を " +++ showDate y +++ " に設定."]
+        (Just x , Nothing) -> [[stext|期限 #{showDate x} を期限なしに変更.|]]
+        (Nothing, Just y ) -> [[stext|期限を #{showDate y} に設定.|]]
         (Just x , Just y ) -> if x == y
                               then []
-                              else ["期限を " +++ showDate x +++ " から "
-                                    +++  showDate y +++ " に変更."]
+                              else [[stext|期限を #{showDate x} から #{showDate y} に変更.|]]
       rm = case (issueReminderdate i, commentReminderdate c) of
         (Nothing, Nothing) -> []
-        (Just x , Nothing) -> ["通知日 " +++ showText x +++ " を通知なしに変更"]
-        (Nothing, Just y ) -> ["通知日を " +++ showText y +++ " に設定."]
+        (Just x , Nothing) -> [[stext|通知日 #{showText x} を通知なしに変更.|]]
+        (Nothing, Just y ) -> [[stext|通知日を #{showText y} に設定.|]]
         (Just x , Just y ) -> if x == y
                               then []
-                              else ["通知日を " +++ showText x +++ " から "
-                                    +++ showText y +++ " に変更."]
+                              else [[stext|通知日を #{showText x} から #{showText y} に変更.|]]
 
       af = case f of
         Nothing -> []
-        Just (_, fname) -> ["ファイル " +++ fname +++ " を添付."]
+        Just (_, fname) -> [[stext|ファイル #{fname} を添付.|]]
   as <- case (issueAssign i, commentAssign c) of
     (Nothing, Nothing) -> return []
     (Just x , Nothing) -> do
       x' <- get404 x
-      return ["担当者 " +++ userFullName x' +++ " を担当者なしに変更."]
+      return [[stext|担当者 #{userFullName x'} を担当者なしに変更.|]]
     (Nothing, Just y ) -> do
       y' <- get404 y
-      return ["担当者を " +++ userFullName y' +++ " に設定."]
+      return [[stext|担当者を #{userFullName y'} に設定.|]]
     (Just x , Just y ) -> do
       x' <- get404 x
       y' <- get404 y
       if x' == y'
         then return []
-        else return ["担当者を " +++ userFullName x' +++ " から " +++ 
-                     userFullName y' +++ " に変更."]
-  return $ Textarea $ T.intercalate "\n" (st ++ as ++ lm ++ rm ++ af)
+        else return [[stext|担当者を #{userFullName x'} から #{userFullName y'} に変更.|]]
+  return $ Textarea $ fromLazy $ L.intercalate "\n" $ st <> as <> lm <> rm <> af
+  where
+    fromLazy = T.pack . L.unpack

@@ -494,6 +494,8 @@ postCommentR pid ino = do
     let msgid = toMessageId iid cid now mailMessageIdDomain
         refid = toMessageId iid lastCid (commentCdate lastC) mailMessageIdDomain
         fragment = "#" +++ toPathPiece cid
+        url = r (IssueR pid ino) <> fragment
+        mfurl = fmap (r . AttachedFileR cid . fst) mfh
     when (isJust (commentContent comment) && not (null emails)) $
       liftIO $ renderSendMail Mail
         { mailFrom = fromEmailAddress
@@ -508,28 +510,23 @@ postCommentR pid ino = do
           , (mailXHeader, toPathPiece pid)
           ]
         , mailParts = 
-            [[ Part
-                 { partType = "text/plain; charset=utf-8"
-                 , partEncoding = None
-                 , partFilename = Nothing
-                 , partHeaders = []
-                 , partContent = LE.encodeUtf8 $ L.pack $ T.unpack $ T.unlines
-                                 $ [ "プロジェクト: " +++ projectName prj
-                                   , "タスク: " +++ issueSubject issue
-                                   , "ステータス: " +++ issueStatus issue
-                                   , ""
-                                   ]
-                                 ++ T.lines (unTextarea (fromJust (commentContent comment)))
-                                 ++ [ ""
-                                    , "*このメールに直接返信せずにこちらのページから投稿してください。"
-                                    , "URL: " +++ r (IssueR pid ino) +++ fragment]
-                                 ++ case mfh of
-                                   Nothing -> []
-                                   Just (fid,_) -> ["添付ファイル: " +++ (r $ AttachedFileR cid fid)]
-                 }
+            [[ Part "text/plain; charset=utf-8" QuotedPrintableText Nothing []
+               $ LE.encodeUtf8 $ textPart prj issue comment url mfurl
              ]]
         }
   redirect $ IssueR pid ino
+  where
+    textPart p i c url mfUrl = [stext|
+プロジェクト: #{projectName p}
+タスク: #{issueSubject i}
+ステータス: #{issueStatus i}
+\#{unTextarea $ fromJust $ commentContent c}
+
+*このメールに直接返信せずにこちらのページから投稿してください。
+URL: #{url}
+|] <> if isNothing mfUrl then "" else [stext|
+添付ファイル: #{fromJust mfUrl}
+|]
         
 getAttachedFileR :: CommentId -> FileHeaderId -> Handler RepHtml
 getAttachedFileR cid fid = do

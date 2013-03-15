@@ -35,7 +35,7 @@ $with id' <- entityKey u, u' <- entityVal u
               <button .link #button-status-syntax-help type=submit>_{MsgHelp}
             <td>
               <textarea #statuses name=statuses placeholder="(_{MsgStatusSetting})" cols="32" rows="6" required>#{inintstatuses}
-    <button .common type=submit name=_method value=create>_{MsgCreateProject}
+    <button .common type=submit>_{MsgCreateProject}
 
 <div #search-users>
   <label for=search-bay-name>_{MsgName}:

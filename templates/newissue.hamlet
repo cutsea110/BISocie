@@ -58,4 +58,4 @@
           <input #checkreader-yes type=radio name=checkreader value=yes>
           <label for=checkreader-yes>する
     \
-    <button .common type=submit name=_method value=add>タスク作成
+    <button .common type=submit>タスク作成

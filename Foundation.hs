@@ -108,8 +108,8 @@ instance Yesod BISocie where
       (title, parents) <- breadcrumbs
       current <- getCurrentRoute
       tm <- getRouteToMaster
-      let header = $(hamletFile "templates/header.hamlet")
-          footer = $(hamletFile "templates/footer.hamlet")
+      let header = $(widgetFile "header")
+          footer = $(widgetFile "footer")
       pc <- widgetToPageContent $ do
         pnotify y
         addScriptEither $ urlJqueryJs y
@@ -158,7 +158,7 @@ instance Yesod BISocie where
     isAuthorized (AttachedFileR cid _) _ = canReadComment cid
     isAuthorized (CommentReadersR cid) _ = canReadComment cid
     isAuthorized (ParticipantsListR pid) _ = isParticipant' pid
-    isAuthorized (ParticipantsR pid) _ = isParticipant pid
+    isAuthorized (ParticipantsR pid _) _ = isParticipant pid
     isAuthorized (ProfileR uid) True = canEditUser uid
     isAuthorized (ProfileR _) False = loggedInAuth
     isAuthorized (AvatarImageR _) _ = loggedInAuth

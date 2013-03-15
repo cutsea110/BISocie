@@ -7,4 +7,4 @@
         <label for=students-list-csv>学生アカウントCSVファイル:
         <input #students-list-csv type=file name=studentscsv required>
         <br>
-        <button type=submit name=_method value=upload>学生一括登録
+        <button .common type=submit>学生一括登録

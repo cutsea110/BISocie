@@ -14,7 +14,7 @@ $(document).ready(function(){
 
   $('#search-users').hide().attr('title', 'ユーザ検索').dialog({
     autoOpen: false,
-    width: 500,
+    width: 580,
     modal: true
   });
 
@@ -26,7 +26,10 @@ $(document).ready(function(){
     e.preventDefault();
   });
   $('#go-search-users').click(function(e){
-    var q = {uncache: (new Date).getTime()};
+    $('#search-result .user-logo').remove();
+    $('#search-result').addClass('nowloading');
+
+    var q = {uncache: (new Date).getTime(), project_id: '#{rawJS $ show pid}'};
     var xs = [ {id:'search-by-name', attr:'value', qkey:'name_like'}
              , {id:'select-entry-year', attr:'value', qkey:'entry_year'}
              , {id:'select-teacher', attr:'checked', qkey:'teacher'}
@@ -39,8 +42,8 @@ $(document).ready(function(){
     }
     $.getJSON('@{UserListR}', q, function(json){
       var us = json.userlist;
-      $('#search-result .user-logo').remove();
       $.getJSON('@{ParticipantsListR pid}', function(json) {
+       $('#search-result').removeClass('nowloading');
        var ps = json2hash(json.participants);
          $.each(us, function(i, u){
           $('#search-result').append(mkUser(u, ps));
@@ -74,7 +77,7 @@ function json2hash(ps){
 
 function mkUser(u, ps){
   var div = $("<div class='inline user'/>")
-            .attr({uid: u.id, ident: u.ident, fullname: u.name, eyear: u.entryYear})
+            .attr({uid: u.id, ident: u.ident, fullname: u.name, eyear: u.entryYear, uri: u.participant_uri})
             .addClass(u.role+' user-logo'),
       i = $('<div/>').text(u.ident).hide(),
       area = $('<div/>').addClass('avatar_area'),
@@ -113,15 +116,16 @@ function mkUser(u, ps){
 function modifyParticipant(c){
   var uid = c.closest('div.user').attr('uid'),
       checked = c.attr('checked'),
-      method = checked ? "add" : "del",
+      method = checked ? 'PUT' : 'DELETE',
+      url = c.closest('div.user').attr('uri'),
       mail = c.closest('div').find("img.mail");
 
   $.ajax({
     async: false,
-    type: 'POST',
-    url: '@{ParticipantsR pid}',
+    type: method,
+    url: url,
     dataType: 'json',
-    data: {_method: method, uid: uid},
+    data: {uid: uid},
     success: function (json) {
       switch (json.participants.status) {
         case 'added':
@@ -145,15 +149,15 @@ function modifyParticipant(c){
 
 function toggleSendmailParticipant(mail){
   var uid = mail.closest('div.user').attr('uid'),
-      method = "mod",
+      url = mail.closest('div.user').attr('uri'),
       sendstop = 'none';
 
   switch (mail.attr('receivemail')) {
     case 'send':
-      sendstop = 'stop';
+      sendstop = false;
       break;
     case 'stop':
-      sendstop = 'send';
+      sendstop = true;
       break;
     case 'none':
       // NONE
@@ -162,16 +166,16 @@ function toggleSendmailParticipant(mail){
 
   $.ajax({
     async: false,
-    type: 'POST',
-    url: '@{ParticipantsR pid}',
+    type: 'PUT',
+    url: url,
     dataType: 'json',
-    data: {_method: method, mail: sendstop, uid: uid},
+    data: {mail: sendstop},
     success: function (json) {
       switch (json.participants.mail) {
-        case "send":
+        case true:
           mail.attr({src: '@{StaticR img_mail_accept_png}', receivemail: 'send'});
           break;
-        case "stop":
+        case false:
           mail.attr({src: '@{StaticR img_mail_error_png}', receivemail: 'stop'});
           break;
       }

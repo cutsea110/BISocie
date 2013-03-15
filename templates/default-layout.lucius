@@ -842,6 +842,13 @@ table.profile td input[type="text"] {
   width: 400px;
 }
 
+#popup-profile table.profile, .prof-tooltip table.profile {
+  width: 400px;
+  td {
+    width: 240px;
+  }
+}
+
 th.number, td.number {
   text-align: right;
 }

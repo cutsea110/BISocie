@@ -110,10 +110,16 @@ postExportCsvR uid = do
     mkRecord :: Issue -> [Text]
     mkRecord is = sbj:sd:st:ed:et:[]
       where
-        sbj = issueSubject is
+        sbj = escape $ issueSubject is
         sd = toText $ fromJust $ issueLimitdate is
         st = toText $ fromJust $ issueLimittime is
         (ed, et) = (sd, st)
+        escape t =  "\"" <> T.foldr ((<>).rep) T.empty t <> "\""
+        rep :: Char -> Text
+        rep '\\' = "\\\\"
+        rep ',' = "\\,"
+        rep '"' = "\\\""
+        rep x = T.singleton x
 
 getProjectListR :: Handler RepJson
 getProjectListR = do

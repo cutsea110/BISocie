@@ -3,7 +3,6 @@
 module Handler.Participants where
 
 import Import
-import BISocie.Helpers.Util
 import Control.Monad (when, forM)
 import Data.Time
 import Yesod.Auth (requireAuthId)

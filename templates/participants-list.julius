@@ -26,6 +26,9 @@ $(document).ready(function(){
     e.preventDefault();
   });
   $('#go-search-users').click(function(e){
+    $('#search-result .user-logo').remove();
+    $('#search-result').addClass('nowloading');
+
     var q = {uncache: (new Date).getTime(), project_id: '#{rawJS $ show pid}'};
     var xs = [ {id:'search-by-name', attr:'value', qkey:'name_like'}
              , {id:'select-entry-year', attr:'value', qkey:'entry_year'}
@@ -39,8 +42,8 @@ $(document).ready(function(){
     }
     $.getJSON('@{UserListR}', q, function(json){
       var us = json.userlist;
-      $('#search-result .user-logo').remove();
       $.getJSON('@{ParticipantsListR pid}', function(json) {
+       $('#search-result').removeClass('nowloading');
        var ps = json2hash(json.participants);
          $.each(us, function(i, u){
           $('#search-result').append(mkUser(u, ps));

@@ -590,6 +590,10 @@ img.avatar {
   max-height:40px;
   margin-right:10px
 }
+img.avatar_on_map {
+  width: 100px;
+  margin: 0;
+}
 .attached {
   margin-top:2em;
   padding-top:5px;
@@ -806,6 +810,19 @@ dd {
   margin-left:0em;
   margin-top:0.5em
 }
+
+dl.profile {
+  font-size: 70%;
+  dt, dd {
+    margin: 0;
+    padding: 0;
+    border: none;
+  }
+  dd {
+    margin-left: 0.5em;
+  }
+}
+
 img.mail.clickable:hover {
   cursor:pointer;
 }

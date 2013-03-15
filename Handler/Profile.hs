@@ -13,7 +13,7 @@ import Data.Maybe (fromMaybe, fromJust)
 import Handler.S3
 import Settings (entryStartYear, graduateStartYear)
 
-getProfileR :: UserId -> Handler RepHtml
+getProfileR :: UserId -> Handler RepHtmlJson
 getProfileR uid = do
   mode <- lookupGetParam "mode"
   case mode of
@@ -66,10 +66,11 @@ getProfileR uid = do
                                     }
 
       
-    viewProf :: Handler RepHtml
+    viewProf :: Handler RepHtmlJson
     viewProf = do
       (Entity selfid self) <- requireAuth
       now <- liftIO getCurrentTime
+      r <- getUrlRender
       let viewprof = (ProfileR uid, [("mode", "v")])
           editprof = (ProfileR uid, [("mode", "e")])
       (user, mprof, mlab) <- 
@@ -78,16 +79,25 @@ getProfileR uid = do
           mprof <- getProf user
           mlab <- getLab user
           return (user, mprof, mlab)
-      defaultLayout $ do
-        setTitle "Profile"
-        addScriptRemote "https://maps.google.com/maps/api/js?sensor=false"
-        $(widgetFile "profile")
-        $(widgetFile "viewProfile")
+      let widget = do
+            setTitle "Profile"
+            addScriptRemote "https://maps.google.com/maps/api/js?sensor=false"
+            $(widgetFile "profile")
+            $(widgetFile "viewProfile")
+          json = object [ "ident" .= userIdent user
+                        , "name" .= userFullName user
+                        , "uri" .= r (ProfileR uid)
+                        , "avatar" .= r (AvatarImageR uid)
+                        , "profile" .= fmap fromProf mprof
+                        , "lab" .= fmap fromLab mlab
+                        ]
+      defaultLayoutJson widget json
     
-    editProf :: Handler RepHtml
+    editProf :: Handler RepHtmlJson
     editProf = do
       (Entity selfid self) <- requireAuth
       now <- liftIO getCurrentTime
+      r <- getUrlRender
       let viewprof = (ProfileR uid, [("mode", "v")])
           editprof = (ProfileR uid, [("mode", "e")])
           (y,_,_) = toGregorian $ utctDay now
@@ -103,11 +113,26 @@ getProfileR uid = do
               gyears = zipWith (\y1 y2 -> (Just y1==y2, y1)) [Settings.graduateStartYear..y+5] $
                        repeat (fromMaybe Nothing (fmap (fmap toInteger.profileGraduateYear) mprof))
           return (user, mprof, mlab, eyears, gyears)
-      defaultLayout $ do
-        setTitle "Profile"
-        addScriptRemote "https://maps.google.com/maps/api/js?sensor=false"
-        $(widgetFile "profile")
-        $(widgetFile "editProfile")
+      let widget = do
+            setTitle "Profile"
+            addScriptRemote "https://maps.google.com/maps/api/js?sensor=false"
+            $(widgetFile "profile")
+            $(widgetFile "editProfile")
+          json = object [ "ident" .= userIdent user
+                        , "name" .= userFullName user
+                        , "uri" .= r (ProfileR uid)
+                        , "avatar" .= r (AvatarImageR uid)
+                        , "profile" .= fmap fromProf mprof
+                        , "lab" .= fmap fromLab mlab
+                        ]
+      defaultLayoutJson widget json
+      
+    fromProf p = object [ "entryYear" .= profileEntryYear p
+                        , "branch" .= profileBranch p
+                        ]
+    fromLab l = object [ "extensionNumber" .= laboratoryExtensionNumber l
+                       , "roomNumber" .= laboratoryRoomNumber l
+                       ]
 
 postProfileR :: UserId -> Handler RepHtml
 postProfileR uid = do

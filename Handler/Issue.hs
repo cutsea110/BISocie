@@ -6,7 +6,26 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
-module Handler.Issue where
+module Handler.Issue
+       ( getCurrentScheduleR
+       , getScheduleR
+       , getTaskR
+       , postExportCsvR
+       , getProjectListR
+       , getAssignListR
+       , getStatusListR
+       , getCrossSearchR
+       , postCrossSearchR
+       , getIssueListR
+       , getNewIssueR
+       , postNewIssueR
+       , getIssueR
+       , postCommentR
+       , getAttachedFileR
+       , postReadCommentR
+       , deleteReadCommentR
+       , getCommentReadersR
+       ) where
 
 import Import
 import BISocie.Helpers.Util
@@ -385,13 +404,15 @@ postNewIssueR pid = do
               ]
             , mailParts = 
                 [[ Part "text/plain; charset=utf-8" QuotedPrintableText Nothing []
-                   $ LE.encodeUtf8 $ textPart prj issue comment url mfurl
+                   $ LE.encodeUtf8 $ mkTextPart prj issue comment url mfurl
                  ]]
             }
     return ino
   redirect $ IssueR pid ino
-  where
-    textPart p i c url mfUrl = [stext|
+
+
+-- | FIXME: like a mkMail on Root.hs
+mkTextPart p i c url mfUrl = [stext|
 プロジェクト: #{projectName p}
 タスク: #{issueSubject i}
 ステータス: #{issueStatus i}
@@ -402,6 +423,7 @@ URL: #{url}
 |] <> if isNothing mfUrl then "" else [stext|
 添付ファイル: #{fromJust mfUrl}
 |]
+
 
 getIssueR :: ProjectId -> IssueNo -> Handler RepHtml
 getIssueR pid ino = do
@@ -508,22 +530,10 @@ postCommentR pid ino = do
           ]
         , mailParts = 
             [[ Part "text/plain; charset=utf-8" QuotedPrintableText Nothing []
-               $ LE.encodeUtf8 $ textPart prj issue comment url mfurl
+               $ LE.encodeUtf8 $ mkTextPart prj issue comment url mfurl
              ]]
         }
   redirect $ IssueR pid ino
-  where
-    textPart p i c url mfUrl = [stext|
-プロジェクト: #{projectName p}
-タスク: #{issueSubject i}
-ステータス: #{issueStatus i}
-\#{unTextarea $ fromJust $ commentContent c}
-
-*このメールに直接返信せずにこちらのページから投稿してください。
-URL: #{url}
-|] <> if isNothing mfUrl then "" else [stext|
-添付ファイル: #{fromJust mfUrl}
-|]
         
 getAttachedFileR :: CommentId -> FileHeaderId -> Handler RepHtml
 getAttachedFileR cid fid = do

@@ -9,7 +9,7 @@
     <a href=@{ParticipantsListR pid}>参加者
 <div #main-content>
   <h3 .project.page-header>#{projectName prj} プロジェクト設定
-    <button #button-delete-confirm type=submit name=_method value=delete .link>このプロジェクトを削除する.
+    <button #button-delete-confirm type=submit .link>このプロジェクトを削除する.
   <form method=post action=@{ProjectR pid}>
     <table width="800px">
       <tbody>
@@ -37,7 +37,7 @@
             <button #button-status-syntax-help type=submit .link>ヘルプ
           <td>
             <textarea #statuses name=statuses placeholder="(ステータス設定)" uri=@{ProjectR pid} required>#{unTextarea $ projectStatuses prj}
-    <button .common type=submit name=_method value=modify>変更する
+    <button .common type=submit>変更する
 
 ^{help}
 <div #delete-confirm .alert>

@@ -167,14 +167,14 @@ mkMail render prj issue url = do
               }
   where
     textPart = [stext|
-\#{render MsgProject}: #{projectName prj}
-\#{render MsgIssue}: #{issueSubject issue}
-\#{render MsgLimitDate}: #{showLimitdatetime issue}
+ #{render MsgProject}: #{projectName prj}
+ #{render MsgIssue}: #{issueSubject issue}
+ #{render MsgLimitDate}: #{showLimitdatetime issue}
 
-\#{render MsgCloseLimitDateOfThisIssue}
+ #{render MsgCloseLimitDateOfThisIssue}
 
-* #{render MsgNoteOnThisReminderMail}
-\#{render MsgIssue} URL: #{url}
+ * #{render MsgNoteOnThisReminderMail}
+ #{render MsgIssue} URL: #{url}
 |]
     htmlPart = TL.decodeUtf8 $ renderHtml [shamlet|
 <p>

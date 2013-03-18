@@ -41,6 +41,8 @@ import qualified Data.Text as T
 import Handler.S3
 import Network.Mail.Mime
 import Text.Blaze.Internal (preEscapedText)
+import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
+import Text.Hamlet (shamlet)
 import Text.Shakespeare.Text (stext)
 import Yesod.Auth (requireAuthId)
 
@@ -411,6 +413,8 @@ postNewIssueR pid = do
             , mailParts = 
                 [[ Part "text/plain; charset=utf-8" QuotedPrintableText Nothing []
                    $ LE.encodeUtf8 $ mkTextPart prj issue comment url mfurl
+                 , Part "text/html; charset=utf-8" QuotedPrintableText Nothing []
+                   $ LE.encodeUtf8 $ mkHtmlPart prj issue comment url mfurl
                  ]]
             }
     return ino
@@ -422,14 +426,36 @@ mkTextPart p i c url mfUrl = [stext|
 プロジェクト: #{projectName p}
 タスク: #{issueSubject i}
 ステータス: #{issueStatus i}
-\#{unTextarea $ fromJust $ commentContent c}
 
-*このメールに直接返信せずにこちらのページから投稿してください。
+ #{unTextarea $ fromJust $ commentContent c}
+
+* このメールに直接返信せずにこちらのページから投稿してください.
 URL: #{url}
 |] <> if isNothing mfUrl then "" else [stext|
 添付ファイル: #{fromJust mfUrl}
 |]
 
+mkHtmlPart p i c url mfUrl = LE.decodeUtf8 $ renderHtml [shamlet|
+<p>
+  <dl>
+    <dt>プロジェクト
+    <dd>#{projectName p}
+    <dt>タスク
+    <dd>#{issueSubject i}
+    <dt>ステータス
+    <dd>#{issueStatus i}
+
+<p>#{unTextarea $ fromJust $ commentContent c}
+
+<p> * このメールに直接返信せずにこちらのページから投稿してください.
+<p>
+  <dl>
+    <dt>URL
+    <dd>#{url}
+    $maybe furl <- mfUrl
+      <dt>添付ファイル
+      <dd>#{furl}
+|]
 
 getIssueR :: ProjectId -> IssueNo -> Handler RepHtml
 getIssueR pid ino = do

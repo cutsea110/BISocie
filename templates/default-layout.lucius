@@ -67,6 +67,10 @@ input[type="time"] {
   width: 6em;
 }
 
+input[type="file"] {
+  width: 200px;
+}
+
 /*** TABLED ***/
 table {
   border-collapse: collapse;
@@ -859,6 +863,10 @@ table.profile td {
 }
 table.profile td input[type="text"] {
   width: 400px;
+}
+div.profile {
+  margin: 0 auto;
+  width: 700px;
 }
 
 #popup-profile table.profile, .prof-tooltip table.profile {

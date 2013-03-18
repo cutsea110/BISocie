@@ -1,5 +1,21 @@
 $(document).ready(function(){
 
+  $('#upload-avatar').hide().attr('title', 'アバターの変更').dialog({
+    autoOpen: false,
+    width: 500,
+    modal: false,
+    buttons: {
+      '閉じる': function(){
+        $(this).dialog('close');
+      }
+    }
+  });
+
+  $('#open-upload-avatar').click(function(e){
+    $('#upload-avatar').dialog('open');
+    e.preventDefault();
+  });
+
   $('#desired-human-network').hide().attr('title', 'ヒューマンネットワーク').dialog({
     autoOpen: false,
     width: 500,
@@ -109,7 +125,7 @@ $(document).ready(function(){
            $.post('@{AvatarR uid}', {avatar: fhid}, function(json){
              var avatar = $("<img id='myavatar'/>").attr({src: json.uri + '?uncache='+(new Date).getTime()});
              $('#myavatar').remove();
-             $('#avatar').append(avatar);
+             avatar.insertBefore('#avatar br');
              $('#upload_file').val('');
              $('#upload_file').change();
            }, 'json');

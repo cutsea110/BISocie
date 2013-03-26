@@ -18,5 +18,6 @@ Staging:
   <<: *defaults
 
 Production:
+  #approot: "https://bisocie2.basement.timedia.co.jp/_bis"
   approot: "https://bisocie.seitoku.ac.jp/_bis"
   <<: *defaults

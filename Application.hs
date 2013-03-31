@@ -14,10 +14,13 @@ import Settings
 import Yesod.Auth
 import Yesod.Default.Config
 import Yesod.Default.Main
-import Network.Wai.Middleware.RequestLogger (logStdout, logStdoutDev)
+import Network.Wai.Middleware.RequestLogger
 import qualified Database.Persist.Store
 import Database.Persist.GenericSql (runMigration)
 import Network.HTTP.Conduit (newManager, def)
+import Control.Monad.Logger (runLoggingT)
+import System.IO (stdout)
+import System.Log.FastLogger (mkLogger)
 import Data.ByteString
 
 
@@ -51,11 +54,19 @@ getRobotsR = return $ RepPlain $ toContent ("User-agent: *" :: ByteString)
 makeApplication :: AppConfig DefaultEnv Extra -> IO Application
 makeApplication conf = do
     foundation <- makeFoundation conf
+
+    -- Initialize the logging middleware
+    logWare <- mkRequestLogger def
+        { outputFormat =
+            if development
+                then Detailed True
+                else Apache FromSocket
+        , destination = Logger $ appLogger foundation
+        }
+
+    -- Create the WAI application and apply middlewares
     app <- toWaiAppPlain foundation
     return $ logWare app
-  where
-    logWare   = if development then logStdoutDev
-                               else logStdout
 
 makeFoundation :: AppConfig DefaultEnv Extra -> IO BISocie
 makeFoundation conf = do
@@ -65,8 +76,15 @@ makeFoundation conf = do
               Database.Persist.Store.loadConfig >>=
               Database.Persist.Store.applyEnv
     p <- Database.Persist.Store.createPoolConfig (dbconf :: Settings.PersistConfig)
-    Database.Persist.Store.runPool dbconf (runMigration migrateAll) p
-    return $ BISocie conf s p manager dbconf
+    logger <- mkLogger True stdout
+    let foundation = BISocie conf s p manager dbconf logger
+
+    -- Perform database migration using our application's logging settings.
+    runLoggingT
+        (Database.Persist.Store.runPool dbconf (runMigration migrateAll) p)
+        (messageLoggerSource foundation logger)
+
+    return foundation
 
 -- for yesod devel
 getApplicationDev :: IO (Int, Application)

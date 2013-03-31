@@ -29,7 +29,9 @@ import Network.Wai (Request(..))
 import Network.Socket (getNameInfo)
 import Model
 import qualified Settings
+import Settings.Development (development)
 import Settings (widgetFile, Extra (..))
+import System.Log.FastLogger (Logger)
 import Text.Jasmine (minifym)
 import Text.Julius (RawJS(..))
 import Text.Hamlet (hamletFile)
@@ -57,6 +59,7 @@ data BISocie = BISocie
     , connPool :: Database.Persist.Store.PersistConfigPool Settings.PersistConfig -- ^ Database connection pool.
     , httpManager :: Manager
     , persistConfig :: Settings.PersistConfig
+    , appLogger :: Logger
     }
 
 -- Set up i18n messages. See the message folder.
@@ -181,8 +184,15 @@ instance Yesod BISocie where
     -- users receiving stale content.
     addStaticContent = addStaticContentExternal minifym base64md5 Settings.staticDir (StaticR . flip StaticRoute [])
     
-    -- Enable Javascript async loading
---    yepnopeJs _ = Just $ Right $ StaticR js_modernizr_js
+    -- Place Javascript at bottom of the body tag so the rest of the page loads first
+    jsLoader _ = BottomOfBody
+
+    -- What messages should be logged. The following includes all messages when
+    -- in development, and warnings and errors in production.
+    shouldLog _ _source level =
+        development || level == LevelWarn || level == LevelError
+
+    getLogger = return . appLogger
 
 -- Utility functions for isAuthorized
 loggedInAuth :: GHandler s BISocie AuthResult

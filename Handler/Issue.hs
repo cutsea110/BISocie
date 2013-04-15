@@ -444,8 +444,9 @@ mkHtmlPart p i c url mfUrl = LE.decodeUtf8 $ renderHtml [shamlet|
     <dd>#{issueSubject i}
     <dt>ステータス
     <dd>#{issueStatus i}
-
-<p>#{unTextarea $ fromJust $ commentContent c}
+<p>
+  $forall ln <- T.lines $ unTextarea $ fromJust $ commentContent c
+    #{ln}<br>
 
 <p> * このメールに直接返信せずにこちらのページから投稿してください.
 <p>

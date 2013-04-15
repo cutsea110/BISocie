@@ -444,8 +444,9 @@ mkHtmlPart p i c url mfUrl = LE.decodeUtf8 $ renderHtml [shamlet|
     <dd>#{issueSubject i}
     <dt>ステータス
     <dd>#{issueStatus i}
-
-<p>#{unTextarea $ fromJust $ commentContent c}
+<p>
+  $forall ln <- T.lines $ unTextarea $ fromJust $ commentContent c
+    #{ln}<br>
 
 <p> * このメールに直接返信せずにこちらのページから投稿してください.
 <p>
@@ -563,6 +564,8 @@ postCommentR pid ino = do
         , mailParts = 
             [[ Part "text/plain; charset=utf-8" QuotedPrintableText Nothing []
                $ LE.encodeUtf8 $ mkTextPart prj issue comment url mfurl
+             , Part "text/html; charset=utf-8" QuotedPrintableText Nothing []
+               $ LE.encodeUtf8 $ mkHtmlPart prj issue comment url mfurl
              ]]
         }
   redirect $ IssueR pid ino

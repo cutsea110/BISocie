@@ -3,7 +3,11 @@ $(document).ready(function(){
   if($.browser.msie && $.browser.version < 10){
     $.datepicker.setDefaults($.extend($.datepicker.regional['ja']));
     $("input[type='date']").datepicker({
-      dateFormat: 'yy/mm/dd'
+      dateFormat: 'yy-mm-dd',
+      onSelect: function (dateText, inst) {
+        // placeholoderと連携している.
+        $(this).css('color', $(this).attr('defaultColor'));
+      }
     });
   }
 

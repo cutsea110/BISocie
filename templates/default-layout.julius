@@ -1,5 +1,12 @@
 $(document).ready(function(){
 
+  if($.browser.msie && $.browser.version < 10){
+    $.datepicker.setDefaults($.extend($.datepicker.regional['ja']));
+    $("input[type='date']").datepicker({
+      dateFormat: 'yy/mm/dd'
+    });
+  }
+
   if($.browser.msie && $.browser.version < 8){
     $("button[name=_method]").each(function(){
       // IEではbuttonのvalueを取得するのは異常に面倒くさい

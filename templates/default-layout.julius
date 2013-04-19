@@ -1,6 +1,12 @@
 $(document).ready(function(){
 
-  if($.browser.msie && $.browser.version < 10){
+  var checkInputSuport = function (type) {
+    var input = document.createElement("input");
+    input.setAttribute("type", type);
+    return input.type == type;
+  };
+
+  if(!checkInputSuport("date")){
     $.datepicker.setDefaults($.extend($.datepicker.regional['ja']));
     $("input[type='date']").datepicker({
       dateFormat: 'yy-mm-dd',
@@ -9,6 +15,8 @@ $(document).ready(function(){
         $(this).css('color', $(this).attr('defaultColor'));
       }
     });
+  }
+  if(!checkInputSuport("time")){
     $("input[type='time']").clockpick({
       starthour: 0,
       endhour: 23,

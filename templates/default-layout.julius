@@ -1,5 +1,27 @@
 $(document).ready(function(){
 
+  if($.browser.msie && $.browser.version < 10){
+    $.datepicker.setDefaults($.extend($.datepicker.regional['ja']));
+    $("input[type='date']").datepicker({
+      dateFormat: 'yy-mm-dd',
+      onSelect: function (dateText, inst) {
+        // placeholoderと連携している.
+        $(this).css('color', $(this).attr('defaultColor'));
+      }
+    });
+    $("input[type='time']").clockpick({
+      starthour: 0,
+      endhour: 23,
+      showminutes: true,
+      minutedivisions: 4,
+      military: true
+    },
+    function () {
+      // placeholderと連携している.
+      $(this).css('color', $(this).attr('defaultColor'));
+    });
+  }
+
   if($.browser.msie && $.browser.version < 8){
     $("button[name=_method]").each(function(){
       // IEではbuttonのvalueを取得するのは異常に面倒くさい

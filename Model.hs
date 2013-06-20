@@ -4,10 +4,13 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 {-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
-module Model where
+module Model ( module Model
+             , module Model.Fields
+             ) where
 
 import Yesod
 -- import Yesod.Crud -- FIXME
@@ -19,6 +22,8 @@ import Data.Int
 import Data.Time
 import Data.Maybe (fromMaybe, maybeToList)
 import Data.List (find)
+import Data.Typeable (Typeable)
+import Database.Persist.Quasi (upperCaseSettings)
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec as P (string)
 import Data.Text (Text)
@@ -28,14 +33,11 @@ import Text.Blaze.Internal (preEscapedText)
 
 import qualified Settings (tz)
 import BISocie.Helpers.Util
+import Model.Fields
 
 type Year = Integer
 type Month = Int
 type Date = Int
-
-data Role =  Student | Teacher | Staff | Admin
-          deriving (Read, Show, Eq, Ord, Enum, Bounded)
-derivePersistField "Role"
 
 prettyRoleName :: Role -> Text
 prettyRoleName Admin = "管理者"
@@ -48,7 +50,8 @@ type IssueNo = Int
 -- You can define all of your database entities here. You can find more
 -- information on persistent and how to declare entities at:
 -- http://docs.yesodweb.com/book/persistent/
-share [mkPersist sqlSettings, mkMigrate "migrateAll"] $(persistFile "config/models")
+share [mkPersist sqlOnlySettings, mkMigrate "migrateAll"]
+  $(persistFileWith upperCaseSettings "config/models")
 
 -- FIXME Crud
 --instance Item User where
@@ -340,7 +343,7 @@ canViewUserLocations u =
 canSearchUser :: User -> Bool
 canSearchUser _ = True
 
-textToOrder :: Text -> SelectOpt (ProjectGeneric backend)
+textToOrder :: Text -> SelectOpt Project
 textToOrder "DescProjectUdate" = Desc ProjectUdate
 textToOrder "AscProjectUdate" = Asc ProjectUdate
 textToOrder "DescProjectCdate" = Desc ProjectCdate

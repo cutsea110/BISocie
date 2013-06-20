@@ -29,6 +29,7 @@ library
     exposed-modules: Application
     other-modules:   Foundation
                      Import
+                     Model.Fields
                      Model
                      Settings
                      Settings.Development

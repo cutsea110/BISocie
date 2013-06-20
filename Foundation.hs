@@ -22,8 +22,8 @@ module Foundation
     ) where
 
 import Data.Maybe (isJust)
-import qualified Database.Persist.Store
-import Database.Persist.GenericSql
+import qualified Database.Persist
+import Database.Persist.Sql (SqlPersistT)
 import Network.HTTP.Conduit (Manager)
 import Network.Wai (Request(..))
 import Network.Socket (getNameInfo)
@@ -56,9 +56,9 @@ import BISocie.Helpers.Util
 data BISocie = BISocie
     { settings :: AppConfig DefaultEnv Extra
     , getStatic :: Static -- ^ Settings for static file serving.
-    , connPool :: Database.Persist.Store.PersistConfigPool Settings.PersistConfig -- ^ Database connection pool.
+    , connPool :: Database.Persist.PersistConfigPool Settings.PersistConf -- ^ Database connection pool.
     , httpManager :: Manager
-    , persistConfig :: Settings.PersistConfig
+    , persistConfig :: Settings.PersistConf
     , appLogger :: Logger
     }
 
@@ -86,7 +86,7 @@ mkMessage "BISocie" "messages" "en"
 -- split these actions into two functions and place them in separate files.
 mkYesodData "BISocie" $(parseRoutesFile "config/routes")
 
-type Form x = Html -> MForm BISocie BISocie (FormResult x, Widget)
+type Form x = Html -> MForm (HandlerT BISocie IO) (FormResult x, Widget)
 
 -- S3はアクセス制限する
 -- S3は基本公開ベースなので制限をするURIを提供してそこからgetFileRを呼ぶ
@@ -98,11 +98,9 @@ instance Yesod BISocie where
     
     -- Store session data on the client in encrypted cookies,
     -- default session idle timeout is 120 minutes
-    makeSessionBackend _ = do
-        key <- getKey "config/client_session_key.aes"
-        let timeout = 120 * 60 -- 120 minutes
-        (getCachedDate, _closeDateCache) <- clientSessionDateCacher timeout
-        return . Just $ clientSessionBackend2 key getCachedDate
+    makeSessionBackend _ = fmap Just $ defaultClientSessionBackend
+        (120 * 60) --120 minutes
+        "config/client_session_key.aes"
     
     defaultLayout widget = do
       mu <- maybeAuth
@@ -110,7 +108,6 @@ instance Yesod BISocie where
       let (ApprootMaster approot') = approot
       (title, parents) <- breadcrumbs
       current <- getCurrentRoute
-      tm <- getRouteToMaster
       let header = $(widgetFile "header")
           footer = $(widgetFile "footer")
       pc <- widgetToPageContent $ do
@@ -130,7 +127,7 @@ instance Yesod BISocie where
         addScriptEither $ Left $ StaticR plugins_pnotify_jquery_pnotify_min_js
         addStylesheetEither $ Left $ StaticR plugins_pnotify_jquery_pnotify_default_css
         $(widgetFile "default-layout")
-      hamletToRepHtml $(hamletFile "templates/default-layout-wrapper.hamlet")
+      giveUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
 
     -- This is done to provide an optimization for serving static files from
     -- a separate domain. Please see the staticroot setting in Settings.hs
@@ -177,15 +174,19 @@ instance Yesod BISocie where
     isAuthorized _ _ = loggedInAuth
 
     -- Maximum allowed length of the request body, in bytes.
-    maximumContentLength _ (Just (AvatarR _))      =   2 * 1024 * 1024 --  2 megabytes for default
-    maximumContentLength _ (Just (AvatarImageR _)) =   2 * 1024 * 1024 --  2 megabytes for default
-    maximumContentLength _ _                       =  20 * 1024 * 1024 -- 20 megabytes for default
+    maximumContentLength _ (Just (AvatarR _))      = Just (2 * 1024 * 1024) --  2 megabytes for default
+    maximumContentLength _ (Just (AvatarImageR _)) = Just (2 * 1024 * 1024) --  2 megabytes for default
+    maximumContentLength _ _                       = Just (20 * 1024 * 1024) -- 20 megabytes for default
     
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
     -- expiration dates to be set far in the future without worry of
     -- users receiving stale content.
-    addStaticContent = addStaticContentExternal minifym base64md5 Settings.staticDir (StaticR . flip StaticRoute [])
+    addStaticContent = addStaticContentExternal minifym genFilename Settings.staticDir (StaticR . flip StaticRoute [])
+      where
+        genFilename lbs
+          | development = "autogen-" ++ base64md5 lbs
+          | otherwise = base64md5 lbs
     
     -- Place Javascript at bottom of the body tag so the rest of the page loads first
     jsLoader _ = BottomOfBody
@@ -195,12 +196,12 @@ instance Yesod BISocie where
     shouldLog _ _source level =
         development || level == LevelWarn || level == LevelError
 
-    getLogger = return . appLogger
+    makeLogger = return . appLogger
 
 -- Utility functions for isAuthorized
-loggedInAuth :: GHandler s BISocie AuthResult
+loggedInAuth :: Handler AuthResult
 loggedInAuth = fmap (maybe AuthenticationRequired $ const Authorized) maybeAuthId
-isMyOwn :: UserId -> GHandler s BISocie AuthResult
+isMyOwn :: UserId -> Handler AuthResult
 isMyOwn uid = do
   self <- requireAuthId
   if self == uid
@@ -208,7 +209,7 @@ isMyOwn uid = do
     else do
     r <- getMessageRender
     return $ Unauthorized $ r MsgYouCannotAccessThisPage
-checkUser :: (User -> Bool) -> GHandler s BISocie AuthResult
+checkUser :: (User -> Bool) -> Handler AuthResult
 checkUser pred = do
   u <- requireAuth
   if pred $ entityVal u
@@ -216,7 +217,7 @@ checkUser pred = do
     else do
     r <- getMessageRender
     return $ Unauthorized $ r MsgYouCannotAccessThisPage
-reqFromLocalhost :: GHandler s BISocie AuthResult
+reqFromLocalhost :: Handler AuthResult
 reqFromLocalhost = do
   req <- fmap reqWaiRequest getRequest
   (Just rhostname, _) <- liftIO $ getNameInfo [] True True $ remoteHost req
@@ -226,7 +227,7 @@ reqFromLocalhost = do
     r <- getMessageRender
     return $ Unauthorized $ r MsgYouCannotAccessThisPage
 
-isParticipant :: ProjectId -> GHandler s BISocie AuthResult
+isParticipant :: ProjectId -> Handler AuthResult
 isParticipant pid = do
   u <- requireAuth
   mp <- runDB $ getBy $ UniqueParticipants pid (entityKey u)
@@ -236,7 +237,7 @@ isParticipant pid = do
     r <- getMessageRender
     return $ Unauthorized $ r MsgYouCannotAccessThisPage
 
-isParticipant' :: ProjectId -> GHandler s BISocie AuthResult
+isParticipant' :: ProjectId -> Handler AuthResult
 isParticipant' pid = do
   u <- requireAuth
   mp <- runDB $ getBy $ UniqueParticipants pid (entityKey u)
@@ -246,7 +247,7 @@ isParticipant' pid = do
     r <- getMessageRender
     return $ Unauthorized $ r MsgYouCannotAccessThisPage
 
-canReadComment :: CommentId -> GHandler s BISocie AuthResult
+canReadComment :: CommentId -> Handler AuthResult
 canReadComment cid = do
   u <- requireAuth
   b <- runDB $ do
@@ -259,7 +260,7 @@ canReadComment cid = do
     r <- getMessageRender
     return $ Unauthorized $ r MsgYouCannotAccessThisPage
 
-canEditUser :: UserId -> GHandler s BISocie AuthResult
+canEditUser :: UserId -> Handler AuthResult
 canEditUser uid = do
   u' <- requireAuth
   u <- runDB $ get404 uid
@@ -313,13 +314,11 @@ instance YesodBreadcrumbs BISocie where
 
 -- How to run database actions.
 instance YesodPersist BISocie where
-    type YesodPersistBackend BISocie = SqlPersist
-    runDB f = do
-        master <- getYesod
-        Database.Persist.Store.runPool
-            (persistConfig master)
-            f
-            (connPool master)
+    type YesodPersistBackend BISocie = SqlPersistT
+    runDB = defaultRunDB persistConfig connPool
+
+instance YesodPersistRunner BISocie where
+  getDBRunner = defaultGetDBRunner connPool
 
 instance YesodJquery BISocie where
   urlJqueryJs _ = Left $ StaticR js_jquery_1_4_4_min_js
@@ -362,13 +361,12 @@ instance YesodAuth BISocie where
     
     authHttpManager = httpManager
 
-    loginHandler = defaultLayout $ do
+    loginHandler = lift $ defaultLayout $ do
       setTitle "ログイン"
       $(widgetFile "login")
 
-
 instance YesodAuthOwl BISocie where
-  getOwlIdent = return . userIdent . entityVal =<< requireAuth
+  getOwlIdent = lift $ fmap (userIdent . entityVal) requireAuth
   clientId _ = Settings.clientId
   owlPubkey _ = Settings.owl_pub
   myPrivkey _ = Settings.bisocie_priv

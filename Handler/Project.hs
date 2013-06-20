@@ -13,7 +13,7 @@ import System.FilePath ((</>))
 import Text.Blaze.Internal (preEscapedText)
 import Yesod.Auth (requireAuthId)
 
-getNewProjectR :: Handler RepHtml
+getNewProjectR :: Handler Html
 getNewProjectR = do
   u <- requireAuth
   now <- liftIO getCurrentTime
@@ -25,7 +25,7 @@ getNewProjectR = do
     setTitleI MsgCreateNewProject
     $(widgetFile "newproject")
     
-postNewProjectR :: Handler RepHtml
+postNewProjectR :: Handler Html
 postNewProjectR = do
   uid <- requireAuthId
   (name, desc, sts) <- runInputPost $ (,,)
@@ -51,7 +51,7 @@ postNewProjectR = do
     return pid
   redirect $ ProjectR pid
 
-getProjectR :: ProjectId -> Handler RepHtml
+getProjectR :: ProjectId -> Handler Html
 getProjectR pid = do
   uid <- requireAuthId
   let help = $(widgetFile "help")
@@ -79,7 +79,7 @@ postProjectR pid = do
     replace pid prj'
   redirect $ ProjectR pid
 
-deleteProjectR :: ProjectId -> Handler RepJson
+deleteProjectR :: ProjectId -> Handler Value
 deleteProjectR pid = do
   u <- requireAuth
   deleted <- runDB $ do
@@ -113,6 +113,7 @@ deleteProjectR pid = do
         return True
         else return False
   cacheSeconds 10 -- FIXME
-  if deleted
-    then jsonToRepJson $ object ["deleted" .= show pid]
-    else jsonToRepJson $ object ["error" .= ("このプロジェクトは削除できませんでした." :: Text)]
+  returnJson $ 
+    if deleted
+    then object ["deleted" .= show pid]
+    else object ["error" .= ("このプロジェクトは削除できませんでした." :: Text)]

@@ -60,17 +60,17 @@ executable bisocie
     main-is: main.hs
     build-depends: base         >= 4       && < 5
                  , HTTP         >= 4000.2
-                 , yesod        >= 1.1     && < 1.2
-                 , yesod-core   >= 1.1     && < 1.2
-                 , yesod-auth   >= 1.1     && < 1.2
-                 , yesod-static >= 1.1     && < 1.2
-                 , yesod-default >= 1.1    && < 1.2
-                 , yesod-form   >= 1.2     && < 1.3
-                 , yesod-pnotify >= 0.3    && < 0.4
+                 , yesod        >= 1.2     && < 1.3
+                 , yesod-core   >= 1.2     && < 1.3
+                 , yesod-auth   >= 1.2     && < 1.3
+                 , yesod-static >= 1.2     && < 1.3
+                 , yesod-default >= 1.2    && < 1.3
+                 , yesod-form   >= 1.3     && < 1.4
+                 , yesod-pnotify >= 0.4    && < 0.5
                  , failure      >= 0.2     && < 0.3
                  , transformers
                  , mime-mail
-                 , network      >= 2.3     && < 2.4
+                 , network      >= 2.4     && < 2.5
                  , wai
                  , wai-extra    >= 1.3     && < 1.4
                  , yaml         >= 0.8     && < 0.9
@@ -78,9 +78,9 @@ executable bisocie
                  , directory
                  , bytestring
                  , text
-                 , persistent   >= 1.1     && < 1.2
-                 , persistent-postgresql >= 1.1 && < 1.2
-                 , persistent-template >= 1.1 && < 1.2
+                 , persistent   >= 1.2     && < 1.3
+                 , persistent-postgresql >= 1.2 && < 1.3
+                 , persistent-template >= 1.2 && < 1.3
                  , http-types
                  , template-haskell
                  , hamlet
@@ -106,4 +106,4 @@ executable bisocie
                  , crypto-pubkey >= 0.1 && < 0.2
                  , monad-logger >= 0.3 && < 0.4
                  , fast-logger >= 0.3 && < 0.4
-                 , owl-auth >= 0.1 && < 0.2
+                 , owl-auth >= 0.2 && < 0.3

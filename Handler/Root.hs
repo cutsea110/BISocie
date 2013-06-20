@@ -39,23 +39,23 @@ import Yesod.Auth.Owl (setPassR)
 -- The majority of the code you will write in Yesod lives in these handler
 -- functions. You can spread them across multiple files if you are so
 -- inclined, or create a single monolithic file.
-getRootR :: Handler RepHtml
+getRootR :: Handler Html
 getRootR = redirect . HomeR . entityKey =<< requireAuth
 
-getHomeR :: UserId -> Handler RepHtml
+getHomeR :: UserId -> Handler Html
 getHomeR uid = do
   u <- requireAuth
   defaultLayout $ do
     setTitleI $ MsgHomeOf $ entityVal u
     $(widgetFile "home")
 
-getChangePasswordR :: Handler RepHtml
+getChangePasswordR :: Handler Html
 getChangePasswordR = do
   defaultLayout $ do
     setTitleI MsgChangePassword
     $(widgetFile "change-pass")
     
-getHumanNetworkR :: Handler RepHtml
+getHumanNetworkR :: Handler Html
 getHumanNetworkR = do
   u <- requireAuth
   defaultLayout $ do
@@ -63,7 +63,7 @@ getHumanNetworkR = do
     addScriptRemote "https://maps.google.com/maps/api/js?sensor=false"
     $(widgetFile "humannetwork")
 
-getUserLocationsR :: Handler RepJson
+getUserLocationsR :: Handler Value
 getUserLocationsR = do
   r <- getUrlRender
   profs <- runDB $ do
@@ -72,7 +72,7 @@ getUserLocationsR = do
     forM profs' $ \(Entity _ p) -> do
       let (Just (Entity _ u)) = find (\eu -> profileUser p == entityKey eu) us
       return (u, p)
-  jsonToRepJson $ object ["locations" .= array (map (go r) profs)]
+  returnJson $ object ["locations" .= array (map (go r) profs)]
   where
     go r (u, p) = 
       object [ "uri" .= r (ProfileR $ profileUser p)
@@ -81,7 +81,7 @@ getUserLocationsR = do
              , "lng" .= profileLongitude p
              ]
 
-getSystemBatchR :: Handler RepHtml
+getSystemBatchR :: Handler Html
 getSystemBatchR = defaultLayout $ do
     setTitleI MsgSystemBatch
     $(widgetFile "systembatch")
@@ -90,7 +90,7 @@ postSystemBatchR :: Handler ()
 postSystemBatchR = do
   r <- getMessageRender
   Just fi <- lookupFile "studentscsv"
-  lbs <- lift $ L.fromChunks <$> (fileSource fi $$ consume)
+  lbs <- L.fromChunks <$> (fileSource fi $$ consume)
   let recs = filter (not . T.null) $ T.lines $ T.pack $ decodeString $ L.unpack lbs
       recs' = map (T.splitOn ",") recs
   runDB $ do
@@ -133,7 +133,7 @@ postSystemBatchR = do
     profExist :: UserId -> [Entity Profile] -> Maybe (Entity Profile)
     profExist = find . (\x y -> x == profileUser (entityVal y))
 
-getSendReminderMailR :: Year -> Month -> Date -> Handler RepHtml
+getSendReminderMailR :: Year -> Month -> Date -> Handler Html
 getSendReminderMailR y m d = do
   let rday = fromGregorian y m d
   (r, r') <- (,) <$> getUrlRender <*> getMessageRender

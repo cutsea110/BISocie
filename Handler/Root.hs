@@ -27,7 +27,6 @@ import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as TL
 import Data.Time (fromGregorian)
 import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
-import Text.Hamlet (shamlet)
 import Text.Shakespeare.Text (stext)
 import Network.Mail.Mime
 import Yesod.Auth.Owl (setPassR)

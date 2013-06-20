@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
 module BISocie.Helpers.Util
        ( mkPagenate
        , (+++)
@@ -98,10 +99,12 @@ instance ToText TimeOfDay where
 
 newtype RepCsv a = RepCsv (CSV a)
 
-instance ToText a => HasReps (RepCsv a) where
-  chooseRep (RepCsv csv) _ = return (typeOctet, toContent csv)
+instance (ToText a, ToContent (RepCsv a)) => ToTypedContent (RepCsv a) where
+  toTypedContent (RepCsv csv) = TypedContent typeOctet (toContent csv)
+instance ToTypedContent (RepCsv a) => HasContentType (RepCsv a) where
+  getContentType _ = typeOctet
 
-download :: ToText a => Text -> CSV a -> GHandler s m (RepCsv a)
+download :: ToText a => Text -> CSV a -> HandlerT m IO (RepCsv a)
 download fn csv = do
-  setHeader "Content-Disposition" $ "attachment; filename=" `T.append` fn
+  addHeader "Content-Disposition" $ "attachment; filename=" `T.append` fn
   return (RepCsv csv)

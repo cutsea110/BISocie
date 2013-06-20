@@ -35,7 +35,6 @@ import System.Log.FastLogger (Logger)
 import Text.Jasmine (minifym)
 import Text.Julius (RawJS(..))
 import Text.Hamlet (hamletFile)
-import Web.ClientSession (getKey)
 import Yesod
 import Yesod.Static
 import Yesod.Auth

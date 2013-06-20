@@ -20,7 +20,7 @@ module BISocie.Helpers.Util
 
 import Codec.Binary.UTF8.String (encodeString, decodeString)
 import Control.Arrow ((***))
-import Database.Persist.Store
+import Database.Persist
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time

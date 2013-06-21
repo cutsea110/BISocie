@@ -42,7 +42,6 @@ import Handler.S3
 import Network.Mail.Mime
 import Text.Blaze.Internal (preEscapedText)
 import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
-import Text.Hamlet (shamlet)
 import Text.Shakespeare.Text (stext)
 import Yesod.Auth (requireAuthId)
 

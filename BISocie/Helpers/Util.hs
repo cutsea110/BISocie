@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
 module BISocie.Helpers.Util
        ( mkPagenate
        , (+++)
@@ -26,6 +27,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time
 import Data.Tuple.HT (fst3, snd3, thd3)
+import GHC.Int (Int64)
 import Network.HTTP.Base (urlEncode, urlDecode)
 import Yesod
 
@@ -84,6 +86,8 @@ instance ToText a => ToContent (CSV a) where
 class ToText a where
   toText :: a -> Text
 
+instance ToText String where
+  toText = T.pack
 instance ToText Text where
   toText = id
 instance ToText Int where
@@ -95,6 +99,10 @@ instance ToText Integer where
 instance ToText Day where
   toText = T.pack . show
 instance ToText TimeOfDay where
+  toText = T.pack . show
+instance ToText UTCTime where
+  toText = T.pack . show
+instance ToText Int64 where
   toText = T.pack . show
 
 newtype RepCsv a = RepCsv (CSV a)

@@ -13,16 +13,18 @@ module Handler.S3
        ) where
 
 import Import
-import BISocie.Helpers.Util ((+++), encodeUrl)
+import BISocie.Helpers.Util ((+++), encodeUrl, ToText(..))
 import qualified Data.ByteString.Lazy as L
 import Data.Conduit (($$))
 import Data.Conduit.List (consume)
+import qualified Data.Map as Map
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import Data.Time
 import System.Directory
 import System.FilePath
-import Text.Hamlet (xshamlet)
+import Text.Hamlet.XML
+import Text.XML
 
 getUploadR :: Handler Html
 getUploadR = do
@@ -74,16 +76,17 @@ postUploadR = do
         Just (fid, name, ext, fsize, cdate) -> do
           cacheSeconds 10 -- FIXME
           let rf = r $ FileR uid fid
-          return $ RepXml $ toContent
-            [xshamlet|$newline never
-<file>
-  <fhid>#{T.unpack $ toPathPiece fid}
-  <name>#{name}
-  <ext>#{ext}
-  <size>#{show fsize}
-  <cdate>#{show cdate}
-  <uri>#{rf}
-|]
+          return $ RepXml $ toContent $ renderText def $
+            Document
+            (Prologue [] Nothing [])
+            (Element "file" Map.empty [xml|
+<fhid>#{toPathPiece fid}
+<name>#{name}
+<ext>#{ext}
+<size>#{toText fsize}
+<cdate>#{toText cdate}
+<uri>#{rf}
+|]) []
 
 putUploadR :: Handler Html
 putUploadR = do
@@ -128,11 +131,12 @@ deleteFileR uid fid = do
         s3fp = s3dir' </> T.unpack (toPathPiece fid)
         rf = r $ FileR uid fid
     liftIO $ removeFile s3fp
-    return $ RepXml $ toContent
-      [xshamlet|$newline never
-<deleted>
-  <uri>#{rf}
-|]
+    return $ RepXml $ toContent $ renderText def $
+      Document
+      (Prologue [] Nothing [])
+      (Element "deleted" Map.empty [xml|
+<uri>#{rf}
+|]) []
 
 getFileListR :: UserId -> Handler Value
 getFileListR uid = do

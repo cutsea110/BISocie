@@ -46,7 +46,7 @@ import Text.Hamlet (shamlet)
 import Text.Shakespeare.Text (stext)
 import Yesod.Auth (requireAuthId)
 
-getCurrentScheduleR :: Handler RepHtml
+getCurrentScheduleR :: Handler Html
 getCurrentScheduleR = do
   today <- liftIO $ fmap utctDay getCurrentTime
   let (y, m, _) = toGregorian today
@@ -55,7 +55,7 @@ getCurrentScheduleR = do
 data WeekDay = Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sunday
              deriving (Show, Eq, Ord, Enum)
 
-getScheduleR :: Year -> Month -> Handler RepHtml
+getScheduleR :: Year -> Month -> Handler Html
 getScheduleR y m = do
   u <- requireAuth
   today <- liftIO $ fmap utctDay getCurrentTime
@@ -93,7 +93,7 @@ getScheduleR y m = do
     toWeekDay :: Int -> WeekDay
     toWeekDay n = toEnum (n-1)
     
-getTaskR :: Year -> Month -> Date -> Handler RepJson
+getTaskR :: Year -> Month -> Date -> Handler Value
 getTaskR y m d = do
   (uid, r) <- (,) <$> requireAuthId <*> getUrlRender
   issues <- runDB $ do
@@ -103,7 +103,7 @@ getTaskR y m d = do
       , IssueProject <-. map (participantsProject.entityVal) ptcpts
       ] 
       [Asc IssueLimittime]
-  jsonToRepJson $ object ["tasks" .= array (map (go r) issues)]
+  returnJson $ object ["tasks" .= array (map (go r) issues)]
   where
     day = fromGregorian y m d
     go r (Entity iid issue) = 
@@ -143,7 +143,7 @@ postExportCsvR uid = do
         rep '"' = "\\\""
         rep x = T.singleton x
 
-getProjectListR :: Handler RepJson
+getProjectListR :: Handler Value
 getProjectListR = do
   (u, r) <- (,) <$> requireAuth <*> getUrlRender
   (includeTerminated, project_name, user_ident_or_name, mpage, ordName) <-
@@ -174,7 +174,7 @@ getProjectListR = do
       prjs = case mpage of
         Nothing -> allprjs
         Just n  -> drop (n*projectListLimit) $ take ((n+1)*projectListLimit) allprjs
-  jsonToRepJson $ object [ "projects" .= array (map (go r) prjs)
+  returnJson $ object [ "projects" .= array (map (go r) prjs)
                          , "page" .= maybe 0 id mpage
                          , "order" .= ordName
                          , "pageLength" .= (pageLength :: Int)
@@ -189,7 +189,7 @@ getProjectListR = do
                                  , "projectUri" .= r (ProjectR pid)
                                  ]
 
-getAssignListR :: Handler RepJson
+getAssignListR :: Handler Value
 getAssignListR = do
   u <- requireAuth
   pids <- fmap (fmap readText) $ lookupGetParams "projectid"
@@ -201,13 +201,13 @@ getAssignListR = do
             selectList [ParticipantsProject <-. (map (participantsProject.entityVal) ps')] []
     selectList [UserId <-. (map (participantsUser.entityVal) ps)] []
   cacheSeconds 10 -- FIXME
-  jsonToRepJson $ object ["assigns" .= array (map go users)]
+  returnJson $ object ["assigns" .= array (map go users)]
   where
     go (Entity uid u) = object [ "uid" .= show uid
                                , "name" .= userFullName u
                                ]
 
-getStatusListR :: Handler RepJson
+getStatusListR :: Handler Value
 getStatusListR = do
   u <- requireAuth
   pids <- fmap (fmap readText) $ lookupGetParams "projectid"
@@ -221,9 +221,9 @@ getStatusListR = do
                                let (Right es) = parseStatuses $ projectStatuses prj 
                                in map fst3 es) prjs
   cacheSeconds 10 -- FIXME
-  jsonToRepJson $ object ["statuses" .= array stss]
+  returnJson $ object ["statuses" .= array stss]
 
-getCrossSearchR :: Handler RepHtml
+getCrossSearchR :: Handler Html
 getCrossSearchR = do
   u <- requireAuth
   prjs <- runDB $ do
@@ -239,7 +239,7 @@ getCrossSearchR = do
     setTitle "クロスサーチ"
     $(widgetFile "crosssearch")
 
-postCrossSearchR :: Handler RepJson
+postCrossSearchR :: Handler Value
 postCrossSearchR = do
   (u, r) <- (,) <$> requireAuth <*> getUrlRender
   (ps, ss, as) <- 
@@ -276,7 +276,7 @@ postCrossSearchR = do
       let (Just prj) = lookupProjectBis (issueProject i) $ map toProjectBis prjs
       return $ (prj, IssueBis id' i cu uu mau)
   cacheSeconds 10 -- FIXME
-  jsonToRepJson $ object ["issues" .= array (map (go r) issues)]
+  returnJson $ object ["issues" .= array (map (go r) issues)]
   where
     colorAndEffect s es = case lookupStatus s es of
       Nothing -> ("", "")
@@ -303,7 +303,7 @@ postCrossSearchR = do
              , "updated" .= showDate (issueUdate (issueBisIssue i))
              ]
                 
-getIssueListR :: ProjectId -> Handler RepHtml
+getIssueListR :: ProjectId -> Handler Html
 getIssueListR pid = do
   page' <- lookupGetParam "page"
   let page = max 0 $ fromMaybe 0  $ fmap readText $ page'
@@ -351,7 +351,7 @@ getIssueListR pid = do
     setTitle $ preEscapedText $ projectBisName prj +++ "タスク一覧"
     $(widgetFile "issuelist")
 
-getNewIssueR :: ProjectId -> Handler RepHtml
+getNewIssueR :: ProjectId -> Handler Html
 getNewIssueR pid = do
   mparent <- lookupGetParam "parent"
   (ptcpts, stss, prj) <- runDB $ do
@@ -363,7 +363,7 @@ getNewIssueR pid = do
     setTitle "新規タスク作成"
     $(widgetFile "newissue")
       
-postNewIssueR :: ProjectId -> Handler RepHtml
+postNewIssueR :: ProjectId -> Handler Html
 postNewIssueR pid = do
   (uid, r, now) <- 
     (,,) <$> requireAuthId <*> getUrlRender <*> liftIO getCurrentTime
@@ -458,7 +458,7 @@ mkHtmlPart p i c url mfUrl = LE.decodeUtf8 $ renderHtml [shamlet|
       <dd>#{furl}
 |]
 
-getIssueR :: ProjectId -> IssueNo -> Handler RepHtml
+getIssueR :: ProjectId -> IssueNo -> Handler Html
 getIssueR pid ino = do
   selfid <- requireAuthId
   (prj, ptcpts, iid, issue, comments, mparent, children) <- 
@@ -505,7 +505,7 @@ getMaybe :: (PersistStore m, PersistEntity a,
 getMaybe Nothing = return Nothing
 getMaybe (Just k) = get k
 
-postCommentR :: ProjectId -> IssueNo -> Handler RepHtml
+postCommentR :: ProjectId -> IssueNo -> Handler Html
 postCommentR pid ino = do
   uid <- requireAuthId
   now <- liftIO getCurrentTime
@@ -570,12 +570,12 @@ postCommentR pid ino = do
         }
   redirect $ IssueR pid ino
         
-getAttachedFileR :: CommentId -> FileHeaderId -> Handler RepHtml
+getAttachedFileR :: CommentId -> FileHeaderId -> Handler ()
 getAttachedFileR cid fid = do
   f <- runDB $ get404 fid
   getFileR (fileHeaderCreator f) fid
   
-postReadCommentR :: CommentId -> Handler RepJson
+postReadCommentR :: CommentId -> Handler Value
 postReadCommentR cid = do
   (Entity uid u) <- requireAuth
   r <- getUrlRender
@@ -589,20 +589,20 @@ postReadCommentR cid = do
         _ <- insert $ Reader cid uid now
         return "added"
   cacheSeconds 10 -- FIXME
-  jsonToRepJson $ object [ "status" .= (ret :: Text)
-                         , "read" .=
-                           object [ "comment" .= show cid
-                                  , "reader" .=
-                                    object [ "id" .= show uid
-                                           , "ident" .= userIdent u
-                                           , "name" .= userFullName u
-                                           , "uri" .= r (ProfileR uid)
-                                           , "avatar" .= r (AvatarImageR uid)
-                                           ]
-                                  ]
-                         ]
+  returnJson $ object [ "status" .= (ret :: Text)
+                      , "read" .=
+                        object [ "comment" .= show cid
+                               , "reader" .=
+                                 object [ "id" .= show uid
+                                        , "ident" .= userIdent u
+                                        , "name" .= userFullName u
+                                        , "uri" .= r (ProfileR uid)
+                                        , "avatar" .= r (AvatarImageR uid)
+                                        ]
+                               ]
+                      ]
 
-deleteReadCommentR :: CommentId -> Handler RepJson
+deleteReadCommentR :: CommentId -> Handler Value
 deleteReadCommentR cid = do
   (Entity uid u) <- requireAuth
   r <- getUrlRender
@@ -611,21 +611,20 @@ deleteReadCommentR cid = do
     deleteBy $ UniqueReader cid uid
     return "deleted"
   cacheSeconds 10 -- FIXME
-  jsonToRepJson $ object [ "status" .= (ret :: Text)
-                         , "read" .=
-                           object [ "comment" .= show cid
-                                  , "reader" .=
-                                    object [ "id" .= show uid
-                                           , "ident" .= userIdent u
-                                           , "name" .= userFullName u
-                                           , "uri" .= r (ProfileR uid)
-                                           , "avatar" .= r (AvatarImageR uid)
-                                           ]
-                                  ]
-                         ]
-  
+  returnJson $ object [ "status" .= (ret :: Text)
+                      , "read" .=
+                        object [ "comment" .= show cid
+                               , "reader" .=
+                                 object [ "id" .= show uid
+                                        , "ident" .= userIdent u
+                                        , "name" .= userFullName u
+                                        , "uri" .= r (ProfileR uid)
+                                        , "avatar" .= r (AvatarImageR uid)
+                                        ]
+                               ]
+                      ]
 
-getCommentReadersR :: CommentId -> Handler RepJson
+getCommentReadersR :: CommentId -> Handler Value
 getCommentReadersR cid = do
   r <- getUrlRender
   readers <- runDB $ do
@@ -637,7 +636,7 @@ getCommentReadersR cid = do
       Just u <- get uid'
       return (uid', u, ra)
   cacheSeconds 10 -- FIXME
-  jsonToRepJson $ object ["readers" .= array (map (go r) readers)]
+  returnJson $ object ["readers" .= array (map (go r) readers)]
   where
     go r (uid, u, ra) = object [ "id" .= show uid
                                , "ident" .= userIdent u

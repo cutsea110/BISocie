@@ -107,6 +107,9 @@ instance ToText Int64 where
 
 newtype RepCsv a = RepCsv (CSV a)
 
+instance ToText a => ToContent (RepCsv a) where
+  toContent (RepCsv csv) = toContent csv
+
 instance (ToText a, ToContent (RepCsv a)) => ToTypedContent (RepCsv a) where
   toTypedContent (RepCsv csv) = TypedContent typeOctet (toContent csv)
 instance ToTypedContent (RepCsv a) => HasContentType (RepCsv a) where

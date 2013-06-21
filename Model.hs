@@ -352,7 +352,7 @@ textToOrder "AscProjectName" = Asc ProjectName
 textToOrder "DescProjectName" = Desc ProjectName
 
 defaultProfile :: Profile
-defaultProfile = Profile { profileUser=undefined
+defaultProfile = Profile { profileUser=Key PersistNull
                          , profileBirth=Nothing
                          , profileEntryYear=Nothing
                          , profileGraduateYear=Nothing

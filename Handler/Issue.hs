@@ -366,7 +366,7 @@ postNewIssueR :: ProjectId -> Handler Html
 postNewIssueR pid = do
   (uid, r, now) <- 
     (,,) <$> requireAuthId <*> getUrlRender <*> liftIO getCurrentTime
-  issue <- runInputPost $ Issue pid undefined uid now uid now
+  issue <- runInputPost $ Issue pid (-1) uid now uid now
            <$> ireq textField "subject"
            <*> fmap (fmap readText) (iopt textField "assign")
            <*> ireq textField "status"
@@ -374,7 +374,7 @@ postNewIssueR pid = do
            <*> iopt timeField "limittime"
            <*> iopt dayField "reminderdate"
            <*> fmap (fmap readText) (iopt hiddenField "parent")
-  comment <- runInputPost $ Comment pid undefined undefined undefined uid now
+  comment <- runInputPost $ Comment pid (Key PersistNull) (Textarea "") Nothing uid now
              <$> iopt textareaField "content"
              <*> fmap (fmap readText) (iopt textField "assign")
              <*> ireq textField "status"
@@ -508,7 +508,7 @@ postCommentR :: ProjectId -> IssueNo -> Handler Html
 postCommentR pid ino = do
   uid <- requireAuthId
   now <- liftIO getCurrentTime
-  comment <- runInputPost $ Comment pid undefined undefined undefined uid now
+  comment <- runInputPost $ Comment pid (Key PersistNull) (Textarea "") Nothing uid now
              <$> iopt textareaField "content"
              <*> fmap (fmap readText) (iopt textField "assign")
              <*> ireq textField "status"

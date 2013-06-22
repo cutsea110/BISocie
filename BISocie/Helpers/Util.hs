@@ -1,7 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE FlexibleInstances #-}
 module BISocie.Helpers.Util
        ( mkPagenate
        , (+++)
@@ -20,6 +16,7 @@ module BISocie.Helpers.Util
        , download
        ) where
 
+import Prelude
 import Codec.Binary.UTF8.String (encodeString, decodeString)
 import Control.Arrow ((***))
 import Database.Persist

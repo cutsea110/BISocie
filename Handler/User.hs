@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell, OverloadedStrings #-}
 module Handler.User where
 
 import Import

@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell, OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes, CPP #-}
 {-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 module Handler.Profile where

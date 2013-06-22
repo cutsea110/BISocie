@@ -7,7 +7,7 @@ import Control.Monad (when, forM)
 import Data.Time
 import Yesod.Auth (requireAuthId)
 
-getParticipantsListR :: ProjectId -> Handler RepHtmlJson
+getParticipantsListR :: ProjectId -> Handler TypedContent
 getParticipantsListR pid = do
   uid <- requireAuthId
   r <- getUrlRender
@@ -22,14 +22,14 @@ getParticipantsListR pid = do
         return (uid', u, p', ra)
     return (prj', us')
   cacheSeconds 10 -- FIXME
-  let widget = do
-        now <- liftIO getCurrentTime
-        let (y,_,_) = toGregorian $ utctDay now
-            eyears = [entryStartYear..y+5]
-        setTitle "参加者管理"
-        $(widgetFile "participants-list")
-      json = object ["participants" .= array (map (go r) us)]
-  defaultLayoutJson widget json
+  selectRep $ do
+    provideRep $ defaultLayout $ do
+      now <- liftIO getCurrentTime
+      let (y,_,_) = toGregorian $ utctDay now
+          eyears = [entryStartYear..y+5]
+      setTitle "参加者管理"
+      $(widgetFile "participants-list")
+    provideRep $ return $ object ["participants" .= array (map (go r) us)]
   where
     go r (uid, u, p, ra) = object [ "id" .= show uid
                                   , "ident" .= userIdent u
@@ -40,25 +40,25 @@ getParticipantsListR pid = do
                                   , "receivemail" .= participantsReceivemail p
                                   , "participant_uri" .= r (ParticipantsR pid uid)
                                   , "avatar" .= r ra
-                                   ]
+                                  ]
 
-getParticipantsR :: ProjectId -> UserId -> Handler RepJson
+getParticipantsR :: ProjectId -> UserId -> Handler Value
 getParticipantsR pid uid = do
   r <- getUrlRender
   (u, p) <- runDB $ (,) <$> get404 uid <*> getBy404 (UniqueParticipants pid uid)
   cacheSeconds 10 -- FIXME
-  jsonToRepJson $ object [ "id" .= show uid
-                         , "ident" .= userIdent u
-                         , "uri" .= r (ProfileR uid)
-                         , "name" .= userFullName u
-                         , "role" .= show (userRole u)
-                         , "prettyrole" .= userRoleName u
-                         , "receivemail" .= participantsReceivemail (entityVal p)
-                         , "participant_uri" .= r (ParticipantsR pid uid)
-                         , "avatar" .= r (AvatarImageR uid)
-                         ]
+  returnJson $ object [ "id" .= show uid
+                      , "ident" .= userIdent u
+                      , "uri" .= r (ProfileR uid)
+                      , "name" .= userFullName u
+                      , "role" .= show (userRole u)
+                      , "prettyrole" .= userRoleName u
+                      , "receivemail" .= participantsReceivemail (entityVal p)
+                      , "participant_uri" .= r (ParticipantsR pid uid)
+                      , "avatar" .= r (AvatarImageR uid)
+                      ]
 
-putParticipantsR :: ProjectId -> UserId -> Handler RepJson
+putParticipantsR :: ProjectId -> UserId -> Handler Value
 putParticipantsR pid uid = do
   r <- getUrlRender
   (st, p) <- runDB $ do
@@ -78,16 +78,16 @@ putParticipantsR pid uid = do
     p <- getBy404 $ UniqueParticipants pid uid
     return (st, p)
   cacheSeconds 10 -- FIXME
-  jsonToRepJson $ object ["participants" .= object
-                          [ "project" .= show pid
-                          , "user" .= show uid
-                          , "status" .= st
-                          , "mail" .= participantsReceivemail (entityVal p)
-                          ]
-                         , "uri" .= r (ParticipantsR pid uid)
-                         ]
+  returnJson $ object ["participants" .= object
+                       [ "project" .= show pid
+                       , "user" .= show uid
+                       , "status" .= st
+                       , "mail" .= participantsReceivemail (entityVal p)
+                       ]
+                      , "uri" .= r (ParticipantsR pid uid)
+                      ]
 
-deleteParticipantsR :: ProjectId -> UserId -> Handler RepJson
+deleteParticipantsR :: ProjectId -> UserId -> Handler Value
 deleteParticipantsR pid uid = do
   r <- getUrlRender
   uid' <- requireAuthId
@@ -97,10 +97,10 @@ deleteParticipantsR pid uid = do
       lift $ permissionDenied "他に参加者が居ないため削除することはできません."
     deleteBy $ UniqueParticipants pid uid
   cacheSeconds 10 -- FIXME
-  jsonToRepJson $ object ["participants" .= object
-                          [ "project" .= show pid
-                          , "user" .= show uid
-                          , "status" .= ("deleted" :: Text)
-                          ]
-                         , "uri" .= r (ParticipantsR pid uid)
-                         ]
+  returnJson $ object ["participants" .= object
+                       [ "project" .= show pid
+                       , "user" .= show uid
+                       , "status" .= ("deleted" :: Text)
+                       ]
+                      , "uri" .= r (ParticipantsR pid uid)
+                      ]

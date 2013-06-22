@@ -8,7 +8,7 @@
 -- declared in the BISocie.hs file.
 module Settings
     ( widgetFile
-    , PersistConfig
+    , PersistConf
     , staticRoot
     , staticDir
     , Extra (..)
@@ -51,7 +51,7 @@ import Network.Mail.Mime (Address(..))
 import Crypto.PubKey.RSA
 
 -- | Which Persistent backend this site is using.
-type PersistConfig = PostgresConf
+type PersistConf = PostgresConf
 
 -- Static setting below. Changing these requires a recompile
 

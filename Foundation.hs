@@ -1,11 +1,3 @@
-{-# LANGUAGE QuasiQuotes, TemplateHaskell #-} 
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE Rank2Types #-}
-{-# LANGUAGE CPP #-}
 module Foundation
     ( BISocie (..)
     , Route (..)
@@ -21,6 +13,7 @@ module Foundation
     , Form
     ) where
 
+import Prelude
 import Data.Maybe (isJust)
 import qualified Database.Persist
 import Database.Persist.Sql (SqlPersistT)

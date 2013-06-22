@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell, OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes, CPP #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 module Handler.S3 
        ( getUploadR
@@ -17,6 +15,7 @@ import BISocie.Helpers.Util ((+++), encodeUrl, ToText(..))
 import qualified Data.ByteString.Lazy as L
 import Data.Conduit (($$))
 import Data.Conduit.List (consume)
+import Data.List (last)
 import qualified Data.Map as Map
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE

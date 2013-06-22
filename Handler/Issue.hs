@@ -1,9 +1,3 @@
-{-# LANGUAGE TemplateHaskell, OverloadedStrings #-}
-{-# LANGUAGE GADTs, TypeFamilies #-}
-{-# LANGUAGE QuasiQuotes, CPP #-}
-{-# LANGUAGE TupleSections #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 module Handler.Issue

@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 module Model.Fields where
 
 import Prelude

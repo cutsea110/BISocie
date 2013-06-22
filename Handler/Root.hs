@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell, QuasiQuotes #-} 
-{-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
@@ -22,7 +20,7 @@ import Codec.Binary.UTF8.String (decodeString)
 import qualified Data.ByteString.Lazy.Char8 as L
 import Data.Conduit (($$))
 import Data.Conduit.List (consume)
-import Data.List (find)
+import Data.List (head, find)
 import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as TL
 import Data.Time (fromGregorian)

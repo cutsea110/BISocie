@@ -34,6 +34,7 @@ module Settings
     , owl_pass_service_url
     ) where
 
+import Prelude
 import Text.Shakespeare.Text (st)
 import Language.Haskell.TH.Syntax
 import Database.Persist.Postgresql (PostgresConf)

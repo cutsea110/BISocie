@@ -209,9 +209,9 @@ isMyOwn uid = do
     r <- getMessageRender
     return $ Unauthorized $ r MsgYouCannotAccessThisPage
 checkUser :: (User -> Bool) -> Handler AuthResult
-checkUser pred = do
+checkUser p = do
   u <- requireAuth
-  if pred $ entityVal u
+  if p $ entityVal u
     then return Authorized
     else do
     r <- getMessageRender

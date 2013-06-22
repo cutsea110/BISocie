@@ -55,19 +55,19 @@ data WeekDay = Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sun
              deriving (Show, Eq, Ord, Enum)
 
 getScheduleR :: Year -> Month -> Handler Html
-getScheduleR y m = do
+getScheduleR year month = do
   u <- requireAuth
   today <- liftIO $ fmap utctDay getCurrentTime
   let days = map (map (ywd2cell today))
              $ groupBy ((==) `on` snd3)
              $ [toWeekDate d | d <- [fromWeekDate fy fm 1 .. fromWeekDate ly lm 7]]
   defaultLayout $ do
-    setTitle $ preEscapedText $ showText y +++ "年" +++ showText m +++ "月のスケジュール"
+    setTitle $ preEscapedText $ showText year +++ "年" +++ showText month +++ "月のスケジュール"
     $(widgetFile "schedule")
   where
     ywd2cell c (y,w,d) = let d' = fromWeekDate y w d in (d', classOf d' d c)
-    fday = fromGregorian y m 1
-    lday = fromGregorian y m $ gregorianMonthLength y m
+    fday = fromGregorian year month 1
+    lday = fromGregorian year month $ gregorianMonthLength year month
     (fy, fm, _) = toWeekDate fday
     (ly, lm, _) = toWeekDate lday
     classOf :: Day -> Int -> Day -> String
@@ -80,7 +80,7 @@ getScheduleR y m = do
     showDay :: Day -> String
     showDay = show . thd3 . toGregorian
     currentMonth :: Day -> Bool
-    currentMonth d = let (y', m', _) = toGregorian d in y == y' && m == m'
+    currentMonth d = let (y', m', _) = toGregorian d in year == y' && month == m'
     monthmove n cm = let (y', m', _) = toGregorian $ addGregorianMonthsClip n cm
                      in ScheduleR y' m'
     prevMonth = monthmove (-1)
@@ -533,8 +533,8 @@ postCommentR pid ino = do
                       }
     when (isNothing (commentContent comment) && T.null (unTextarea amemo)) $ do
       lift $ do
-        r <- getMessageRender
-        setPNotify $ PNotify JqueryUI Error "invalid input" $ r MsgInvalidCommentPosted
+        r' <- getMessageRender
+        setPNotify $ PNotify JqueryUI Error "invalid input" $ r' MsgInvalidCommentPosted
         redirect $ IssueR pid ino
     cid <- insert $ comment { commentIssue=iid
                             , commentAttached=fmap fst mfh
@@ -570,7 +570,7 @@ postCommentR pid ino = do
   redirect $ IssueR pid ino
         
 getAttachedFileR :: CommentId -> FileHeaderId -> Handler ()
-getAttachedFileR cid fid = do
+getAttachedFileR _ fid = do
   f <- runDB $ get404 fid
   getFileR (fileHeaderCreator f) fid
   
@@ -579,7 +579,6 @@ postReadCommentR cid = do
   (Entity uid u) <- requireAuth
   r <- getUrlRender
   ret <- runDB $ do
-    cmt <- get404 cid
     mr <- getBy $ UniqueReader cid uid
     case mr of
       Just _ -> return "added"
@@ -606,7 +605,6 @@ deleteReadCommentR cid = do
   (Entity uid u) <- requireAuth
   r <- getUrlRender
   ret <- runDB $ do
-    cmt <- get404 cid
     deleteBy $ UniqueReader cid uid
     return "deleted"
   cacheSeconds 10 -- FIXME
@@ -627,7 +625,6 @@ getCommentReadersR :: CommentId -> Handler Value
 getCommentReadersR cid = do
   r <- getUrlRender
   readers <- runDB $ do
-    cmt <- get404 cid
     rds' <- selectList [ReaderComment ==. cid] [Asc ReaderCheckdate]
     forM rds' $ \(Entity _ rd') -> do
       let uid' = readerReader rd'

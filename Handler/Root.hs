@@ -96,7 +96,7 @@ postSystemBatchR = do
     users <- selectList [UserIdent <-. map head recs'] []
     profs <- selectList [ProfileUser <-. map entityKey users] []
     forM recs' $ \rec -> do
-      let (ident:rawpass:email:fname:gname:eyear:gyear:_) = rec
+      let (ident:_:email:fname:gname:eyear:gyear:_) = rec
           (eyear', gyear') = (Just (readText eyear), Just (readText gyear))
       uid' <- case userExist ident users of
         Nothing ->

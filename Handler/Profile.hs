@@ -194,7 +194,7 @@ getAvatarImageR uid = do
         return (fid, f)
   getFileR (fileHeaderCreator f) fid
   where
-    sel uid = case T.foldl' (\b c -> b + ord c) 0 uid `mod` 4 of
+    sel uid' = case T.foldl' (\b c -> b + ord c) 0 uid' `mod` 4 of
       0 -> img_avatar_01_png
       1 -> img_avatar_02_png
       2 -> img_avatar_03_png

@@ -83,14 +83,14 @@ lookupProjectBis = find . (\x y -> x == projectBisId y)
 parseStatuses :: Textarea -> Either ParseError [(Text, Maybe Color, Maybe Effect)]
 parseStatuses (Textarea t) =
     case ps (T.unpack t) of
-      Right xs -> Right $ map toText xs
+      Right xs -> Right $ map toData xs
       Left e -> Left e
     where
       ps :: String -> Either ParseError [(String, Maybe String, Maybe Effect)]
       ps s = parse statuses "parse statuses" 
              $ if last s == '\n' then s else s ++ "\n"
-      toText :: (String, Maybe String, Maybe Effect) -> (Text, Maybe Color, Maybe Effect)
-      toText (s,mc,me) = (T.pack s, fmap T.pack mc, me)
+      toData :: (String, Maybe String, Maybe Effect) -> (Text, Maybe Color, Maybe Effect)
+      toData (s,mc,me) = (T.pack s, fmap T.pack mc, me)
 
 eol :: CharParser st String
 eol = try (P.string "\n\r")

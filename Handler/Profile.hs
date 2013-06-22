@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell, OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes, CPP #-}
 {-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 module Handler.Profile where
@@ -13,7 +11,7 @@ import Data.Maybe (fromMaybe, fromJust)
 import Handler.S3
 import Settings (entryStartYear, graduateStartYear)
 
-getProfileR :: UserId -> Handler RepHtmlJson
+getProfileR :: UserId -> Handler TypedContent
 getProfileR uid = do
   mode <- lookupGetParam "mode"
   case mode of
@@ -66,7 +64,7 @@ getProfileR uid = do
                                     }
 
       
-    viewProf :: Handler RepHtmlJson
+    viewProf :: Handler TypedContent
     viewProf = do
       (Entity selfid self) <- requireAuth
       now <- liftIO getCurrentTime
@@ -79,21 +77,22 @@ getProfileR uid = do
           mprof <- getProf user
           mlab <- getLab user
           return (user, mprof, mlab)
-      let widget = do
-            setTitle "Profile"
-            addScriptRemote "https://maps.google.com/maps/api/js?sensor=false"
-            $(widgetFile "profile")
-            $(widgetFile "viewProfile")
-          json = object [ "ident" .= userIdent user
-                        , "name" .= userFullName user
-                        , "uri" .= r (ProfileR uid)
-                        , "avatar" .= r (AvatarImageR uid)
-                        , "profile" .= fmap fromProf mprof
-                        , "lab" .= fmap fromLab mlab
-                        ]
-      defaultLayoutJson widget json
+      selectRep $ do
+        provideRep $ defaultLayout $ do
+          setTitle "Profile"
+          addScriptRemote "https://maps.google.com/maps/api/js?sensor=false"
+          $(widgetFile "profile")
+          $(widgetFile "viewProfile")
+        provideRep $ return $
+          object [ "ident" .= userIdent user
+                 , "name" .= userFullName user
+                 , "uri" .= r (ProfileR uid)
+                 , "avatar" .= r (AvatarImageR uid)
+                 , "profile" .= fmap fromProf mprof
+                 , "lab" .= fmap fromLab mlab
+                 ]
     
-    editProf :: Handler RepHtmlJson
+    editProf :: Handler TypedContent
     editProf = do
       (Entity selfid self) <- requireAuth
       now <- liftIO getCurrentTime
@@ -113,19 +112,20 @@ getProfileR uid = do
               gyears = zipWith (\y1 y2 -> (Just y1==y2, y1)) [Settings.graduateStartYear..y+5] $
                        repeat (fromMaybe Nothing (fmap (fmap toInteger.profileGraduateYear) mprof))
           return (user, mprof, mlab, eyears, gyears)
-      let widget = do
-            setTitle "Profile"
-            addScriptRemote "https://maps.google.com/maps/api/js?sensor=false"
-            $(widgetFile "profile")
-            $(widgetFile "editProfile")
-          json = object [ "ident" .= userIdent user
-                        , "name" .= userFullName user
-                        , "uri" .= r (ProfileR uid)
-                        , "avatar" .= r (AvatarImageR uid)
-                        , "profile" .= fmap fromProf mprof
-                        , "lab" .= fmap fromLab mlab
-                        ]
-      defaultLayoutJson widget json
+      selectRep $ do
+        provideRep $ defaultLayout $ do
+          setTitle "Profile"
+          addScriptRemote "https://maps.google.com/maps/api/js?sensor=false"
+          $(widgetFile "profile")
+          $(widgetFile "editProfile")
+        provideRep $ return $
+          object [ "ident" .= userIdent user
+                 , "name" .= userFullName user
+                 , "uri" .= r (ProfileR uid)
+                 , "avatar" .= r (AvatarImageR uid)
+                 , "profile" .= fmap fromProf mprof
+                 , "lab" .= fmap fromLab mlab
+                 ]
       
     fromProf p = object [ "entryYear" .= profileEntryYear p
                         , "branch" .= profileBranch p
@@ -134,7 +134,7 @@ getProfileR uid = do
                        , "roomNumber" .= laboratoryRoomNumber l
                        ]
 
-postProfileR :: UserId -> Handler RepHtml
+postProfileR :: UserId -> Handler Html
 postProfileR uid = do
   user <- runDB $ get404 uid
   case userRole user of
@@ -181,7 +181,7 @@ postProfileR uid = do
           Just (Entity pid _) -> replace pid prof >> return pid
       redirect (ProfileR uid, [("mode", "e")] :: [(Text, Text)])
     
-getAvatarImageR :: UserId -> Handler RepHtml
+getAvatarImageR :: UserId -> Handler ()
 getAvatarImageR uid = do
   (fid, f) <- runDB $ do
     u <- get404 uid
@@ -192,13 +192,13 @@ getAvatarImageR uid = do
         return (fid, f)
   getFileR (fileHeaderCreator f) fid
   where
-    sel uid = case T.foldl' (\b c -> b + ord c) 0 uid `mod` 4 of
+    sel uid' = case T.foldl' (\b c -> b + ord c) 0 uid' `mod` 4 of
       0 -> img_avatar_01_png
       1 -> img_avatar_02_png
       2 -> img_avatar_03_png
       _ -> img_avatar_04_png
 
-postAvatarR :: UserId -> Handler RepJson
+postAvatarR :: UserId -> Handler Value
 postAvatarR uid = do
   r <- getUrlRender
   mfhid <- lookupPostParam "avatar"
@@ -206,6 +206,6 @@ postAvatarR uid = do
   runDB $ do
     update uid [UserAvatar =. avatar]
   cacheSeconds 10 -- FIXME
-  jsonToRepJson $ object [ "uri" .= r (AvatarImageR uid)
-                         , "avatar" .= showmaybe mfhid
-                         ]
+  returnJson $ object [ "uri" .= r (AvatarImageR uid)
+                      , "avatar" .= showmaybe mfhid
+                      ]

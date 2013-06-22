@@ -20,7 +20,7 @@ $with id' <- entityKey u, u' <- entityVal u
            <a href=@{prevYear fday}>«前年
          <th .move>
            <a href=@{prevMonth fday}><前月
-         <th colspan=3>#{y}年#{m}月のスケジュール
+         <th colspan=3>#{year}年#{month}月のスケジュール
          <th .move>
            <a href=@{nextMonth fday}>翌月>
          <th .move>

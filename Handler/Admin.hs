@@ -1,16 +1,15 @@
-{-# LANGUAGE TemplateHaskell, QuasiQuotes, OverloadedStrings #-}
 module Handler.Admin where
 
 import Import
 import BISocie.Helpers.Util
 import qualified Data.Text as T
 
-getUsersR :: Handler RepHtml
+getUsersR :: Handler Html
 getUsersR = do
   users <- runDB $ selectList [] [Asc UserIdent]
   defaultLayout $(widgetFile "users")
 
-getUserR :: UserId -> Handler RepHtml
+getUserR :: UserId -> Handler Html
 getUserR uid = do
   user <- runDB $ get404 uid
   let roleIs r = r == userRole user
@@ -38,7 +37,7 @@ postUserR uid = do
   where
     roles = [(T.pack $ show r, r) | r <- [minBound::Role .. maxBound]]
 
-getNewUserR :: Handler RepHtml
+getNewUserR :: Handler Html
 getNewUserR = do
   let toInt = (+1) . fromEnum
   defaultLayout $(widgetFile "newUser")
@@ -61,7 +60,7 @@ postNewUserR = do
   where
     roles = [(T.pack $ show r, r) | r <- [minBound::Role .. maxBound]]
 
-getDeleteUserR :: UserId -> Handler RepHtml
+getDeleteUserR :: UserId -> Handler Html
 getDeleteUserR uid = do
   user <- runDB $ get404 uid
   defaultLayout $(widgetFile "deleteUser")

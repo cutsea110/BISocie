@@ -9,6 +9,7 @@ User
     active Bool default=true
 
     UniqueUser ident
+    deriving Typeable
     
 Profile
     user UserId

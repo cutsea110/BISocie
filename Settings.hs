@@ -8,7 +8,7 @@
 -- declared in the BISocie.hs file.
 module Settings
     ( widgetFile
-    , PersistConfig
+    , PersistConf
     , staticRoot
     , staticDir
     , Extra (..)
@@ -34,6 +34,7 @@ module Settings
     , owl_pass_service_url
     ) where
 
+import Prelude
 import Text.Shakespeare.Text (st)
 import Language.Haskell.TH.Syntax
 import Database.Persist.Postgresql (PostgresConf)
@@ -51,7 +52,7 @@ import Network.Mail.Mime (Address(..))
 import Crypto.PubKey.RSA
 
 -- | Which Persistent backend this site is using.
-type PersistConfig = PostgresConf
+type PersistConf = PostgresConf
 
 -- Static setting below. Changing these requires a recompile
 

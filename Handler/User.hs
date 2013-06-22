@@ -1,13 +1,12 @@
-{-# LANGUAGE TemplateHaskell, OverloadedStrings #-}
 module Handler.User where
 
 import Import
 import BISocie.Helpers.Util
 import Control.Monad (forM, mplus, join)
-import Data.Maybe (isNothing, maybeToList)
+import Data.Maybe (isNothing)
 import Data.Text (isInfixOf)
 
-getUserListR :: Handler RepJson
+getUserListR :: Handler Value
 getUserListR = do
   r <- getUrlRender
   (mn, mey, mt, mstf, ma, mpid) <- runInputGet $ (,,,,,)
@@ -27,7 +26,7 @@ getUserListR = do
       return (u, mp', ra)
   let us = filter (mkCond mn mey) us'
   cacheSeconds 10 -- FIXME
-  jsonToRepJson $ object ["userlist" .= array (map (go mpid r) us)]
+  returnJson $ object ["userlist" .= array (map (go mpid r) us)]
   where
     go mpid r ((Entity uid u), mp, ra) =
       object $ [ "id" .= show uid

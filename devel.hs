@@ -1,4 +1,5 @@
-import Application (getApplicationDev)
+{-# LANGUAGE PackageImports #-}
+import "bisocie" Application (getApplicationDev)
 import Network.Wai.Handler.Warp
     (runSettings, defaultSettings, settingsPort)
 import Control.Concurrent (forkIO)

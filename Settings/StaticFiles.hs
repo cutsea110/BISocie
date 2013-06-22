@@ -1,5 +1,3 @@
-{-# LANGUAGE QuasiQuotes, TemplateHaskell, TypeFamilies, OverloadedStrings #-}
-{-# LANGUAGE CPP #-}
 module Settings.StaticFiles where
 
 import Prelude (IO)

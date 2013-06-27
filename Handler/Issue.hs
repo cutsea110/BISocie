@@ -69,7 +69,7 @@ getScheduleR year month = do
                           $ ["schedule-day-cell", toWeekName d] 
                            ++ (if today == day then ["today"] else [])
                            ++ (if currentMonth day then ["currentMonth"] else ["otherMonth"])
-    taskUri :: Day -> Route BISocie
+    taskUri :: Day -> Route App
     taskUri d = let (y', m', d') = toGregorian d in TaskR y' m' d'
     showDay :: Day -> String
     showDay = show . thd3 . toGregorian

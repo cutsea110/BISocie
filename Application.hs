@@ -33,7 +33,7 @@ import Handler.Admin
 -- This line actually creates our YesodSite instance. It is the second half
 -- of the call to mkYesodData which occurs in BISocie.hs. Please see
 -- the comments there for more details.
-mkYesodDispatch "BISocie" resourcesBISocie
+mkYesodDispatch "App" resourcesApp
 
 -- Some default handlers that ship with the Yesod site template. You will
 -- very rarely need to modify this.
@@ -64,7 +64,7 @@ makeApplication conf = do
     app <- toWaiAppPlain foundation
     return $ logWare app
 
-makeFoundation :: AppConfig DefaultEnv Extra -> IO BISocie
+makeFoundation :: AppConfig DefaultEnv Extra -> IO App
 makeFoundation conf = do
     manager <- newManager def
     s <- staticSite
@@ -73,7 +73,7 @@ makeFoundation conf = do
               Database.Persist.applyEnv
     p <- Database.Persist.createPoolConfig (dbconf :: Settings.PersistConf)
     logger <- mkLogger True stdout
-    let foundation = BISocie conf s p manager dbconf logger
+    let foundation = App conf s p manager dbconf logger
 
     -- Perform database migration using our application's logging settings.
     runLoggingT

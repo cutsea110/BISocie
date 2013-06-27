@@ -1,8 +1,8 @@
 module Foundation
-    ( BISocie (..)
+    ( App (..)
     , Route (..)
-    , BISocieMessage (..)
-    , resourcesBISocie
+    , AppMessage (..)
+    , resourcesApp
     , Handler
     , Widget
     , maybeAuth
@@ -45,7 +45,7 @@ import BISocie.Helpers.Util
 -- keep settings and values requiring initialization before your application
 -- starts running, such as database connections. Every handler will have
 -- access to the data present here.
-data BISocie = BISocie
+data App = App
     { settings :: AppConfig DefaultEnv Extra
     , getStatic :: Static -- ^ Settings for static file serving.
     , connPool :: Database.Persist.PersistConfigPool Settings.PersistConf -- ^ Database connection pool.
@@ -55,7 +55,7 @@ data BISocie = BISocie
     }
 
 -- Set up i18n messages. See the message folder.
-mkMessage "BISocie" "messages" "en"
+mkMessage "App" "messages" "en"
 
 -- This is where we define all of the routes in our application. For a full
 -- explanation of the syntax, please see:
@@ -76,16 +76,16 @@ mkMessage "BISocie" "messages" "en"
 -- for our application to be in scope. However, the handler functions
 -- usually require access to the BISocieRoute datatype. Therefore, we
 -- split these actions into two functions and place them in separate files.
-mkYesodData "BISocie" $(parseRoutesFile "config/routes")
+mkYesodData "App" $(parseRoutesFile "config/routes")
 
-type Form x = Html -> MForm (HandlerT BISocie IO) (FormResult x, Widget)
+type Form x = Html -> MForm (HandlerT App IO) (FormResult x, Widget)
 
 -- S3はアクセス制限する
 -- S3は基本公開ベースなので制限をするURIを提供してそこからgetFileRを呼ぶ
 
 -- Please see the documentation for the Yesod typeclass. There are a number
 -- of settings which can be configured by overriding methods here.
-instance Yesod BISocie where
+instance Yesod App where
     approot = ApprootMaster $ appRoot . settings
     
     -- Store session data on the client in encrypted cookies,
@@ -261,7 +261,7 @@ canEditUser uid = do
     r <- getMessageRender
     return $ Unauthorized $ r MsgYouCannotEditThisData
 
-instance YesodBreadcrumbs BISocie where
+instance YesodBreadcrumbs App where
   breadcrumb RootR = return ("", Nothing)
   breadcrumb HomeR{} = return ("ホーム", Nothing)
   breadcrumb HumanNetworkR = do
@@ -304,25 +304,25 @@ instance YesodBreadcrumbs BISocie where
   
 
 -- How to run database actions.
-instance YesodPersist BISocie where
-    type YesodPersistBackend BISocie = SqlPersistT
+instance YesodPersist App where
+    type YesodPersistBackend App = SqlPersistT
     runDB = defaultRunDB persistConfig connPool
 
-instance YesodPersistRunner BISocie where
+instance YesodPersistRunner App where
   getDBRunner = defaultGetDBRunner connPool
 
-instance YesodJquery BISocie where
+instance YesodJquery App where
   urlJqueryJs _ = Left $ StaticR js_jquery_1_4_4_min_js
   urlJqueryUiJs _ = Left $ StaticR js_jquery_ui_1_8_9_custom_min_js
   urlJqueryUiCss _ = Left $ StaticR css_jquery_ui_1_8_9_custom_css
 
-instance YesodJqueryPnotify BISocie where
+instance YesodJqueryPnotify App where
 
-instance RenderMessage BISocie FormMessage where
+instance RenderMessage App FormMessage where
     renderMessage _ _ = defaultFormMessage
 
-instance YesodAuth BISocie where
-    type AuthId BISocie = UserId
+instance YesodAuth App where
+    type AuthId App = UserId
 
     -- Where to send a user after successful login
     loginDest _ = RootR
@@ -356,7 +356,7 @@ instance YesodAuth BISocie where
       setTitle "ログイン"
       $(widgetFile "login")
 
-instance YesodAuthOwl BISocie where
+instance YesodAuthOwl App where
   getOwlIdent = lift $ fmap (userIdent . entityVal) requireAuth
   clientId _ = Settings.clientId
   owlPubkey _ = Settings.owl_pub

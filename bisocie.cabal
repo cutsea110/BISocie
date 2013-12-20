@@ -80,9 +80,10 @@ library
                  , mime-mail
                  , network      >= 2.4     && < 2.5
                  , wai
-                 , wai-extra    >= 1.3     && < 1.4
+                 , wai-extra    >= 1.3     && < 3.0
+                 , wai-logger   >= 2.0     && < 3.0
                  , yaml         >= 0.8     && < 0.9
-                 , http-conduit  >= 1.9    && < 1.10
+                 , http-conduit  >= 1.9    && < 3.0
                  , directory
                  , bytestring
                  , text
@@ -111,9 +112,9 @@ library
                  , data-default >= 0.5     && < 0.6
                  , conduit      >= 1.0     && < 1.1
                  , aeson        >= 0.6     && < 0.7
-                 , crypto-pubkey >= 0.1 && < 0.2
+                 , crypto-pubkey >= 0.1 && < 0.3
                  , monad-logger >= 0.3 && < 0.4
-                 , fast-logger >= 0.3 && < 0.4
+                 , fast-logger >= 0.3 && < 3.0
                  , owl-auth >= 0.2 && < 0.3
                  , xml-hamlet >= 0.4 && < 0.5
                  , xml-conduit >= 1.1 && < 1.2

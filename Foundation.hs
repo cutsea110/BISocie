@@ -24,7 +24,6 @@ import Model
 import qualified Settings
 import Settings.Development (development)
 import Settings (widgetFile, Extra (..))
-import System.Log.FastLogger (Logger)
 import Text.Jasmine (minifym)
 import Text.Julius (RawJS(..))
 import Text.Hamlet (hamletFile)
@@ -32,6 +31,7 @@ import Yesod
 import Yesod.Static
 import Yesod.Auth
 import Yesod.Auth.Owl
+import Yesod.Core.Types (Logger)
 import Yesod.Default.Config
 import Yesod.Default.Util (addStaticContentExternal)
 import Yesod.Form.Jquery

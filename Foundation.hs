@@ -99,7 +99,7 @@ instance Yesod App where
       y <- getYesod
       let (ApprootMaster approot') = approot
       (title, parents) <- breadcrumbs
-      current <- getCurrentRoute
+      _current <- getCurrentRoute
       let header = $(widgetFile "header")
           footer = $(widgetFile "footer")
       pc <- widgetToPageContent $ do

@@ -40,7 +40,7 @@ getRootR :: Handler Html
 getRootR = redirect . HomeR . entityKey =<< requireAuth
 
 getHomeR :: UserId -> Handler Html
-getHomeR uid = do
+getHomeR _uid = do
   u <- requireAuth
   defaultLayout $ do
     setTitleI $ MsgHomeOf $ entityVal u
@@ -157,13 +157,13 @@ mkMail render prj issue url = do
                 ]
               , mailParts =
                   [[ Part "text/plain; charset=utf-8" QuotedPrintableText Nothing []
-                     $ TL.encodeUtf8 textPart
+                     $ TL.encodeUtf8 textPart'
                    , Part "text/html; charset=utf-8" QuotedPrintableText Nothing []
-                     $ TL.encodeUtf8 htmlPart
+                     $ TL.encodeUtf8 htmlPart'
                    ]]
               }
   where
-    textPart = [stext|
+    textPart' = [stext|
  #{render MsgProject}: #{projectName prj}
  #{render MsgIssue}: #{issueSubject issue}
  #{render MsgLimitDate}: #{showLimitdatetime issue}
@@ -173,7 +173,7 @@ mkMail render prj issue url = do
  * #{render MsgNoteOnThisReminderMail}
  #{render MsgIssue} URL: #{url}
 |]
-    htmlPart = TL.decodeUtf8 $ renderHtml [shamlet|
+    htmlPart' = TL.decodeUtf8 $ renderHtml [shamlet|
 <p>
   <dl>
     <dt>#{render MsgProject}

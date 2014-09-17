@@ -27,7 +27,7 @@ import Text.XML
 
 getUploadR :: Handler Html
 getUploadR = do
-  (Entity uid _) <- requireAuth
+  (Entity _uid _) <- requireAuth
   defaultLayout $ do
     $(widgetFile "s3/upload")
 

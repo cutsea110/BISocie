@@ -67,10 +67,8 @@ getProfileR uid = do
     viewProf :: Handler TypedContent
     viewProf = do
       (Entity selfid self) <- requireAuth
-      now <- liftIO getCurrentTime
       r <- getUrlRender
       let viewprof = (ProfileR uid, [("mode", "v")])
-          editprof = (ProfileR uid, [("mode", "e")])
       (user, mprof, mlab) <- 
         runDB $ do
           user <- get404 uid
@@ -98,7 +96,6 @@ getProfileR uid = do
       now <- liftIO getCurrentTime
       r <- getUrlRender
       let viewprof = (ProfileR uid, [("mode", "v")])
-          editprof = (ProfileR uid, [("mode", "e")])
           (y,_,_) = toGregorian $ utctDay now
       (user, mprof, mlab, eyears, gyears) <-
         runDB $ do

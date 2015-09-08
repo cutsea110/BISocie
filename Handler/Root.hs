@@ -12,22 +12,20 @@ module Handler.Root
        , getSendReminderMailR
        ) where
 
-import Import
+import Import hiding (head, find)
 import BISocie.Helpers.Util
-import Control.Arrow ((&&&))
-import Control.Monad (forM)
 import Codec.Binary.UTF8.String (decodeString)
 import qualified Data.ByteString.Lazy.Char8 as L
-import Data.Conduit (($$))
 import Data.Conduit.List (consume)
 import Data.List (head, find)
 import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as TL
-import Data.Time (fromGregorian)
 import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
 import Text.Shakespeare.Text (stext)
+import Text.Julius (RawJS(..))
 import Network.Mail.Mime
 import Yesod.Auth.Owl (setPassR)
+import Yesod.Goodies.PNotify
 
 -- This is a handler function for the GET request method on the RootR
 -- resource pattern. All of your resource patterns are defined in

@@ -5,25 +5,19 @@ module Model ( module Model
              , module Model.Fields
              ) where
 
-import Prelude
-import Yesod
+import ClassyPrelude.Yesod hiding (Reader, try, (<|>), last)
+import Database.Persist.Quasi hiding (parse)
+
 -- import Yesod.Crud -- FIXME
-import System.Locale
-import Control.Monad (liftM2)
-import Control.Applicative ((<$>),(<*>))
 import Data.Char (isHexDigit)
-import Data.Int
+import Data.List (last)
 import Data.Time
-import Data.Maybe (fromMaybe, maybeToList)
-import Data.List (find)
-import Data.Typeable (Typeable)
-import Database.Persist.Quasi (upperCaseSettings)
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec as P (string)
-import Data.Text (Text)
 import qualified Data.Text as T
 import Network.Mail.Mime
 import Text.Blaze.Internal (preEscapedText)
+import Database.Persist.Sql
 
 import qualified Settings (tz)
 import BISocie.Helpers.Util
@@ -44,7 +38,7 @@ type IssueNo = Int
 -- You can define all of your database entities here. You can find more
 -- information on persistent and how to declare entities at:
 -- http://docs.yesodweb.com/book/persistent/
-share [mkPersist sqlOnlySettings, mkMigrate "migrateAll"]
+share [mkPersist sqlSettings, mkMigrate "migrateAll"]
   $(persistFileWith upperCaseSettings "config/models")
 
 -- FIXME Crud
@@ -346,7 +340,7 @@ textToOrder "AscProjectName" = Asc ProjectName
 textToOrder "DescProjectName" = Desc ProjectName
 
 defaultProfile :: Profile
-defaultProfile = Profile { profileUser=Key PersistNull
+defaultProfile = Profile { profileUser=UserKey (SqlBackendKey 0)
                          , profileBirth=Nothing
                          , profileEntryYear=Nothing
                          , profileGraduateYear=Nothing

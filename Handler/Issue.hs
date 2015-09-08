@@ -21,14 +21,13 @@ module Handler.Issue
        , getCommentReadersR
        ) where
 
-import Import
+import Import hiding (intercalate, intersperse, groupBy)
+import Database.Persist.Sql
 import BISocie.Helpers.Util
-import Control.Monad (when, forM, liftM2)
-import Data.Function (on)
 import Data.List (intercalate, intersperse, nub, groupBy)
+import Data.Maybe (fromJust)
 import Data.Time
 import Data.Time.Calendar.WeekDate
-import Data.Maybe (fromMaybe, fromJust, isJust, isNothing)
 import qualified Data.Text.Lazy as L
 import qualified Data.Text.Lazy.Encoding as LE
 import qualified Data.Text as T
@@ -37,7 +36,7 @@ import Network.Mail.Mime
 import Text.Blaze.Internal (preEscapedText)
 import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
 import Text.Shakespeare.Text (stext)
-import Yesod.Auth (requireAuthId)
+import Yesod.Goodies.PNotify
 
 getCurrentScheduleR :: Handler Html
 getCurrentScheduleR = do
@@ -365,15 +364,15 @@ postNewIssueR pid = do
            <*> fmap (fmap readText) (iopt textField "assign")
            <*> ireq textField "status"
            <*> iopt dayField "limitdate"
-           <*> iopt timeField "limittime"
+           <*> iopt timeFieldTypeText "limittime"
            <*> iopt dayField "reminderdate"
            <*> fmap (fmap readText) (iopt hiddenField "parent")
-  comment <- runInputPost $ Comment pid (Key PersistNull) (Textarea "") Nothing uid now
+  comment <- runInputPost $ Comment pid (IssueKey (SqlBackendKey 0)) (Textarea "") Nothing uid now
              <$> iopt textareaField "content"
              <*> fmap (fmap readText) (iopt textField "assign")
              <*> ireq textField "status"
              <*> iopt dayField "limitdate"
-             <*> iopt timeField "limittime"
+             <*> iopt timeFieldTypeText "limittime"
              <*> iopt dayField "reminderdate"
              <*> ireq boolField "checkreader"
   mfi <- lookupFile "attached"
@@ -492,9 +491,9 @@ getIssueR pid ino = do
     setTitle $ preEscapedText $ issueSubject issue
     $(widgetFile "issue")
 
-getMaybe :: (PersistStore m, PersistEntity a,
-             PersistMonadBackend m ~ PersistEntityBackend a) =>
-            Maybe (Key a) -> m (Maybe a)
+-- getMaybe :: (PersistStore m, PersistEntity a,
+--              PersistConfigBackend m ~ PersistEntityBackend a) =>
+--             Maybe (IssueKey a) -> m (Maybe a)
 getMaybe Nothing = return Nothing
 getMaybe (Just k) = get k
 
@@ -502,19 +501,19 @@ postCommentR :: ProjectId -> IssueNo -> Handler Html
 postCommentR pid ino = do
   uid <- requireAuthId
   now <- liftIO getCurrentTime
-  comment <- runInputPost $ Comment pid (Key PersistNull) (Textarea "") Nothing uid now
+  comment <- runInputPost $ Comment pid (IssueKey (SqlBackendKey 0)) (Textarea "") Nothing uid now
              <$> iopt textareaField "content"
              <*> fmap (fmap readText) (iopt textField "assign")
              <*> ireq textField "status"
              <*> iopt dayField "limitdate"
-             <*> iopt timeField "limittime"
+             <*> iopt timeFieldTypeText "limittime"
              <*> iopt dayField "reminderdate"
              <*> ireq boolField "checkreader"
   mfi <- lookupFile "attached"
   runDB $ do
     r <- lift getUrlRender
     (Entity iid issue) <- getBy404 $ UniqueIssue pid ino
-    Just (Entity lastCid lastC) <- selectFirst [CommentIssue ==. iid] [Desc CommentCdate]
+    Just (Entity lastCid lastC') <- selectFirst [CommentIssue ==. iid] [Desc CommentCdate]
     mfh <- storeAttachedFile uid mfi
     amemo <- generateAutomemo comment issue mfh
     replace iid issue { issueUuser = uid
@@ -537,7 +536,7 @@ postCommentR pid ino = do
     prj <- get404 pid
     emails <- selectMailAddresses pid
     let msgid = toMessageId iid cid now mailMessageIdDomain
-        refid = toMessageId iid lastCid (commentCdate lastC) mailMessageIdDomain
+        refid = toMessageId iid lastCid (commentCdate lastC') mailMessageIdDomain
         fragment = "#" +++ toPathPiece cid
         url = r (IssueR pid ino) <> fragment
         mfurl = fmap (r . AttachedFileR cid . fst) mfh

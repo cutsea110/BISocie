@@ -10,16 +10,14 @@ module Handler.S3
        , upload -- Internal API
        ) where
 
-import Import
+import Import hiding (last, groupBy)
 import BISocie.Helpers.Util ((+++), encodeUrl, ToText(..))
 import qualified Data.ByteString.Lazy as L
-import Data.Conduit (($$))
 import Data.Conduit.List (consume)
 import Data.List (last)
 import qualified Data.Map as Map
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import Data.Time
 import System.Directory
 import System.FilePath
 import Text.Hamlet.XML
@@ -27,7 +25,7 @@ import Text.XML
 
 getUploadR :: Handler Html
 getUploadR = do
-  (Entity uid _) <- requireAuth
+  (Entity _uid _) <- requireAuth
   defaultLayout $ do
     $(widgetFile "s3/upload")
 

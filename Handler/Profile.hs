@@ -2,12 +2,10 @@
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 module Handler.Profile where
 
-import Import
-import Control.Monad
+import Import hiding (isInfixOf)
 import Data.Char (ord)
+import Data.Maybe (fromJust)
 import qualified Data.Text as T
-import Data.Time
-import Data.Maybe (fromMaybe, fromJust)
 import Handler.S3
 import Settings (entryStartYear, graduateStartYear)
 
@@ -67,10 +65,8 @@ getProfileR uid = do
     viewProf :: Handler TypedContent
     viewProf = do
       (Entity selfid self) <- requireAuth
-      now <- liftIO getCurrentTime
       r <- getUrlRender
       let viewprof = (ProfileR uid, [("mode", "v")])
-          editprof = (ProfileR uid, [("mode", "e")])
       (user, mprof, mlab) <- 
         runDB $ do
           user <- get404 uid
@@ -98,7 +94,6 @@ getProfileR uid = do
       now <- liftIO getCurrentTime
       r <- getUrlRender
       let viewprof = (ProfileR uid, [("mode", "v")])
-          editprof = (ProfileR uid, [("mode", "e")])
           (y,_,_) = toGregorian $ utctDay now
       (user, mprof, mlab, eyears, gyears) <-
         runDB $ do

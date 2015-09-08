@@ -20,7 +20,7 @@ fs' m attrs = FieldSettings { fsLabel = SomeMessage m
                             }
 
 projectForm :: Maybe (Text, Textarea, Textarea) -> Form (Text, Textarea, Textarea)
-projectForm mv = renderBootstrap $ (,,)
+projectForm mv = renderBootstrap2 $ (,,)
                  <$> areq textField (fs MsgProjectName) (fst3 <$> mv)
                  <*> areq textareaField (fs MsgDescription) (snd3 <$> mv)
                  <*> areq textareaField (fs MsgStatus) (thd3 <$> mv)

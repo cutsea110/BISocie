@@ -31,7 +31,7 @@
 /avatar/#UserId AvatarR POST
 /avatar-image/#UserId AvatarImageR GET
 
-/static StaticR Static getStatic
+/static StaticR Static appStatic
 /auth   AuthR   Auth   getAuth
 
 /favicon.ico FaviconR GET

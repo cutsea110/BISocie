@@ -1,9 +1,7 @@
 module Handler.User where
 
-import Import
+import Import hiding (isInfixOf)
 import BISocie.Helpers.Util
-import Control.Monad (forM, mplus, join)
-import Data.Maybe (isNothing)
 import Data.Text (isInfixOf)
 
 getUserListR :: Handler Value

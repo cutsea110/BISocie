@@ -2,13 +2,9 @@
 module Handler.Project where
 
 import Import
-import Control.Monad (forM_)
 import qualified Data.Text as T
-import Data.Time
 import System.Directory
-import System.FilePath ((</>))
 import Text.Blaze.Internal (preEscapedText)
-import Yesod.Auth (requireAuthId)
 
 getNewProjectR :: Handler Html
 getNewProjectR = do

@@ -2,9 +2,7 @@
 module Handler.Participants where
 
 import Import
-import Control.Monad (when, forM)
-import Data.Time
-import Yesod.Auth (requireAuthId)
+import Text.Julius (RawJS(..))
 
 getParticipantsListR :: ProjectId -> Handler TypedContent
 getParticipantsListR pid = do

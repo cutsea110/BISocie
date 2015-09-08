@@ -1,64 +1,43 @@
-module Foundation
-    ( App (..)
-    , Route (..)
-    , AppMessage (..)
-    , resourcesApp
-    , Handler
-    , Widget
-    , maybeAuth
-    , requireAuth
-    , module Settings
-    , module Yesod.Goodies.PNotify
-    , RawJS(..)
-    , Form
-    ) where
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+module Foundation where
 
-import Prelude
-import Data.Maybe (isJust)
-import qualified Database.Persist
-import Database.Persist.Sql (SqlPersistT)
-import Network.HTTP.Client.Conduit (Manager, HasHttpManager (getHttpManager))
+import Import.NoFoundation as Import
+import Database.Persist.Sql (ConnectionPool, runSqlPool)
+import Text.Hamlet (hamletFile)
+import Text.Jasmine (minifym)
+import Yesod.Auth.Message   (AuthMessage (InvalidLogin))
+import Yesod.Default.Util   (addStaticContentExternal)
+import Yesod.Core.Types     (Logger)
+import qualified Yesod.Core.Unsafe as Unsafe
+
 import Network.Wai (Request(..))
 import Network.Socket (getNameInfo)
-import Model
-import qualified Settings
-import Settings.Development (development)
-import Settings (widgetFile, Extra (..))
-import Text.Jasmine (minifym)
 import Text.Julius (RawJS(..))
-import Text.Hamlet (hamletFile)
-import Yesod
-import Yesod.Static
-import Yesod.Auth
+
 import Yesod.Auth.Owl
 import Yesod.Auth.GoogleEmail
-import Yesod.Core.Types (Logger)
-import Yesod.Default.Config
-import Yesod.Default.Util (addStaticContentExternal)
 import Yesod.Form.Jquery
 import Yesod.Goodies.PNotify
 
-import Settings.StaticFiles
 import BISocie.Helpers.Util
 
--- | The site argument for your application. This can be a good place to
+-- | The foundation datatype for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
 -- starts running, such as database connections. Every handler will have
 -- access to the data present here.
 data App = App
-    { settings :: AppConfig DefaultEnv Extra
-    , getStatic :: Static -- ^ Settings for static file serving.
-    , connPool :: Database.Persist.PersistConfigPool Settings.PersistConf -- ^ Database connection pool.
-    , httpManager :: Manager
-    , persistConfig :: Settings.PersistConf
-    , appLogger :: Logger
+    { appSettings    :: AppSettings
+    , appStatic      :: Static -- ^ Settings for static file serving.
+    , appConnPool    :: ConnectionPool -- ^ Database connection pool.
+    , appHttpManager :: Manager
+    , appLogger      :: Logger
     }
-
-instance HasHttpManager App where
-    getHttpManager = httpManager
 
 -- Set up i18n messages. See the message folder.
 mkMessage "App" "messages" "en"
+
+instance HasHttpManager App where
+    getHttpManager = appHttpManager
 
 -- This is where we define all of the routes in our application. For a full
 -- explanation of the syntax, please see:
@@ -77,11 +56,11 @@ type Form x = Html -> MForm (HandlerT App IO) (FormResult x, Widget)
 -- Please see the documentation for the Yesod typeclass. There are a number
 -- of settings which can be configured by overriding methods here.
 instance Yesod App where
-    approot = ApprootMaster $ appRoot . settings
+    approot = ApprootMaster $ appRoot . appSettings
     
     -- Store session data on the client in encrypted cookies,
     -- default session idle timeout is 120 minutes
-    makeSessionBackend _ = fmap Just $ defaultClientSessionBackend
+    makeSessionBackend _ = Just <$> defaultClientSessionBackend
         120 -- timeout in minutes
         "config/client_session_key.aes"
     
@@ -109,13 +88,7 @@ instance Yesod App where
         addScriptEither $ Left $ StaticR plugins_pnotify_jquery_pnotify_min_js
         addStylesheetEither $ Left $ StaticR plugins_pnotify_jquery_pnotify_default_css
         $(widgetFile "default-layout")
-      giveUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
-
-    -- This is done to provide an optimization for serving static files from
-    -- a separate domain. Please see the staticroot setting in Settings.hs
-    urlRenderOverride y (StaticR s) =
-        Just $ uncurry (joinPath y (Settings.staticRoot $ settings y)) $ renderRoute s
-    urlRenderOverride _ _ = Nothing
+      withUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
 
     -- The page to be redirected to when authentication is required.
     authRoute _ = Just $ AuthR LoginR
@@ -164,20 +137,27 @@ instance Yesod App where
     -- and names them based on a hash of their content. This allows
     -- expiration dates to be set far in the future without worry of
     -- users receiving stale content.
-    addStaticContent =
-        addStaticContentExternal minifym genFileName Settings.staticDir (StaticR . flip StaticRoute [])
+    addStaticContent ext mime content = do
+        master <- getYesod
+        let staticDir = appStaticDir $ appSettings master
+        addStaticContentExternal
+            minifym
+            genFileName
+            staticDir
+            (StaticR . flip StaticRoute [])
+            ext
+            mime
+            content
       where
-        genFileName lbs
-          | development = "autogen-" ++ base64md5 lbs
-          | otherwise = base64md5 lbs
-    
-    -- Place Javascript at bottom of the body tag so the rest of the page loads first
-    jsLoader _ = BottomOfBody
+        -- Generate a unique filename based on the content itself
+        genFileName lbs = "autogen-" ++ base64md5 lbs
 
     -- What messages should be logged. The following includes all messages when
     -- in development, and warnings and errors in production.
-    shouldLog _ _source level =
-        development || level == LevelWarn || level == LevelError
+    shouldLog app _source level =
+        appShouldLogAll (appSettings app)
+            || level == LevelWarn
+            || level == LevelError
 
     makeLogger = return . appLogger
 
@@ -253,6 +233,74 @@ canEditUser uid = do
     r <- getMessageRender
     return $ Unauthorized $ r MsgYouCannotEditThisData
 
+
+-- How to run database actions.
+instance YesodPersist App where
+    type YesodPersistBackend App = SqlBackend
+    runDB action = do
+        master <- getYesod
+        runSqlPool action $ appConnPool master
+instance YesodPersistRunner App where
+    getDBRunner = defaultGetDBRunner appConnPool
+
+instance YesodAuth App where
+    type AuthId App = UserId
+
+    -- Where to send a user after successful login
+    loginDest _ = RootR
+    -- Where to send a user after logout
+    logoutDest _ = RootR
+
+    authenticate creds = do
+      render <- getMessageRender
+      runDB $ do
+        x <- getBy $ UniqueUser $ credsIdent creds
+        case x of
+            Just (Entity uid u) ->
+              if userActive u
+              then do
+                lift $ setPNotify $ PNotify JqueryUI Success "Login" $ render MsgSuccessLogin
+                return $ Authenticated uid
+              else do
+                lift $ setPNotify $ PNotify JqueryUI Error "fail to Login" "Invalid login."
+                return $ UserError InvalidLogin
+            Nothing -> do
+              lift $ setPNotify $ PNotify JqueryUI Success "Login" $ render MsgSuccessLogin
+              fmap Authenticated $ insert $ initUser $ credsIdent creds
+
+    authPlugins _ = [ authOwl
+                    , authGoogleEmail
+                    ]
+    
+    authHttpManager = getHttpManager
+
+    loginHandler = lift $ defaultLayout $ do
+      setTitle "ログイン"
+      $(widgetFile "login")
+
+instance YesodAuthPersist App
+
+instance RenderMessage App FormMessage where
+    renderMessage _ _ = defaultFormMessage
+
+unsafeHandler :: App -> Handler a -> IO a
+unsafeHandler = Unsafe.fakeHandlerGetLogger appLogger
+
+instance YesodAuthOwl App where
+  getOwlIdent = lift $ fmap (userIdent . entityVal) requireAuth
+  clientId _ = Import.clientId
+  owlPubkey _ = Import.owl_pub
+  myPrivkey _ = Import.bisocie_priv
+  endpoint_auth _ = Import.owl_auth_service_url
+  endpoint_pass _ = Import.owl_pass_service_url
+
+instance YesodJquery App where
+  urlJqueryJs _ = Left $ StaticR js_jquery_1_4_4_min_js
+  urlJqueryUiJs _ = Left $ StaticR js_jquery_ui_1_8_9_custom_min_js
+  urlJqueryUiCss _ = Left $ StaticR css_jquery_ui_1_8_9_custom_css
+
+instance YesodJqueryPnotify App where
+
 instance YesodBreadcrumbs App where
   breadcrumb RootR = return ("", Nothing)
   breadcrumb HomeR{} = return ("ホーム", Nothing)
@@ -293,65 +341,3 @@ instance YesodBreadcrumbs App where
   
   -- the others 
   breadcrumb _ = return ("", Nothing)
-  
-
--- How to run database actions.
-instance YesodPersist App where
-    type YesodPersistBackend App = SqlPersistT
-    runDB = defaultRunDB persistConfig connPool
-
-instance YesodPersistRunner App where
-  getDBRunner = defaultGetDBRunner connPool
-
-instance YesodJquery App where
-  urlJqueryJs _ = Left $ StaticR js_jquery_1_4_4_min_js
-  urlJqueryUiJs _ = Left $ StaticR js_jquery_ui_1_8_9_custom_min_js
-  urlJqueryUiCss _ = Left $ StaticR css_jquery_ui_1_8_9_custom_css
-
-instance YesodJqueryPnotify App where
-
-instance RenderMessage App FormMessage where
-    renderMessage _ _ = defaultFormMessage
-
-instance YesodAuth App where
-    type AuthId App = UserId
-
-    -- Where to send a user after successful login
-    loginDest _ = RootR
-    -- Where to send a user after logout
-    logoutDest _ = RootR
-
-    getAuthId creds = do
-      render <- getMessageRender
-      runDB $ do
-        x <- getBy $ UniqueUser $ credsIdent creds
-        case x of
-            Just (Entity uid u) ->
-              if userActive u
-              then do
-                lift $ setPNotify $ PNotify JqueryUI Success "Login" $ render MsgSuccessLogin
-                return $ Just uid
-              else do
-                lift $ setPNotify $ PNotify JqueryUI Error "fail to Login" "Invalid login."
-                return Nothing
-            Nothing -> do
-              lift $ setPNotify $ PNotify JqueryUI Success "Login" $ render MsgSuccessLogin
-              fmap Just $ insert $ initUser $ credsIdent creds
-
-    authPlugins _ = [ authOwl
-                    , authGoogleEmail
-                    ]
-    
-    authHttpManager = httpManager
-
-    loginHandler = lift $ defaultLayout $ do
-      setTitle "ログイン"
-      $(widgetFile "login")
-
-instance YesodAuthOwl App where
-  getOwlIdent = lift $ fmap (userIdent . entityVal) requireAuth
-  clientId _ = Settings.clientId
-  owlPubkey _ = Settings.owl_pub
-  myPrivkey _ = Settings.bisocie_priv
-  endpoint_auth _ = Settings.owl_auth_service_url
-  endpoint_pass _ = Settings.owl_pass_service_url

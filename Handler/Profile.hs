@@ -2,12 +2,10 @@
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 module Handler.Profile where
 
-import Import
-import Control.Monad
+import Import hiding (isInfixOf)
 import Data.Char (ord)
+import Data.Maybe (fromJust)
 import qualified Data.Text as T
-import Data.Time
-import Data.Maybe (fromMaybe, fromJust)
 import Handler.S3
 import Settings (entryStartYear, graduateStartYear)
 

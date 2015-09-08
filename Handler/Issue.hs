@@ -479,7 +479,7 @@ getIssueR pid ino = do
                  ,isJust mreadP)
       prj <- get404 pid
       ptcpts <- selectParticipants pid
-      mparent <- getMaybe $ issueParentIssue issue
+      mparent <- maybe (return Nothing) get $ issueParentIssue issue
       children <- selectList [IssueParentIssue ==. Just iid] []
       return (prj, ptcpts, iid, issue, comments, mparent, children)
   let (Right stss) = parseStatuses $ projectStatuses prj
@@ -490,12 +490,6 @@ getIssueR pid ino = do
   defaultLayout $ do
     setTitle $ preEscapedText $ issueSubject issue
     $(widgetFile "issue")
-
--- getMaybe :: (PersistStore m, PersistEntity a,
---              PersistConfigBackend m ~ PersistEntityBackend a) =>
---             Maybe (IssueKey a) -> m (Maybe a)
-getMaybe Nothing = return Nothing
-getMaybe (Just k) = get k
 
 postCommentR :: ProjectId -> IssueNo -> Handler Html
 postCommentR pid ino = do

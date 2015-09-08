@@ -268,7 +268,6 @@ instance YesodAuth App where
               fmap Authenticated $ insert $ initUser $ credsIdent creds
 
     authPlugins _ = [ authOwl
-                    , authGoogleEmail
                     ]
     
     authHttpManager = getHttpManager

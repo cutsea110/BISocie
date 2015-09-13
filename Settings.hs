@@ -20,7 +20,7 @@ import Language.Haskell.TH.Syntax
 import Database.Persist.Postgresql (PostgresConf)
 import qualified Data.ByteString.Char8 as SB
 import Network.Mail.Mime (Address(..))
-import Crypto.PubKey.RSA
+import "crypto-pubkey" Crypto.PubKey.RSA
 
 
 -- | Runtime settings to configure this application. These settings can be

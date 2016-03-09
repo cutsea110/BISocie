@@ -5,7 +5,7 @@ module Model ( module Model
              , module Model.Fields
              ) where
 
-import ClassyPrelude.Yesod hiding (Reader, try, (<|>), last)
+import ClassyPrelude.Yesod hiding (Reader, try, (<|>), last, many)
 import Database.Persist.Quasi hiding (parse)
 
 -- import Yesod.Crud -- FIXME

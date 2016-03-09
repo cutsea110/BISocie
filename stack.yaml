@@ -8,6 +8,7 @@ packages:
     git: git@github.com:cutsea110/owl-auth
     commit: FIX-2015
 extra-deps:
+- RSA-2.1.0.3
 - utility-ht-0.0.11
 - yesod-pnotify-0.6.0
-resolver: lts-3.10
+resolver: lts-5.6
